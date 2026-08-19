@@ -52,12 +52,12 @@ describe('FaikoutBroker', () => {
             setTimeout(() => rej(new Error('Zeitablauf beim Verbinden')), 8000);
         });
 
-        client.publish('state/Daikin 1OG', JSON.stringify({ power: true, temp: 19 }));
+        client.publish('state/Wohnzimmer AC', JSON.stringify({ power: true, temp: 19 }));
         await new Promise(r => setTimeout(r, 500));
         await new Promise(r => client.end(false, {}, r));
 
         expect(empfangen.length).to.be.greaterThan(0);
-        expect(empfangen[0][0]).to.equal('state/Daikin 1OG');
+        expect(empfangen[0][0]).to.equal('state/Wohnzimmer AC');
         expect(JSON.parse(empfangen[0][1]).temp).to.equal(19);
     });
 
@@ -99,11 +99,11 @@ describe('FaikoutBroker', () => {
         await new Promise((res, rej) => client.subscribe('command/#', e => (e ? rej(e) : res())));
 
         const gesehen = new Promise(res => client.on('message', (t, p) => res([t, p.toString()])));
-        await broker.publish('command/Daikin 1OG/temp', '21');
+        await broker.publish('command/Wohnzimmer AC/temp', '21');
         const [topic, nutzlast] = await gesehen;
         await new Promise(r => client.end(false, {}, r));
 
-        expect(topic).to.equal('command/Daikin 1OG/temp');
+        expect(topic).to.equal('command/Wohnzimmer AC/temp');
         expect(nutzlast).to.equal('21');
     });
 });

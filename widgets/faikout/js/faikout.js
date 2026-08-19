@@ -1,7 +1,7 @@
 /*
  * Bausteine der Klima-Kachel fuer VIS 1.x - iobroker.faikout
  *
- * Jedes Widget bekommt nur EIN Objekt: das Geraet (z. B. faikout.0.Daikin_1OG). Welche
+ * Jedes Widget bekommt nur EIN Objekt: das Geraet (z. B. faikout.0.Wohnzimmer). Welche
  * Datenpunkte es darunter gibt, ermittelt das Widget selbst - die Anlagen koennen
  * unterschiedlich viel, und der Adapter legt entsprechend unterschiedlich viele Objekte an.
  * Fehlt ein Datenpunkt, zeigt der Baustein einen Hinweis statt eines toten Bedienelements.
@@ -114,7 +114,7 @@ vis.binds.faikout = {
         var prefix = data.deviceOid;
         if (!prefix) {
             $div.html('<div class="fk"><div class="fk-fehler">Kein Gerät gewählt. Im Attribut ' +
-                '„Gerät" ein Objekt wie <code>faikout.0.Daikin_1OG</code> eintragen.</div></div>');
+                '„Gerät" ein Objekt wie <code>faikout.0.Wohnzimmer</code> eintragen.</div></div>');
             return;
         }
 
@@ -630,60 +630,52 @@ vis.binds.faikout = {
     VERLAUF_FARBEN: { gesamt: '#a78bfa', kuehlen: '#4fc3f7', heizen: '#ff7043' },
 
     /**
-     * Liest eine der drei vorbereiteten Reihen.
+     * Liest eine der drei Reihen aus dem Adapter.
      *
-     * Der Adapter fuehrt die Stundenwerte selbst (verbrauch.<art>.stundenJson). Tages- und
-     * Monatsreihen legt das Skript "Klima_Energieverlauf" unter 0_userdata.0.Klima.Verlauf.*
-     * ab - sie muessen ueber laengere Zeit gesammelt werden und passen deshalb nicht in einen
-     * Adapter, der nur den aktuellen Zustand spiegelt.
+     * Alle drei fuehrt der Adapter selbst - Stunden, Tage und Monate. Es ist bewusst kein
+     * Fremdskript noetig: sonst blieben Monats- und Jahresansicht bei jedem leer, der nichts
+     * weiter einrichtet.
      *
-     * @param {function} fertig  ([{beschriftung, kuehlen, heizen}]) => void
+     * @param {function} fertig  ([{beschriftung, kuehlen, heizen}], hinweis) => void
      */
-    verlaufLesen: function (ctx, bereich, quelle, fertig) {
+    verlaufLesen: function (ctx, bereich, fertig) {
         var b = vis.binds.faikout;
+        var FELD = { tag: 'stundenJson', monat: 'tageJson', jahr: 'monateJson' };
+        var feld = FELD[bereich] || FELD.tag;
 
-        if (bereich === 'tag') {
-            // Direkt aus dem Adapter: drei getrennte Stundenreihen zusammenfuehren.
-            var reihen = {};
-            var offen = 2;
-            ['kuehlen', 'heizen'].forEach(function (art) {
-                var feld = 'verbrauch.' + art + '.stundenJson';
-                if (!ctx.hat(feld)) { if (!--offen) b.verlaufFertig(reihen, fertig); return; }
-                vis.conn.getState(ctx.oid(feld), function (err, zustand) {
-                    if (!err && zustand && zustand.val) {
-                        try {
-                            JSON.parse(zustand.val).forEach(function (p) {
-                                if (!reihen[p.stunde]) reihen[p.stunde] = { schluessel: p.stunde, kuehlen: 0, heizen: 0 };
-                                reihen[p.stunde][art] = Number(p.kwh) || 0;
-                            });
-                        } catch (e) { /* unbrauchbares JSON wird still uebergangen */ }
-                    }
-                    if (!--offen) b.verlaufFertig(reihen, fertig, 'tag');
-                });
+        // Kuehlen und Heizen stehen getrennt; sie werden ueber ihren Zeitschluessel vereint.
+        var reihen = {};
+        var offen = 2;
+        var gefunden = false;
+
+        ['kuehlen', 'heizen'].forEach(function (art) {
+            var pfad = 'verbrauch.' + art + '.' + feld;
+            if (!ctx.hat(pfad)) {
+                if (!--offen) b.verlaufFertig(reihen, fertig, bereich, gefunden ? null : feld);
+                return;
+            }
+            gefunden = true;
+            vis.conn.getState(ctx.oid(pfad), function (err, zustand) {
+                if (!err && zustand && zustand.val) {
+                    try {
+                        JSON.parse(zustand.val).forEach(function (p) {
+                            // Der Adapter benennt den Schluessel je nach Reihe verschieden.
+                            var k = p.stunde || p.tag || p.monat;
+                            // Luecken tragen keinen Schluessel - sie gehoeren nicht ins Diagramm.
+                            if (!k) return;
+                            if (!reihen[k]) reihen[k] = { schluessel: k, kuehlen: 0, heizen: 0 };
+                            reihen[k][art] = Number(p.kwh) || 0;
+                        });
+                    } catch (e) { /* unbrauchbares JSON wird still uebergangen */ }
+                }
+                if (!--offen) b.verlaufFertig(reihen, fertig, bereich, null);
             });
-            return;
-        }
-
-        // Monat und Jahr kommen aus der vorbereiteten Reihe.
-        var geraet = ctx.prefix.split('.').pop();
-        var oid = (quelle || '0_userdata.0.Klima.Verlauf') + '.' + geraet + '.' + bereich;
-        vis.conn.getState(oid, function (err, zustand) {
-            if (err || !zustand || !zustand.val) return fertig(null, oid);
-            var liste;
-            try { liste = JSON.parse(zustand.val); } catch (e) { return fertig(null, oid); }
-            if (!Array.isArray(liste) || !liste.length) return fertig([], oid);
-            fertig(liste.map(function (e) {
-                return {
-                    beschriftung: b.verlaufBeschriftung(e.tag || e.monat || '', bereich),
-                    kuehlen: Number(e.kuehlen) || 0,
-                    heizen: Number(e.heizen) || 0
-                };
-            }), oid);
         });
     },
 
-    verlaufFertig: function (reihen, fertig, bereich) {
+    verlaufFertig: function (reihen, fertig, bereich, fehlendesFeld) {
         var b = vis.binds.faikout;
+        if (fehlendesFeld) return fertig(null, fehlendesFeld);
         var schluessel = Object.keys(reihen).sort();
         fertig(schluessel.map(function (k) {
             var e = reihen[k];
@@ -811,11 +803,12 @@ vis.binds.faikout = {
             b.fuss($wurzel, ctx, data);
 
             function laden() {
-                b.verlaufLesen(ctx, bereich, data.quelleOid, function (punkte, oid) {
+                b.verlaufLesen(ctx, bereich, function (punkte, fehlend) {
                     $fuss.find('.fk-v-zeitraum').text(BESCHRIFTUNG[bereich] || '');
                     if (punkte === null) {
-                        $flaeche.html('<div class="fk-fehler">Reihe <code>' + (oid || '?') +
-                            '</code> nicht gefunden. Das Skript „Klima_Energieverlauf" legt sie an.</div>');
+                        $flaeche.html('<div class="fk-fehler">Dieses Gerät hat keinen Datenpunkt ' +
+                            '<code>verbrauch.&lt;art&gt;.' + fehlend + '</code>. Er entsteht, sobald ' +
+                            'die Anlage Energiewerte meldet.</div>');
                         $fuss.find('.fk-v-summe').text('');
                         return;
                     }

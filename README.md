@@ -67,8 +67,9 @@ module's **Extra** settings makes it report immediately.
 
 ### 0.0.2
 - New VIS widget **Energy history**: bar chart switchable between day, month and year, with
-  cooling and heating shown separately. Hourly data comes from the adapter itself; the day and
-  month series are collected by a script into `0_userdata.0.Klima.Verlauf.<device>`.
+  cooling and heating shown separately.
+- Consumption now also covers the current and previous month, and keeps three series ready for
+  charting: `stundenJson` (48 hours), `tageJson` (62 days) and `monateJson` (24 months).
 
 ### 0.0.1
 - Initial version: own MQTT broker, dynamically created data points, writable controls.

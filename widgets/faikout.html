@@ -48,8 +48,7 @@
             'auswahl':      { 'en': 'Series selection', 'de': 'Reihenauswahl zeigen',   'ru': 'Выбор рядов' },
             'zeige_gesamt': { 'en': 'Total',            'de': 'Gesamt',                 'ru': 'Всего' },
             'zeige_kuehlen':{ 'en': 'Cooling',          'de': 'Kühlen',                 'ru': 'Охлаждение' },
-            'zeige_heizen': { 'en': 'Heating',          'de': 'Heizen',                 'ru': 'Отопление' },
-            'quelleOid':    { 'en': 'Series folder',    'de': 'Ordner der Reihen',      'ru': 'Папка рядов' }
+            'zeige_heizen': { 'en': 'Heating',          'de': 'Heizen',                 'ru': 'Отопление' }
         });
     }
 </script>
@@ -192,10 +191,8 @@
 <!--
     Zeigt den Energieverbrauch als Saeulen, umschaltbar zwischen Tag, Monat und Jahr.
 
-    Die Stundenwerte kommen aus dem Adapter selbst (verbrauch.<art>.stundenJson). Tages- und
-    Monatsreihen muessen ueber laengere Zeit gesammelt werden - das erledigt ein Skript und
-    legt sie unter 0_userdata.0.Klima.Verlauf.<Geraet>.{monat,jahr} ab. Der Ordner laesst sich
-    im Attribut „Ordner der Reihen" aendern.
+    Alle drei Reihen fuehrt der Adapter selbst: verbrauch.<art>.stundenJson, .tageJson und
+    .monateJson. Kuehlen und Heizen bleiben getrennt und lassen sich einzeln zuschalten.
 -->
 <script id="tplFaikoutVerlauf"
         type="text/ejs"
@@ -204,7 +201,7 @@
         data-vis-type="val"
         data-vis-name="Energieverlauf (Tag/Monat/Jahr)"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox"
-        data-vis-attrs0="group.verlauf;bereich/select,tag,monat,jahr;umschalter/checkbox;auswahl/checkbox;zeige_gesamt/checkbox;zeige_kuehlen/checkbox;zeige_heizen/checkbox;quelleOid">
+        data-vis-attrs0="group.verlauf;bereich/select,tag,monat,jahr;umschalter/checkbox;auswahl/checkbox;zeige_gesamt/checkbox;zeige_kuehlen/checkbox;zeige_heizen/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:420px;height:250px">
         <script type="text/javascript">
             vis.binds.faikout.verlauf('<%= this.data.attr('wid') %>', view, data, style);

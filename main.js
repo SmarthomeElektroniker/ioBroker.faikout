@@ -29,6 +29,22 @@ const VERBRAUCH_FELDER = [
     { id: 'letzteStunde', name: { en: 'Last full hour', de: 'Letzte volle Stunde' } },
     { id: 'heute', name: { en: 'Today', de: 'Heute' } },
     { id: 'gestern', name: { en: 'Yesterday', de: 'Gestern' } },
+    { id: 'dieserMonat', name: { en: 'This month', de: 'Dieser Monat' } },
+    { id: 'letzterMonat', name: { en: 'Last month', de: 'Letzter Monat' } },
+];
+
+/**
+ * Verlaufsreihen als JSON. Sie tragen die Diagramme im VIS-Baustein und werden hier gefuehrt,
+ * damit der Adapter ohne Fremdskript auskommt - andernfalls blieben Monats- und Jahresansicht
+ * bei jedem leer, der nichts weiter einrichtet.
+ */
+const VERBRAUCH_REIHEN = [
+    { id: 'stundenJson', quelle: 'ring',
+      name: { en: 'Last 48 hours (JSON)', de: 'Letzte 48 Stunden (JSON)' } },
+    { id: 'tageJson', quelle: 'ringTage',
+      name: { en: 'Last 62 days (JSON)', de: 'Letzte 62 Tage (JSON)' } },
+    { id: 'monateJson', quelle: 'ringMonate',
+      name: { en: 'Last 24 months (JSON)', de: 'Letzte 24 Monate (JSON)' } },
 ];
 
 class Faikout extends utils.Adapter {
@@ -38,7 +54,7 @@ class Faikout extends utils.Adapter {
         /**
          * Geraete, die sich gemeldet haben.
          * Schluessel ist die ioBroker-taugliche ID, Wert enthaelt den ECHTEN Geraetenamen -
-         * der enthaelt bei diesen Modulen ein Leerzeichen ("Daikin 1OG"), waehrend die
+         * der enthaelt bei diesen Modulen ein Leerzeichen ("Wohnzimmer AC"), waehrend die
          * Objekt-ID einen Unterstrich braucht. Kommandos muessen den echten Namen treffen,
          * sonst hoert das Geraet nicht zu.
          * @type {Map<string, {name:string, angelegt:Set<string>}>}
@@ -122,8 +138,8 @@ class Faikout extends utils.Adapter {
 
     /**
      * Zerlegt ein Topic in Art, Geraet und Unterpfad.
-     * `state/Daikin 1OG` -> {art:'state', geraet:'Daikin 1OG', unter:''}
-     * `info/Daikin 1OG/upgrade` -> {art:'info', geraet:'Daikin 1OG', unter:'upgrade'}
+     * `state/Wohnzimmer AC` -> {art:'state', geraet:'Wohnzimmer AC', unter:''}
+     * `info/Wohnzimmer AC/upgrade` -> {art:'info', geraet:'Wohnzimmer AC', unter:'upgrade'}
      */
     topicZerlegen(topic) {
         const teile = topic.split('/');
@@ -177,7 +193,7 @@ class Faikout extends utils.Adapter {
      */
     async klimaConfig(text) {
         const c = JSON.parse(text);
-        // Der Geraetename steckt im Verfuegbarkeits-Topic: "state/Daikin 1OG".
+        // Der Geraetename steckt im Verfuegbarkeits-Topic: "state/Wohnzimmer AC".
         const geraetName = String(c.avty_t || '').replace(/^state\//, '');
         if (!geraetName) return;
 
@@ -290,14 +306,13 @@ class Faikout extends utils.Adapter {
             for (const f of VERBRAUCH_FELDER) {
                 await this.zaehlerObjekt(`${basis}.${f.id}`, f.name, 'kWh', 'value.energy.consumed');
             }
-            await this.extendObject(`${basis}.stundenJson`, {
-                type: 'state',
-                common: {
-                    name: { en: 'Last 48 hours (JSON)', de: 'Letzte 48 Stunden (JSON)' },
-                    type: 'string', role: 'json', read: true, write: false,
-                },
-                native: {},
-            });
+            for (const r of VERBRAUCH_REIHEN) {
+                await this.extendObject(`${basis}.${r.id}`, {
+                    type: 'state',
+                    common: { name: r.name, type: 'string', role: 'json', read: true, write: false },
+                    native: {},
+                });
+            }
             g.angelegt.add(basis);
         }
 
@@ -306,7 +321,11 @@ class Faikout extends utils.Adapter {
             if (wert === null || wert === undefined) continue;
             await this.setState(`${basis}.${f.id}`, { val: wert, ack: true });
         }
-        await this.setState(`${basis}.stundenJson`, { val: JSON.stringify(werte.ring || []), ack: true });
+        for (const r of VERBRAUCH_REIHEN) {
+            await this.setState(`${basis}.${r.id}`, {
+                val: JSON.stringify(werte[r.quelle] || []), ack: true,
+            });
+        }
     }
 
     /**
