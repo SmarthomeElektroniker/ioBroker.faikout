@@ -89,6 +89,41 @@ describe('Verbrauchsrechnung', () => {
         expect(r.werte).to.equal(null);
     });
 
+    it('überlebt einen Zustand aus einer älteren Fassung ohne die neuen Ringe', () => {
+        // Genau so sah der gespeicherte Zustand in 0.0.1 aus. Fehlten ringTage/ringMonate,
+        // brach der Tageswechsel mit "Cannot read properties of undefined (reading 'push')".
+        let s = v.verarbeiten(null, 1000000, zeit(17, 10)).stand;
+        s = v.verarbeiten(s, 1000400, zeit(17, 23)).stand;
+        const alt = JSON.parse(JSON.stringify(s));
+        delete alt.ringTage;
+        delete alt.ringMonate;
+        delete alt.monat;
+        delete alt.basisMonat;
+        delete alt.letzterMonat;
+
+        const r = v.verarbeiten(alt, 1001000, zeit(18, 8));
+        expect(r.werte.gestern, 'der Tageswechsel läuft durch').to.equal(0.4);
+        expect(r.werte.ringTage, 'die Tagesreihe entsteht neu').to.be.an('array');
+        expect(r.werte.ringMonate, 'die Monatsreihe entsteht neu').to.be.an('array');
+    });
+
+    it('bucht den ersten gesehenen Monat nicht als Vormonat', () => {
+        // Aus 0.0.1 kam ein Zustand ohne Monatsfelder. Ohne Ausnahme wurde beim ersten
+        // Wert der volle Zaehlerstand (3783 kWh) als Verbrauch des Vormonats gebucht.
+        let s = v.verarbeiten(null, 3780000, zeit(17, 10)).stand;
+        const alt = JSON.parse(JSON.stringify(s));
+        delete alt.monat;
+        delete alt.basisMonat;
+        delete alt.letzterMonat;
+        delete alt.ringMonate;
+
+        const r = v.verarbeiten(alt, 3780500, zeit(17, 11));
+        expect(r.werte.letzterMonat, 'es gibt keinen Vormonat').to.equal(null);
+        // 0,5 statt 0: die Basis ist der zuletzt bekannte Stand, der Verbrauch seither zaehlt mit.
+        expect(r.werte.dieserMonat, 'der laufende Monat zählt ab dem letzten Stand').to.equal(0.5);
+        expect(r.stand.ringMonate, 'kein Phantom-Monat im Ring').to.be.empty;
+    });
+
     it('überlebt einen Neustart, wenn der Zustand gespeichert wurde', () => {
         let s = v.verarbeiten(null, 1000000, zeit(17, 10)).stand;
         s = v.verarbeiten(s, 1000400, zeit(17, 10)).stand;

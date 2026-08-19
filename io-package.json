@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -69,6 +69,19 @@
       }
     ],
     "news": {
+      "0.0.3": {
+        "en": "Fix: consumption crashed after updating from 0.0.1 (missing day/month rings)",
+        "de": "Fehlerbehebung: Verbrauch lief nach dem Update von 0.0.1 auf einen Fehler (fehlende Tages-/Monatsringe)",
+        "ru": "Исправление: расход давал сбой после обновления с 0.0.1",
+        "pt": "Correção: o consumo falhava após a atualização a partir de 0.0.1",
+        "nl": "Fix: verbruik liep vast na de update vanaf 0.0.1",
+        "fr": "Correctif : la consommation échouait après la mise à jour depuis 0.0.1",
+        "it": "Correzione: il consumo si interrompeva dopo l'aggiornamento da 0.0.1",
+        "es": "Corrección: el consumo fallaba tras actualizar desde 0.0.1",
+        "pl": "Poprawka: zużycie zawodziło po aktualizacji z 0.0.1",
+        "uk": "Виправлення: споживання давало збій після оновлення з 0.0.1",
+        "zh-cn": "修复：从 0.0.1 更新后能耗计算出错"
+      },
       "0.0.2": {
         "en": "New VIS widget: energy history, switchable between day, month and year",
         "de": "Neuer VIS-Baustein: Energieverlauf, umschaltbar zwischen Tag, Monat und Jahr"
