@@ -1,0 +1,243 @@
+<!--
+    ioBroker.faikout - Widgets fuer VIS 1.x
+
+    Die Kachel ist in einzeln platzierbare Bausteine zerlegt: Bogen, Betriebsart, Luefter,
+    Leistungsbegrenzung, Zusatzfunktionen, Messwerte-Block und Einzelwert. Dazu gibt es die
+    komplette Kachel als ein Stueck.
+
+    Jeder Baustein braucht nur EIN Attribut: das Geraeteobjekt (faikout.0.<Name>). Welche
+    Datenpunkte darunter liegen, findet das Widget selbst heraus - fehlt einer, sagt es das,
+    statt ein totes Bedienelement zu zeigen.
+-->
+
+<link rel="stylesheet" type="text/css" href="widgets/faikout/css/faikout.css"/>
+<script type="text/javascript" src="widgets/faikout/js/faikout.js"></script>
+
+<script type="text/javascript">
+    'use strict';
+    if (vis.editMode) {
+        $.extend(true, systemDictionary, {
+            'faikout_group_faikout': { 'en': 'Faikout', 'de': 'Faikout', 'ru': 'Faikout' },
+            'deviceOid':    { 'en': 'Device',            'de': 'Gerät',                  'ru': 'Устройство' },
+            'titel':        { 'en': 'Title',             'de': 'Überschrift',            'ru': 'Заголовок' },
+            'untertitel':   { 'en': 'Subtitle',          'de': 'Unterzeile',             'ru': 'Подзаголовок' },
+            'theme':        { 'en': 'Colour scheme',     'de': 'Farbschema',             'ru': 'Схема' },
+            'rahmen':       { 'en': 'Frame',             'de': 'Rahmen',                 'ru': 'Рамка' },
+            'kopf':         { 'en': 'Show header',       'de': 'Kopfzeile zeigen',       'ru': 'Заголовок' },
+            'schalter':     { 'en': 'On/off switch',     'de': 'Ein/Aus-Schalter',       'ru': 'Выключатель' },
+            'fuss':         { 'en': 'Show status line',  'de': 'Statuszeile zeigen',     'ru': 'Строка статуса' },
+            'etikett':      { 'en': 'Show label',        'de': 'Beschriftung zeigen',    'ru': 'Подпись' },
+            'symbole':      { 'en': 'Show icons',        'de': 'Symbole zeigen',         'ru': 'Иконки' },
+            'beschriftung': { 'en': 'Icons with text',   'de': 'Symbole mit Text',       'ru': 'Иконки с текстом' },
+            'ziehen':       { 'en': 'Drag on the arc',   'de': 'Am Bogen ziehen',        'ru': 'Тянуть по дуге' },
+            'messwert':     { 'en': 'Reading',           'de': 'Messwert',               'ru': 'Значение' },
+            'zusatz':       { 'en': 'All extra functions','de': 'Alle Zusatzfunktionen', 'ru': 'Доп. функции' },
+            'zeige_aussen':       { 'en': 'Outside',        'de': 'Außentemperatur',   'ru': 'Снаружи' },
+            'zeige_leistung':     { 'en': 'Power',          'de': 'Leistung',          'ru': 'Мощность' },
+            'zeige_heute':        { 'en': 'Energy today',   'de': 'Energie heute',     'ru': 'Энергия сегодня' },
+            'zeige_verdichter':   { 'en': 'Compressor',     'de': 'Verdichter',        'ru': 'Компрессор' },
+            'zeige_ventilator':   { 'en': 'Fan speed',      'de': 'Ventilator',        'ru': 'Вентилятор' },
+            'zeige_kaeltemittel': { 'en': 'Refrigerant',    'de': 'Kältemittel',       'ru': 'Хладагент' },
+            'zeige_raum':         { 'en': 'Room temp.',     'de': 'Raumtemperatur',    'ru': 'Комната' },
+            'zeige_feuchte':      { 'en': 'Humidity',       'de': 'Luftfeuchte',       'ru': 'Влажность' },
+            'zeige_energie':      { 'en': 'Energy total',   'de': 'Energie gesamt',    'ru': 'Энергия всего' },
+            'zeige_gestern':      { 'en': 'Yesterday',      'de': 'Gestern',           'ru': 'Вчера' },
+            'zeige_stunde':       { 'en': 'This hour',      'de': 'Diese Stunde',      'ru': 'Этот час' },
+            'bereich':      { 'en': 'Initial range',    'de': 'Zeitraum beim Start',    'ru': 'Период' },
+            'umschalter':   { 'en': 'Range switch',     'de': 'Umschalter zeigen',      'ru': 'Переключатель' },
+            'auswahl':      { 'en': 'Series selection', 'de': 'Reihenauswahl zeigen',   'ru': 'Выбор рядов' },
+            'zeige_gesamt': { 'en': 'Total',            'de': 'Gesamt',                 'ru': 'Всего' },
+            'zeige_kuehlen':{ 'en': 'Cooling',          'de': 'Kühlen',                 'ru': 'Охлаждение' },
+            'zeige_heizen': { 'en': 'Heating',          'de': 'Heizen',                 'ru': 'Отопление' },
+            'quelleOid':    { 'en': 'Series folder',    'de': 'Ordner der Reihen',      'ru': 'Папка рядов' }
+        });
+    }
+</script>
+
+<!-- ==================================================== Komplette Kachel -->
+<script id="tplFaikoutKachel"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="ctrl"
+        data-vis-name="Klima-Kachel (komplett)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;symbole/checkbox;ziehen/checkbox;zusatz/checkbox;beschriftung/checkbox"
+        data-vis-attrs0="group.messwerte;zeige_aussen/checkbox;zeige_leistung/checkbox;zeige_heute/checkbox;zeige_verdichter/checkbox;zeige_ventilator/checkbox;zeige_kaeltemittel/checkbox;zeige_raum/checkbox;zeige_feuchte/checkbox;zeige_energie/checkbox;zeige_gestern/checkbox;zeige_stunde/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:820px">
+        <script type="text/javascript">
+            vis.binds.faikout.kachel('<%= this.data.attr('wid') %>', view, data, style);
+        <\/script>
+    </div>
+</script>
+
+<!-- ==================================================== Bogen -->
+<script id="tplFaikoutBogen"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="ctrl"
+        data-vis-name="Sollwert-Bogen"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;ziehen/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:340px;height:350px">
+        <script type="text/javascript">
+            vis.binds.faikout.bogen('<%= this.data.attr('wid') %>', view, data, style);
+        <\/script>
+    </div>
+</script>
+
+<!-- ==================================================== Betriebsart -->
+<script id="tplFaikoutModusH"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="ctrl"
+        data-vis-name="Betriebsart (nebeneinander)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox;symbole/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:135px">
+        <script type="text/javascript">
+            vis.binds.faikout.modus('<%= this.data.attr('wid') %>', view, data, false);
+        <\/script>
+    </div>
+</script>
+
+<script id="tplFaikoutModusV"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="ctrl"
+        data-vis-name="Betriebsart (untereinander)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox;symbole/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:190px;height:265px">
+        <script type="text/javascript">
+            vis.binds.faikout.modus('<%= this.data.attr('wid') %>', view, data, true);
+        <\/script>
+    </div>
+</script>
+
+<!-- ==================================================== Luefterstufe -->
+<script id="tplFaikoutLuefterH"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="ctrl"
+        data-vis-name="Lüfterstufe (nebeneinander)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:420px;height:100px">
+        <script type="text/javascript">
+            vis.binds.faikout.luefter('<%= this.data.attr('wid') %>', view, data, false);
+        <\/script>
+    </div>
+</script>
+
+<script id="tplFaikoutLuefterV"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="ctrl"
+        data-vis-name="Lüfterstufe (untereinander)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:165px;height:345px">
+        <script type="text/javascript">
+            vis.binds.faikout.luefter('<%= this.data.attr('wid') %>', view, data, true);
+        <\/script>
+    </div>
+</script>
+
+<!-- ==================================================== Leistungsbegrenzung -->
+<script id="tplFaikoutLeistung"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="ctrl"
+        data-vis-name="Leistungsbegrenzung"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:280px;height:150px">
+        <script type="text/javascript">
+            vis.binds.faikout.leistung('<%= this.data.attr('wid') %>', view, data, style);
+        <\/script>
+    </div>
+</script>
+
+<!-- ==================================================== Zusatzfunktionen -->
+<script id="tplFaikoutZusatzH"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="ctrl"
+        data-vis-name="Zusatzfunktionen (nebeneinander)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox;beschriftung/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:300px;height:115px">
+        <script type="text/javascript">
+            vis.binds.faikout.zusatz('<%= this.data.attr('wid') %>', view, data, false);
+        <\/script>
+    </div>
+</script>
+
+<script id="tplFaikoutZusatzV"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="ctrl"
+        data-vis-name="Zusatzfunktionen (untereinander)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:230px;height:290px">
+        <script type="text/javascript">
+            vis.binds.faikout.zusatz('<%= this.data.attr('wid') %>', view, data, true);
+        <\/script>
+    </div>
+</script>
+
+<!-- ==================================================== Messwerte-Block -->
+<!-- ==================================================== Energieverlauf -->
+<!--
+    Zeigt den Energieverbrauch als Saeulen, umschaltbar zwischen Tag, Monat und Jahr.
+
+    Die Stundenwerte kommen aus dem Adapter selbst (verbrauch.<art>.stundenJson). Tages- und
+    Monatsreihen muessen ueber laengere Zeit gesammelt werden - das erledigt ein Skript und
+    legt sie unter 0_userdata.0.Klima.Verlauf.<Geraet>.{monat,jahr} ab. Der Ordner laesst sich
+    im Attribut „Ordner der Reihen" aendern.
+-->
+<script id="tplFaikoutVerlauf"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="val"
+        data-vis-name="Energieverlauf (Tag/Monat/Jahr)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox"
+        data-vis-attrs0="group.verlauf;bereich/select,tag,monat,jahr;umschalter/checkbox;auswahl/checkbox;zeige_gesamt/checkbox;zeige_kuehlen/checkbox;zeige_heizen/checkbox;quelleOid">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:420px;height:250px">
+        <script type="text/javascript">
+            vis.binds.faikout.verlauf('<%= this.data.attr('wid') %>', view, data, style);
+        <\/script>
+    </div>
+</script>
+
+<script id="tplFaikoutMesswerte"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="val"
+        data-vis-name="Messwerte (Block, auswählbar)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,hell,dunkel;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox"
+        data-vis-attrs0="group.messwerte;zeige_aussen/checkbox;zeige_leistung/checkbox;zeige_heute/checkbox;zeige_verdichter/checkbox;zeige_ventilator/checkbox;zeige_kaeltemittel/checkbox;zeige_raum/checkbox;zeige_feuchte/checkbox;zeige_energie/checkbox;zeige_gestern/checkbox;zeige_stunde/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:160px">
+        <script type="text/javascript">
+            vis.binds.faikout.messwerte('<%= this.data.attr('wid') %>', view, data, style);
+        <\/script>
+    </div>
+</script>
+
+<!-- ==================================================== Einzelwert -->
+<script id="tplFaikoutWert"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="val"
+        data-vis-name="Messwert (einzeln)"
+        data-vis-attrs="deviceOid/id;messwert/select,aussen,leistung,heute,verdichter,ventilator,kaeltemittel,raum,feuchte,energie,gestern,stunde;titel;theme/select,hell,dunkel;rahmen/checkbox;etikett/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:150px;height:100px">
+        <script type="text/javascript">
+            vis.binds.faikout.einzelwert('<%= this.data.attr('wid') %>', view, data, style);
+        <\/script>
+    </div>
+</script>

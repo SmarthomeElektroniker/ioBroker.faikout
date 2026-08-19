@@ -1,0 +1,137 @@
+{
+  "common": {
+    "name": "faikout",
+    "version": "0.0.2",
+    "titleLang": {
+      "en": "Faikout",
+      "de": "Faikout",
+      "ru": "Faikout",
+      "pt": "Faikout",
+      "nl": "Faikout",
+      "fr": "Faikout",
+      "it": "Faikout",
+      "es": "Faikout",
+      "pl": "Faikout",
+      "uk": "Faikout",
+      "zh-cn": "Faikout"
+    },
+    "desc": {
+      "en": "Connect Daikin air conditioners with a faikout module locally via MQTT.",
+      "de": "Verbindet Daikin-Klimaanlagen mit faikout-Modul lokal über MQTT.",
+      "ru": "Локальное подключение кондиционеров Daikin с модулем faikout через MQTT.",
+      "pt": "Liga ar condicionados Daikin com módulo faikout localmente via MQTT.",
+      "nl": "Verbindt Daikin-airco's met faikout-module lokaal via MQTT.",
+      "fr": "Connecte localement les climatiseurs Daikin équipés d'un module faikout via MQTT.",
+      "it": "Collega localmente i condizionatori Daikin con modulo faikout tramite MQTT.",
+      "es": "Conecta localmente aires acondicionados Daikin con módulo faikout mediante MQTT.",
+      "pl": "Łączy lokalnie klimatyzatory Daikin z modułem faikout przez MQTT.",
+      "uk": "Локальне підключення кондиціонерів Daikin з модулем faikout через MQTT.",
+      "zh-cn": "通过 MQTT 在本地连接带 faikout 模块的大金空调。"
+    },
+    "authors": [
+      "Immanuel"
+    ],
+    "keywords": [
+      "faikout",
+      "faikin",
+      "daikin",
+      "mqtt",
+      "climate"
+    ],
+    "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+    },
+    "platform": "Javascript/Node.js",
+    "main": "main.js",
+    "icon": "faikout.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/SmarthomeElektroniker/ioBroker.faikout/main/admin/faikout.png",
+    "readme": "https://github.com/SmarthomeElektroniker/ioBroker.faikout/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 2,
+    "mode": "daemon",
+    "type": "climate-control",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "push",
+    "adminUI": {
+      "config": "json"
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=6.0.11"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.6.20"
+      }
+    ],
+    "news": {
+      "0.0.2": {
+        "en": "New VIS widget: energy history, switchable between day, month and year",
+        "de": "Neuer VIS-Baustein: Energieverlauf, umschaltbar zwischen Tag, Monat und Jahr"
+      },
+      "0.0.1": {
+        "en": "Initial version: own MQTT broker, dynamic data points, writable controls.",
+        "de": "Erste Version: eigener MQTT-Broker, dynamische Datenpunkte, schreibbare Steuerung.",
+        "ru": "Первая версия: собственный MQTT-брокер, динамические точки данных, управление.",
+        "pt": "Primeira versão: broker MQTT próprio, pontos de dados dinâmicos, controlo gravável.",
+        "nl": "Eerste versie: eigen MQTT-broker, dynamische datapunten, schrijfbare besturing.",
+        "fr": "Première version : courtier MQTT intégré, points de données dynamiques, commandes inscriptibles.",
+        "it": "Prima versione: broker MQTT proprio, punti dati dinamici, controlli scrivibili.",
+        "es": "Primera versión: broker MQTT propio, puntos de datos dinámicos, controles escribibles.",
+        "pl": "Pierwsza wersja: własny broker MQTT, dynamiczne punkty danych, sterowanie zapisywalne.",
+        "uk": "Перша версія: власний MQTT-брокер, динамічні точки даних, керування.",
+        "zh-cn": "首个版本：自带 MQTT 代理、动态数据点、可写控制。"
+      }
+    },
+    "restartAdapters": [
+      "vis"
+    ]
+  },
+  "native": {
+    "port": 1888,
+    "user": "",
+    "pass": "",
+    "historyAnmelden": true,
+    "historyInstanz": "history.0"
+  },
+  "encryptedNative": [
+    "pass"
+  ],
+  "protectedNative": [
+    "pass"
+  ],
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": {
+          "en": "Information",
+          "de": "Informationen"
+        }
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": {
+          "en": "At least one faikout module connected",
+          "de": "Mindestens ein faikout-Modul verbunden"
+        },
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "i18n": true,
+  "type": "tabs",
+  "items": {
+    "tabBroker": {
+      "type": "panel",
+      "label": "tabBroker",
+      "items": {
+        "hinweis": {
+          "type": "header",
+          "size": 4,
+          "text": "headerBroker",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        },
+        "erklaerung": {
+          "type": "staticText",
+          "text": "textBroker",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        },
+        "port": {
+          "type": "number",
+          "label": "labelPort",
+          "help": "helpPort",
+          "min": 1,
+          "max": 65535,
+          "default": 1888,
+          "xs": 12,
+          "sm": 12,
+          "md": 6,
+          "lg": 4,
+          "xl": 4
+        },
+        "_leer": {
+          "type": "staticText",
+          "text": "",
+          "xs": 12,
+          "sm": 12,
+          "md": 6,
+          "lg": 8,
+          "xl": 8
+        },
+        "user": {
+          "type": "text",
+          "label": "labelUser",
+          "help": "helpUser",
+          "xs": 12,
+          "sm": 12,
+          "md": 6,
+          "lg": 4,
+          "xl": 4
+        },
+        "pass": {
+          "type": "password",
+          "label": "labelPass",
+          "help": "helpPass",
+          "visible": "!!data.user",
+          "xs": 12,
+          "sm": 12,
+          "md": 6,
+          "lg": 4,
+          "xl": 4
+        }
+      }
+    },
+    "tabVerbrauch": {
+      "type": "panel",
+      "label": "tabVerbrauch",
+      "items": {
+        "hVerbrauch": {
+          "type": "header",
+          "size": 4,
+          "text": "headerVerbrauch",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        },
+        "tVerbrauch": {
+          "type": "staticText",
+          "text": "textVerbrauch",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        },
+        "historyAnmelden": {
+          "type": "checkbox",
+          "label": "labelHistoryAnmelden",
+          "help": "helpHistoryAnmelden",
+          "default": true,
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 6,
+          "xl": 6
+        },
+        "historyInstanz": {
+          "type": "instance",
+          "adapter": "history",
+          "allowDeactivate": false,
+          "label": "labelHistoryInstanz",
+          "help": "helpHistoryInstanz",
+          "default": "history.0",
+          "visible": "!!data.historyAnmelden",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 6,
+          "xl": 6
+        }
+      }
+    },
+    "tabHilfe": {
+      "type": "panel",
+      "label": "tabHilfe",
+      "items": {
+        "h1": {
+          "type": "header",
+          "size": 4,
+          "text": "headerSetup",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        },
+        "t1": {
+          "type": "staticText",
+          "text": "textSetup",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        },
+        "h2": {
+          "type": "header",
+          "size": 5,
+          "text": "headerDocker",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        },
+        "t2": {
+          "type": "staticText",
+          "text": "textDocker",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        },
+        "h3": {
+          "type": "header",
+          "size": 5,
+          "text": "headerLive",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        },
+        "t3": {
+          "type": "staticText",
+          "text": "textLive",
+          "xs": 12,
+          "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12
+        }
+      }
+    }
+  }
+}

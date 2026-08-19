@@ -1,0 +1,233 @@
+/*
+ * Bausteine der Klima-Kachel fuer VIS 1.x
+ *
+ * Jedes Widget bringt seinen eigenen Rahmen mit und ist einzeln platzierbar. Alle Farben
+ * kommen aus CSS-Variablen; das Attribut "theme" schaltet zwischen hell und dunkel um.
+ * Der Akzent folgt der Betriebsart, der Bogen ist eine Temperaturskala von kalt nach heiss.
+ */
+
+.fk {
+    --fk-flaeche:    #ffffff;
+    --fk-flaeche-2:  #f4f6f9;
+    --fk-rand:       #d6dce5;
+    --fk-rand-stark: #b9c3d0;
+    --fk-text:       #161d28;
+    --fk-leise:      #5b6878;
+    --fk-still:      #8593a4;
+    --fk-akzent:     #1e86c4;
+    --fk-gut:        #2e7d52;
+    --fk-warn:       #b4761b;
+
+    /* Temperaturskala 16 bis 29 Grad */
+    --fk-t0: #2e6fbf; --fk-t1: #4fa9e0; --fk-t2: #7fbf8e;
+    --fk-t3: #d9be55; --fk-t4: #de8438; --fk-t5: #c4402a;
+
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--fk-flaeche);
+    color: var(--fk-text);
+    border: 1px solid var(--fk-rand);
+    border-radius: 14px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+}
+.fk * { box-sizing: border-box; }
+
+.fk.fk-dunkel {
+    --fk-flaeche:    #171e27;
+    --fk-flaeche-2:  #1e2733;
+    --fk-rand:       #2a3542;
+    --fk-rand-stark: #3b4959;
+    --fk-text:       #e8edf3;
+    --fk-leise:      #9faebf;
+    --fk-still:      #6f8093;
+    --fk-gut:        #56c08a;
+    --fk-warn:       #e0a84a;
+    --fk-t0: #4a8fe0; --fk-t1: #63beee; --fk-t2: #8fd09c;
+    --fk-t3: #e7d06a; --fk-t4: #f0954b; --fk-t5: #e2543a;
+}
+/* Ohne Rahmen - wenn das Widget in eine vorhandene Flaeche eingesetzt wird */
+.fk.fk-blank { border: none; border-radius: 0; background: transparent; }
+
+.fk-fehler { padding: 14px; color: var(--fk-warn); font-size: 13px; }
+
+/* ---------------------------------------------------------------- Kopf */
+.fk-kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px 0; flex: none; }
+.fk-name { font-weight: 600; font-size: 15px; letter-spacing: -.01em; }
+.fk-ort { font-size: 11px; color: var(--fk-still); letter-spacing: .05em; }
+
+.fk-schalter {
+    position: relative; width: 48px; height: 27px; border-radius: 999px; flex: none;
+    border: 1px solid var(--fk-rand-stark); background: var(--fk-flaeche-2);
+    cursor: pointer; padding: 0; transition: background .2s, border-color .2s;
+}
+.fk-schalter::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 21px; height: 21px;
+    border-radius: 50%; background: var(--fk-still);
+    transition: transform .22s cubic-bezier(.4,1.2,.5,1), background .22s;
+}
+.fk-schalter.fk-an { border-color: var(--fk-akzent); }
+.fk-schalter.fk-an::after { transform: translateX(21px); background: var(--fk-akzent); }
+.fk-schalter:focus-visible { outline: 2px solid var(--fk-akzent); outline-offset: 2px; }
+
+.fk-streifen { height: 3px; flex: none; background: var(--fk-akzent); transition: background .35s ease; }
+.fk.fk-aus .fk-streifen { background: var(--fk-rand-stark); }
+
+/* ---------------------------------------------------------------- Bogen */
+.fk-instrument { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 12px 0; flex: 1 1 auto; min-height: 0; }
+.fk-bogen { position: relative; width: 100%; max-width: 320px; aspect-ratio: 320 / 258; touch-action: none; }
+.fk-bogen svg { display: block; width: 100%; height: 100%; overflow: visible; }
+/* KEIN stroke in CSS: das wuerde das per-Widget gesetzte Verlaufsattribut schlagen
+   (CSS gewinnt gegen Praesentationsattribute) und der Bogen bliebe farblos. */
+.fk-spur { fill: none; stroke-width: 17; stroke-linecap: round; }
+.fk-skala { fill: none; stroke-width: 17; stroke-linecap: round; opacity: .2; }
+.fk-fuellung { fill: none; stroke-width: 17; stroke-linecap: round; transition: stroke-dashoffset .35s cubic-bezier(.3,.8,.4,1), opacity .3s; }
+.fk-bogen.fk-zieht .fk-fuellung { transition: none; }
+.fk.fk-aus .fk-fuellung { opacity: .3; }
+.fk.fk-aus .fk-skala { opacity: .1; }
+
+.fk-treffer { fill: none; stroke: transparent; stroke-width: 46; cursor: pointer; }
+.fk-griff { pointer-events: none; transition: transform .35s cubic-bezier(.3,.8,.4,1); }
+.fk-bogen.fk-zieht .fk-griff { transition: none; }
+.fk-griff circle { fill: var(--fk-flaeche); stroke: var(--fk-akzent); stroke-width: 4.5; }
+.fk-griff .fk-kern { fill: var(--fk-akzent); stroke: none; }
+.fk-raummarke { fill: none; stroke: var(--fk-text); stroke-width: 2.5; stroke-linecap: round; opacity: .6; }
+
+.fk-ablesung { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 4%; pointer-events: none; }
+.fk-soll { display: flex; align-items: flex-start; justify-content: center; gap: 3px; }
+.fk-soll-zahl { font-size: 56px; font-weight: 300; letter-spacing: -.04em; line-height: .92; font-variant-numeric: tabular-nums; }
+.fk-soll-einheit { font-size: 25px; font-weight: 500; color: var(--fk-leise); margin-top: 6px; }
+.fk-soll-etikett { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--fk-still); margin-top: 5px; }
+.fk-ist { display: flex; align-items: center; gap: 18px; margin-top: 16px; font-size: 18px; color: var(--fk-leise); font-variant-numeric: tabular-nums; }
+.fk-ist span { display: inline-flex; align-items: baseline; gap: 5px; }
+.fk-ist b { font-weight: 600; color: var(--fk-text); font-size: 21px; }
+.fk-ist svg { width: 17px; height: 17px; opacity: .6; align-self: center; }
+
+.fk-pm-reihe { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: -34px; padding-bottom: 10px; position: relative; z-index: 1; flex: none; }
+.fk-pm {
+    width: 76px; height: 40px; border-radius: 12px; border: 1px solid var(--fk-rand-stark);
+    background: var(--fk-flaeche-2); color: var(--fk-text); font-size: 20px; cursor: pointer;
+    display: grid; place-items: center; padding: 0;
+    transition: border-color .15s, background .15s, color .15s, transform .1s;
+}
+/* Waermer/kaelter statt Akzentfarbe: die Taste zeigt die Richtung, nicht die Betriebsart.
+   Sonst leuchtete im Heizbetrieb auch die Minus-Taste bernsteinfarben. */
+.fk-pm-plus:hover  { border-color: var(--fk-t5); color: var(--fk-t5); background: color-mix(in srgb, var(--fk-t5) 12%, var(--fk-flaeche-2)); }
+.fk-pm-minus:hover { border-color: var(--fk-t0); color: var(--fk-t0); background: color-mix(in srgb, var(--fk-t0) 12%, var(--fk-flaeche-2)); }
+.fk-pm:active { transform: scale(.94); }
+.fk-pm-plus:focus-visible  { outline: 2px solid var(--fk-t5); outline-offset: 2px; }
+.fk-pm-minus:focus-visible { outline: 2px solid var(--fk-t0); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- Auswahlreihen */
+.fk-gruppe { padding: 10px 14px; flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.fk-gruppe-etikett { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--fk-still); margin-bottom: 8px; flex: none; }
+.fk-pillen { display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; overflow: auto; }
+.fk-pillen.fk-senkrecht { flex-direction: column; flex-wrap: nowrap; }
+.fk-pillen.fk-senkrecht .fk-pille { width: 100%; justify-content: flex-start; }
+
+.fk-pille {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--fk-rand); background: var(--fk-flaeche-2); color: var(--fk-leise);
+    border-radius: 999px; padding: 6px 13px 6px 10px; font-size: 12.5px; cursor: pointer;
+    font-family: inherit; transition: border-color .15s, background .15s, color .15s;
+}
+.fk-pille svg { width: 15px; height: 15px; flex: none; }
+.fk-pille:hover { border-color: var(--fk-rand-stark); color: var(--fk-text); }
+.fk-pille.fk-gewaehlt { border-color: var(--fk-akzent); color: var(--fk-akzent); font-weight: 600; background: color-mix(in srgb, var(--fk-akzent) 12%, transparent); }
+.fk-pille:focus-visible { outline: 2px solid var(--fk-akzent); outline-offset: 2px; }
+.fk-pille.fk-nur-text { padding: 6px 14px; min-width: 42px; justify-content: center; }
+.fk-pillen.fk-senkrecht .fk-pille.fk-nur-text { justify-content: flex-start; }
+
+/* Zusatzfunktionen als reine Symbolschalter - der Name steht im Tooltip. Groesseres
+   Symbol und rundes Feld, damit sie sich klar von den Auswahlreihen unterscheiden. */
+.fk-pille.fk-nur-icon { padding: 0; width: 42px; height: 42px; border-radius: 50%; justify-content: center; gap: 0; }
+.fk-pille.fk-nur-icon svg { width: 20px; height: 20px; }
+
+/* ---------------------------------------------------------------- Leistungsbegrenzung */
+.fk-leistung { display: flex; flex-direction: column; gap: 8px; }
+.fk-leistung-wert { font-size: 32px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: 1.05; text-align: center; }
+.fk-leistung-wert small { font-size: 15px; font-weight: 500; color: var(--fk-leise); margin-left: 2px; }
+.fk-leistung-skala { display: flex; justify-content: space-between; font-size: 10px; color: var(--fk-still); font-variant-numeric: tabular-nums; }
+
+.fk-schieber { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 999px; background: var(--fk-rand); outline: none; margin: 0; }
+.fk-schieber::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--fk-flaeche); border: 4px solid var(--fk-akzent); cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+.fk-schieber::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--fk-flaeche); border: 4px solid var(--fk-akzent); cursor: pointer;
+}
+.fk-schieber:focus-visible { outline: 2px solid var(--fk-akzent); outline-offset: 4px; }
+
+/* ---------------------------------------------------------------- Messwerte */
+.fk-messwerte { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1px; background: var(--fk-rand); flex: 1 1 auto; align-content: start; overflow: auto; }
+.fk-mw { background: var(--fk-flaeche); padding: 10px 12px; text-align: center; }
+.fk-mw-name { font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--fk-still); white-space: nowrap; }
+.fk-mw-wert { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.fk-mw-wert small { font-size: 11px; font-weight: 500; color: var(--fk-leise); margin-left: 1px; }
+
+/* Einzelwert als eigenes Element - groesser, weil er alleine steht */
+.fk-einzel { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 10px 12px; text-align: center; }
+.fk-einzel-name { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--fk-still); }
+.fk-einzel-wert { font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: 1.1; margin-top: 3px; }
+.fk-einzel-wert small { font-size: 14px; font-weight: 500; color: var(--fk-leise); margin-left: 2px; }
+
+/* ---------------------------------------------------------------- Fuss */
+.fk-fuss { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 16px; border-top: 1px solid var(--fk-rand); background: var(--fk-flaeche-2); font-size: 10.5px; color: var(--fk-still); flex: none; }
+.fk-punkt { display: inline-flex; align-items: center; gap: 6px; }
+.fk-punkt::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--fk-gut); }
+.fk-punkt.fk-weg::before { background: var(--fk-still); }
+.fk-status.fk-wartet { color: var(--fk-warn); }
+
+@media (prefers-reduced-motion: reduce) { .fk * { transition: none !important; } }
+
+/* ---------------------------------------------------------------- Energieverlauf */
+
+.fk-verlauf { padding: 0 12px 10px; }
+
+.fk-v-schalter {
+    display: inline-flex; gap: 3px; padding: 3px;
+    background: rgba(0, 0, 0, .06); border-radius: 7px; margin-bottom: 6px;
+}
+.fk-dunkel .fk-v-schalter { background: rgba(255, 255, 255, .06); }
+.fk-v-schalter button {
+    border: 0; background: transparent; color: inherit; opacity: .6;
+    font: inherit; font-size: 12px; padding: 4px 11px;
+    border-radius: 5px; cursor: pointer;
+}
+.fk-v-schalter button:hover { opacity: 1; }
+.fk-v-schalter button[aria-pressed="true"] {
+    background: rgba(0, 0, 0, .12); opacity: 1; font-weight: 600;
+}
+.fk-dunkel .fk-v-schalter button[aria-pressed="true"] { background: rgba(255, 255, 255, .14); }
+
+.fk-v-arten { display: flex; gap: 13px; margin: 2px 0 6px; }
+.fk-v-arten label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; opacity: .65; cursor: pointer;
+}
+.fk-v-arten label:hover { opacity: 1; }
+.fk-v-arten input { margin: 0; cursor: pointer; accent-color: var(--fk-akzent, #1e86c4); }
+.fk-v-punkt { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+.fk-v-flaeche { position: relative; }
+.fk-verlauf-svg { display: block; width: 100%; height: auto; }
+/* Die Achsen sollen sich unterordnen - die Saeulen tragen die Aussage. */
+.fk-v-achse text { fill: currentColor; opacity: .5; font-size: 9px; }
+.fk-v-raster line { stroke: currentColor; opacity: .12; stroke-width: 1; }
+.fk-v-balken rect { transition: opacity .1s; }
+.fk-v-balken rect:hover { opacity: .75; }
+
+.fk-v-leer { padding: 22px 0; text-align: center; font-size: 12px; opacity: .5; }
+
+.fk-v-fuss {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 6px; font-size: 12px; opacity: .65;
+}
+.fk-v-fuss b { font-weight: 600; opacity: 1; font-size: 13px; }
