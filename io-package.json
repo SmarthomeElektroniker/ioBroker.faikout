@@ -80,58 +80,6 @@
         "pl": "Spełnia wymagania repozytorium ioBroker",
         "uk": "Відповідає вимогам репозиторію ioBroker",
         "zh-cn": "满足 ioBroker 仓库的收录要求"
-      },
-      "0.0.4": {
-        "en": "Fix: admin rejected the configuration (\"invalid jsonConfig\")",
-        "de": "Fehlerbehebung: Admin verwarf die Konfiguration (\"invalid jsonConfig\")",
-        "ru": "Исправление: admin отклонял конфигурацию",
-        "pt": "Correção: o admin rejeitava a configuração",
-        "nl": "Fix: admin weigerde de configuratie",
-        "fr": "Correctif : l'admin rejetait la configuration",
-        "it": "Correzione: admin rifiutava la configurazione",
-        "es": "Corrección: admin rechazaba la configuración",
-        "pl": "Poprawka: admin odrzucał konfigurację",
-        "uk": "Виправлення: admin відхиляв конфігурацію",
-        "zh-cn": "修复：admin 拒绝了配置"
-      },
-      "0.0.3": {
-        "en": "Fix: consumption crashed after updating from 0.0.1 (missing day/month rings)",
-        "de": "Fehlerbehebung: Verbrauch lief nach dem Update von 0.0.1 auf einen Fehler (fehlende Tages-/Monatsringe)",
-        "ru": "Исправление: расход давал сбой после обновления с 0.0.1",
-        "pt": "Correção: o consumo falhava após a atualização a partir de 0.0.1",
-        "nl": "Fix: verbruik liep vast na de update vanaf 0.0.1",
-        "fr": "Correctif : la consommation échouait après la mise à jour depuis 0.0.1",
-        "it": "Correzione: il consumo si interrompeva dopo l'aggiornamento da 0.0.1",
-        "es": "Corrección: el consumo fallaba tras actualizar desde 0.0.1",
-        "pl": "Poprawka: zużycie zawodziło po aktualizacji z 0.0.1",
-        "uk": "Виправлення: споживання давало збій після оновлення з 0.0.1",
-        "zh-cn": "修复：从 0.0.1 更新后能耗计算出错"
-      },
-      "0.0.2": {
-        "en": "New VIS widget: energy history, switchable between day, month and year",
-        "de": "Neuer VIS-Baustein: Energieverlauf, umschaltbar zwischen Tag, Monat und Jahr",
-        "ru": "Отображение энергопотребления как VIS-виджета, месячные значения в адаптере",
-        "pt": "Consumo de energia como widget VIS, valores mensais no adaptador",
-        "nl": "Energieverloop als VIS-widget, maandwaarden in de adapter",
-        "fr": "Historique d'énergie comme widget VIS, valeurs mensuelles dans l'adaptateur",
-        "it": "Andamento energetico come widget VIS, valori mensili nell'adapter",
-        "es": "Histórico de energía como widget VIS, valores mensuales en el adaptador",
-        "pl": "Przebieg energii jako widget VIS, wartości miesięczne w adapterze",
-        "uk": "Графік енергоспоживання як VIS-віджет, місячні значення в адаптері",
-        "zh-cn": "能耗曲线 VIS 控件，适配器内月度数值"
-      },
-      "0.0.1": {
-        "en": "Initial version: own MQTT broker, dynamic data points, writable controls.",
-        "de": "Erste Version: eigener MQTT-Broker, dynamische Datenpunkte, schreibbare Steuerung.",
-        "ru": "Первая версия: собственный MQTT-брокер, динамические точки данных, управление.",
-        "pt": "Primeira versão: broker MQTT próprio, pontos de dados dinâmicos, controlo gravável.",
-        "nl": "Eerste versie: eigen MQTT-broker, dynamische datapunten, schrijfbare besturing.",
-        "fr": "Première version : courtier MQTT intégré, points de données dynamiques, commandes inscriptibles.",
-        "it": "Prima versione: broker MQTT proprio, punti dati dinamici, controlli scrivibili.",
-        "es": "Primera versión: broker MQTT propio, puntos de datos dinámicos, controles escribibles.",
-        "pl": "Pierwsza wersja: własny broker MQTT, dynamiczne punkty danych, sterowanie zapisywalne.",
-        "uk": "Перша версія: власний MQTT-брокер, динамічні точки даних, керування.",
-        "zh-cn": "首个版本：自带 MQTT 代理、动态数据点、可写控制。"
       }
     },
     "restartAdapters": [
