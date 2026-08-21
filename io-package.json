@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -69,6 +69,19 @@
       }
     ],
     "news": {
+      "0.0.4": {
+        "en": "Fix: admin rejected the configuration (\"invalid jsonConfig\")",
+        "de": "Fehlerbehebung: Admin verwarf die Konfiguration (\"invalid jsonConfig\")",
+        "ru": "Исправление: admin отклонял конфигурацию",
+        "pt": "Correção: o admin rejeitava a configuração",
+        "nl": "Fix: admin weigerde de configuratie",
+        "fr": "Correctif : l'admin rejetait la configuration",
+        "it": "Correzione: admin rifiutava la configurazione",
+        "es": "Corrección: admin rechazaba la configuración",
+        "pl": "Poprawka: admin odrzucał konfigurację",
+        "uk": "Виправлення: admin відхиляв конфігурацію",
+        "zh-cn": "修复：admin 拒绝了配置"
+      },
       "0.0.3": {
         "en": "Fix: consumption crashed after updating from 0.0.1 (missing day/month rings)",
         "de": "Fehlerbehebung: Verbrauch lief nach dem Update von 0.0.1 auf einen Fehler (fehlende Tages-/Monatsringe)",

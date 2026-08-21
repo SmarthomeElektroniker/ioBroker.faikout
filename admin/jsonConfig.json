@@ -107,11 +107,11 @@
                 "historyInstanz": {
                     "type": "instance",
                     "adapter": "history",
+                    "hidden": "!data.historyAnmelden",
                     "allowDeactivate": false,
                     "label": "labelHistoryInstanz",
                     "help": "helpHistoryInstanz",
                     "default": "history.0",
-                    "visible": "!!data.historyAnmelden",
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
