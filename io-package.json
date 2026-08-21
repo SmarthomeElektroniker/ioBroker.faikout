@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.6": {
+        "en": "Released through GitHub Actions with npm provenance",
+        "de": "Veroeffentlichung ueber GitHub Actions mit npm-Provenance",
+        "ru": "Публикация через GitHub Actions с npm provenance",
+        "pt": "Publicado via GitHub Actions com proveniência npm",
+        "nl": "Gepubliceerd via GitHub Actions met npm-provenance",
+        "fr": "Publié via GitHub Actions avec provenance npm",
+        "it": "Pubblicato tramite GitHub Actions con provenance npm",
+        "es": "Publicado mediante GitHub Actions con proveniencia npm",
+        "pl": "Opublikowano przez GitHub Actions z npm provenance",
+        "uk": "Опубліковано через GitHub Actions з npm provenance",
+        "zh-cn": "通过 GitHub Actions 发布并附带 npm 来源证明"
+      },
       "0.0.5": {
         "en": "Meet the ioBroker repository requirements",
         "de": "Anforderungen des ioBroker-Repositorys erfuellt",

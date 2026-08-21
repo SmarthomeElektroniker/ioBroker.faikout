@@ -65,6 +65,10 @@ module's **Extra** settings makes it report immediately.
 
 ## Changelog
 
+### 0.0.6
+- Released through GitHub Actions with npm provenance (trusted publishing). No functional
+  changes; 0.0.5 was published manually and therefore carries no provenance attestation.
+
 ### 0.0.5
 - Meet the ioBroker repository requirements: updated dev dependencies, removed the deprecated
   `common.main`, fixed responsive column widths, and translated the admin texts into the nine
