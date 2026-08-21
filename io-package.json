@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -43,7 +43,6 @@
       "license": "MIT"
     },
     "platform": "Javascript/Node.js",
-    "main": "main.js",
     "icon": "faikout.png",
     "enabled": true,
     "extIcon": "https://raw.githubusercontent.com/SmarthomeElektroniker/ioBroker.faikout/main/admin/faikout.png",
@@ -69,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.5": {
+        "en": "Meet the ioBroker repository requirements",
+        "de": "Anforderungen des ioBroker-Repositorys erfuellt",
+        "ru": "Соответствие требованиям репозитория ioBroker",
+        "pt": "Cumpre os requisitos do repositório ioBroker",
+        "nl": "Voldoet aan de eisen van het ioBroker-repository",
+        "fr": "Conforme aux exigences du dépôt ioBroker",
+        "it": "Conforme ai requisiti del repository ioBroker",
+        "es": "Cumple los requisitos del repositorio ioBroker",
+        "pl": "Spełnia wymagania repozytorium ioBroker",
+        "uk": "Відповідає вимогам репозиторію ioBroker",
+        "zh-cn": "满足 ioBroker 仓库的收录要求"
+      },
       "0.0.4": {
         "en": "Fix: admin rejected the configuration (\"invalid jsonConfig\")",
         "de": "Fehlerbehebung: Admin verwarf die Konfiguration (\"invalid jsonConfig\")",
@@ -97,7 +109,16 @@
       },
       "0.0.2": {
         "en": "New VIS widget: energy history, switchable between day, month and year",
-        "de": "Neuer VIS-Baustein: Energieverlauf, umschaltbar zwischen Tag, Monat und Jahr"
+        "de": "Neuer VIS-Baustein: Energieverlauf, umschaltbar zwischen Tag, Monat und Jahr",
+        "ru": "Отображение энергопотребления как VIS-виджета, месячные значения в адаптере",
+        "pt": "Consumo de energia como widget VIS, valores mensais no adaptador",
+        "nl": "Energieverloop als VIS-widget, maandwaarden in de adapter",
+        "fr": "Historique d'énergie comme widget VIS, valeurs mensuelles dans l'adaptateur",
+        "it": "Andamento energetico come widget VIS, valori mensili nell'adapter",
+        "es": "Histórico de energía como widget VIS, valores mensuales en el adaptador",
+        "pl": "Przebieg energii jako widget VIS, wartości miesięczne w adapterze",
+        "uk": "Графік енергоспоживання як VIS-віджет, місячні значення в адаптері",
+        "zh-cn": "能耗曲线 VIS 控件，适配器内月度数值"
       },
       "0.0.1": {
         "en": "Initial version: own MQTT broker, dynamic data points, writable controls.",
@@ -114,7 +135,8 @@
       }
     },
     "restartAdapters": [
-      "vis"
+      "vis",
+      "vis-2"
     ]
   },
   "native": {

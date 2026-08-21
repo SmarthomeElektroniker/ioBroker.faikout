@@ -65,6 +65,24 @@ module's **Extra** settings makes it report immediately.
 
 ## Changelog
 
+### 0.0.5
+- Meet the ioBroker repository requirements: updated dev dependencies, removed the deprecated
+  `common.main`, fixed responsive column widths, and translated the admin texts into the nine
+  remaining languages.
+
+### 0.0.4
+- Fix: the admin rejected the whole configuration with "invalid jsonConfig". `instance` fields
+  do not allow `visible` (their schema sets `additionalProperties: false`); the condition
+  belongs in `hidden`. The configuration is now validated against the official schema.
+
+### 0.0.3
+- Fix: consumption tracking crashed on every meter reading after updating from 0.0.1
+  ("Cannot read properties of undefined") because the stored state predates the day and month
+  buffers. Stored state is merged into a fresh default now.
+- Fix: with no month recorded yet, the month rollover booked the whole meter reading as last
+  month's consumption (3783 kWh instead of the difference).
+- `npm test` only ran the package checks; the unit tests now run with it.
+
 ### 0.0.2
 - New VIS widget **Energy history**: bar chart switchable between day, month and year, with
   cooling and heating shown separately.
