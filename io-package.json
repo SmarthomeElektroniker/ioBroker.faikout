@@ -29,7 +29,7 @@
       "zh-cn": "通过 MQTT 在本地连接带 faikout 模块的大金空调。"
     },
     "authors": [
-      "Immanuel"
+      "Immanuel <github@freitag.online>"
     ],
     "keywords": [
       "faikout",

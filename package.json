@@ -2,7 +2,10 @@
   "name": "iobroker.faikout",
   "version": "0.0.6",
   "description": "Connect Daikin air conditioners with a faikout module locally via MQTT.",
-  "author": "Immanuel",
+  "author": {
+    "name": "Immanuel",
+    "email": "github@freitag.online"
+  },
   "homepage": "https://github.com/SmarthomeElektroniker/ioBroker.faikout",
   "license": "MIT",
   "keywords": [
