@@ -65,6 +65,12 @@ module's **Extra** settings makes it report immediately.
 
 ## Changelog
 
+### 0.0.7
+- Maintenance release: `@iobroker/adapter-core` 3.4.3 and `@iobroker/testing` 6.2.1, tests also on
+  Node.js 26, `testing-action-check` v2, admin translations in the short format
+  (`admin/i18n/<lang>.json`), `tsconfig.json` and JSON schemas for VS Code.
+- Published through GitHub Actions with provenance (0.0.6 had been published manually).
+
 ### 0.0.6
 - Released through GitHub Actions with npm provenance (trusted publishing). No functional
   changes; 0.0.5 was published manually and therefore carries no provenance attestation.

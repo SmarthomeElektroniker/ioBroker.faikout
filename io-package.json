@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.7": {
+        "en": "Maintenance release: dependencies updated, tests now also run on Node.js 26, admin translations moved to the short file format. Published through GitHub Actions with provenance.",
+        "de": "Wartungsversion: Abhängigkeiten aktualisiert, Tests laufen jetzt auch unter Node.js 26, Admin-Übersetzungen ins kurze Dateiformat umgestellt. Veröffentlicht über GitHub Actions mit Provenance.",
+        "ru": "Сопровождающий выпуск: зависимости обновлены, тесты теперь выполняются и на Node.js 26, переводы интерфейса администратора переведены в короткий формат файлов. Опубликовано через GitHub Actions с provenance.",
+        "pt": "Versão de manutenção: dependências atualizadas, os testes correm agora também no Node.js 26, traduções do admin migradas para o formato curto de ficheiros. Publicado através do GitHub Actions com provenance.",
+        "nl": "Onderhoudsversie: afhankelijkheden bijgewerkt, tests draaien nu ook op Node.js 26, admin-vertalingen omgezet naar het korte bestandsformaat. Gepubliceerd via GitHub Actions met provenance.",
+        "fr": "Version de maintenance : dépendances mises à jour, les tests s'exécutent désormais aussi sous Node.js 26, traductions de l'admin converties au format de fichier court. Publiée via GitHub Actions avec provenance.",
+        "it": "Versione di manutenzione: dipendenze aggiornate, i test ora vengono eseguiti anche su Node.js 26, traduzioni dell'admin convertite nel formato di file breve. Pubblicata tramite GitHub Actions con provenance.",
+        "es": "Versión de mantenimiento: dependencias actualizadas, las pruebas ahora también se ejecutan en Node.js 26, traducciones del admin convertidas al formato de archivo corto. Publicada mediante GitHub Actions con provenance.",
+        "pl": "Wydanie serwisowe: zaktualizowano zależności, testy działają teraz także na Node.js 26, tłumaczenia panelu admin przeniesiono do krótkiego formatu plików. Opublikowano przez GitHub Actions z provenance.",
+        "uk": "Сервісний випуск: залежності оновлено, тести тепер виконуються й на Node.js 26, переклади адмін-панелі переведено в короткий формат файлів. Опубліковано через GitHub Actions з provenance.",
+        "zh-cn": "维护版本：更新依赖项，测试现在也在 Node.js 26 上运行，管理界面翻译改为简短文件格式。通过 GitHub Actions 发布并附带来源证明（provenance）。"
+      },
       "0.0.6": {
         "en": "Released through GitHub Actions with npm provenance",
         "de": "Veroeffentlichung ueber GitHub Actions mit npm-Provenance",
