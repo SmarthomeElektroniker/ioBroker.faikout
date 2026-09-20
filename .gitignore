@@ -5,6 +5,8 @@ node_modules/
 tmp/
 coverage/
 .vscode/
+# Die Schema-Zuordnungen gehoeren ins Repo - der Repo-Checker sucht sie dort (S4036).
+!.vscode/settings.json
 *.tgz
 
 .commitinfo
