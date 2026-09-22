@@ -134,7 +134,16 @@
       "common": {
         "name": {
           "en": "Information",
-          "de": "Informationen"
+          "de": "Informationen",
+          "ru": "Информация",
+          "pt": "Informação",
+          "nl": "Informatie",
+          "fr": "Informations",
+          "it": "Informazioni",
+          "es": "Información",
+          "pl": "Informacje",
+          "uk": "Інформація",
+          "zh-cn": "信息"
         }
       },
       "native": {}
@@ -146,7 +155,16 @@
         "role": "indicator.connected",
         "name": {
           "en": "At least one faikout module connected",
-          "de": "Mindestens ein faikout-Modul verbunden"
+          "de": "Mindestens ein faikout-Modul verbunden",
+          "ru": "Подключён хотя бы один модуль faikout",
+          "pt": "Pelo menos um módulo faikout ligado",
+          "nl": "Ten minste één faikout-module verbonden",
+          "fr": "Au moins un module faikout connecté",
+          "it": "Almeno un modulo faikout connesso",
+          "es": "Al menos un módulo faikout conectado",
+          "pl": "Co najmniej jeden moduł faikout połączony",
+          "uk": "Підключено щонайменше один модуль faikout",
+          "zh-cn": "至少已连接一个 faikout 模块"
         },
         "type": "boolean",
         "read": true,

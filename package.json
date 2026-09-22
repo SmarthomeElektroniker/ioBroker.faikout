@@ -57,7 +57,7 @@
     "test:integration": "mocha test/integration --exit",
     "test": "npm run test:package && npm run test:unit",
     "lint": "eslint .",
-    "test:unit": "mocha test/verbrauch test/broker --exit",
+    "test:unit": "mocha test/verbrauch test/broker test/namen --exit",
     "release": "release-script"
   }
 }

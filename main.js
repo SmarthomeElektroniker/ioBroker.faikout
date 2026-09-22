@@ -8,6 +8,7 @@
 const utils = require('@iobroker/adapter-core');
 const { FaikoutBroker } = require('./lib/broker');
 const felder = require('./lib/fields');
+const namen = require('./lib/namen');
 const verbrauch = require('./lib/verbrauch');
 
 /** Topics, die der Adapter auswertet. Alles andere wird still verworfen. */
@@ -349,17 +350,27 @@ class Faikout extends utils.Adapter {
         if (!g.angelegt.has(basis)) {
             await this.extendObject(`${id}.verbrauch`, {
                 type: 'channel',
-                common: { name: { en: 'Consumption', de: 'Verbrauch' } },
+                common: { name: namen.vollerName({ en: 'Consumption', de: 'Verbrauch' }) },
                 native: {},
             });
-            await this.extendObject(basis, { type: 'channel', common: { name: z.name }, native: {} });
+            await this.extendObject(basis, {
+                type: 'channel',
+                common: { name: namen.vollerName(z.name) },
+                native: {},
+            });
             for (const f of VERBRAUCH_FELDER) {
                 await this.zaehlerObjekt(`${basis}.${f.id}`, f.name, 'kWh', 'value.energy.consumed');
             }
             for (const r of VERBRAUCH_REIHEN) {
                 await this.extendObject(`${basis}.${r.id}`, {
                     type: 'state',
-                    common: { name: r.name, type: 'string', role: 'json', read: true, write: false },
+                    common: {
+                        name: namen.vollerName(r.name),
+                        type: 'string',
+                        role: 'json',
+                        read: true,
+                        write: false,
+                    },
                     native: {},
                 });
             }
@@ -409,11 +420,11 @@ class Faikout extends utils.Adapter {
     async objektAnlegen(geraetId, def, feld, stateId) {
         await this.extendObject(`${geraetId}.${def.kanal}`, {
             type: 'channel',
-            common: { name: this.kanalName(def.kanal) },
+            common: { name: namen.vollerName(this.kanalName(def.kanal)) },
             native: {},
         });
         const common = {
-            name: def.name,
+            name: namen.vollerName(def.name),
             type: def.type,
             role: def.role,
             read: true,
