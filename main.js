@@ -403,7 +403,14 @@ class Faikout extends utils.Adapter {
      * @param {string} role      ioBroker-Rolle
      */
     async zaehlerObjekt(stateId, name, unit, role) {
-        const common = { name, type: 'number', role, unit, read: true, write: false };
+        const common = {
+            name: namen.vollerName(name),
+            type: 'number',
+            role,
+            unit,
+            read: true,
+            write: false,
+        };
         const instanz = (this.config.historyInstanz || '').trim();
         if (this.config.historyAnmelden && instanz) {
             common.custom = {
