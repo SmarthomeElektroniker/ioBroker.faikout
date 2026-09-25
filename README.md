@@ -70,6 +70,14 @@ module's **Extra** settings makes it report immediately.
 	### **WORK IN PROGRESS**
 -->
 
+### 0.0.8
+- Object structure fixed for the repository check: all datapoint names now in eleven languages
+  (`lib/namen.js`), invalid roles corrected (`info` → `info.name`/`info.address`/`text`,
+  `level.mode.*` → `state`), instance objects translated as well. New test `test/namen.js`.
+- Shared `@iobroker/eslint-config` and `@alcalzone/release-script` adopted, older changelog
+  entries moved to `CHANGELOG_OLD.md`, `.vscode/settings.json` added, contact address in the
+  copyright line.
+
 ### 0.0.7
 - Maintenance release: `@iobroker/adapter-core` 3.4.3 and `@iobroker/testing` 6.2.1, tests also on
   Node.js 26, `testing-action-check` v2, admin translations in the short format

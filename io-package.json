@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.8": {
+        "en": "Object structure fixed for the repository check: all datapoint names in eleven languages, invalid roles corrected (info, level.mode.*). Shared ESLint config and release script adopted.",
+        "de": "Objektstruktur für die Repository-Prüfung berichtigt: alle Datenpunktnamen in elf Sprachen, ungültige Rollen korrigiert (info, level.mode.*). Gemeinsame ESLint-Konfiguration und Release-Skript übernommen.",
+        "ru": "Структура объектов исправлена для проверки репозитория: все имена точек данных на одиннадцати языках, исправлены недопустимые роли (info, level.mode.*). Внедрены общая конфигурация ESLint и скрипт выпуска.",
+        "pt": "Estrutura de objetos corrigida para a verificação do repositório: todos os nomes de pontos de dados em onze idiomas, funções inválidas corrigidas (info, level.mode.*). Adotada a configuração ESLint partilhada e o script de lançamento.",
+        "nl": "Objectstructuur gecorrigeerd voor de repositorycontrole: alle datapuntnamen in elf talen, ongeldige rollen gecorrigeerd (info, level.mode.*). Gedeelde ESLint-configuratie en releasescript overgenomen.",
+        "fr": "Structure des objets corrigée pour la vérification du dépôt : tous les noms de points de données en onze langues, rôles invalides corrigés (info, level.mode.*). Configuration ESLint partagée et script de publication adoptés.",
+        "it": "Struttura degli oggetti corretta per il controllo del repository: tutti i nomi dei punti dati in undici lingue, ruoli non validi corretti (info, level.mode.*). Adottati la configurazione ESLint condivisa e lo script di rilascio.",
+        "es": "Estructura de objetos corregida para la comprobación del repositorio: todos los nombres de puntos de datos en once idiomas, roles no válidos corregidos (info, level.mode.*). Adoptada la configuración ESLint compartida y el script de publicación.",
+        "pl": "Poprawiono strukturę obiektów na potrzeby kontroli repozytorium: wszystkie nazwy punktów danych w jedenastu językach, poprawiono nieprawidłowe role (info, level.mode.*). Przyjęto wspólną konfigurację ESLint i skrypt wydania.",
+        "uk": "Структуру об'єктів виправлено для перевірки репозиторію: усі назви точок даних одинадцятьма мовами, виправлено недійсні ролі (info, level.mode.*). Запроваджено спільну конфігурацію ESLint і скрипт випуску.",
+        "zh-cn": "为仓库检查修正了对象结构：所有数据点名称提供十一种语言，更正了无效角色（info、level.mode.*）。采用共享 ESLint 配置和发布脚本。"
+      },
       "0.0.7": {
         "en": "Maintenance release: dependencies updated, tests now also run on Node.js 26, admin translations moved to the short file format. Published through GitHub Actions with provenance.",
         "de": "Wartungsversion: Abhängigkeiten aktualisiert, Tests laufen jetzt auch unter Node.js 26, Admin-Übersetzungen ins kurze Dateiformat umgestellt. Veröffentlicht über GitHub Actions mit Provenance.",
