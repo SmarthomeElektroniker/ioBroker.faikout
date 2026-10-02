@@ -1,6 +1,6 @@
 {
   "name": "iobroker.faikout",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Connect Daikin air conditioners with a faikout module locally via MQTT.",
   "author": {
     "name": "Immanuel",
@@ -37,7 +37,7 @@
     "@alcalzone/release-script-plugin-manual-review": "^5.2.0",
     "@iobroker/adapter-dev": "^1.5.0",
     "@iobroker/eslint-config": "^2.3.4",
-    "@iobroker/testing": "^6.2.1",
+    "@iobroker/testing": "^6.3.0",
     "@tsconfig/node22": "^22.0.6",
     "@types/node": "^22.18.11",
     "mqtt": "^5.15.2",

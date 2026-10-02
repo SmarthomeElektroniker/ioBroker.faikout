@@ -70,6 +70,10 @@ module's **Extra** settings makes it report immediately.
 	### **WORK IN PROGRESS**
 -->
 
+### 0.0.9
+- Maintenance: `@iobroker/testing` updated to 6.3 (W0037).
+- `.gitignore` uses `.vscode/*` so the tracked `.vscode/settings.json` is no longer covered by an ignore rule (W9008).
+
 ### 0.0.8
 - Object structure fixed for the repository check: all datapoint names now in eleven languages
   (`lib/namen.js`), invalid roles corrected (`info` → `info.name`/`info.address`/`text`,

@@ -4,7 +4,7 @@ node_modules/
 .DS_Store
 tmp/
 coverage/
-.vscode/
+.vscode/*
 # Die Schema-Zuordnungen gehoeren ins Repo - der Repo-Checker sucht sie dort (S4036).
 !.vscode/settings.json
 *.tgz

@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.9": {
+        "en": "Maintenance: @iobroker/testing updated to 6.3, .gitignore no longer covers the tracked .vscode/settings.json",
+        "de": "Wartung: @iobroker/testing auf 6.3 aktualisiert, .gitignore schließt die versionierte .vscode/settings.json nicht mehr aus",
+        "ru": "Обслуживание: @iobroker/testing обновлён до 6.3, .gitignore больше не исключает отслеживаемый .vscode/settings.json",
+        "pt": "Manutenção: @iobroker/testing atualizado para 6.3, o .gitignore já não abrange o .vscode/settings.json versionado",
+        "nl": "Onderhoud: @iobroker/testing bijgewerkt naar 6.3, .gitignore sluit de gevolgde .vscode/settings.json niet meer uit",
+        "fr": "Maintenance : @iobroker/testing mis à jour vers 6.3, le .gitignore n'exclut plus le fichier suivi .vscode/settings.json",
+        "it": "Manutenzione: @iobroker/testing aggiornato a 6.3, .gitignore non esclude più il file tracciato .vscode/settings.json",
+        "es": "Mantenimiento: @iobroker/testing actualizado a 6.3, .gitignore ya no excluye el archivo versionado .vscode/settings.json",
+        "pl": "Konserwacja: @iobroker/testing zaktualizowany do 6.3, .gitignore nie wyklucza już śledzonego pliku .vscode/settings.json",
+        "uk": "Обслуговування: @iobroker/testing оновлено до 6.3, .gitignore більше не виключає відстежуваний .vscode/settings.json",
+        "zh-cn": "维护：@iobroker/testing 更新至 6.3，.gitignore 不再排除已跟踪的 .vscode/settings.json"
+      },
       "0.0.8": {
         "en": "Object structure fixed for the repository check: all datapoint names in eleven languages, invalid roles corrected (info, level.mode.*). Shared ESLint config and release script adopted.",
         "de": "Objektstruktur für die Repository-Prüfung berichtigt: alle Datenpunktnamen in elf Sprachen, ungültige Rollen korrigiert (info, level.mode.*). Gemeinsame ESLint-Konfiguration und Release-Skript übernommen.",
