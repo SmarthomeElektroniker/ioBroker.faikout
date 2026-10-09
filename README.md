@@ -70,6 +70,11 @@ module's **Extra** settings makes it report immediately.
 	### **WORK IN PROGRESS**
 -->
 
+### 0.0.11
+- Remaining log messages in English (hour change, client disconnect/error, failed command).
+- Stopping the adapter no longer hangs while faikout modules stay connected: open MQTT connections are closed actively,
+  with a 2 s upper limit (previously the js-controller killed the process after its stop timeout). New test.
+
 ### 0.0.10
 - Review findings (PR #6700): all log messages and error texts in English (`main.js`, `lib/broker.js`, `lib/verbrauch.js`).
 - `control.swing`: state labels in English (`off`, `on`, `vertical`, `horizontal`, `both`, `comfort`).

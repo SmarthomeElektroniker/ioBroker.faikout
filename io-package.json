@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.10",
+    "version": "0.0.11",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.11": {
+        "en": "Remaining log messages in English; the adapter now stops quickly even while faikout modules stay connected (no more forced kill on stop)",
+        "de": "Restliche Log-Meldungen auf Englisch; der Adapter beendet sich jetzt schnell, auch wenn faikout-Module verbunden bleiben (kein erzwungener Abbruch mehr beim Stoppen)",
+        "ru": "Оставшиеся сообщения журнала на английском; адаптер теперь быстро останавливается, даже если модули faikout остаются подключёнными (больше нет принудительного завершения)",
+        "pt": "Restantes mensagens de registo em inglês; o adaptador para agora rapidamente mesmo com módulos faikout ligados (sem encerramento forçado ao parar)",
+        "nl": "Resterende logberichten in het Engels; de adapter stopt nu snel, ook als faikout-modules verbonden blijven (geen geforceerde beëindiging meer)",
+        "fr": "Messages de journal restants en anglais ; l'adaptateur s'arrête désormais rapidement même si des modules faikout restent connectés (plus d'arrêt forcé)",
+        "it": "Messaggi di log rimanenti in inglese; l'adattatore ora si arresta rapidamente anche con moduli faikout connessi (nessuna terminazione forzata)",
+        "es": "Mensajes de registro restantes en inglés; el adaptador ahora se detiene rápidamente aunque los módulos faikout sigan conectados (sin cierre forzado)",
+        "pl": "Pozostałe komunikaty dziennika po angielsku; adapter zatrzymuje się teraz szybko, nawet gdy moduły faikout pozostają połączone (bez wymuszonego zakończenia)",
+        "uk": "Решта повідомлень журналу англійською; адаптер тепер швидко зупиняється, навіть якщо модулі faikout залишаються підключеними (без примусового завершення)",
+        "zh-cn": "其余日志消息改为英文；即使 faikout 模块保持连接，适配器现在也能快速停止（停止时不再被强制终止）"
+      },
       "0.0.10": {
         "en": "Review findings: all log messages in English, swing state labels in English, VIS widgets show English texts outside German (decimal separator and month names follow the VIS language)",
         "de": "Review-Befunde: alle Log-Meldungen auf Englisch, Bezeichnungen der Schwenk-Zustände auf Englisch, VIS-Bausteine außerhalb von Deutsch auf Englisch (Dezimaltrennzeichen und Monatsnamen folgen der VIS-Sprache)",

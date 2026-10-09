@@ -33,6 +33,34 @@ describe('FaikoutBroker', () => {
         broker = null;
     });
 
+    it('beendet sich schnell, auch wenn ein Modul verbunden bleibt', async function () {
+        // Vorher wartete server.close() auf das Trennen der Module, die aber dauerhaft
+        // verbunden bleiben: Das Beenden hing, bis der js-controller den Prozess abschoss.
+        this.timeout(15000);
+        port = await freierPort();
+        broker = new FaikoutBroker({ port, log: stilleLog, onMessage: () => {} });
+        await broker.start();
+        const mqtt = require('mqtt');
+        const client = mqtt.connect(`mqtt://127.0.0.1:${port}`, { clientId: 'bleibt-verbunden', reconnectPeriod: 0 });
+        await new Promise((res, rej) => {
+            client.on('connect', res);
+            client.on('error', rej);
+            setTimeout(() => rej(new Error('Zeitablauf beim Verbinden')), 8000);
+        });
+        const start = Date.now();
+        await broker.stop();
+        broker = null;
+        const dauer = Date.now() - start;
+        client.end(true);
+        expect(dauer).to.be.below(1500);
+        // Port ist wieder frei
+        await new Promise((res, rej) => {
+            const s = net.createServer();
+            s.on('error', rej);
+            s.listen(port, () => s.close(res));
+        });
+    });
+
     it('nimmt eine Verbindung an und reicht Nachrichten durch', async function () {
         this.timeout(15000);
         port = await freierPort();

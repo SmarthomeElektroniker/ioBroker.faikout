@@ -107,7 +107,7 @@ class Faikout extends utils.Adapter {
         const naechste = new Date(jetzt);
         naechste.setHours(jetzt.getHours() + 1, 0, 5, 0); // 5 s nach der vollen Stunde
         this.stundenTimer = this.setTimeout(() => {
-            this.stundenwechsel().catch(e => this.log.warn(`Stundenwechsel: ${e.message}`));
+            this.stundenwechsel().catch(e => this.log.warn(`Hour change: ${e.message}`));
             this.stundenTaktStarten();
         }, naechste - jetzt);
     }
@@ -120,7 +120,7 @@ class Faikout extends utils.Adapter {
                     continue;
                 }
                 g.zaehler[z.feld] = ergebnis.stand;
-                ergebnis.hinweise.forEach(h => this.log.info(`${g.name} ${z.zweig}: ${h}`));
+                ergebnis.hinweise.forEach(h => this.log.info(`${g.name} ${z.name.en.toLowerCase()}: ${h}`));
                 await this.verbrauchSchreiben(id, g, z, ergebnis.werte);
             }
             await this.zaehlerstandSichern(id, g);
@@ -337,7 +337,7 @@ class Faikout extends utils.Adapter {
             const ergebnis = verbrauch.verarbeiten(g.zaehler[z.feld] || null, roh, new Date());
             g.zaehler[z.feld] = ergebnis.stand;
             veraendert = true;
-            ergebnis.hinweise.forEach(h => this.log.info(`${g.name} ${z.zweig}: ${h}`));
+            ergebnis.hinweise.forEach(h => this.log.info(`${g.name} ${z.name.en.toLowerCase()}: ${h}`));
             await this.verbrauchSchreiben(id, g, z, ergebnis.werte);
         }
         if (veraendert) {
