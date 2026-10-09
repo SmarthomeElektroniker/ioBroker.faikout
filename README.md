@@ -70,6 +70,10 @@ module's **Extra** settings makes it report immediately.
 	### **WORK IN PROGRESS**
 -->
 
+### 0.0.13
+- On start, names and roles of existing states are updated to the current field description. Objects are only created
+  when a value arrives, so rarely reported fields (like `status.reason`) kept their old description after an update.
+
 ### 0.0.12
 - New state `status.reason`: the disconnect reason the broker publishes from the module's MQTT last will (value `LWT`),
   now described with role and names in all eleven languages (it was created as an unknown field before).

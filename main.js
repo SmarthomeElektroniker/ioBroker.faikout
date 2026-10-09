@@ -72,6 +72,7 @@ class Faikout extends utils.Adapter {
 
     async onReady() {
         await this.setState('info.connection', { val: false, ack: true });
+        await this.objekteAbgleichen();
 
         const port = Number(this.config.port) || 1888;
         this.broker = new FaikoutBroker({
@@ -418,6 +419,42 @@ class Faikout extends utils.Adapter {
             };
         }
         await this.extendObject(stateId, { type: 'state', common, native: {} });
+    }
+
+    /**
+     * Namen und Rollen vorhandener Datenpunkte an die aktuelle Feldkunde angleichen.
+     *
+     * Objekte entstehen erst, wenn ein Wert kommt. Felder, die selten kommen (etwa `reason` aus
+     * dem MQTT-Last-Will beim Trennen), behielten sonst nach einem Update ihre alte Beschreibung -
+     * ein unbekannt angelegtes Feld blieb dann bei Namen nur in en/de (Objektpruefung E6001).
+     * Geraetabhaengige Werte (min/max/step) bleiben unangetastet.
+     */
+    async objekteAbgleichen() {
+        try {
+            const sicht = await this.getObjectViewAsync('system', 'state', {
+                startkey: `${this.namespace}.`,
+                endkey: `${this.namespace}.\u9999`,
+            });
+            let angepasst = 0;
+            for (const zeile of sicht.rows) {
+                const o = zeile.value;
+                const feld = o && o.native && o.native.feld;
+                const def = feld && felder.FELDER[feld];
+                if (!def) {
+                    continue;
+                }
+                const name = namen.vollerName(def.name);
+                if (JSON.stringify(o.common.name) !== JSON.stringify(name) || o.common.role !== def.role) {
+                    await this.extendObject(o._id, { common: { name, role: def.role } });
+                    angepasst++;
+                }
+            }
+            if (angepasst) {
+                this.log.info(`${angepasst} existing state(s) updated to the current field description.`);
+            }
+        } catch (e) {
+            this.log.debug(`Object update skipped: ${e.message}`);
+        }
     }
 
     async zaehlerstandSichern(id, g) {

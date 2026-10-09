@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.12",
+    "version": "0.0.13",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.13": {
+        "en": "On start, names and roles of existing states are updated to the current field description (also for rarely reported fields)",
+        "de": "Beim Start werden Namen und Rollen vorhandener Datenpunkte an die aktuelle Feldbeschreibung angeglichen (auch bei selten gemeldeten Feldern)",
+        "ru": "При запуске названия и роли существующих состояний приводятся к текущему описанию полей (в том числе для редко передаваемых полей)",
+        "pt": "Ao iniciar, os nomes e funções dos estados existentes são atualizados para a descrição atual dos campos (também para campos raramente enviados)",
+        "nl": "Bij het starten worden namen en rollen van bestaande states bijgewerkt naar de huidige veldbeschrijving (ook voor zelden gemelde velden)",
+        "fr": "Au démarrage, les noms et rôles des états existants sont mis à jour selon la description actuelle des champs (y compris les champs rarement transmis)",
+        "it": "All'avvio, nomi e ruoli degli stati esistenti vengono allineati alla descrizione attuale dei campi (anche per campi trasmessi raramente)",
+        "es": "Al iniciar, los nombres y roles de los estados existentes se actualizan a la descripción actual de los campos (también para campos que se envían rara vez)",
+        "pl": "Przy starcie nazwy i role istniejących stanów są aktualizowane do bieżącego opisu pól (także dla rzadko przesyłanych pól)",
+        "uk": "Під час запуску назви та ролі наявних станів оновлюються до поточного опису полів (також для полів, що надходять рідко)",
+        "zh-cn": "启动时，现有状态的名称和角色会更新为当前字段描述（包括很少上报的字段）"
+      },
       "0.0.12": {
         "en": "New state status.reason (disconnect reason from the MQTT last will, e.g. \"LWT\") with names in all languages",
         "de": "Neuer Datenpunkt status.reason (Grund der Trennung aus dem MQTT-„Last Will“, z. B. „LWT“) mit Namen in allen Sprachen",
@@ -145,19 +158,6 @@
         "pl": "Wydanie serwisowe: zaktualizowano zależności, testy działają teraz także na Node.js 26, tłumaczenia panelu admin przeniesiono do krótkiego formatu plików. Opublikowano przez GitHub Actions z provenance.",
         "uk": "Сервісний випуск: залежності оновлено, тести тепер виконуються й на Node.js 26, переклади адмін-панелі переведено в короткий формат файлів. Опубліковано через GitHub Actions з provenance.",
         "zh-cn": "维护版本：更新依赖项，测试现在也在 Node.js 26 上运行，管理界面翻译改为简短文件格式。通过 GitHub Actions 发布并附带来源证明（provenance）。"
-      },
-      "0.0.6": {
-        "en": "Released through GitHub Actions with npm provenance",
-        "de": "Veroeffentlichung ueber GitHub Actions mit npm-Provenance",
-        "ru": "Публикация через GitHub Actions с npm provenance",
-        "pt": "Publicado via GitHub Actions com proveniência npm",
-        "nl": "Gepubliceerd via GitHub Actions met npm-provenance",
-        "fr": "Publié via GitHub Actions avec provenance npm",
-        "it": "Pubblicato tramite GitHub Actions con provenance npm",
-        "es": "Publicado mediante GitHub Actions con proveniencia npm",
-        "pl": "Opublikowano przez GitHub Actions z npm provenance",
-        "uk": "Опубліковано через GitHub Actions з npm provenance",
-        "zh-cn": "通过 GitHub Actions 发布并附带 npm 来源证明"
       }
     },
     "restartAdapters": [
