@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.11",
+    "version": "0.0.12",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.12": {
+        "en": "New state status.reason (disconnect reason from the MQTT last will, e.g. \"LWT\") with names in all languages",
+        "de": "Neuer Datenpunkt status.reason (Grund der Trennung aus dem MQTT-„Last Will“, z. B. „LWT“) mit Namen in allen Sprachen",
+        "ru": "Новое состояние status.reason (причина отключения из MQTT last will, например «LWT») с названиями на всех языках",
+        "pt": "Novo estado status.reason (motivo da desconexão do MQTT last will, p. ex. «LWT») com nomes em todos os idiomas",
+        "nl": "Nieuwe status status.reason (reden van verbreking uit de MQTT last will, bijv. \"LWT\") met namen in alle talen",
+        "fr": "Nouvel état status.reason (cause de la déconnexion issue du last will MQTT, p. ex. « LWT ») avec des noms dans toutes les langues",
+        "it": "Nuovo stato status.reason (motivo della disconnessione dal last will MQTT, ad es. \"LWT\") con nomi in tutte le lingue",
+        "es": "Nuevo estado status.reason (motivo de la desconexión del last will de MQTT, p. ej. «LWT») con nombres en todos los idiomas",
+        "pl": "Nowy stan status.reason (przyczyna rozłączenia z MQTT last will, np. „LWT”) z nazwami we wszystkich językach",
+        "uk": "Новий стан status.reason (причина відключення з MQTT last will, напр. «LWT») з назвами всіма мовами",
+        "zh-cn": "新状态 status.reason（来自 MQTT 遗嘱消息的断开原因，例如“LWT”），名称支持所有语言"
+      },
       "0.0.11": {
         "en": "Remaining log messages in English; the adapter now stops quickly even while faikout modules stay connected (no more forced kill on stop)",
         "de": "Restliche Log-Meldungen auf Englisch; der Adapter beendet sich jetzt schnell, auch wenn faikout-Module verbunden bleiben (kein erzwungener Abbruch mehr beim Stoppen)",
@@ -145,19 +158,6 @@
         "pl": "Opublikowano przez GitHub Actions z npm provenance",
         "uk": "Опубліковано через GitHub Actions з npm provenance",
         "zh-cn": "通过 GitHub Actions 发布并附带 npm 来源证明"
-      },
-      "0.0.5": {
-        "en": "Meet the ioBroker repository requirements",
-        "de": "Anforderungen des ioBroker-Repositorys erfuellt",
-        "ru": "Соответствие требованиям репозитория ioBroker",
-        "pt": "Cumpre os requisitos do repositório ioBroker",
-        "nl": "Voldoet aan de eisen van het ioBroker-repository",
-        "fr": "Conforme aux exigences du dépôt ioBroker",
-        "it": "Conforme ai requisiti del repository ioBroker",
-        "es": "Cumple los requisitos del repositorio ioBroker",
-        "pl": "Spełnia wymagania repozytorium ioBroker",
-        "uk": "Відповідає вимогам репозиторію ioBroker",
-        "zh-cn": "满足 ioBroker 仓库的收录要求"
       }
     },
     "restartAdapters": [

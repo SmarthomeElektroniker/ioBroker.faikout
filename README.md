@@ -70,6 +70,10 @@ module's **Extra** settings makes it report immediately.
 	### **WORK IN PROGRESS**
 -->
 
+### 0.0.12
+- New state `status.reason`: the disconnect reason the broker publishes from the module's MQTT last will (value `LWT`),
+  now described with role and names in all eleven languages (it was created as an unknown field before).
+
 ### 0.0.11
 - Remaining log messages in English (hour change, client disconnect/error, failed command).
 - Stopping the adapter no longer hangs while faikout modules stay connected: open MQTT connections are closed actively,
