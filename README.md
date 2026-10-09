@@ -70,6 +70,11 @@ module's **Extra** settings makes it report immediately.
 	### **WORK IN PROGRESS**
 -->
 
+### 0.0.10
+- Review findings (PR #6700): all log messages and error texts in English (`main.js`, `lib/broker.js`, `lib/verbrauch.js`).
+- `control.swing`: state labels in English (`off`, `on`, `vertical`, `horizontal`, `both`, `comfort`).
+- VIS widgets: every visible text goes through a small translation helper – German for a German VIS, English for all other languages; decimal separator and month names follow the VIS language.
+
 ### 0.0.9
 - Maintenance: `@iobroker/testing` updated to 6.3 (W0037).
 - `.gitignore` uses `.vscode/*` so the tracked `.vscode/settings.json` is no longer covered by an ignore rule (W9008).

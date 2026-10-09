@@ -9,7 +9,89 @@
 'use strict';
 
 vis.binds.faikout = {
-    version: '0.0.1',
+    version: '0.0.2',
+
+    /*
+     * Sichtbare Texte (Review 09.10.2026: alles, was Nutzer sehen, englisch oder uebersetzt mit
+     * Rueckfall auf Englisch). Im Code stehen die deutschen Texte, t() liefert sie bei deutscher
+     * VIS-Sprache unveraendert und sonst die englische Fassung - fehlt ein Eintrag, bleibt der Text.
+     */
+    TEXTE: {
+        'Schwenken': 'Swing',
+        'Lamellen senkrecht': 'Vertical louvres',
+        'Lamellen waagerecht': 'Horizontal louvres',
+        'Sparbetrieb': 'Econo mode',
+        'Turbo': 'Powerful',
+        'Komfortbetrieb': 'Comfort mode',
+        'Luftreinigung': 'Air purification',
+        'Anwesenheitssensor': 'Presence sensor',
+        'Anzeige-LED': 'Display LED',
+        'Leiser Außenbetrieb': 'Quiet outdoor unit',
+        'Auto': 'Auto',
+        'Kühlen': 'Cool',
+        'Heizen': 'Heat',
+        'Trocknen': 'Dry',
+        'Lüften': 'Fan',
+        'Nacht': 'Night',
+        'Außen': 'Outside',
+        'Leistung': 'Power',
+        'Heute': 'Today',
+        'Verdichter': 'Compressor',
+        'Ventilator': 'Fan speed',
+        'Kältemittel': 'Refrigerant',
+        'Raum': 'Room',
+        'Luftfeuchte': 'Humidity',
+        'Energie gesamt': 'Energy total',
+        'Gestern': 'Yesterday',
+        'Diese Stunde': 'This hour',
+        'Kein Gerät gewählt. Im Attribut „Gerät“ ein Objekt wie %s eintragen.': 'No device selected. Enter an object such as %s in the attribute “Device”.',
+        'Datenpunkte nicht lesbar: %s': 'Cannot read states: %s',
+        'gesendet · warte auf Rückmeldung': 'sent · waiting for confirmation',
+        'Dieses Gerät hat keinen Datenpunkt %s.': 'This device has no state %s.',
+        'Soll': 'Target',
+        'Betriebsart': 'Mode',
+        'Lüfter': 'Fan',
+        'Leistungsbegrenzung': 'Power limit',
+        'Dieses Gerät meldet keine der Zusatzfunktionen.': 'This device reports none of the extra functions.',
+        'Zusatzfunktionen': 'Extra functions',
+        'Keiner der gewählten Messwerte ist bei diesem Gerät vorhanden.': 'None of the selected readings is available on this device.',
+        'Kein Messwert gewählt.': 'No reading selected.',
+        'Dieses Gerät hat keinen Datenpunkt %s. Er entsteht, sobald die Anlage Energiewerte meldet.': 'This device has no state %s yet. It is created as soon as the unit reports energy values.',
+        'Noch keine Werte für diesen Zeitraum.': 'No values for this period yet.',
+        'Summe': 'Total',
+        'Dieser Monat': 'This month',
+        'Dieses Jahr': 'This year',
+        'Tag': 'Day',
+        'Monat': 'Month',
+        'Jahr': 'Year',
+        'Gesamt': 'Total',
+        'verbunden': 'connected',
+        'offline': 'offline'
+    },
+
+    /** Sprache der VIS-Oberflaeche (vis.language bzw. systemLang), Rueckfall Englisch. */
+    sprache: function () {
+        var l = (typeof vis !== 'undefined' && vis.language) || (typeof systemLang !== 'undefined' && systemLang) || 'en';
+        return String(l).toLowerCase();
+    },
+
+    /** Text in der VIS-Sprache: Deutsch bei 'de', sonst Englisch. %s wird durch `wert` ersetzt. */
+    t: function (de, wert) {
+        var b = vis.binds.faikout;
+        var text = b.sprache() === 'de' ? de : (b.TEXTE[de] || de);
+        return wert === undefined ? text : text.replace('%s', wert);
+    },
+
+    /** Die Namen in ZUSATZ/MODI/LUEFTER/MESSWERTE einmalig in die VIS-Sprache bringen. */
+    listenUebersetzen: function () {
+        var b = vis.binds.faikout;
+        if (b._uebersetzt) return;
+        b._uebersetzt = true;
+        b.ZUSATZ.forEach(function (z) { z.name = b.t(z.name); });
+        b.MODI.forEach(function (m) { m.text = b.t(m.text); });
+        b.LUEFTER.forEach(function (l) { l.text = b.t(l.text); });
+        b.MESSWERTE.forEach(function (m) { m.name = b.t(m.name); });
+    },
 
     /* Rueckfallwerte; die echten Grenzen liefert das Geraet ueber common.min/max/step. */
     MIN: 16,
@@ -95,7 +177,9 @@ vis.binds.faikout = {
         if (v === null || v === undefined || v === '') return null;
         var n = parseFloat(v);
         if (isNaN(n)) return null;
-        return n.toFixed(stellen).replace('.', ',');
+        // Dezimalpunkt im Englischen und Chinesischen, sonst Komma
+        var l = vis.binds.faikout.sprache();
+        return l === 'en' || l === 'zh-cn' ? n.toFixed(stellen) : n.toFixed(stellen).replace('.', ',');
     },
 
     /**
@@ -106,6 +190,7 @@ vis.binds.faikout = {
      */
     start: function (widgetID, data, aufbau) {
         var b = vis.binds.faikout;
+        b.listenUebersetzen();
         var $div = $('#' + widgetID);
         if (!$div.length) {
             return setTimeout(function () { b.start(widgetID, data, aufbau); }, 100);
@@ -113,14 +198,15 @@ vis.binds.faikout = {
 
         var prefix = data.deviceOid;
         if (!prefix) {
-            $div.html('<div class="fk"><div class="fk-fehler">Kein Gerät gewählt. Im Attribut ' +
-                '„Gerät" ein Objekt wie <code>faikout.0.Wohnzimmer</code> eintragen.</div></div>');
+            $div.html('<div class="fk"><div class="fk-fehler">' +
+                b.t('Kein Gerät gewählt. Im Attribut „Gerät“ ein Objekt wie %s eintragen.', '<code>faikout.0.Wohnzimmer</code>') +
+                '</div></div>');
             return;
         }
 
         vis.conn.getStates(prefix + '.*', function (fehler, zustaende) {
             if (fehler) {
-                $div.html('<div class="fk"><div class="fk-fehler">Datenpunkte nicht lesbar: ' + fehler + '</div></div>');
+                $div.html('<div class="fk"><div class="fk-fehler">' + b.t('Datenpunkte nicht lesbar: %s', $('<span>').text(String(fehler)).html()) + '</div></div>');
                 return;
             }
             zustaende = zustaende || {};
@@ -146,7 +232,7 @@ vis.binds.faikout = {
                 wartet: function ($w) {
                     var $s = $w.find('.fk-status');
                     if (!$s.length) return;
-                    $s.text('gesendet · warte auf Rückmeldung').addClass('fk-wartet');
+                    $s.text(b.t('gesendet · warte auf Rückmeldung')).addClass('fk-wartet');
                     clearTimeout($w.data('fkTimer'));
                     $w.data('fkTimer', setTimeout(function () { $s.text('').removeClass('fk-wartet'); }, 65000));
                 }
@@ -173,7 +259,7 @@ vis.binds.faikout = {
 
     /** Hinweis, wenn die Anlage den benoetigten Datenpunkt gar nicht hat. */
     fehlt: function ($wurzel, feld) {
-        $wurzel.html('<div class="fk-fehler">Dieses Gerät hat keinen Datenpunkt <code>' + feld + '</code>.</div>');
+        $wurzel.html('<div class="fk-fehler">' + vis.binds.faikout.t('Dieses Gerät hat keinen Datenpunkt %s.', '<code>' + feld + '</code>') + '</div>');
         return null;
     },
 
@@ -258,7 +344,7 @@ vis.binds.faikout = {
             '  </svg>' +
             '  <div class="fk-ablesung">' +
             '   <div class="fk-soll"><span class="fk-soll-zahl">–</span><span class="fk-soll-einheit">°C</span></div>' +
-            '   <div class="fk-soll-etikett">Soll</div>' +
+            '   <div class="fk-soll-etikett">' + b.t('Soll') + '</div>' +
             '   <div class="fk-ist">' +
             '    <span class="fk-ist-temp-feld">' + b.SYM.temp + '<b class="fk-ist-temp">–</b> °C</span>' +
             '    <span class="fk-ist-hum-feld">' + b.SYM.hum + '<b class="fk-ist-hum">–</b> %</span>' +
@@ -384,7 +470,7 @@ vis.binds.faikout = {
                 $wurzel.find('.fk-schalter').toggleClass('fk-an', an);
                 zeichneBogen();
                 var erreichbar = ctx.hat('info.online') ? !!ctx.wert('info.online') : true;
-                $wurzel.find('.fk-punkt').toggleClass('fk-weg', !erreichbar).text(erreichbar ? 'verbunden' : 'offline');
+                $wurzel.find('.fk-punkt').toggleClass('fk-weg', !erreichbar).text(vis.binds.faikout.t(erreichbar ? 'verbunden' : 'offline'));
             };
         });
     },
@@ -397,7 +483,7 @@ vis.binds.faikout = {
 
             b.kopf($wurzel, ctx, data);
             var $g = $('<div class="fk-gruppe"></div>');
-            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">Betriebsart</div>');
+            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('Betriebsart') + '</div>');
             var $p = $('<div class="fk-pillen"></div>').toggleClass('fk-senkrecht', !!senkrecht);
             b.MODI.forEach(function (m) {
                 $('<button type="button" class="fk-pille"></button>')
@@ -438,7 +524,7 @@ vis.binds.faikout = {
 
             b.kopf($wurzel, ctx, data);
             var $g = $('<div class="fk-gruppe"></div>');
-            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">Lüfter</div>');
+            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('Lüfter') + '</div>');
             var $p = $('<div class="fk-pillen"></div>').toggleClass('fk-senkrecht', !!senkrecht);
             b.LUEFTER.forEach(function (l) {
                 $('<button type="button" class="fk-pille fk-nur-text"></button>')
@@ -473,7 +559,7 @@ vis.binds.faikout = {
 
             b.kopf($wurzel, ctx, data);
             var $g = $('<div class="fk-gruppe"></div>');
-            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">Leistungsbegrenzung</div>');
+            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('Leistungsbegrenzung') + '</div>');
             $g.append(
                 '<div class="fk-leistung">' +
                 ' <div class="fk-leistung-wert"><span class="fk-leistung-zahl">–</span><small>%</small></div>' +
@@ -516,13 +602,13 @@ vis.binds.faikout = {
                 return ctx.hat(z.feld);
             });
             if (!liste.length) {
-                $wurzel.append('<div class="fk-fehler">Dieses Gerät meldet keine der Zusatzfunktionen.</div>');
+                $wurzel.append('<div class="fk-fehler">' + b.t('Dieses Gerät meldet keine der Zusatzfunktionen.') + '</div>');
                 return null;
             }
 
             b.kopf($wurzel, ctx, data);
             var $g = $('<div class="fk-gruppe"></div>');
-            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">Zusatzfunktionen</div>');
+            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('Zusatzfunktionen') + '</div>');
             var $p = $('<div class="fk-pillen"></div>').toggleClass('fk-senkrecht', !!senkrecht);
             liste.forEach(function (z) {
                 var mitText = data.beschriftung === true || senkrecht;
@@ -577,7 +663,7 @@ vis.binds.faikout = {
             b.kopf($wurzel, ctx, data);
             var liste = b.gewaehlteWerte(data).filter(function (m) { return ctx.hat(m.feld); });
             if (!liste.length) {
-                $wurzel.append('<div class="fk-fehler">Keiner der gewählten Messwerte ist bei diesem Gerät vorhanden.</div>');
+                $wurzel.append('<div class="fk-fehler">' + b.t('Keiner der gewählten Messwerte ist bei diesem Gerät vorhanden.') + '</div>');
                 return null;
             }
             $wurzel.append('<div class="fk-messwerte"></div>');
@@ -605,7 +691,7 @@ vis.binds.faikout = {
                 if (b.MESSWERTE[i].schluessel === data.messwert) m = b.MESSWERTE[i];
             }
             if (!m) {
-                $wurzel.html('<div class="fk-fehler">Kein Messwert gewählt.</div>');
+                $wurzel.html('<div class="fk-fehler">' + b.t('Kein Messwert gewählt.') + '</div>');
                 return null;
             }
             if (!ctx.hat(m.feld)) return b.fehlt($wurzel, m.feld);
@@ -689,10 +775,17 @@ vis.binds.faikout = {
 
     /** Kurze Achsenbeschriftung: Stunde, Tag im Monat oder Monatsname. */
     verlaufBeschriftung: function (schluessel, bereich) {
-        var MONATE = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
         if (bereich === 'tag') return schluessel.slice(-2);                      // 2026-08-19T14 -> 14
         if (/^\d{4}-\d{2}-\d{2}$/.test(schluessel)) return String(+schluessel.slice(8)) + '.';
-        if (/^\d{4}-\d{2}$/.test(schluessel)) return MONATE[+schluessel.slice(5) - 1] || schluessel;
+        if (/^\d{4}-\d{2}$/.test(schluessel)) {
+            // Monatsname in der VIS-Sprache vom Browser - keine eigene Liste je Sprache
+            var monat = +schluessel.slice(5) - 1;
+            try {
+                return new Intl.DateTimeFormat(vis.binds.faikout.sprache(), { month: 'short' }).format(new Date(2000, monat, 15));
+            } catch (e) {
+                return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monat] || schluessel;
+            }
+        }
         return schluessel;
     },
 
@@ -747,8 +840,8 @@ vis.binds.faikout = {
                 svg += '<rect x="' + x.toFixed(1) + '" y="' + y(wert).toFixed(1) +
                        '" width="' + balkenB.toFixed(1) + '" height="' + h.toFixed(1) +
                        '" rx="1" fill="' + b.VERLAUF_FARBEN[r.art] + '">' +
-                       '<title>' + punkte[k].beschriftung + ' · Kühlen ' + punkte[k].kuehlen.toFixed(1) +
-                       ' kWh · Heizen ' + punkte[k].heizen.toFixed(1) + ' kWh</title></rect>';
+                       '<title>' + punkte[k].beschriftung + ' · ' + b.t('Kühlen') + ' ' + punkte[k].kuehlen.toFixed(1) +
+                       ' kWh · ' + b.t('Heizen') + ' ' + punkte[k].heizen.toFixed(1) + ' kWh</title></rect>';
             });
         });
         svg += '</g></svg>';
@@ -766,14 +859,14 @@ vis.binds.faikout = {
                 kuehlen: data.zeige_kuehlen !== false,
                 heizen:  data.zeige_heizen !== false
             };
-            var BESCHRIFTUNG = { tag: 'Heute', monat: 'Dieser Monat', jahr: 'Dieses Jahr' };
+            var BESCHRIFTUNG = { tag: b.t('Heute'), monat: b.t('Dieser Monat'), jahr: b.t('Dieses Jahr') };
 
             var $box = $('<div class="fk-verlauf"></div>').appendTo($wurzel);
             if (data.umschalter !== false) {
                 var $schalter = $('<div class="fk-v-schalter"></div>').appendTo($box);
                 ['tag', 'monat', 'jahr'].forEach(function (wahl) {
                     $('<button type="button"></button>')
-                        .text({ tag: 'Tag', monat: 'Monat', jahr: 'Jahr' }[wahl])
+                        .text(b.t({ tag: 'Tag', monat: 'Monat', jahr: 'Jahr' }[wahl]))
                         .attr('aria-pressed', wahl === bereich ? 'true' : 'false')
                         .on('click', function () {
                             bereich = wahl;
@@ -786,7 +879,7 @@ vis.binds.faikout = {
             }
             if (data.auswahl !== false) {
                 var $arten = $('<div class="fk-v-arten"></div>').appendTo($box);
-                [['gesamt', 'Gesamt'], ['kuehlen', 'Kühlen'], ['heizen', 'Heizen']].forEach(function (paar) {
+                [['gesamt', b.t('Gesamt')], ['kuehlen', b.t('Kühlen')], ['heizen', b.t('Heizen')]].forEach(function (paar) {
                     var $l = $('<label></label>').appendTo($arten);
                     $('<input type="checkbox">')
                         .prop('checked', arten[paar[0]])
@@ -806,21 +899,20 @@ vis.binds.faikout = {
                 b.verlaufLesen(ctx, bereich, function (punkte, fehlend) {
                     $fuss.find('.fk-v-zeitraum').text(BESCHRIFTUNG[bereich] || '');
                     if (punkte === null) {
-                        $flaeche.html('<div class="fk-fehler">Dieses Gerät hat keinen Datenpunkt ' +
-                            '<code>verbrauch.&lt;art&gt;.' + fehlend + '</code>. Er entsteht, sobald ' +
-                            'die Anlage Energiewerte meldet.</div>');
+                        $flaeche.html('<div class="fk-fehler">' + b.t('Dieses Gerät hat keinen Datenpunkt %s. Er entsteht, sobald die Anlage Energiewerte meldet.',
+                            '<code>verbrauch.&lt;art&gt;.' + fehlend + '</code>') + '</div>');
                         $fuss.find('.fk-v-summe').text('');
                         return;
                     }
                     if (!punkte.length) {
-                        $flaeche.html('<div class="fk-v-leer">Noch keine Werte für diesen Zeitraum.</div>');
+                        $flaeche.html('<div class="fk-v-leer">' + b.t('Noch keine Werte für diesen Zeitraum.') + '</div>');
                         $fuss.find('.fk-v-summe').text('');
                         return;
                     }
                     var w = $flaeche.width() || 400;
                     b.verlaufZeichnen($flaeche, punkte, arten, w, Math.max(110, Math.round(w * 0.42)));
                     var summe = punkte.reduce(function (a, p) { return a + p.kuehlen + p.heizen; }, 0);
-                    $fuss.find('.fk-v-summe').html('Summe <b>' +
+                    $fuss.find('.fk-v-summe').html(b.t('Summe') + ' <b>' +
                         (summe >= 100 ? summe.toFixed(0) : summe.toFixed(1)) + ' kWh</b>');
                 });
             }
@@ -845,10 +937,10 @@ vis.binds.faikout = {
 
             teile.push(b.bogenBauen($wurzel, ctx, data, 'fkskala_' + widgetID));
             if (ctx.hat('control.mode')) {
-                teile.push(b.teilPillen($wurzel, ctx, 'Betriebsart', 'control.mode', b.MODI, false, data.symbole !== false));
+                teile.push(b.teilPillen($wurzel, ctx, b.t('Betriebsart'), 'control.mode', b.MODI, false, data.symbole !== false));
             }
             if (ctx.hat('control.fan')) {
-                teile.push(b.teilPillen($wurzel, ctx, 'Lüfter', 'control.fan', b.LUEFTER, true, false));
+                teile.push(b.teilPillen($wurzel, ctx, b.t('Lüfter'), 'control.fan', b.LUEFTER, true, false));
             }
 
             // Schwenken gehoert auf die grosse Kachel. Die uebrigen Zusatzfunktionen kommen
@@ -872,7 +964,7 @@ vis.binds.faikout = {
                 $wurzel.find('.fk-schalter').toggleClass('fk-an', an);
                 teile.forEach(function (f) { if (f) f(); });
                 var erreichbar = ctx.hat('info.online') ? !!ctx.wert('info.online') : true;
-                $wurzel.find('.fk-punkt').toggleClass('fk-weg', !erreichbar).text(erreichbar ? 'verbunden' : 'offline');
+                $wurzel.find('.fk-punkt').toggleClass('fk-weg', !erreichbar).text(vis.binds.faikout.t(erreichbar ? 'verbunden' : 'offline'));
             };
         });
     },
@@ -914,7 +1006,7 @@ vis.binds.faikout = {
         var b = vis.binds.faikout;
         var $g = $('<div class="fk-gruppe" style="flex:none"></div>')
             .append('<div class="fk-gruppe-etikett">' +
-                (liste.length > 3 ? 'Zusatzfunktionen' : 'Schwenken') + '</div>');
+                b.t(liste.length > 3 ? 'Zusatzfunktionen' : 'Schwenken') + '</div>');
         var $p = $('<div class="fk-pillen"></div>');
         liste.forEach(function (z) {
             var mitText = data && data.beschriftung === true;

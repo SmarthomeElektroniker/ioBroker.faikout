@@ -86,11 +86,11 @@ class Faikout extends utils.Adapter {
         try {
             await this.broker.start();
         } catch (e) {
-            this.log.error(`MQTT-Broker konnte nicht starten: ${e.message}`);
+            this.log.error(`MQTT broker could not start: ${e.message}`);
             return;
         }
 
-        this.log.info(`Bereit. Die faikout-Module müssen als MQTT-Host <IP des ioBroker>:${port} eingetragen sein.`);
+        this.log.info(`Ready. Configure the faikout modules with MQTT host <ioBroker IP>:${port}.`);
         this.subscribeStates('*.control.*');
         this.stundenTaktStarten();
     }
@@ -182,7 +182,7 @@ class Faikout extends utils.Adapter {
         try {
             daten = JSON.parse(text);
         } catch {
-            this.log.debug(`Kein JSON auf "${topic}": ${text.slice(0, 80)}`);
+            this.log.debug(`No JSON on "${topic}": ${text.slice(0, 80)}`);
             return;
         }
         if (!daten || typeof daten !== 'object') {
@@ -241,7 +241,7 @@ class Faikout extends utils.Adapter {
         if (vorhanden) {
             await this.extendObject(stateId, { common: grenzen });
             this.log.info(
-                `${geraetName}: Sollwertbereich ${grenzen.min}–${grenzen.max} °C in ${grenzen.step}er-Schritten übernommen.`,
+                `${geraetName}: target range ${grenzen.min}–${grenzen.max} °C in steps of ${grenzen.step} applied.`,
             );
         }
     }
@@ -274,7 +274,7 @@ class Faikout extends utils.Adapter {
                 common: { name: geraetName },
                 native: { faikoutName: geraetName },
             });
-            this.log.info(`Gerät erkannt: "${geraetName}" -> ${this.namespace}.${id}`);
+            this.log.info(`Device detected: "${geraetName}" -> ${this.namespace}.${id}`);
             this.verbindungPruefen();
         }
         // Der Name kann sich aendern, wenn der Hostname im Modul umgestellt wird.
@@ -299,7 +299,7 @@ class Faikout extends utils.Adapter {
                     g.feuchteEcht = true;
                     await this.extendObject(id, { native: { feuchteEcht: true } });
                     this.log.info(
-                        `${geraetName}: Luftfeuchte-Sensor erkannt (${wert} %) - Datenpunkt wird ab jetzt geführt.`,
+                        `${geraetName}: humidity sensor detected (${wert} %) - state is maintained from now on.`,
                     );
                 }
                 if (!urteil.nehmen) {
@@ -456,7 +456,7 @@ class Faikout extends utils.Adapter {
         await this.extendObject(stateId, { type: 'state', common, native: { feld } });
         if (def.unbekannt) {
             this.log.info(
-                `Unbekanntes Feld "${feld}" angelegt (${def.type}) - bitte melden, damit es sauber beschrieben wird.`,
+                `Unknown field "${feld}" created (${def.type}) - please report it so it can be described properly.`,
             );
         }
     }
@@ -499,7 +499,7 @@ class Faikout extends utils.Adapter {
         const feld = (obj.native && obj.native.feld) || teile[teile.length - 1];
         const g = this.geraete.get(geraetId);
         if (!g) {
-            this.log.warn(`Befehl für unbekanntes Gerät ${geraetId} verworfen.`);
+            this.log.warn(`Command for unknown device ${geraetId} discarded.`);
             return;
         }
 

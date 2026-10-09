@@ -52,7 +52,7 @@ describe('Verbrauchsrechnung', () => {
         expect(r.werte.stunde, 'nach dem Reset wieder bei null').to.equal(0);
         expect(r.werte.heute).to.equal(0);
         expect(r.werte.gesamt).to.equal(0.012);
-        expect(r.hinweise.join(' ')).to.match(/zurückgesprungen/);
+        expect(r.hinweise.join(' ')).to.match(/went backwards/);
     });
 
     it('vermerkt Ausfallzeiten als Lücke statt sie einer Stunde zuzuschlagen', () => {
@@ -63,7 +63,7 @@ describe('Verbrauchsrechnung', () => {
         expect(r.werte.letzteStunde, 'die 10-Uhr-Stunde ist sauber abgeschlossen').to.equal(0.4);
         const luecken = r.werte.ring.filter(e => e.kwh === null);
         expect(luecken, 'drei unbekannte Stunden').to.have.lengthOf(3);
-        expect(r.hinweise.join(' ')).to.match(/Lücke/);
+        expect(r.hinweise.join(' ')).to.match(/gap/);
     });
 
     it('begrenzt den Ringpuffer auf 48 Stunden', () => {

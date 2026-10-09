@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.9",
+    "version": "0.0.10",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.10": {
+        "en": "Review findings: all log messages in English, swing state labels in English, VIS widgets show English texts outside German (decimal separator and month names follow the VIS language)",
+        "de": "Review-Befunde: alle Log-Meldungen auf Englisch, Bezeichnungen der Schwenk-Zustände auf Englisch, VIS-Bausteine außerhalb von Deutsch auf Englisch (Dezimaltrennzeichen und Monatsnamen folgen der VIS-Sprache)",
+        "ru": "Замечания ревью: все сообщения журнала на английском, названия состояний качания на английском, виджеты VIS вне немецкого показывают английские тексты (десятичный разделитель и названия месяцев следуют языку VIS)",
+        "pt": "Constatações da revisão: todas as mensagens de registo em inglês, rótulos dos estados de oscilação em inglês, widgets VIS mostram textos em inglês fora do alemão (separador decimal e nomes dos meses seguem o idioma do VIS)",
+        "nl": "Reviewbevindingen: alle logberichten in het Engels, labels van de zwenkstanden in het Engels, VIS-widgets tonen buiten het Duits Engelse teksten (decimaalteken en maandnamen volgen de VIS-taal)",
+        "fr": "Remarques de la revue : tous les messages du journal en anglais, libellés des états d'oscillation en anglais, les widgets VIS affichent des textes anglais hors allemand (séparateur décimal et noms des mois suivent la langue de VIS)",
+        "it": "Rilievi della revisione: tutti i messaggi di log in inglese, etichette degli stati di oscillazione in inglese, i widget VIS mostrano testi in inglese al di fuori del tedesco (separatore decimale e nomi dei mesi seguono la lingua di VIS)",
+        "es": "Hallazgos de la revisión: todos los mensajes de registro en inglés, etiquetas de los estados de oscilación en inglés, los widgets VIS muestran textos en inglés fuera del alemán (el separador decimal y los nombres de los meses siguen el idioma de VIS)",
+        "pl": "Uwagi z przeglądu: wszystkie komunikaty dziennika po angielsku, etykiety stanów nawiewu po angielsku, widżety VIS poza niemieckim pokazują teksty angielskie (separator dziesiętny i nazwy miesięcy zgodne z językiem VIS)",
+        "uk": "Зауваження рев'ю: усі повідомлення журналу англійською, назви станів гойдання англійською, віджети VIS поза німецькою показують англійські тексти (десятковий роздільник і назви місяців відповідають мові VIS)",
+        "zh-cn": "审查意见：所有日志消息改为英文，摆风状态标签改为英文，VIS 小部件在非德语环境下显示英文文本（小数分隔符和月份名称跟随 VIS 语言）"
+      },
       "0.0.9": {
         "en": "Maintenance: @iobroker/testing updated to 6.3, .gitignore no longer covers the tracked .vscode/settings.json",
         "de": "Wartung: @iobroker/testing auf 6.3 aktualisiert, .gitignore schließt die versionierte .vscode/settings.json nicht mehr aus",
