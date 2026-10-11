@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.13",
+    "version": "0.0.14",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.14": {
+        "en": "Consumption states renamed to English IDs (consumption.total.today ...), existing values are migrated; status.autoe can be written; complete translations of admin and widgets",
+        "de": "Verbrauchsdatenpunkte auf englische IDs umbenannt (consumption.total.today ...), vorhandene Werte werden übernommen; status.autoe ist beschreibbar; vollständige Übersetzungen von Admin und Widgets",
+        "ru": "Состояния потребления переименованы в английские ID (consumption.total.today ...), существующие значения переносятся; status.autoe можно записывать; полные переводы админки и виджетов",
+        "pt": "Estados de consumo renomeados para IDs em inglês (consumption.total.today ...), os valores existentes são migrados; status.autoe pode ser escrito; traduções completas do admin e dos widgets",
+        "nl": "Verbruiksstatussen hernoemd naar Engelse ID’s (consumption.total.today ...), bestaande waarden worden overgenomen; status.autoe is schrijfbaar; volledige vertalingen van admin en widgets",
+        "fr": "États de consommation renommés en ID anglais (consumption.total.today ...), les valeurs existantes sont migrées ; status.autoe est modifiable ; traductions complètes de l’admin et des widgets",
+        "it": "Stati di consumo rinominati con ID inglesi (consumption.total.today ...), i valori esistenti vengono migrati; status.autoe è scrivibile; traduzioni complete di admin e widget",
+        "es": "Estados de consumo renombrados a ID en inglés (consumption.total.today ...), los valores existentes se migran; status.autoe se puede escribir; traducciones completas del admin y los widgets",
+        "pl": "Stany zużycia przemianowane na angielskie ID (consumption.total.today ...), istniejące wartości są przenoszone; status.autoe można zapisywać; pełne tłumaczenia panelu i widżetów",
+        "uk": "Стани споживання перейменовано на англійські ID (consumption.total.today ...), наявні значення переносяться; status.autoe можна записувати; повні переклади адмінки та віджетів",
+        "zh-cn": "能耗状态改为英文 ID（consumption.total.today 等），现有数值自动迁移；status.autoe 可写入；管理界面和小部件完整翻译"
+      },
       "0.0.13": {
         "en": "On start, names and roles of existing states are updated to the current field description (also for rarely reported fields)",
         "de": "Beim Start werden Namen und Rollen vorhandener Datenpunkte an die aktuelle Feldbeschreibung angeglichen (auch bei selten gemeldeten Feldern)",
@@ -145,19 +158,6 @@
         "pl": "Poprawiono strukturę obiektów na potrzeby kontroli repozytorium: wszystkie nazwy punktów danych w jedenastu językach, poprawiono nieprawidłowe role (info, level.mode.*). Przyjęto wspólną konfigurację ESLint i skrypt wydania.",
         "uk": "Структуру об'єктів виправлено для перевірки репозиторію: усі назви точок даних одинадцятьма мовами, виправлено недійсні ролі (info, level.mode.*). Запроваджено спільну конфігурацію ESLint і скрипт випуску.",
         "zh-cn": "为仓库检查修正了对象结构：所有数据点名称提供十一种语言，更正了无效角色（info、level.mode.*）。采用共享 ESLint 配置和发布脚本。"
-      },
-      "0.0.7": {
-        "en": "Maintenance release: dependencies updated, tests now also run on Node.js 26, admin translations moved to the short file format. Published through GitHub Actions with provenance.",
-        "de": "Wartungsversion: Abhängigkeiten aktualisiert, Tests laufen jetzt auch unter Node.js 26, Admin-Übersetzungen ins kurze Dateiformat umgestellt. Veröffentlicht über GitHub Actions mit Provenance.",
-        "ru": "Сопровождающий выпуск: зависимости обновлены, тесты теперь выполняются и на Node.js 26, переводы интерфейса администратора переведены в короткий формат файлов. Опубликовано через GitHub Actions с provenance.",
-        "pt": "Versão de manutenção: dependências atualizadas, os testes correm agora também no Node.js 26, traduções do admin migradas para o formato curto de ficheiros. Publicado através do GitHub Actions com provenance.",
-        "nl": "Onderhoudsversie: afhankelijkheden bijgewerkt, tests draaien nu ook op Node.js 26, admin-vertalingen omgezet naar het korte bestandsformaat. Gepubliceerd via GitHub Actions met provenance.",
-        "fr": "Version de maintenance : dépendances mises à jour, les tests s'exécutent désormais aussi sous Node.js 26, traductions de l'admin converties au format de fichier court. Publiée via GitHub Actions avec provenance.",
-        "it": "Versione di manutenzione: dipendenze aggiornate, i test ora vengono eseguiti anche su Node.js 26, traduzioni dell'admin convertite nel formato di file breve. Pubblicata tramite GitHub Actions con provenance.",
-        "es": "Versión de mantenimiento: dependencias actualizadas, las pruebas ahora también se ejecutan en Node.js 26, traducciones del admin convertidas al formato de archivo corto. Publicada mediante GitHub Actions con provenance.",
-        "pl": "Wydanie serwisowe: zaktualizowano zależności, testy działają teraz także na Node.js 26, tłumaczenia panelu admin przeniesiono do krótkiego formatu plików. Opublikowano przez GitHub Actions z provenance.",
-        "uk": "Сервісний випуск: залежності оновлено, тести тепер виконуються й на Node.js 26, переклади адмін-панелі переведено в короткий формат файлів. Опубліковано через GitHub Actions з provenance.",
-        "zh-cn": "维护版本：更新依赖项，测试现在也在 Node.js 26 上运行，管理界面翻译改为简短文件格式。通过 GitHub Actions 发布并附带来源证明（provenance）。"
       }
     },
     "restartAdapters": [
@@ -169,8 +169,8 @@
     "port": 1888,
     "user": "",
     "pass": "",
-    "historyAnmelden": true,
-    "historyInstanz": "history.0"
+    "historyRegister": true,
+    "historyInstance": "history.0"
   },
   "encryptedNative": [
     "pass"

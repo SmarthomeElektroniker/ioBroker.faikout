@@ -70,6 +70,16 @@ module's **Extra** settings makes it report immediately.
 	### **WORK IN PROGRESS**
 -->
 
+### 0.0.14
+- **Breaking:** the consumption subtree uses English IDs: `consumption.{total|heating|cooling}.{currentHour|lastHour|today|yesterday|thisMonth|lastMonth}`
+  and `hoursJson`/`daysJson`/`monthsJson` (entries keyed `hour`/`day`/`month`). On start the adapter copies the last values of the
+  old `verbrauch.*` states to the new IDs and deletes the old objects. Data recorded by the history adapter stays under the old IDs.
+- Config keys renamed to `historyRegister` / `historyInstance`; an existing configuration keeps working until it is saved again.
+- `status.autoe` is now subscribed - writes were silently dropped before.
+- Admin texts translated into all eleven languages; VIS widgets: English names, English select values (`light`/`dark`,
+  `day`/`month`/`year`, reading keys) and a dictionary for all eleven languages. Values saved by older views are still understood.
+- Names of states for unknown fields carry all eleven languages.
+
 ### 0.0.13
 - On start, names and roles of existing states are updated to the current field description. Objects are only created
   when a value arrives, so rarely reported fields (like `status.reason`) kept their old description after an update.

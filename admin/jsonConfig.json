@@ -6,7 +6,7 @@
             "type": "panel",
             "label": "tabBroker",
             "items": {
-                "hinweis": {
+                "brokerHeader": {
                     "type": "header",
                     "size": 4,
                     "text": "headerBroker",
@@ -16,7 +16,7 @@
                     "lg": 12,
                     "xl": 12
                 },
-                "erklaerung": {
+                "brokerText": {
                     "type": "staticText",
                     "text": "textBroker",
                     "xs": 12,
@@ -38,7 +38,7 @@
                     "lg": 4,
                     "xl": 4
                 },
-                "_leer": {
+                "_spacer": {
                     "type": "staticText",
                     "text": "",
                     "xs": 12,
@@ -70,33 +70,33 @@
                 }
             }
         },
-        "tabVerbrauch": {
+        "tabConsumption": {
             "type": "panel",
-            "label": "tabVerbrauch",
+            "label": "tabConsumption",
             "items": {
-                "hVerbrauch": {
+                "consumptionHeader": {
                     "type": "header",
                     "size": 4,
-                    "text": "headerVerbrauch",
+                    "text": "headerConsumption",
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
                     "xl": 12
                 },
-                "tVerbrauch": {
+                "consumptionText": {
                     "type": "staticText",
-                    "text": "textVerbrauch",
+                    "text": "textConsumption",
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
                     "xl": 12
                 },
-                "historyAnmelden": {
+                "historyRegister": {
                     "type": "checkbox",
-                    "label": "labelHistoryAnmelden",
-                    "help": "helpHistoryAnmelden",
+                    "label": "labelHistoryRegister",
+                    "help": "helpHistoryRegister",
                     "default": true,
                     "xs": 12,
                     "sm": 12,
@@ -104,13 +104,13 @@
                     "lg": 6,
                     "xl": 6
                 },
-                "historyInstanz": {
+                "historyInstance": {
                     "type": "instance",
                     "adapter": "history",
-                    "hidden": "!data.historyAnmelden",
+                    "hidden": "!data.historyRegister",
                     "allowDeactivate": false,
-                    "label": "labelHistoryInstanz",
-                    "help": "helpHistoryInstanz",
+                    "label": "labelHistoryInstance",
+                    "help": "helpHistoryInstance",
                     "default": "history.0",
                     "xs": 12,
                     "sm": 12,
@@ -120,9 +120,9 @@
                 }
             }
         },
-        "tabHilfe": {
+        "tabHelp": {
             "type": "panel",
-            "label": "tabHilfe",
+            "label": "tabHelp",
             "items": {
                 "h1": {
                     "type": "header",

@@ -1,6 +1,6 @@
 {
   "tabBroker": "MQTT broker",
-  "tabHilfe": "Setup",
+  "tabHelp": "Setup",
   "headerBroker": "Own MQTT broker",
   "textBroker": "This adapter runs its own MQTT broker. Point the faikout modules at it; nothing else is needed.",
   "labelPort": "Port",
@@ -15,11 +15,11 @@
   "textDocker": "The broker port must be published by the container, otherwise the modules cannot reach it. Add a port mapping for the port configured above.",
   "headerLive": "Faster feedback",
   "textLive": "By default a module reports its status every 60 seconds ('reporting'), so a command is confirmed only with the next report. Enabling 'livestatus' in the module's Extra settings makes it report immediately.",
-  "tabVerbrauch": "Consumption",
-  "headerVerbrauch": "Consumption history",
-  "textVerbrauch": "The units only report lifetime counters. The adapter derives hourly and daily consumption from them (verbrauch.*), keeps the totals unchanged (status.*) and stores the last 48 hours as JSON for the widget.",
-  "labelHistoryAnmelden": "Log consumption with the history adapter",
-  "helpHistoryAnmelden": "Registers the consumption data points for recording automatically, so charts work without configuring each point by hand.",
-  "labelHistoryInstanz": "History instance",
-  "helpHistoryInstanz": "Instance that stores the series."
+  "tabConsumption": "Consumption",
+  "headerConsumption": "Consumption history",
+  "textConsumption": "The units only report lifetime counters. The adapter derives hourly and daily consumption from them (consumption.*), keeps the totals unchanged (status.*) and stores the last 48 hours as JSON for the widget.",
+  "labelHistoryRegister": "Log consumption with the history adapter",
+  "helpHistoryRegister": "Registers the consumption data points for recording automatically, so charts work without configuring each point by hand.",
+  "labelHistoryInstance": "History instance",
+  "helpHistoryInstance": "Instance that stores the series."
 }

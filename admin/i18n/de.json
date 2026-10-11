@@ -1,6 +1,6 @@
 {
   "tabBroker": "MQTT-Broker",
-  "tabHilfe": "Einrichtung",
+  "tabHelp": "Einrichtung",
   "headerBroker": "Eigener MQTT-Broker",
   "textBroker": "Dieser Adapter bringt einen eigenen MQTT-Broker mit. Die faikout-Module müssen nur darauf zeigen, mehr ist nicht nötig.",
   "labelPort": "Port",
@@ -15,11 +15,11 @@
   "textDocker": "Der Broker-Port muss vom Container nach außen gemappt sein, sonst erreichen ihn die Module nicht. Für den oben eingestellten Port ein Portmapping ergänzen.",
   "headerLive": "Schnellere Rückmeldung",
   "textLive": "Ab Werk meldet ein Modul seinen Zustand alle 60 Sekunden ('reporting') - ein Befehl wird deshalb erst mit der nächsten Meldung bestätigt. Die Einstellung 'livestatus' in den Extra-Einstellungen des Moduls lässt es sofort melden.",
-  "tabVerbrauch": "Verbrauch",
-  "headerVerbrauch": "Verbrauchshistorie",
-  "textVerbrauch": "Die Anlagen melden nur Gesamtzähler. Der Adapter bildet daraus Stunden- und Tagesverbrauch (verbrauch.*), lässt die Gesamtzähler unangetastet (status.*) und legt die letzten 48 Stunden als JSON für das Widget ab.",
-  "labelHistoryAnmelden": "Verbrauch über den History-Adapter aufzeichnen",
-  "helpHistoryAnmelden": "Meldet die Verbrauchs-Datenpunkte automatisch zur Aufzeichnung an, damit Diagramme ohne Handarbeit an jedem einzelnen Punkt funktionieren.",
-  "labelHistoryInstanz": "History-Instanz",
-  "helpHistoryInstanz": "Instanz, welche die Reihen speichert."
+  "tabConsumption": "Verbrauch",
+  "headerConsumption": "Verbrauchshistorie",
+  "textConsumption": "Die Anlagen melden nur Gesamtzähler. Der Adapter bildet daraus Stunden- und Tagesverbrauch (consumption.*), lässt die Gesamtzähler unangetastet (status.*) und legt die letzten 48 Stunden als JSON für das Widget ab.",
+  "labelHistoryRegister": "Verbrauch über den History-Adapter aufzeichnen",
+  "helpHistoryRegister": "Meldet die Verbrauchs-Datenpunkte automatisch zur Aufzeichnung an, damit Diagramme ohne Handarbeit an jedem einzelnen Punkt funktionieren.",
+  "labelHistoryInstance": "History-Instanz",
+  "helpHistoryInstance": "Instanz, welche die Reihen speichert."
 }

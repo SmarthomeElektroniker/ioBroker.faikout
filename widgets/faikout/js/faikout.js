@@ -156,20 +156,39 @@ vis.binds.faikout = {
         { wert: 'high', text: '5' }
     ],
 
-    /** Alle Messwerte, die als Kachel oder Einzelwert zur Verfuegung stehen. */
+    /**
+     * Alle Messwerte, die als Kachel oder Einzelwert zur Verfuegung stehen.
+     *
+     * `key` ist der Wert im Widget-Attribut (`reading`, `show_<key>`). `legacy` ist der Wert, den
+     * Ansichten aus 0.0.13 und frueher gespeichert haben - er wird weiter verstanden, damit eine
+     * bestehende Ansicht nach dem Update nicht leer bleibt.
+     */
     MESSWERTE: [
-        { schluessel: 'aussen', feld: 'status.outside', name: 'Außen', einheit: '°C', stellen: 1 },
-        { schluessel: 'leistung', feld: 'status.consumption', name: 'Leistung', einheit: 'W', stellen: 0 },
-        { schluessel: 'heute', feld: 'verbrauch.gesamt.heute', name: 'Heute', einheit: 'kWh', stellen: 1 },
-        { schluessel: 'verdichter', feld: 'status.comp', name: 'Verdichter', einheit: 'rpm', stellen: 0 },
-        { schluessel: 'ventilator', feld: 'status.fanfreq', name: 'Ventilator', einheit: 'rpm', stellen: 0 },
-        { schluessel: 'kaeltemittel', feld: 'status.liquid', name: 'Kältemittel', einheit: '°C', stellen: 1 },
-        { schluessel: 'raum', feld: 'status.temp', name: 'Raum', einheit: '°C', stellen: 1 },
-        { schluessel: 'feuchte', feld: 'status.hum', name: 'Luftfeuchte', einheit: '%', stellen: 0 },
-        { schluessel: 'energie', feld: 'status.energy', name: 'Energie gesamt', einheit: 'kWh', stellen: 1 },
-        { schluessel: 'gestern', feld: 'verbrauch.gesamt.gestern', name: 'Gestern', einheit: 'kWh', stellen: 1 },
-        { schluessel: 'stunde', feld: 'verbrauch.gesamt.stunde', name: 'Diese Stunde', einheit: 'kWh', stellen: 2 }
+        { key: 'outdoor', legacy: 'aussen', feld: 'status.outside', name: 'Außen', einheit: '°C', stellen: 1 },
+        { key: 'power', legacy: 'leistung', feld: 'status.consumption', name: 'Leistung', einheit: 'W', stellen: 0 },
+        { key: 'today', legacy: 'heute', feld: 'consumption.total.today', name: 'Heute', einheit: 'kWh', stellen: 1 },
+        { key: 'compressor', legacy: 'verdichter', feld: 'status.comp', name: 'Verdichter', einheit: 'rpm', stellen: 0 },
+        { key: 'fan', legacy: 'ventilator', feld: 'status.fanfreq', name: 'Ventilator', einheit: 'rpm', stellen: 0 },
+        { key: 'refrigerant', legacy: 'kaeltemittel', feld: 'status.liquid', name: 'Kältemittel', einheit: '°C', stellen: 1 },
+        { key: 'room', legacy: 'raum', feld: 'status.temp', name: 'Raum', einheit: '°C', stellen: 1 },
+        { key: 'humidity', legacy: 'feuchte', feld: 'status.hum', name: 'Luftfeuchte', einheit: '%', stellen: 0 },
+        { key: 'energy', legacy: 'energie', feld: 'status.energy', name: 'Energie gesamt', einheit: 'kWh', stellen: 1 },
+        { key: 'yesterday', legacy: 'gestern', feld: 'consumption.total.yesterday', name: 'Gestern', einheit: 'kWh', stellen: 1 },
+        { key: 'hour', legacy: 'stunde', feld: 'consumption.total.currentHour', name: 'Diese Stunde', einheit: 'kWh', stellen: 2 }
     ],
+
+    /** Werte, die Ansichten aus 0.0.13 und frueher fuer `bereich` gespeichert haben. */
+    BEREICH_ALT: { tag: 'day', monat: 'month', jahr: 'year' },
+
+    /** Dunkles Farbschema? `dunkel` ist der Wert aus 0.0.13 und frueher. */
+    istDunkel: function (data) {
+        return data.theme === 'dark' || data.theme === 'dunkel';
+    },
+
+    /** Ein Ja/Nein-Attribut unter neuem Namen, mit Rueckfall auf den alten aus 0.0.13. */
+    attr: function (data, neu, alt) {
+        return data[neu] !== undefined && data[neu] !== null && data[neu] !== '' ? data[neu] : data[alt];
+    },
 
     /* ------------------------------------------------------------------ Hilfen */
 
@@ -239,7 +258,7 @@ vis.binds.faikout = {
             };
 
             var $wurzel = $('<div class="fk"></div>')
-                .toggleClass('fk-dunkel', data.theme === 'dunkel')
+                .toggleClass('fk-dunkel', vis.binds.faikout.istDunkel(data))
                 .toggleClass('fk-blank', data.rahmen === false);
             $div.empty().append($wurzel);
 
@@ -649,11 +668,11 @@ vis.binds.faikout = {
     /** Welche Messwerte sollen erscheinen? Ohne Auswahl die sechs der Standardkachel. */
     gewaehlteWerte: function (data) {
         var b = vis.binds.faikout;
-        var aus = b.MESSWERTE.filter(function (m) { return data['zeige_' + m.schluessel] === true; });
+        var aus = b.MESSWERTE.filter(function (m) { return b.attr(data, 'show_' + m.key, 'zeige_' + m.legacy) === true; });
         if (aus.length) return aus;
         return b.MESSWERTE.filter(function (m) {
-            return ['aussen', 'leistung', 'heute', 'verdichter', 'ventilator', 'kaeltemittel']
-                .indexOf(m.schluessel) >= 0;
+            return ['outdoor', 'power', 'today', 'compressor', 'fan', 'refrigerant']
+                .indexOf(m.key) >= 0;
         });
     },
 
@@ -674,7 +693,7 @@ vis.binds.faikout = {
                 liste.forEach(function (m) {
                     var v = b.zahl(ctx.wert(m.feld), m.stellen);
                     if (v === null) return;
-                    html += '<div class="fk-mw"><div class="fk-mw-name">' + m.name + '</div>' +
+                    html += '<div class="fk-mw"><div class="fk-mw-name">' + b.t(m.name) + '</div>' +
                         '<div class="fk-mw-wert">' + v + '<small>' + m.einheit + '</small></div></div>';
                 });
                 $wurzel.find('.fk-messwerte').html(html);
@@ -688,7 +707,8 @@ vis.binds.faikout = {
             var b = vis.binds.faikout;
             var m = null;
             for (var i = 0; i < b.MESSWERTE.length; i++) {
-                if (b.MESSWERTE[i].schluessel === data.messwert) m = b.MESSWERTE[i];
+                var gewaehlt = b.attr(data, 'reading', 'messwert');
+                if (b.MESSWERTE[i].key === gewaehlt || b.MESSWERTE[i].legacy === gewaehlt) m = b.MESSWERTE[i];
             }
             if (!m) {
                 $wurzel.html('<div class="fk-fehler">' + b.t('Kein Messwert gewählt.') + '</div>');
@@ -713,7 +733,7 @@ vis.binds.faikout = {
     /* ================================================================== Energieverlauf */
 
     /** Farben der drei Reihen. Kalt/warm sind gesetzt, Gesamt bleibt neutral dazwischen. */
-    VERLAUF_FARBEN: { gesamt: '#a78bfa', kuehlen: '#4fc3f7', heizen: '#ff7043' },
+    VERLAUF_FARBEN: { total: '#a78bfa', cooling: '#4fc3f7', heating: '#ff7043' },
 
     /**
      * Liest eine der drei Reihen aus dem Adapter.
@@ -722,20 +742,20 @@ vis.binds.faikout = {
      * Fremdskript noetig: sonst blieben Monats- und Jahresansicht bei jedem leer, der nichts
      * weiter einrichtet.
      *
-     * @param {function} fertig  ([{beschriftung, kuehlen, heizen}], hinweis) => void
+     * @param {function} fertig  ([{beschriftung, cooling, heating}], hinweis) => void
      */
     verlaufLesen: function (ctx, bereich, fertig) {
         var b = vis.binds.faikout;
-        var FELD = { tag: 'stundenJson', monat: 'tageJson', jahr: 'monateJson' };
-        var feld = FELD[bereich] || FELD.tag;
+        var FELD = { day: 'hoursJson', month: 'daysJson', year: 'monthsJson' };
+        var feld = FELD[bereich] || FELD.day;
 
         // Kuehlen und Heizen stehen getrennt; sie werden ueber ihren Zeitschluessel vereint.
         var reihen = {};
         var offen = 2;
         var gefunden = false;
 
-        ['kuehlen', 'heizen'].forEach(function (art) {
-            var pfad = 'verbrauch.' + art + '.' + feld;
+        ['cooling', 'heating'].forEach(function (art) {
+            var pfad = 'consumption.' + art + '.' + feld;
             if (!ctx.hat(pfad)) {
                 if (!--offen) b.verlaufFertig(reihen, fertig, bereich, gefunden ? null : feld);
                 return;
@@ -746,10 +766,10 @@ vis.binds.faikout = {
                     try {
                         JSON.parse(zustand.val).forEach(function (p) {
                             // Der Adapter benennt den Schluessel je nach Reihe verschieden.
-                            var k = p.stunde || p.tag || p.monat;
+                            var k = p.hour || p.day || p.month;
                             // Luecken tragen keinen Schluessel - sie gehoeren nicht ins Diagramm.
                             if (!k) return;
-                            if (!reihen[k]) reihen[k] = { schluessel: k, kuehlen: 0, heizen: 0 };
+                            if (!reihen[k]) reihen[k] = { schluessel: k, cooling: 0, heating: 0 };
                             reihen[k][art] = Number(p.kwh) || 0;
                         });
                     } catch (e) { /* unbrauchbares JSON wird still uebergangen */ }
@@ -767,15 +787,15 @@ vis.binds.faikout = {
             var e = reihen[k];
             return {
                 beschriftung: b.verlaufBeschriftung(k, bereich),
-                kuehlen: e.kuehlen,
-                heizen: e.heizen
+                cooling: e.cooling,
+                heating: e.heating
             };
         }));
     },
 
     /** Kurze Achsenbeschriftung: Stunde, Tag im Monat oder Monatsname. */
     verlaufBeschriftung: function (schluessel, bereich) {
-        if (bereich === 'tag') return schluessel.slice(-2);                      // 2026-08-19T14 -> 14
+        if (bereich === 'day') return schluessel.slice(-2);                      // 2026-08-19T14 -> 14
         if (/^\d{4}-\d{2}-\d{2}$/.test(schluessel)) return String(+schluessel.slice(8)) + '.';
         if (/^\d{4}-\d{2}$/.test(schluessel)) {
             // Monatsname in der VIS-Sprache vom Browser - keine eigene Liste je Sprache
@@ -798,9 +818,9 @@ vis.binds.faikout = {
 
         // Gesamt liegt hinten, die Anteile stehen davor - so bleiben beide ablesbar.
         var reihen = [];
-        if (arten.gesamt)  reihen.push({ art: 'gesamt',  werte: punkte.map(function (p) { return p.kuehlen + p.heizen; }) });
-        if (arten.heizen)  reihen.push({ art: 'heizen',  werte: punkte.map(function (p) { return p.heizen; }) });
-        if (arten.kuehlen) reihen.push({ art: 'kuehlen', werte: punkte.map(function (p) { return p.kuehlen; }) });
+        if (arten.total)   reihen.push({ art: 'total',   werte: punkte.map(function (p) { return p.cooling + p.heating; }) });
+        if (arten.heating) reihen.push({ art: 'heating', werte: punkte.map(function (p) { return p.heating; }) });
+        if (arten.cooling) reihen.push({ art: 'cooling', werte: punkte.map(function (p) { return p.cooling; }) });
 
         var max = 0.1;
         reihen.forEach(function (r) { r.werte.forEach(function (v) { if (v > max) max = v; }); });
@@ -840,8 +860,8 @@ vis.binds.faikout = {
                 svg += '<rect x="' + x.toFixed(1) + '" y="' + y(wert).toFixed(1) +
                        '" width="' + balkenB.toFixed(1) + '" height="' + h.toFixed(1) +
                        '" rx="1" fill="' + b.VERLAUF_FARBEN[r.art] + '">' +
-                       '<title>' + punkte[k].beschriftung + ' · ' + b.t('Kühlen') + ' ' + punkte[k].kuehlen.toFixed(1) +
-                       ' kWh · ' + b.t('Heizen') + ' ' + punkte[k].heizen.toFixed(1) + ' kWh</title></rect>';
+                       '<title>' + punkte[k].beschriftung + ' · ' + b.t('Kühlen') + ' ' + punkte[k].cooling.toFixed(1) +
+                       ' kWh · ' + b.t('Heizen') + ' ' + punkte[k].heating.toFixed(1) + ' kWh</title></rect>';
             });
         });
         svg += '</g></svg>';
@@ -853,20 +873,21 @@ vis.binds.faikout = {
             var b = vis.binds.faikout;
             b.kopf($wurzel, ctx, data);
 
-            var bereich = data.bereich || 'tag';
+            var gespeichert = b.attr(data, 'range', 'bereich');
+            var bereich = b.BEREICH_ALT[gespeichert] || gespeichert || 'day';
             var arten = {
-                gesamt:  data.zeige_gesamt === true,
-                kuehlen: data.zeige_kuehlen !== false,
-                heizen:  data.zeige_heizen !== false
+                total:   b.attr(data, 'show_total', 'zeige_gesamt') === true,
+                cooling: b.attr(data, 'show_cooling', 'zeige_kuehlen') !== false,
+                heating: b.attr(data, 'show_heating', 'zeige_heizen') !== false
             };
-            var BESCHRIFTUNG = { tag: b.t('Heute'), monat: b.t('Dieser Monat'), jahr: b.t('Dieses Jahr') };
+            var BESCHRIFTUNG = { day: b.t('Heute'), month: b.t('Dieser Monat'), year: b.t('Dieses Jahr') };
 
             var $box = $('<div class="fk-verlauf"></div>').appendTo($wurzel);
-            if (data.umschalter !== false) {
+            if (b.attr(data, 'rangeSwitch', 'umschalter') !== false) {
                 var $schalter = $('<div class="fk-v-schalter"></div>').appendTo($box);
-                ['tag', 'monat', 'jahr'].forEach(function (wahl) {
+                ['day', 'month', 'year'].forEach(function (wahl) {
                     $('<button type="button"></button>')
-                        .text(b.t({ tag: 'Tag', monat: 'Monat', jahr: 'Jahr' }[wahl]))
+                        .text(b.t({ day: 'Tag', month: 'Monat', year: 'Jahr' }[wahl]))
                         .attr('aria-pressed', wahl === bereich ? 'true' : 'false')
                         .on('click', function () {
                             bereich = wahl;
@@ -877,9 +898,9 @@ vis.binds.faikout = {
                         .appendTo($schalter);
                 });
             }
-            if (data.auswahl !== false) {
+            if (b.attr(data, 'seriesSelect', 'auswahl') !== false) {
                 var $arten = $('<div class="fk-v-arten"></div>').appendTo($box);
-                [['gesamt', b.t('Gesamt')], ['kuehlen', b.t('Kühlen')], ['heizen', b.t('Heizen')]].forEach(function (paar) {
+                [['total', b.t('Gesamt')], ['cooling', b.t('Kühlen')], ['heating', b.t('Heizen')]].forEach(function (paar) {
                     var $l = $('<label></label>').appendTo($arten);
                     $('<input type="checkbox">')
                         .prop('checked', arten[paar[0]])
@@ -900,7 +921,7 @@ vis.binds.faikout = {
                     $fuss.find('.fk-v-zeitraum').text(BESCHRIFTUNG[bereich] || '');
                     if (punkte === null) {
                         $flaeche.html('<div class="fk-fehler">' + b.t('Dieses Gerät hat keinen Datenpunkt %s. Er entsteht, sobald die Anlage Energiewerte meldet.',
-                            '<code>verbrauch.&lt;art&gt;.' + fehlend + '</code>') + '</div>');
+                            '<code>consumption.&lt;type&gt;.' + fehlend + '</code>') + '</div>');
                         $fuss.find('.fk-v-summe').text('');
                         return;
                     }
@@ -911,7 +932,7 @@ vis.binds.faikout = {
                     }
                     var w = $flaeche.width() || 400;
                     b.verlaufZeichnen($flaeche, punkte, arten, w, Math.max(110, Math.round(w * 0.42)));
-                    var summe = punkte.reduce(function (a, p) { return a + p.kuehlen + p.heizen; }, 0);
+                    var summe = punkte.reduce(function (a, p) { return a + p.cooling + p.heating; }, 0);
                     $fuss.find('.fk-v-summe').html(b.t('Summe') + ' <b>' +
                         (summe >= 100 ? summe.toFixed(0) : summe.toFixed(1)) + ' kWh</b>');
                 });
@@ -1046,7 +1067,7 @@ vis.binds.faikout = {
             liste.forEach(function (m) {
                 var v = b.zahl(ctx.wert(m.feld), m.stellen);
                 if (v === null) return;
-                html += '<div class="fk-mw"><div class="fk-mw-name">' + m.name + '</div>' +
+                html += '<div class="fk-mw"><div class="fk-mw-name">' + b.t(m.name) + '</div>' +
                     '<div class="fk-mw-wert">' + v + '<small>' + m.einheit + '</small></div></div>';
             });
             $m.html(html);

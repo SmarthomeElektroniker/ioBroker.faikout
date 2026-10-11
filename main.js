@@ -14,24 +14,28 @@ const verbrauch = require('./lib/verbrauch');
 /** Topics, die der Adapter auswertet. Alles andere wird still verworfen. */
 const BEKANNTE_ARTEN = new Set(['state', 'info', 'error', 'event']);
 
+/** Kanal der Verbrauchswerte unter jedem Geraet. */
+const CONSUMPTION = 'consumption';
+
 /**
  * Die drei Lebensdauer-Zaehler und ihr Zweig im Objektbaum. Die Gesamtzaehler bleiben
- * erhalten (status.*), zusaetzlich entstehen daraus die Verbrauchswerte (verbrauch.*).
+ * erhalten (status.*), zusaetzlich entstehen daraus die Verbrauchswerte (consumption.*).
+ * `alt` ist der Zweig bis 0.0.13 - siehe verbrauchUmziehen().
  */
 const ZAEHLER = [
-    { feld: 'energy', zweig: 'gesamt', name: { en: 'Total', de: 'Gesamt' } },
-    { feld: 'energyheat', zweig: 'heizen', name: { en: 'Heating', de: 'Heizen' } },
-    { feld: 'energycool', zweig: 'kuehlen', name: { en: 'Cooling', de: 'Kühlen' } },
+    { feld: 'energy', zweig: 'total', alt: 'gesamt', name: { en: 'Total', de: 'Gesamt' } },
+    { feld: 'energyheat', zweig: 'heating', alt: 'heizen', name: { en: 'Heating', de: 'Heizen' } },
+    { feld: 'energycool', zweig: 'cooling', alt: 'kuehlen', name: { en: 'Cooling', de: 'Kühlen' } },
 ];
 
-/** Datenpunkte je Zaehlerzweig. */
+/** Datenpunkte je Zaehlerzweig. `alt` ist die ID bis 0.0.13. */
 const VERBRAUCH_FELDER = [
-    { id: 'stunde', name: { en: 'Current hour', de: 'Laufende Stunde' } },
-    { id: 'letzteStunde', name: { en: 'Last full hour', de: 'Letzte volle Stunde' } },
-    { id: 'heute', name: { en: 'Today', de: 'Heute' } },
-    { id: 'gestern', name: { en: 'Yesterday', de: 'Gestern' } },
-    { id: 'dieserMonat', name: { en: 'This month', de: 'Dieser Monat' } },
-    { id: 'letzterMonat', name: { en: 'Last month', de: 'Letzter Monat' } },
+    { id: 'currentHour', alt: 'stunde', name: { en: 'Current hour', de: 'Laufende Stunde' } },
+    { id: 'lastHour', alt: 'letzteStunde', name: { en: 'Last full hour', de: 'Letzte volle Stunde' } },
+    { id: 'today', alt: 'heute', name: { en: 'Today', de: 'Heute' } },
+    { id: 'yesterday', alt: 'gestern', name: { en: 'Yesterday', de: 'Gestern' } },
+    { id: 'thisMonth', alt: 'dieserMonat', name: { en: 'This month', de: 'Dieser Monat' } },
+    { id: 'lastMonth', alt: 'letzterMonat', name: { en: 'Last month', de: 'Letzter Monat' } },
 ];
 
 /**
@@ -40,9 +44,24 @@ const VERBRAUCH_FELDER = [
  * bei jedem leer, der nichts weiter einrichtet.
  */
 const VERBRAUCH_REIHEN = [
-    { id: 'stundenJson', quelle: 'ring', name: { en: 'Last 48 hours (JSON)', de: 'Letzte 48 Stunden (JSON)' } },
-    { id: 'tageJson', quelle: 'ringTage', name: { en: 'Last 62 days (JSON)', de: 'Letzte 62 Tage (JSON)' } },
-    { id: 'monateJson', quelle: 'ringMonate', name: { en: 'Last 24 months (JSON)', de: 'Letzte 24 Monate (JSON)' } },
+    {
+        id: 'hoursJson',
+        alt: 'stundenJson',
+        quelle: 'hours',
+        name: { en: 'Last 48 hours (JSON)', de: 'Letzte 48 Stunden (JSON)' },
+    },
+    {
+        id: 'daysJson',
+        alt: 'tageJson',
+        quelle: 'days',
+        name: { en: 'Last 62 days (JSON)', de: 'Letzte 62 Tage (JSON)' },
+    },
+    {
+        id: 'monthsJson',
+        alt: 'monateJson',
+        quelle: 'months',
+        name: { en: 'Last 24 months (JSON)', de: 'Letzte 24 Monate (JSON)' },
+    },
 ];
 
 class Faikout extends utils.Adapter {
@@ -72,6 +91,7 @@ class Faikout extends utils.Adapter {
 
     async onReady() {
         await this.setState('info.connection', { val: false, ack: true });
+        await this.verbrauchUmziehen();
         await this.objekteAbgleichen();
 
         const port = Number(this.config.port) || 1888;
@@ -93,6 +113,9 @@ class Faikout extends utils.Adapter {
 
         this.log.info(`Ready. Configure the faikout modules with MQTT host <ioBroker IP>:${port}.`);
         this.subscribeStates('*.control.*');
+        // `autoe` liegt im Kanal status, ist aber beschreibbar (Review 11.10.2026: Schreibbefehle
+        // darauf gingen bisher ins Leere, weil nur control.* abonniert war).
+        this.subscribeStates('*.status.autoe');
         this.stundenTaktStarten();
     }
 
@@ -347,34 +370,9 @@ class Faikout extends utils.Adapter {
     }
 
     async verbrauchSchreiben(id, g, z, werte) {
-        const basis = `${id}.verbrauch.${z.zweig}`;
+        const basis = `${id}.${CONSUMPTION}.${z.zweig}`;
         if (!g.angelegt.has(basis)) {
-            await this.extendObject(`${id}.verbrauch`, {
-                type: 'channel',
-                common: { name: namen.vollerName({ en: 'Consumption', de: 'Verbrauch' }) },
-                native: {},
-            });
-            await this.extendObject(basis, {
-                type: 'channel',
-                common: { name: namen.vollerName(z.name) },
-                native: {},
-            });
-            for (const f of VERBRAUCH_FELDER) {
-                await this.zaehlerObjekt(`${basis}.${f.id}`, f.name, 'kWh', 'value.energy.consumed');
-            }
-            for (const r of VERBRAUCH_REIHEN) {
-                await this.extendObject(`${basis}.${r.id}`, {
-                    type: 'state',
-                    common: {
-                        name: namen.vollerName(r.name),
-                        type: 'string',
-                        role: 'json',
-                        read: true,
-                        write: false,
-                    },
-                    native: {},
-                });
-            }
+            await this.verbrauchAnlegen(id, z);
             g.angelegt.add(basis);
         }
 
@@ -390,6 +388,105 @@ class Faikout extends utils.Adapter {
                 val: JSON.stringify(werte[r.quelle] || []),
                 ack: true,
             });
+        }
+    }
+
+    /**
+     * Legt Kanal und Datenpunkte eines Zaehlerzweigs an.
+     *
+     * @param {string} id   Objekt-ID des Geraets
+     * @param {object} z    Eintrag aus ZAEHLER
+     */
+    async verbrauchAnlegen(id, z) {
+        const basis = `${id}.${CONSUMPTION}.${z.zweig}`;
+        await this.extendObject(`${id}.${CONSUMPTION}`, {
+            type: 'channel',
+            common: { name: namen.vollerName({ en: 'Consumption', de: 'Verbrauch' }) },
+            native: {},
+        });
+        await this.extendObject(basis, {
+            type: 'channel',
+            common: { name: namen.vollerName(z.name) },
+            native: {},
+        });
+        for (const f of VERBRAUCH_FELDER) {
+            await this.zaehlerObjekt(`${basis}.${f.id}`, f.name, 'kWh', 'value.energy.consumed');
+        }
+        for (const r of VERBRAUCH_REIHEN) {
+            await this.extendObject(`${basis}.${r.id}`, {
+                type: 'state',
+                common: {
+                    name: namen.vollerName(r.name),
+                    type: 'string',
+                    role: 'json',
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
+    }
+
+    /**
+     * Zieht den Verbrauchszweig von den deutschen IDs bis 0.0.13 (`verbrauch.gesamt.heute` ...)
+     * auf die englischen (`consumption.total.today` ...) um.
+     *
+     * Review vom 11.10.2026: Objekt-IDs muessen englisch sein. Damit beim Update nichts verloren
+     * geht, werden die letzten Werte uebernommen und erst danach die alten Objekte geloescht.
+     * Die JSON-Reihen bekommen dabei ihre englischen Schluessel (hour/day/month). Was der
+     * History-Adapter unter den alten IDs aufgezeichnet hat, bleibt dort stehen - die neuen
+     * Datenpunkte werden wieder angemeldet und zeichnen ab jetzt auf.
+     */
+    async verbrauchUmziehen() {
+        let geraete;
+        try {
+            geraete = await this.getDevicesAsync();
+        } catch (e) {
+            this.log.debug(`Consumption migration skipped: ${e.message}`);
+            return;
+        }
+        const umbenennen = { stunde: 'hour', tag: 'day', monat: 'month' };
+        for (const geraet of geraete) {
+            const id = geraet._id.slice(this.namespace.length + 1);
+            if (!(await this.getObjectAsync(`${id}.verbrauch`))) {
+                continue;
+            }
+            for (const z of ZAEHLER) {
+                const altBasis = `${id}.verbrauch.${z.alt}`;
+                if (!(await this.getObjectAsync(altBasis))) {
+                    continue;
+                }
+                await this.verbrauchAnlegen(id, z);
+                const neuBasis = `${id}.${CONSUMPTION}.${z.zweig}`;
+                for (const f of VERBRAUCH_FELDER) {
+                    const alt = await this.getStateAsync(`${altBasis}.${f.alt}`);
+                    if (alt && alt.val !== null && alt.val !== undefined) {
+                        await this.setState(`${neuBasis}.${f.id}`, { val: alt.val, ack: true });
+                    }
+                }
+                for (const r of VERBRAUCH_REIHEN) {
+                    const alt = await this.getStateAsync(`${altBasis}.${r.alt}`);
+                    if (!alt || typeof alt.val !== 'string') {
+                        continue;
+                    }
+                    try {
+                        const reihe = JSON.parse(alt.val).map(e => {
+                            const neu = {};
+                            for (const [k, v] of Object.entries(e)) {
+                                neu[umbenennen[k] || k] = v;
+                            }
+                            return neu;
+                        });
+                        await this.setState(`${neuBasis}.${r.id}`, { val: JSON.stringify(reihe), ack: true });
+                    } catch {
+                        // unbrauchbare Reihe - sie entsteht mit der naechsten Meldung neu
+                    }
+                }
+            }
+            await this.delObjectAsync(`${id}.verbrauch`, { recursive: true });
+            this.log.info(
+                `${geraet.common && geraet.common.name}: consumption states moved from "verbrauch.*" to "${CONSUMPTION}.*".`,
+            );
         }
     }
 
@@ -412,8 +509,11 @@ class Faikout extends utils.Adapter {
             read: true,
             write: false,
         };
-        const instanz = (this.config.historyInstanz || '').trim();
-        if (this.config.historyAnmelden && instanz) {
+        // historyInstanz/historyAnmelden sind die Schluessel bis 0.0.13 - eine bestehende
+        // Konfiguration gilt weiter, bis sie im Admin neu gespeichert wird.
+        const instanz = String(this.config.historyInstance ?? this.config.historyInstanz ?? '').trim();
+        const anmelden = this.config.historyRegister ?? this.config.historyAnmelden;
+        if (anmelden && instanz) {
             common.custom = {
                 [instanz]: { enabled: true, changesOnly: false, debounce: 0, retention: 0 },
             };
@@ -441,6 +541,14 @@ class Faikout extends utils.Adapter {
                 const feld = o && o.native && o.native.feld;
                 const def = feld && felder.FELDER[feld];
                 if (!def) {
+                    // Unbekanntes Feld: Name in allen elf Sprachen nachtragen (bis 0.0.13 nur en/de).
+                    const n = o && o.common && o.common.name;
+                    if (feld && n && typeof n === 'object' && felder.SPRACHEN.some(l => !n[l])) {
+                        await this.extendObject(o._id, {
+                            common: { name: Object.fromEntries(felder.SPRACHEN.map(l => [l, n[l] || n.en || feld])) },
+                        });
+                        angepasst++;
+                    }
                     continue;
                 }
                 const name = namen.vollerName(def.name);

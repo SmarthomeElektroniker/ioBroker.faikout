@@ -9,38 +9,38 @@ const zeit = (tag, stunde) => new Date(2026, 7, tag, stunde, 30, 0);
 describe('Verbrauchsrechnung', () => {
     it('liefert beim ersten Wert überall null-Verbrauch, aber den Gesamtzähler', () => {
         const r = v.verarbeiten(null, 3774300, zeit(17, 10));
-        expect(r.werte.gesamt).to.equal(3774.3);
-        expect(r.werte.stunde).to.equal(0);
-        expect(r.werte.heute).to.equal(0);
-        expect(r.werte.letzteStunde).to.equal(null);
+        expect(r.werte.total).to.equal(3774.3);
+        expect(r.werte.currentHour).to.equal(0);
+        expect(r.werte.today).to.equal(0);
+        expect(r.werte.lastHour).to.equal(null);
         expect(r.hinweise).to.be.empty;
     });
 
     it('rechnet innerhalb einer Stunde die Differenz', () => {
         let s = v.verarbeiten(null, 1000000, zeit(17, 10)).stand;
         const r = v.verarbeiten(s, 1000400, zeit(17, 10));
-        expect(r.werte.stunde).to.equal(0.4);
-        expect(r.werte.heute).to.equal(0.4);
-        expect(r.werte.gesamt).to.equal(1000.4);
+        expect(r.werte.currentHour).to.equal(0.4);
+        expect(r.werte.today).to.equal(0.4);
+        expect(r.werte.total).to.equal(1000.4);
     });
 
     it('schließt die Stunde beim Stundenwechsel ab', () => {
         let s = v.verarbeiten(null, 1000000, zeit(17, 10)).stand;
         s = v.verarbeiten(s, 1000400, zeit(17, 10)).stand;
         const r = v.verarbeiten(s, 1000500, zeit(17, 11));
-        expect(r.werte.letzteStunde, 'die volle Stunde 10 Uhr').to.equal(0.4);
-        expect(r.werte.stunde, 'in der neuen Stunde erst 100 Wh').to.equal(0.1);
-        expect(r.werte.heute, 'der Tag läuft weiter').to.equal(0.5);
-        expect(r.werte.ring).to.have.lengthOf(1);
-        expect(r.werte.ring[0]).to.deep.equal({ stunde: '2026-08-17T10', kwh: 0.4 });
+        expect(r.werte.lastHour, 'die volle Stunde 10 Uhr').to.equal(0.4);
+        expect(r.werte.currentHour, 'in der neuen Stunde erst 100 Wh').to.equal(0.1);
+        expect(r.werte.today, 'der Tag läuft weiter').to.equal(0.5);
+        expect(r.werte.hours).to.have.lengthOf(1);
+        expect(r.werte.hours[0]).to.deep.equal({ hour: '2026-08-17T10', kwh: 0.4 });
     });
 
     it('schließt den Tag beim Tageswechsel ab', () => {
         let s = v.verarbeiten(null, 1000000, zeit(17, 23)).stand;
         s = v.verarbeiten(s, 1002000, zeit(17, 23)).stand;
         const r = v.verarbeiten(s, 1002100, zeit(18, 0));
-        expect(r.werte.gestern).to.equal(2);
-        expect(r.werte.heute).to.equal(0.1);
+        expect(r.werte.yesterday).to.equal(2);
+        expect(r.werte.today).to.equal(0.1);
     });
 
     it('bucht einen zurückgesprungenen Zähler NICHT als Verbrauch', () => {
@@ -49,9 +49,9 @@ describe('Verbrauchsrechnung', () => {
         let s = v.verarbeiten(null, 3774300, zeit(17, 10)).stand;
         s = v.verarbeiten(s, 3774800, zeit(17, 10)).stand;
         const r = v.verarbeiten(s, 12, zeit(17, 10));
-        expect(r.werte.stunde, 'nach dem Reset wieder bei null').to.equal(0);
-        expect(r.werte.heute).to.equal(0);
-        expect(r.werte.gesamt).to.equal(0.012);
+        expect(r.werte.currentHour, 'nach dem Reset wieder bei null').to.equal(0);
+        expect(r.werte.today).to.equal(0);
+        expect(r.werte.total).to.equal(0.012);
         expect(r.hinweise.join(' ')).to.match(/went backwards/);
     });
 
@@ -60,8 +60,8 @@ describe('Verbrauchsrechnung', () => {
         s = v.verarbeiten(s, 1000400, zeit(17, 10)).stand;
         // Der Adapter war 3 Stunden weg und meldet sich um 14 Uhr zurueck.
         const r = v.verarbeiten(s, 1002000, zeit(17, 14));
-        expect(r.werte.letzteStunde, 'die 10-Uhr-Stunde ist sauber abgeschlossen').to.equal(0.4);
-        const luecken = r.werte.ring.filter(e => e.kwh === null);
+        expect(r.werte.lastHour, 'die 10-Uhr-Stunde ist sauber abgeschlossen').to.equal(0.4);
+        const luecken = r.werte.hours.filter(e => e.kwh === null);
         expect(luecken, 'drei unbekannte Stunden').to.have.lengthOf(3);
         expect(r.hinweise.join(' ')).to.match(/gap/);
     });
@@ -80,7 +80,7 @@ describe('Verbrauchsrechnung', () => {
         // Das Modul sendet nur alle 60 s - um Punkt 11 Uhr kommt eventuell nichts.
         const r = v.pruefen(s, zeit(17, 11));
         expect(r.werte, 'der Timer schließt die Stunde ab').to.not.equal(null);
-        expect(r.werte.letzteStunde).to.equal(0.4);
+        expect(r.werte.lastHour).to.equal(0.4);
     });
 
     it('tut beim Prüfen nichts, wenn sich die Stunde nicht geändert hat', () => {
@@ -102,9 +102,9 @@ describe('Verbrauchsrechnung', () => {
         delete alt.letzterMonat;
 
         const r = v.verarbeiten(alt, 1001000, zeit(18, 8));
-        expect(r.werte.gestern, 'der Tageswechsel läuft durch').to.equal(0.4);
-        expect(r.werte.ringTage, 'die Tagesreihe entsteht neu').to.be.an('array');
-        expect(r.werte.ringMonate, 'die Monatsreihe entsteht neu').to.be.an('array');
+        expect(r.werte.yesterday, 'der Tageswechsel läuft durch').to.equal(0.4);
+        expect(r.werte.days, 'die Tagesreihe entsteht neu').to.be.an('array');
+        expect(r.werte.months, 'die Monatsreihe entsteht neu').to.be.an('array');
     });
 
     it('bucht den ersten gesehenen Monat nicht als Vormonat', () => {
@@ -118,9 +118,9 @@ describe('Verbrauchsrechnung', () => {
         delete alt.ringMonate;
 
         const r = v.verarbeiten(alt, 3780500, zeit(17, 11));
-        expect(r.werte.letzterMonat, 'es gibt keinen Vormonat').to.equal(null);
+        expect(r.werte.lastMonth, 'es gibt keinen Vormonat').to.equal(null);
         // 0,5 statt 0: die Basis ist der zuletzt bekannte Stand, der Verbrauch seither zaehlt mit.
-        expect(r.werte.dieserMonat, 'der laufende Monat zählt ab dem letzten Stand').to.equal(0.5);
+        expect(r.werte.thisMonth, 'der laufende Monat zählt ab dem letzten Stand').to.equal(0.5);
         expect(r.stand.ringMonate, 'kein Phantom-Monat im Ring').to.be.empty;
     });
 
@@ -130,6 +130,6 @@ describe('Verbrauchsrechnung', () => {
         // So landet der Zustand im Geraeteobjekt und kommt wieder heraus.
         const gespeichert = JSON.parse(JSON.stringify(s));
         const r = v.verarbeiten(gespeichert, 1000900, zeit(17, 10));
-        expect(r.werte.heute, 'die Tagesbasis ist erhalten geblieben').to.equal(0.9);
+        expect(r.werte.today, 'die Tagesbasis ist erhalten geblieben').to.equal(0.9);
     });
 });
