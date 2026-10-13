@@ -11,6 +11,7 @@ const { FaikoutBroker } = require('../lib/broker');
 const felder = require('../lib/fields');
 
 const stilleLog = { info() {}, warn() {}, error() {}, debug() {} };
+const zeitgeber = { setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: t => clearTimeout(t) };
 
 /** Sucht einen freien Port, damit der Test nicht mit laufenden Diensten kollidiert. */
 function freierPort() {
@@ -38,7 +39,7 @@ describe('FaikoutBroker', () => {
         // verbunden bleiben: Das Beenden hing, bis der js-controller den Prozess abschoss.
         this.timeout(15000);
         port = await freierPort();
-        broker = new FaikoutBroker({ port, log: stilleLog, onMessage: () => {} });
+        broker = new FaikoutBroker({ port, log: stilleLog, timer: zeitgeber, onMessage: () => {} });
         await broker.start();
         const mqtt = require('mqtt');
         const client = mqtt.connect(`mqtt://127.0.0.1:${port}`, { clientId: 'bleibt-verbunden', reconnectPeriod: 0 });
@@ -68,6 +69,7 @@ describe('FaikoutBroker', () => {
         broker = new FaikoutBroker({
             port,
             log: stilleLog,
+            timer: zeitgeber,
             onMessage: (topic, payload) => empfangen.push([topic, payload.toString()]),
         });
         await broker.start();
@@ -92,7 +94,7 @@ describe('FaikoutBroker', () => {
     it('weist falsche Anmeldedaten ab', async function () {
         this.timeout(15000);
         port = await freierPort();
-        broker = new FaikoutBroker({ port, user: 'a', pass: 'b', log: stilleLog, onMessage() {} });
+        broker = new FaikoutBroker({ port, user: 'a', pass: 'b', log: stilleLog, timer: zeitgeber, onMessage() {} });
         await broker.start();
 
         const mqtt = require('mqtt');
@@ -114,7 +116,7 @@ describe('FaikoutBroker', () => {
     it('sendet Kommandos auf ein Topic mit Leerzeichen im Gerätenamen', async function () {
         this.timeout(15000);
         port = await freierPort();
-        broker = new FaikoutBroker({ port, log: stilleLog, onMessage() {} });
+        broker = new FaikoutBroker({ port, log: stilleLog, timer: zeitgeber, onMessage() {} });
         await broker.start();
 
         const mqtt = require('mqtt');
@@ -138,8 +140,23 @@ describe('FaikoutBroker', () => {
 
 describe('Feldkunde', () => {
     it('kennt die schreibbaren Steuerfelder', () => {
-        for (const f of ['power', 'mode', 'target', 'fan', 'swing', 'preset', 'demand', 'econo',
-            'powerful', 'comfort', 'streamer', 'sensor', 'led', 'quiet', 'humidify']) {
+        for (const f of [
+            'power',
+            'mode',
+            'target',
+            'fan',
+            'swing',
+            'preset',
+            'demand',
+            'econo',
+            'powerful',
+            'comfort',
+            'streamer',
+            'sensor',
+            'led',
+            'quiet',
+            'humidify',
+        ]) {
             expect(felder.FELDER[f], f).to.be.an('object');
             expect(felder.FELDER[f].w, `${f} muss schreibbar sein`).to.equal(true);
         }

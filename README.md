@@ -70,6 +70,9 @@ module's **Extra** settings makes it report immediately.
 	### **WORK IN PROGRESS**
 -->
 
+### 0.0.15
+- The MQTT broker's shutdown timeout uses the adapter's `setTimeout` (repository checker E5005).
+
 ### 0.0.14
 - **Breaking:** the consumption subtree uses English IDs: `consumption.{total|heating|cooling}.{currentHour|lastHour|today|yesterday|thisMonth|lastMonth}`
   and `hoursJson`/`daysJson`/`monthsJson` (entries keyed `hour`/`day`/`month`). On start the adapter copies the last values of the

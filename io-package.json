@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.14",
+    "version": "0.0.15",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.15": {
+        "en": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
+        "de": "Abschalt-Zeitlimit des MQTT-Brokers nutzt den Adapter-Zeitgeber (Checker E5005)",
+        "ru": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
+        "pt": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
+        "nl": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
+        "fr": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
+        "it": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
+        "es": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
+        "pl": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
+        "uk": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
+        "zh-cn": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)"
+      },
       "0.0.14": {
         "en": "Consumption states renamed to English IDs (consumption.total.today ...), existing values are migrated; status.autoe can be written; complete translations of admin and widgets",
         "de": "Verbrauchsdatenpunkte auf englische IDs umbenannt (consumption.total.today ...), vorhandene Werte werden übernommen; status.autoe ist beschreibbar; vollständige Übersetzungen von Admin und Widgets",

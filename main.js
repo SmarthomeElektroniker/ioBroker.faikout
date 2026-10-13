@@ -100,6 +100,7 @@ class Faikout extends utils.Adapter {
             user: this.config.user,
             pass: this.config.pass,
             log: this.log,
+            timer: this,
             onMessage: (topic, payload) => this.onMqtt(topic, payload),
             onClient: () => this.verbindungPruefen(),
         });
