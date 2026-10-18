@@ -70,6 +70,9 @@ module's **Extra** settings makes it report immediately.
 	### **WORK IN PROGRESS**
 -->
 
+### 0.0.16
+- Release notes in `io-package.json` trimmed to seven entries and translated into all languages (repository checker E1032/E1144).
+
 ### 0.0.15
 - The MQTT broker's shutdown timeout uses the adapter's `setTimeout` (repository checker E5005).
 

@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.15",
+    "version": "0.0.16",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,18 +68,31 @@
       }
     ],
     "news": {
+      "0.0.16": {
+        "en": "Release notes trimmed to seven entries and translated (repository checker E1032/E1144)",
+        "de": "Versionshinweise auf sieben Einträge gekürzt und übersetzt (Repository-Checker E1032/E1144)",
+        "ru": "Примечания к выпуску сокращены до семи записей и переведены (проверка репозитория E1032/E1144)",
+        "pt": "Notas de versão reduzidas a sete entradas e traduzidas (verificador do repositório E1032/E1144)",
+        "nl": "Releaseopmerkingen ingekort tot zeven items en vertaald (repositorycontrole E1032/E1144)",
+        "fr": "Notes de version réduites à sept entrées et traduites (contrôle du dépôt E1032/E1144)",
+        "it": "Note di rilascio ridotte a sette voci e tradotte (controllo del repository E1032/E1144)",
+        "es": "Notas de la versión reducidas a siete entradas y traducidas (comprobación del repositorio E1032/E1144)",
+        "pl": "Informacje o wydaniu skrócone do siedmiu wpisów i przetłumaczone (kontrola repozytorium E1032/E1144)",
+        "uk": "Примітки до випуску скорочено до семи записів і перекладено (перевірка репозиторію E1032/E1144)",
+        "zh-cn": "发行说明精简为七条并已翻译（仓库检查 E1032/E1144）"
+      },
       "0.0.15": {
         "en": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
         "de": "Abschalt-Zeitlimit des MQTT-Brokers nutzt den Adapter-Zeitgeber (Checker E5005)",
-        "ru": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
-        "pt": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
-        "nl": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
-        "fr": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
-        "it": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
-        "es": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
-        "pl": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
-        "uk": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
-        "zh-cn": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)"
+        "ru": "Тайм-аут остановки MQTT-брокера использует таймер адаптера (проверка E5005)",
+        "pt": "O tempo limite de encerramento do broker MQTT usa o temporizador do adaptador (verificação E5005)",
+        "nl": "Afsluittime-out van de MQTT-broker gebruikt de timer van de adapter (controle E5005)",
+        "fr": "Le délai d'arrêt du broker MQTT utilise le minuteur de l'adaptateur (contrôle E5005)",
+        "it": "Il timeout di arresto del broker MQTT usa il timer dell'adattatore (controllo E5005)",
+        "es": "El tiempo de espera de cierre del broker MQTT usa el temporizador del adaptador (comprobación E5005)",
+        "pl": "Limit czasu zamykania brokera MQTT korzysta z timera adaptera (kontrola E5005)",
+        "uk": "Тайм-аут зупинки MQTT-брокера використовує таймер адаптера (перевірка E5005)",
+        "zh-cn": "MQTT 代理的关闭超时使用适配器计时器（检查 E5005）"
       },
       "0.0.14": {
         "en": "Consumption states renamed to English IDs (consumption.total.today ...), existing values are migrated; status.autoe can be written; complete translations of admin and widgets",
@@ -145,32 +158,6 @@
         "pl": "Uwagi z przeglądu: wszystkie komunikaty dziennika po angielsku, etykiety stanów nawiewu po angielsku, widżety VIS poza niemieckim pokazują teksty angielskie (separator dziesiętny i nazwy miesięcy zgodne z językiem VIS)",
         "uk": "Зауваження рев'ю: усі повідомлення журналу англійською, назви станів гойдання англійською, віджети VIS поза німецькою показують англійські тексти (десятковий роздільник і назви місяців відповідають мові VIS)",
         "zh-cn": "审查意见：所有日志消息改为英文，摆风状态标签改为英文，VIS 小部件在非德语环境下显示英文文本（小数分隔符和月份名称跟随 VIS 语言）"
-      },
-      "0.0.9": {
-        "en": "Maintenance: @iobroker/testing updated to 6.3, .gitignore no longer covers the tracked .vscode/settings.json",
-        "de": "Wartung: @iobroker/testing auf 6.3 aktualisiert, .gitignore schließt die versionierte .vscode/settings.json nicht mehr aus",
-        "ru": "Обслуживание: @iobroker/testing обновлён до 6.3, .gitignore больше не исключает отслеживаемый .vscode/settings.json",
-        "pt": "Manutenção: @iobroker/testing atualizado para 6.3, o .gitignore já não abrange o .vscode/settings.json versionado",
-        "nl": "Onderhoud: @iobroker/testing bijgewerkt naar 6.3, .gitignore sluit de gevolgde .vscode/settings.json niet meer uit",
-        "fr": "Maintenance : @iobroker/testing mis à jour vers 6.3, le .gitignore n'exclut plus le fichier suivi .vscode/settings.json",
-        "it": "Manutenzione: @iobroker/testing aggiornato a 6.3, .gitignore non esclude più il file tracciato .vscode/settings.json",
-        "es": "Mantenimiento: @iobroker/testing actualizado a 6.3, .gitignore ya no excluye el archivo versionado .vscode/settings.json",
-        "pl": "Konserwacja: @iobroker/testing zaktualizowany do 6.3, .gitignore nie wyklucza już śledzonego pliku .vscode/settings.json",
-        "uk": "Обслуговування: @iobroker/testing оновлено до 6.3, .gitignore більше не виключає відстежуваний .vscode/settings.json",
-        "zh-cn": "维护：@iobroker/testing 更新至 6.3，.gitignore 不再排除已跟踪的 .vscode/settings.json"
-      },
-      "0.0.8": {
-        "en": "Object structure fixed for the repository check: all datapoint names in eleven languages, invalid roles corrected (info, level.mode.*). Shared ESLint config and release script adopted.",
-        "de": "Objektstruktur für die Repository-Prüfung berichtigt: alle Datenpunktnamen in elf Sprachen, ungültige Rollen korrigiert (info, level.mode.*). Gemeinsame ESLint-Konfiguration und Release-Skript übernommen.",
-        "ru": "Структура объектов исправлена для проверки репозитория: все имена точек данных на одиннадцати языках, исправлены недопустимые роли (info, level.mode.*). Внедрены общая конфигурация ESLint и скрипт выпуска.",
-        "pt": "Estrutura de objetos corrigida para a verificação do repositório: todos os nomes de pontos de dados em onze idiomas, funções inválidas corrigidas (info, level.mode.*). Adotada a configuração ESLint partilhada e o script de lançamento.",
-        "nl": "Objectstructuur gecorrigeerd voor de repositorycontrole: alle datapuntnamen in elf talen, ongeldige rollen gecorrigeerd (info, level.mode.*). Gedeelde ESLint-configuratie en releasescript overgenomen.",
-        "fr": "Structure des objets corrigée pour la vérification du dépôt : tous les noms de points de données en onze langues, rôles invalides corrigés (info, level.mode.*). Configuration ESLint partagée et script de publication adoptés.",
-        "it": "Struttura degli oggetti corretta per il controllo del repository: tutti i nomi dei punti dati in undici lingue, ruoli non validi corretti (info, level.mode.*). Adottati la configurazione ESLint condivisa e lo script di rilascio.",
-        "es": "Estructura de objetos corregida para la comprobación del repositorio: todos los nombres de puntos de datos en once idiomas, roles no válidos corregidos (info, level.mode.*). Adoptada la configuración ESLint compartida y el script de publicación.",
-        "pl": "Poprawiono strukturę obiektów na potrzeby kontroli repozytorium: wszystkie nazwy punktów danych w jedenastu językach, poprawiono nieprawidłowe role (info, level.mode.*). Przyjęto wspólną konfigurację ESLint i skrypt wydania.",
-        "uk": "Структуру об'єктів виправлено для перевірки репозиторію: усі назви точок даних одинадцятьма мовами, виправлено недійсні ролі (info, level.mode.*). Запроваджено спільну конфігурацію ESLint і скрипт випуску.",
-        "zh-cn": "为仓库检查修正了对象结构：所有数据点名称提供十一种语言，更正了无效角色（info、level.mode.*）。采用共享 ESLint 配置和发布脚本。"
       }
     },
     "restartAdapters": [
