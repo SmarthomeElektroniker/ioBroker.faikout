@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.16",
+    "version": "0.0.17",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.17": {
+        "en": "Units of compressor and fan speed detected from the module (Hz or rpm), all module fields described, new tab \"Module settings\"",
+        "de": "Einheit von Verdichter- und Lüfterdrehzahl wird am Modul erkannt (Hz oder rpm), alle Modulfelder beschrieben, neuer Reiter „Moduleinstellungen“",
+        "ru": "Единицы частоты компрессора и вентилятора определяются по модулю (Гц или об/мин), описаны все поля модуля, новая вкладка «Настройки модуля»",
+        "pt": "Unidades da velocidade do compressor e do ventilador detetadas a partir do módulo (Hz ou rpm), todos os campos do módulo descritos, novo separador \"Configurações do módulo\"",
+        "nl": "Eenheid van compressor- en ventilatortoerental wordt uit de module herkend (Hz of rpm), alle modulevelden beschreven, nieuw tabblad \"Module-instellingen\"",
+        "fr": "Unités des régimes du compresseur et du ventilateur détectées depuis le module (Hz ou tr/min), tous les champs du module décrits, nouvel onglet « Réglages du module »",
+        "it": "Unità della velocità di compressore e ventilatore rilevate dal modulo (Hz o giri/min), descritti tutti i campi del modulo, nuova scheda \"Impostazioni del modulo\"",
+        "es": "Unidades de la velocidad del compresor y del ventilador detectadas desde el módulo (Hz o rpm), descritos todos los campos del módulo, nueva pestaña \"Ajustes del módulo\"",
+        "pl": "Jednostki prędkości sprężarki i wentylatora rozpoznawane z modułu (Hz lub obr./min), opisane wszystkie pola modułu, nowa karta „Ustawienia modułu”",
+        "uk": "Одиниці частоти компресора й вентилятора визначаються з модуля (Гц або об/хв), описано всі поля модуля, нова вкладка «Налаштування модуля»",
+        "zh-cn": "压缩机和风扇转速的单位由模块识别（Hz 或 rpm），已描述全部模块字段，新增“模块设置”选项卡"
+      },
       "0.0.16": {
         "en": "Release notes trimmed to seven entries and translated (repository checker E1032/E1144)",
         "de": "Versionshinweise auf sieben Einträge gekürzt und übersetzt (Repository-Checker E1032/E1144)",
@@ -145,19 +158,6 @@
         "pl": "Pozostałe komunikaty dziennika po angielsku; adapter zatrzymuje się teraz szybko, nawet gdy moduły faikout pozostają połączone (bez wymuszonego zakończenia)",
         "uk": "Решта повідомлень журналу англійською; адаптер тепер швидко зупиняється, навіть якщо модулі faikout залишаються підключеними (без примусового завершення)",
         "zh-cn": "其余日志消息改为英文；即使 faikout 模块保持连接，适配器现在也能快速停止（停止时不再被强制终止）"
-      },
-      "0.0.10": {
-        "en": "Review findings: all log messages in English, swing state labels in English, VIS widgets show English texts outside German (decimal separator and month names follow the VIS language)",
-        "de": "Review-Befunde: alle Log-Meldungen auf Englisch, Bezeichnungen der Schwenk-Zustände auf Englisch, VIS-Bausteine außerhalb von Deutsch auf Englisch (Dezimaltrennzeichen und Monatsnamen folgen der VIS-Sprache)",
-        "ru": "Замечания ревью: все сообщения журнала на английском, названия состояний качания на английском, виджеты VIS вне немецкого показывают английские тексты (десятичный разделитель и названия месяцев следуют языку VIS)",
-        "pt": "Constatações da revisão: todas as mensagens de registo em inglês, rótulos dos estados de oscilação em inglês, widgets VIS mostram textos em inglês fora do alemão (separador decimal e nomes dos meses seguem o idioma do VIS)",
-        "nl": "Reviewbevindingen: alle logberichten in het Engels, labels van de zwenkstanden in het Engels, VIS-widgets tonen buiten het Duits Engelse teksten (decimaalteken en maandnamen volgen de VIS-taal)",
-        "fr": "Remarques de la revue : tous les messages du journal en anglais, libellés des états d'oscillation en anglais, les widgets VIS affichent des textes anglais hors allemand (séparateur décimal et noms des mois suivent la langue de VIS)",
-        "it": "Rilievi della revisione: tutti i messaggi di log in inglese, etichette degli stati di oscillazione in inglese, i widget VIS mostrano testi in inglese al di fuori del tedesco (separatore decimale e nomi dei mesi seguono la lingua di VIS)",
-        "es": "Hallazgos de la revisión: todos los mensajes de registro en inglés, etiquetas de los estados de oscilación en inglés, los widgets VIS muestran textos en inglés fuera del alemán (el separador decimal y los nombres de los meses siguen el idioma de VIS)",
-        "pl": "Uwagi z przeglądu: wszystkie komunikaty dziennika po angielsku, etykiety stanów nawiewu po angielsku, widżety VIS poza niemieckim pokazują teksty angielskie (separator dziesiętny i nazwy miesięcy zgodne z językiem VIS)",
-        "uk": "Зауваження рев'ю: усі повідомлення журналу англійською, назви станів гойдання англійською, віджети VIS поза німецькою показують англійські тексти (десятковий роздільник і назви місяців відповідають мові VIS)",
-        "zh-cn": "审查意见：所有日志消息改为英文，摆风状态标签改为英文，VIS 小部件在非德语环境下显示英文文本（小数分隔符和月份名称跟随 VIS 语言）"
       }
     },
     "restartAdapters": [

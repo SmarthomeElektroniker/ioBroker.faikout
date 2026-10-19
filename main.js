@@ -14,6 +14,9 @@ const verbrauch = require('./lib/verbrauch');
 /** Topics, die der Adapter auswertet. Alles andere wird still verworfen. */
 const BEKANNTE_ARTEN = new Set(['state', 'info', 'error', 'event']);
 
+/** Kanaele der Felder unter jedem Geraet. */
+const KANAELE = ['control', 'status', 'info'];
+
 /** Kanal der Verbrauchswerte unter jedem Geraet. */
 const CONSUMPTION = 'consumption';
 
@@ -77,6 +80,15 @@ class Faikout extends utils.Adapter {
          *
          */
         this.geraete = new Map();
+
+        /**
+         * Einheiten von comp/fanfreq je Geraet aus der HA-Discovery (Hz oder rpm). Getrennt von
+         * `geraete`, weil die Discovery vor der ersten Statusmeldung eintreffen kann.
+         */
+        this.einheiten = new Map();
+
+        /** Geraete, fuer die schon vor ausgeschaltetem ha.enable gewarnt wurde (einmal je Lauf). */
+        this.haWarnung = new Set();
 
         this.broker = null;
         this.stopping = false;
@@ -189,7 +201,20 @@ class Faikout extends utils.Adapter {
         // Daraus kommen Bereich und Schrittweite der Solltemperatur - die unterscheiden sich
         // je Anlage (eine nimmt halbe Grad, die andere nur ganze, Einstellung "ha1c").
         if (topic.startsWith('homeassistant/climate/') && topic.endsWith('/config')) {
-            this.klimaConfig(text).catch(e => this.log.debug(`HA-Config: ${e.message}`));
+            this.klimaConfig(text).catch(e => this.log.debug(`HA config: ${e.message}`));
+            return;
+        }
+        // Aus den Sensor-Discoveries kommt die Einheit von comp/fanfreq (Hz ab Werk, rpm mit
+        // ha.comprpm/ha.fanrpm) - der Statuswert selbst traegt keine Einheit.
+        const sensor = felder.haSensorAuswerten(topic, text);
+        if (sensor) {
+            this.einheitSetzen(
+                this.geraetId(sensor.geraet),
+                sensor.geraet,
+                sensor.feld,
+                sensor.einheit,
+                'discovery',
+            ).catch(e => this.log.debug(`HA config: ${e.message}`));
             return;
         }
 
@@ -217,6 +242,12 @@ class Faikout extends utils.Adapter {
         // state/<Name> ist die Hauptmeldung im Klartext. state/<Name>/status liefert dasselbe
         // im nativen Format (mode "C" statt "cool") - das waere doppelt und wird uebergangen.
         if (t.art === 'state' && !t.unter) {
+            if (felder.ohneHaEnable(daten) && !this.haWarnung.has(t.geraet)) {
+                this.haWarnung.add(t.geraet);
+                this.log.warn(
+                    `${t.geraet}: the module sends diagnostics only - enable the setting "ha.enable" ("Home Assistant") in the module, otherwise no temperatures, mode or energy values arrive.`,
+                );
+            }
             this.werteUebernehmen(t.geraet, daten).catch(e => this.log.warn(`${t.geraet}: ${e.message}`));
         } else if (t.art === 'info' && t.unter === 'upgrade') {
             this.werteUebernehmen(t.geraet, { version: daten.version, build: daten.build }).catch(() => {});
@@ -272,6 +303,61 @@ class Faikout extends utils.Adapter {
     }
 
     /**
+     * Uebernimmt die Einheit eines Feldes mit wechselnder Einheit (comp/fanfreq) und zieht ein
+     * vorhandenes Objekt nach. Die Einheit wird am Geraeteobjekt gemerkt, damit sie nach einem
+     * Neustart schon beim Anlegen stimmt.
+     *
+     * @param {string} id          Objekt-ID des Geraets
+     * @param {string} geraetName  Name des Moduls
+     * @param {string} feld        Feldname (comp oder fanfreq)
+     * @param {string} einheit     'Hz' oder 'rpm'
+     * @param {string} quelle      Herkunft fuer das Log
+     */
+    async einheitSetzen(id, geraetName, feld, einheit, quelle) {
+        const bekannt = this.einheiten.get(id) || {};
+        if (bekannt[feld] === einheit) {
+            return;
+        }
+        bekannt[feld] = einheit;
+        this.einheiten.set(id, bekannt);
+
+        if (await this.getObjectAsync(id)) {
+            await this.extendObject(id, { native: { einheiten: { [feld]: einheit } } });
+        }
+        const def = felder.FELDER[feld];
+        const stateId = `${id}.${def.kanal}.${felder.objektId(feld)}`;
+        const obj = await this.getObjectAsync(stateId);
+        if (obj && obj.common && obj.common.unit !== einheit) {
+            await this.extendObject(stateId, { common: { unit: einheit } });
+            this.log.info(`${geraetName}: unit of "${feld}" set to ${einheit} (from ${quelle}).`);
+        }
+    }
+
+    /**
+     * Einheit eines Feldes fuer dieses Geraet: aus der Discovery bzw. gemerkt; fehlt beides, die
+     * Einheit eines schon vorhandenen Objekts (sie stammt aus einem frueheren Lauf und wird nicht
+     * blind auf den Werksstand zurueckgesetzt), sonst der Werksstand aus der Feldkunde.
+     *
+     * @param {string} id       Objekt-ID des Geraets
+     * @param {string} feld     Feldname
+     * @param {object} def      Feldbeschreibung
+     * @param {string} stateId  Objekt-ID des Datenpunkts
+     * @returns {Promise<string|undefined>} Einheit
+     */
+    async einheitFuer(id, feld, def, stateId) {
+        if (!def.einheiten) {
+            return def.unit;
+        }
+        const e = this.einheiten.get(id);
+        if (e && e[feld]) {
+            return e[feld];
+        }
+        const vorhanden = await this.getObjectAsync(stateId);
+        const alt = vorhanden && vorhanden.common && vorhanden.common.unit;
+        return def.einheiten.includes(alt) ? alt : def.unit;
+    }
+
+    /**
      * Legt fehlende Objekte an und schreibt die Werte.
      *
      * @param {string} geraetName   Name des Moduls, wie es sich meldet
@@ -293,11 +379,15 @@ class Faikout extends utils.Adapter {
                 zaehler: (alt && alt.native && alt.native.zaehler) || {},
                 grenzen: (alt && alt.native && alt.native.grenzen) || null,
             };
+            // Gemerkte Einheiten aus einem frueheren Lauf; was die Discovery in diesem Lauf
+            // schon geliefert hat, hat Vorrang.
+            const gemerkt = (alt && alt.native && alt.native.einheiten) || {};
+            this.einheiten.set(id, { ...gemerkt, ...(this.einheiten.get(id) || {}) });
             this.geraete.set(id, g);
             await this.extendObject(id, {
                 type: 'device',
                 common: { name: geraetName },
-                native: { faikoutName: geraetName },
+                native: { faikoutName: geraetName, einheiten: this.einheiten.get(id) },
             });
             this.log.info(`Device detected: "${geraetName}" -> ${this.namespace}.${id}`);
             this.verbindungPruefen();
@@ -335,9 +425,19 @@ class Faikout extends utils.Adapter {
             const def = felder.beschreibe(feld, wert);
             const stateId = `${id}.${def.kanal}.${felder.objektId(feld)}`;
 
+            // Ein gebrochener Luefterwert ist sicher Hz - auch ohne Discovery.
+            const ausWert = felder.einheitAusWert(feld, wert);
+            if (ausWert && g.angelegt.has(stateId)) {
+                await this.einheitSetzen(id, geraetName, feld, ausWert, 'value');
+            }
+
             if (!g.angelegt.has(stateId)) {
-                await this.objektAnlegen(id, def, feld, stateId);
+                const einheit = ausWert || (await this.einheitFuer(id, feld, def, stateId));
+                await this.objektAnlegen(id, def, feld, stateId, einheit);
                 g.angelegt.add(stateId);
+                if (ausWert) {
+                    await this.einheitSetzen(id, geraetName, feld, ausWert, 'value');
+                }
             }
             await this.setState(stateId, { val: felder.umrechnen(def, wert), ack: true });
         }
@@ -552,6 +652,14 @@ class Faikout extends utils.Adapter {
                     }
                     continue;
                 }
+                // Falscher Kanal: bis 0.0.16 unbekannte Felder (dma, restart) lagen unter status.*,
+                // gehoeren aber nach info.*. Umziehen mit dem letzten Wert.
+                const teile = o._id.slice(this.namespace.length + 1).split('.');
+                if (teile.length === 3 && teile[1] !== def.kanal && KANAELE.includes(teile[1])) {
+                    await this.objektUmziehen(o, teile[0], def, feld);
+                    angepasst++;
+                    continue;
+                }
                 const name = namen.vollerName(def.name);
                 if (JSON.stringify(o.common.name) !== JSON.stringify(name) || o.common.role !== def.role) {
                     await this.extendObject(o._id, { common: { name, role: def.role } });
@@ -566,11 +674,31 @@ class Faikout extends utils.Adapter {
         }
     }
 
+    /**
+     * Legt einen Datenpunkt im richtigen Kanal neu an, uebernimmt den letzten Wert und loescht
+     * den alten.
+     *
+     * @param {object} alt       bisheriges Objekt
+     * @param {string} geraetId  Objekt-ID des Geraets
+     * @param {object} def       Feldbeschreibung
+     * @param {string} feld      Feldname
+     */
+    async objektUmziehen(alt, geraetId, def, feld) {
+        const neuId = `${geraetId}.${def.kanal}.${felder.objektId(feld)}`;
+        await this.objektAnlegen(geraetId, def, feld, neuId, await this.einheitFuer(geraetId, feld, def, neuId));
+        const wert = await this.getForeignStateAsync(alt._id);
+        if (wert && wert.val !== null && wert.val !== undefined) {
+            await this.setState(neuId, { val: wert.val, ack: true });
+        }
+        await this.delForeignObjectAsync(alt._id);
+        this.log.info(`State ${alt._id} moved to ${this.namespace}.${neuId}.`);
+    }
+
     async zaehlerstandSichern(id, g) {
         await this.extendObject(id, { native: { zaehler: g.zaehler } });
     }
 
-    async objektAnlegen(geraetId, def, feld, stateId) {
+    async objektAnlegen(geraetId, def, feld, stateId, einheit = def.unit) {
         await this.extendObject(`${geraetId}.${def.kanal}`, {
             type: 'channel',
             common: { name: namen.vollerName(this.kanalName(def.kanal)) },
@@ -583,8 +711,8 @@ class Faikout extends utils.Adapter {
             read: true,
             write: !!def.w,
         };
-        if (def.unit) {
-            common.unit = def.unit;
+        if (einheit) {
+            common.unit = einheit;
         }
         if (def.states) {
             common.states = def.states;

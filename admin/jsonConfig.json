@@ -120,6 +120,624 @@
                 }
             }
         },
+        "tabModule": {
+            "type": "panel",
+            "label": "tabModule",
+            "items": {
+                "moduleHeader": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerModule",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "moduleText": {
+                    "type": "staticText",
+                    "text": "textModule",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m0a": {
+                    "type": "staticText",
+                    "text": "colSetting",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m0b": {
+                    "type": "staticText",
+                    "text": "colValue",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m0c": {
+                    "type": "staticText",
+                    "text": "colEffect",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m1a": {
+                    "type": "staticText",
+                    "text": "setMqttHost",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m1b": {
+                    "type": "staticText",
+                    "text": "valMqttHost",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m1c": {
+                    "type": "staticText",
+                    "text": "effMqttHost",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m1d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m2a": {
+                    "type": "staticText",
+                    "text": "set_ha_enable",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m2b": {
+                    "type": "staticText",
+                    "text": "valOnDefault",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m2c": {
+                    "type": "staticText",
+                    "text": "effHaEnable",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m2d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m3a": {
+                    "type": "staticText",
+                    "text": "set_ha_fanrpm",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m3b": {
+                    "type": "staticText",
+                    "text": "valOnRecommended",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m3c": {
+                    "type": "staticText",
+                    "text": "effFanRpm",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m3d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m4a": {
+                    "type": "staticText",
+                    "text": "set_ha_comprpm",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m4b": {
+                    "type": "staticText",
+                    "text": "valOnRecommended",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m4c": {
+                    "type": "staticText",
+                    "text": "effCompRpm",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m4d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m5a": {
+                    "type": "staticText",
+                    "text": "set_ha_switches",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m5b": {
+                    "type": "staticText",
+                    "text": "valOn",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m5c": {
+                    "type": "staticText",
+                    "text": "effSwitches",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m5d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m6a": {
+                    "type": "staticText",
+                    "text": "set_no_hvacaction",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m6b": {
+                    "type": "staticText",
+                    "text": "valOffDefaultOn",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m6c": {
+                    "type": "staticText",
+                    "text": "effHvacAction",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m6d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m7a": {
+                    "type": "staticText",
+                    "text": "set_no_humidity",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m7b": {
+                    "type": "staticText",
+                    "text": "valOffDefault",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m7c": {
+                    "type": "staticText",
+                    "text": "effHumidity",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m7d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m8a": {
+                    "type": "staticText",
+                    "text": "set_no_demand",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m8b": {
+                    "type": "staticText",
+                    "text": "valOffDefault",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m8c": {
+                    "type": "staticText",
+                    "text": "effDemand",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m8d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m9a": {
+                    "type": "staticText",
+                    "text": "set_no_led",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m9b": {
+                    "type": "staticText",
+                    "text": "valOffDefaultOn",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m9c": {
+                    "type": "staticText",
+                    "text": "effLed",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m9d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m10a": {
+                    "type": "staticText",
+                    "text": "set_no_humidify",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m10b": {
+                    "type": "staticText",
+                    "text": "valOffDefaultOn",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m10c": {
+                    "type": "staticText",
+                    "text": "effHumidify",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m10d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m11a": {
+                    "type": "staticText",
+                    "text": "setOtherNo",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m11b": {
+                    "type": "staticText",
+                    "text": "valOffDefault",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m11c": {
+                    "type": "staticText",
+                    "text": "effOtherNo",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m11d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m12a": {
+                    "type": "staticText",
+                    "text": "set_livestatus",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m12b": {
+                    "type": "staticText",
+                    "text": "valOnRecommended",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m12c": {
+                    "type": "staticText",
+                    "text": "effLivestatus",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m12d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "m13a": {
+                    "type": "staticText",
+                    "text": "set_reporting",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontFamily": "monospace"
+                    }
+                },
+                "m13b": {
+                    "type": "staticText",
+                    "text": "valReporting",
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "style": {
+                        "fontWeight": "bold"
+                    }
+                },
+                "m13c": {
+                    "type": "staticText",
+                    "text": "effReporting",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "m13d": {
+                    "type": "divider",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "moduleNoSetting": {
+                    "type": "staticText",
+                    "text": "textModuleNoSetting",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                }
+            }
+        },
         "tabHelp": {
             "type": "panel",
             "label": "tabHelp",

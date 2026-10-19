@@ -66,9 +66,9 @@ the dot, e.g. `haenable`, `nohumidity`). These are the relevant ones:
 | Setting | Required value | Effect |
 |---|---|---|
 | **MQTT host** (Basic) | `<ioBroker IP>:<port>` | Connects the module to the adapter's broker. |
-| `ha.enable` ("Home Assistant") | **on** (default) | The module publishes its readings (`state/<name>`) **only** while this is on. Off means: diagnostics only, no temperatures, energy, mode etc. |
-| `ha.fanrpm` | **on** | Fan speed in rpm. Off sends Hz, which the adapter then shows with the wrong unit (rpm). |
-| `ha.comprpm` | **on** | Compressor speed in rpm. Off sends Hz, shown with the wrong unit. |
+| `ha.enable` ("Home Assistant") | **on** (default) | The module publishes its readings (`state/<name>`) **only** while this is on. Off means: diagnostics only, no temperatures, energy, mode etc. — the adapter then logs a warning. |
+| `ha.fanrpm` | on (recommended) | Fan speed `status.fanfreq` in rpm instead of Hz (default: Hz, one decimal). The adapter detects the unit itself (from the module's Home Assistant discovery) and sets it on the state; rpm is just more precise. |
+| `ha.comprpm` | on (recommended) | Compressor speed `status.comp` in rpm instead of Hz (default: Hz). Detected automatically as well. |
 | `ha.switches` | on | Adds `autoe` (main switch of the module's own automation) to the readings. |
 | `no.hvacaction` | **off** (default is on) | Adds `action` — what the unit is actually doing (heating, cooling, idle …). |
 | `no.humidity` | off (default) | Humidity `hum`. Only switch it on if the unit has no humidity sensor. |
@@ -95,8 +95,16 @@ module's **Extra** settings makes it report immediately.
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
-- README: which faikout module settings are needed for the complete set of data points.
+### 0.0.17
+- Fixed units of `status.comp` and `status.fanfreq`: the module sends Hz by default and rpm only with `ha.comprpm`/`ha.fanrpm`.
+  The adapter now takes the unit from the module's Home Assistant discovery (a fractional fan value is always Hz),
+  sets it on the state and remembers it per device. The VIS widgets show the unit of the state.
+- All fields the module can report are described: new `status.action` (with `no.hvacaction` off), `status.loopback`,
+  `status.bletemp`/`blehum`/`blebat`, `info.dma`, `info.restart`, `info.ipv6`, `info.secureboot`, `info.nvsecryption`.
+  `dma` and `restart` were created as unknown fields under `status.*` up to 0.0.16 and are moved to `info.*` on start.
+- New tab "Module settings" in the instance configuration: which settings the faikout module needs for the complete set of
+  data points (all eleven languages). Same table in the README.
+- Warning in the log when a module is connected without `ha.enable`.
 
 ### 0.0.16
 - Release notes in `io-package.json` trimmed to seven entries and translated into all languages (repository checker E1032/E1144).

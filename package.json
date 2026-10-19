@@ -1,6 +1,6 @@
 {
   "name": "iobroker.faikout",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "Connect Daikin air conditioners with a faikout module locally via MQTT.",
   "author": {
     "name": "Immanuel",
@@ -57,7 +57,7 @@
     "test:integration": "mocha test/integration --exit",
     "test": "npm run test:package && npm run test:unit",
     "lint": "eslint .",
-    "test:unit": "mocha test/verbrauch test/broker test/namen --exit",
+    "test:unit": "mocha test/verbrauch test/broker test/namen test/einheiten --exit",
     "release": "release-script"
   }
 }

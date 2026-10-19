@@ -167,8 +167,8 @@ vis.binds.faikout = {
         { key: 'outdoor', legacy: 'aussen', feld: 'status.outside', name: 'Außen', einheit: '°C', stellen: 1 },
         { key: 'power', legacy: 'leistung', feld: 'status.consumption', name: 'Leistung', einheit: 'W', stellen: 0 },
         { key: 'today', legacy: 'heute', feld: 'consumption.total.today', name: 'Heute', einheit: 'kWh', stellen: 1 },
-        { key: 'compressor', legacy: 'verdichter', feld: 'status.comp', name: 'Verdichter', einheit: 'rpm', stellen: 0 },
-        { key: 'fan', legacy: 'ventilator', feld: 'status.fanfreq', name: 'Ventilator', einheit: 'rpm', stellen: 0 },
+        { key: 'compressor', legacy: 'verdichter', feld: 'status.comp', name: 'Verdichter', einheit: 'Hz', stellen: 0, einheitVomObjekt: true },
+        { key: 'fan', legacy: 'ventilator', feld: 'status.fanfreq', name: 'Ventilator', einheit: 'Hz', stellen: 1, einheitVomObjekt: true },
         { key: 'refrigerant', legacy: 'kaeltemittel', feld: 'status.liquid', name: 'Kältemittel', einheit: '°C', stellen: 1 },
         { key: 'room', legacy: 'raum', feld: 'status.temp', name: 'Raum', einheit: '°C', stellen: 1 },
         { key: 'humidity', legacy: 'feuchte', feld: 'status.hum', name: 'Luftfeuchte', einheit: '%', stellen: 0 },
@@ -191,6 +191,19 @@ vis.binds.faikout = {
     },
 
     /* ------------------------------------------------------------------ Hilfen */
+
+    /**
+     * Einheit eines Messwerts. comp/fanfreq kommen je nach Moduleinstellung in Hz oder rpm -
+     * massgeblich ist die Einheit am Objekt, die der Adapter aus der HA-Discovery setzt.
+     */
+    einheit: function (ctx, m) {
+        return (m.einheitVomObjekt && ctx.einheiten[m.feld]) || m.einheit;
+    },
+
+    /** Nachkommastellen: rpm sind ganze Zahlen, der Luefter in Hz hat eine Stelle. */
+    stellen: function (ctx, m) {
+        return vis.binds.faikout.einheit(ctx, m) === 'rpm' ? 0 : m.stellen;
+    },
 
     zahl: function (v, stellen) {
         if (v === null || v === undefined || v === '') return null;
@@ -231,6 +244,7 @@ vis.binds.faikout = {
             zustaende = zustaende || {};
             var ctx = {
                 prefix: prefix,
+                einheiten: {},
                 widgetID: widgetID,
                 zustaende: zustaende,
                 oid: function (feld) { return prefix + '.' + feld; },
@@ -273,6 +287,16 @@ vis.binds.faikout = {
             $div.data('bound', gebunden);
             $div.data('bindHandler', zeichnen);
             zeichnen();
+
+            // Einheiten von comp/fanfreq vom Objekt holen und danach neu zeichnen.
+            b.MESSWERTE.forEach(function (m) {
+                if (!m.einheitVomObjekt || !ctx.hat(m.feld)) return;
+                vis.conn.getObject(ctx.oid(m.feld), function (err, obj) {
+                    if (err || !obj || !obj.common || !obj.common.unit) return;
+                    ctx.einheiten[m.feld] = obj.common.unit;
+                    zeichnen();
+                });
+            });
         });
     },
 
@@ -691,10 +715,10 @@ vis.binds.faikout = {
             return function () {
                 var html = '';
                 liste.forEach(function (m) {
-                    var v = b.zahl(ctx.wert(m.feld), m.stellen);
+                    var v = b.zahl(ctx.wert(m.feld), b.stellen(ctx, m));
                     if (v === null) return;
                     html += '<div class="fk-mw"><div class="fk-mw-name">' + b.t(m.name) + '</div>' +
-                        '<div class="fk-mw-wert">' + v + '<small>' + m.einheit + '</small></div></div>';
+                        '<div class="fk-mw-wert">' + v + '<small>' + b.einheit(ctx, m) + '</small></div></div>';
                 });
                 $wurzel.find('.fk-messwerte').html(html);
                 $wurzel.css('--fk-akzent', ctx.akzent());
@@ -723,8 +747,8 @@ vis.binds.faikout = {
                 '</div>');
 
             return function () {
-                var v = b.zahl(ctx.wert(m.feld), m.stellen);
-                $wurzel.find('.fk-einzel-wert').html((v === null ? '–' : v) + '<small>' + m.einheit + '</small>');
+                var v = b.zahl(ctx.wert(m.feld), b.stellen(ctx, m));
+                $wurzel.find('.fk-einzel-wert').html((v === null ? '–' : v) + '<small>' + b.einheit(ctx, m) + '</small>');
                 $wurzel.css('--fk-akzent', ctx.akzent());
             };
         });
@@ -1065,10 +1089,10 @@ vis.binds.faikout = {
         return function () {
             var html = '';
             liste.forEach(function (m) {
-                var v = b.zahl(ctx.wert(m.feld), m.stellen);
+                var v = b.zahl(ctx.wert(m.feld), b.stellen(ctx, m));
                 if (v === null) return;
                 html += '<div class="fk-mw"><div class="fk-mw-name">' + b.t(m.name) + '</div>' +
-                    '<div class="fk-mw-wert">' + v + '<small>' + m.einheit + '</small></div></div>';
+                    '<div class="fk-mw-wert">' + v + '<small>' + b.einheit(ctx, m) + '</small></div></div>';
             });
             $m.html(html);
         };
