@@ -57,6 +57,32 @@ Objects are grouped per device:
 The broker port has to be published by the container, otherwise the modules cannot reach it.
 Add a port mapping for the configured port.
 
+### Module settings for the complete set of data points
+
+What the adapter can show depends on the settings in the faikout module (web interface,
+**Settings**; most of them sit under the **Advanced** settings; older firmware spells them without
+the dot, e.g. `haenable`, `nohumidity`). These are the relevant ones:
+
+| Setting | Required value | Effect |
+|---|---|---|
+| **MQTT host** (Basic) | `<ioBroker IP>:<port>` | Connects the module to the adapter's broker. |
+| `ha.enable` ("Home Assistant") | **on** (default) | The module publishes its readings (`state/<name>`) **only** while this is on. Off means: diagnostics only, no temperatures, energy, mode etc. |
+| `ha.fanrpm` | **on** | Fan speed in rpm. Off sends Hz, which the adapter then shows with the wrong unit (rpm). |
+| `ha.comprpm` | **on** | Compressor speed in rpm. Off sends Hz, shown with the wrong unit. |
+| `ha.switches` | on | Adds `autoe` (main switch of the module's own automation) to the readings. |
+| `no.hvacaction` | **off** (default is on) | Adds `action` — what the unit is actually doing (heating, cooling, idle …). |
+| `no.humidity` | off (default) | Humidity `hum`. Only switch it on if the unit has no humidity sensor. |
+| `no.demand` | off (default) | Demand limit `demand`. |
+| `no.led` | **off** (default is on) | LED control — only if the unit's display LED can be switched. |
+| `no.humidify` | off (default is on) | Humidifier control — only for units with a humidifier. |
+| other `no.*` (`econo`, `powerful`, `comfort`, `streamer`, `quiet`, `sensor`, `swingv`, `swingh`, `flap`, `antifreeze`) | off (default) | Each one hides the matching function. Switch on only for functions your unit really lacks. |
+| `livestatus` | on (recommended) | Reports immediately instead of every `reporting` seconds, see below. |
+| `reporting` | 60 (default) | Interval of the periodic report in seconds. |
+
+No setting is needed for energy counters, power draw, compressor and fan speed, refrigerant and
+outside temperature: the module reads them from the unit on its own. Whether they appear depends
+only on the model — a unit that does not report a value simply has no data point for it.
+
 ### Faster feedback
 
 Out of the box a module reports its state every 60 seconds (`reporting` setting), so a command
@@ -69,6 +95,8 @@ module's **Extra** settings makes it report immediately.
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- README: which faikout module settings are needed for the complete set of data points.
 
 ### 0.0.16
 - Release notes in `io-package.json` trimmed to seven entries and translated into all languages (repository checker E1032/E1144).
