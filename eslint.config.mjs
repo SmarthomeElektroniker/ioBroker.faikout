@@ -15,6 +15,7 @@ export default [
             'widgets/**',
             'test/**',
             'coverage/**',
+            'lokal/**',
             '*.config.mjs',
         ],
     },

@@ -326,6 +326,15 @@ vis.binds.faikout = {
         if (neu.length) vis.conn.subscribe(neu);
     },
 
+    /**
+     * Akzentfarbe (Betriebsart) als CSS-Variable setzen. jQuery 1.11 in vis 1 kann mit .css()
+     * keine Custom Properties setzen - der Akzent blieb deshalb immer blau.
+     */
+    farbe: function ($w, wert) {
+        if ($w && $w[0] && $w[0].style) $w[0].style.setProperty('--fk-akzent', wert);
+        return $w;
+    },
+
     /** Hinweis, wenn die Anlage den benoetigten Datenpunkt gar nicht hat. */
     fehlt: function ($wurzel, feld) {
         $wurzel.html('<div class="fk-fehler">' + vis.binds.faikout.t('Dieses Gerät hat keinen Datenpunkt %s.', '<code>' + feld + '</code>') + '</div>');
@@ -535,7 +544,7 @@ vis.binds.faikout = {
 
             return function () {
                 var an = ctx.hat('control.power') ? !!ctx.wert('control.power') : true;
-                $wurzel.css('--fk-akzent', ctx.akzent()).toggleClass('fk-aus', !an);
+                vis.binds.faikout.farbe($wurzel, ctx.akzent()).toggleClass('fk-aus', !an);
                 $wurzel.find('.fk-schalter').toggleClass('fk-an', an);
                 zeichneBogen();
                 var erreichbar = ctx.hat('info.online') ? !!ctx.wert('info.online') : true;
@@ -575,7 +584,7 @@ vis.binds.faikout = {
             return function () {
                 var an = ctx.hat('control.power') ? !!ctx.wert('control.power') : true;
                 var m = ctx.wert('control.mode');
-                $wurzel.css('--fk-akzent', ctx.akzent()).toggleClass('fk-aus', !an);
+                vis.binds.faikout.farbe($wurzel, ctx.akzent()).toggleClass('fk-aus', !an);
                 $wurzel.find('.fk-schalter').toggleClass('fk-an', an);
                 $wurzel.find('.fk-pille').each(function () {
                     $(this).toggleClass('fk-gewaehlt', $(this).attr('data-wert') === m && an);
@@ -610,7 +619,7 @@ vis.binds.faikout = {
 
             return function () {
                 var f = ctx.wert('control.fan');
-                $wurzel.css('--fk-akzent', ctx.akzent());
+                vis.binds.faikout.farbe($wurzel, ctx.akzent());
                 $wurzel.find('.fk-pille').each(function () {
                     $(this).toggleClass('fk-gewaehlt', $(this).attr('data-wert') === f);
                 });
@@ -649,7 +658,7 @@ vis.binds.faikout = {
 
             return function () {
                 var w = parseInt(ctx.wert('control.demand'), 10);
-                $wurzel.css('--fk-akzent', ctx.akzent());
+                vis.binds.faikout.farbe($wurzel, ctx.akzent());
                 if (!isNaN(w)) {
                     if (!$s.is(':active')) $s.val(w);
                     $wurzel.find('.fk-leistung-zahl').text(w);
@@ -701,7 +710,7 @@ vis.binds.faikout = {
             b.fuss($wurzel, ctx, data);
 
             return function () {
-                $wurzel.css('--fk-akzent', ctx.akzent());
+                vis.binds.faikout.farbe($wurzel, ctx.akzent());
                 $wurzel.find('.fk-schalt').each(function () {
                     var f = $(this).attr('data-feld');
                     var v = ctx.wert(f);
@@ -747,7 +756,7 @@ vis.binds.faikout = {
                         '<div class="fk-mw-wert">' + v + '<small>' + b.einheit(ctx, m) + '</small></div></div>';
                 });
                 $wurzel.find('.fk-messwerte').html(html);
-                $wurzel.css('--fk-akzent', ctx.akzent());
+                vis.binds.faikout.farbe($wurzel, ctx.akzent());
             };
         });
     },
@@ -775,7 +784,7 @@ vis.binds.faikout = {
             return function () {
                 var v = b.zahl(ctx.wert(m.feld), b.stellen(ctx, m));
                 $wurzel.find('.fk-einzel-wert').html((v === null ? '–' : v) + '<small>' + b.einheit(ctx, m) + '</small>');
-                $wurzel.css('--fk-akzent', ctx.akzent());
+                vis.binds.faikout.farbe($wurzel, ctx.akzent());
             };
         });
     },
@@ -995,7 +1004,7 @@ vis.binds.faikout = {
             }
 
             return function () {
-                $wurzel.css('--fk-akzent', ctx.akzent());
+                vis.binds.faikout.farbe($wurzel, ctx.akzent());
                 laden();
             };
         });
@@ -1037,7 +1046,7 @@ vis.binds.faikout = {
 
             return function () {
                 var an = ctx.hat('control.power') ? !!ctx.wert('control.power') : true;
-                $wurzel.css('--fk-akzent', ctx.akzent()).toggleClass('fk-aus', !an);
+                vis.binds.faikout.farbe($wurzel, ctx.akzent()).toggleClass('fk-aus', !an);
                 $wurzel.find('.fk-schalter').toggleClass('fk-an', an);
                 teile.forEach(function (f) { if (f) f(); });
                 var erreichbar = ctx.hat('info.online') ? !!ctx.wert('info.online') : true;

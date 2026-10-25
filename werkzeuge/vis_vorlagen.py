@@ -7,8 +7,8 @@ Zwei Ausgaben aus demselben Bauplan:
       python3 werkzeuge/vis_vorlagen.py vorlage vis-templates/
   * Fassung fuer eine konkrete Anlage (Geraete und Felder aus einem Objektabzug)
       python3 werkzeuge/vis_vorlagen.py anlage <objekte.json> <ziel.json> \
-          --geraet faikout.0.Daikin_1OG=1.OG=Faikout_1OG \
-          --geraet faikout.0.Daikin_Wohnzimmer=Wohnzimmer=Faikout_Wohnzimmer [--start-id 300]
+          --geraet faikout.0.Upstairs=Oben=Faikout_Oben \
+          --geraet faikout.0.Living_room=Wohnzimmer=Faikout_Wohnzimmer [--start-id 300]
     <objekte.json>: {"states":[{"id":..., "unit":...}, ...]} (Abzug der faikout.0-Objekte)
 
 vis-1-Regeln, an die sich alles hier haelt (sonst bricht die Bindung):

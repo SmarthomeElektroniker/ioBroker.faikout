@@ -107,6 +107,8 @@ one detail page per unit with controls, energy history and a phone view. They us
   They now subscribe the data points of their device themselves (vis only subscribed the device object), so values
   and states are shown and kept up to date. Energy history: works with vis 1 (`getStates`), shows a fixed range
   (last 24 hours / 31 days / 12 months) and formats numbers in the VIS language.
+- VIS widgets: the accent colour follows the mode again (heating orange, cooling blue, off grey) – jQuery 1.11 in vis 1
+  cannot set CSS custom properties with `.css()`, so it always stayed blue.
 - New: vis templates (`vis-templates/`) – overview, detail page per unit, energy and phone view.
 
 ### 0.0.17
