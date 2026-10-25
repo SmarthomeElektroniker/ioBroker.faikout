@@ -242,6 +242,7 @@ vis.binds.faikout = {
                 return;
             }
             zustaende = zustaende || {};
+            b.abonnieren(zustaende);
             var ctx = {
                 prefix: prefix,
                 einheiten: {},
@@ -298,6 +299,28 @@ vis.binds.faikout = {
                 });
             });
         });
+    },
+
+    /**
+     * VIS abonniert beim Laden einer Ansicht nur die IDs, die in den Widget-Attributen stehen -
+     * hier also nur das Geraeteobjekt, nicht die Datenpunkte darunter. Ohne eigenes Abo blieben
+     * vis.states leer und alle Werte zeigten "–". Deshalb: Anfangswerte in vis.states legen
+     * (wenn noch keine da sind) und die Datenpunkte selbst abonnieren.
+     */
+    abonnieren: function (zustaende) {
+        var neu = [];
+        var aktiv = (vis.subscribing && vis.subscribing.active) || null;
+        Object.keys(zustaende).forEach(function (id) {
+            var s = zustaende[id];
+            if (s && vis.states.attr(id + '.val') === undefined) vis.updateState(id, s);
+            if (!aktiv) {
+                neu.push(id);
+            } else if (aktiv.indexOf(id) === -1) {
+                aktiv.push(id);
+                neu.push(id);
+            }
+        });
+        if (neu.length) vis.conn.subscribe(neu);
     },
 
     /** Hinweis, wenn die Anlage den benoetigten Datenpunkt gar nicht hat. */
@@ -785,7 +808,10 @@ vis.binds.faikout = {
                 return;
             }
             gefunden = true;
-            vis.conn.getState(ctx.oid(pfad), function (err, zustand) {
+            // vis 1 kennt kein conn.getState, nur getStates (Liste oder Muster).
+            var oid = ctx.oid(pfad);
+            vis.conn.getStates([oid], function (err, zustaende) {
+                var zustand = zustaende && zustaende[oid];
                 if (!err && zustand && zustand.val) {
                     try {
                         JSON.parse(zustand.val).forEach(function (p) {

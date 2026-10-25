@@ -81,9 +81,7 @@
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;symbole/checkbox;ziehen/checkbox;zusatz/checkbox;beschriftung/checkbox"
         data-vis-attrs0="group.readings;show_outdoor/checkbox;show_power/checkbox;show_today/checkbox;show_compressor/checkbox;show_fan/checkbox;show_refrigerant/checkbox;show_room/checkbox;show_humidity/checkbox;show_energy/checkbox;show_yesterday/checkbox;show_hour/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:820px">
-        <script type="text/javascript">
-            vis.binds.faikout.kachel('<%= this.data.attr('wid') %>', view, data, style);
-        <\/script>
+        <% vis.binds.faikout.kachel(this.data.wid, this.view, this.data, this.style); %>
     </div>
 </script>
 
@@ -96,9 +94,7 @@
         data-vis-name="Set point arc"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;ziehen/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:340px;height:350px">
-        <script type="text/javascript">
-            vis.binds.faikout.bogen('<%= this.data.attr('wid') %>', view, data, style);
-        <\/script>
+        <% vis.binds.faikout.bogen(this.data.wid, this.view, this.data, this.style); %>
     </div>
 </script>
 
@@ -111,9 +107,7 @@
         data-vis-name="Mode (horizontal)"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox;symbole/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:135px">
-        <script type="text/javascript">
-            vis.binds.faikout.modus('<%= this.data.attr('wid') %>', view, data, false);
-        <\/script>
+        <% vis.binds.faikout.modus(this.data.wid, this.view, this.data, false); %>
     </div>
 </script>
 
@@ -125,9 +119,7 @@
         data-vis-name="Mode (vertical)"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox;symbole/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:190px;height:265px">
-        <script type="text/javascript">
-            vis.binds.faikout.modus('<%= this.data.attr('wid') %>', view, data, true);
-        <\/script>
+        <% vis.binds.faikout.modus(this.data.wid, this.view, this.data, true); %>
     </div>
 </script>
 
@@ -140,9 +132,7 @@
         data-vis-name="Fan speed (horizontal)"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:420px;height:100px">
-        <script type="text/javascript">
-            vis.binds.faikout.luefter('<%= this.data.attr('wid') %>', view, data, false);
-        <\/script>
+        <% vis.binds.faikout.luefter(this.data.wid, this.view, this.data, false); %>
     </div>
 </script>
 
@@ -154,9 +144,7 @@
         data-vis-name="Fan speed (vertical)"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:165px;height:345px">
-        <script type="text/javascript">
-            vis.binds.faikout.luefter('<%= this.data.attr('wid') %>', view, data, true);
-        <\/script>
+        <% vis.binds.faikout.luefter(this.data.wid, this.view, this.data, true); %>
     </div>
 </script>
 
@@ -169,9 +157,7 @@
         data-vis-name="Power limit"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:280px;height:150px">
-        <script type="text/javascript">
-            vis.binds.faikout.leistung('<%= this.data.attr('wid') %>', view, data, style);
-        <\/script>
+        <% vis.binds.faikout.leistung(this.data.wid, this.view, this.data, this.style); %>
     </div>
 </script>
 
@@ -184,9 +170,7 @@
         data-vis-name="Extra functions (horizontal)"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox;beschriftung/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:300px;height:115px">
-        <script type="text/javascript">
-            vis.binds.faikout.zusatz('<%= this.data.attr('wid') %>', view, data, false);
-        <\/script>
+        <% vis.binds.faikout.zusatz(this.data.wid, this.view, this.data, false); %>
     </div>
 </script>
 
@@ -198,9 +182,7 @@
         data-vis-name="Extra functions (vertical)"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:230px;height:290px">
-        <script type="text/javascript">
-            vis.binds.faikout.zusatz('<%= this.data.attr('wid') %>', view, data, true);
-        <\/script>
+        <% vis.binds.faikout.zusatz(this.data.wid, this.view, this.data, true); %>
     </div>
 </script>
 
@@ -221,9 +203,7 @@
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox"
         data-vis-attrs0="group.history;range/select,day,month,year;rangeSwitch/checkbox;seriesSelect/checkbox;show_total/checkbox;show_cooling/checkbox;show_heating/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:420px;height:250px">
-        <script type="text/javascript">
-            vis.binds.faikout.verlauf('<%= this.data.attr('wid') %>', view, data, style);
-        <\/script>
+        <% vis.binds.faikout.verlauf(this.data.wid, this.view, this.data, this.style); %>
     </div>
 </script>
 
@@ -236,9 +216,7 @@
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox"
         data-vis-attrs0="group.readings;show_outdoor/checkbox;show_power/checkbox;show_today/checkbox;show_compressor/checkbox;show_fan/checkbox;show_refrigerant/checkbox;show_room/checkbox;show_humidity/checkbox;show_energy/checkbox;show_yesterday/checkbox;show_hour/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:160px">
-        <script type="text/javascript">
-            vis.binds.faikout.messwerte('<%= this.data.attr('wid') %>', view, data, style);
-        <\/script>
+        <% vis.binds.faikout.messwerte(this.data.wid, this.view, this.data, this.style); %>
     </div>
 </script>
 
@@ -251,8 +229,6 @@
         data-vis-name="Reading (single)"
         data-vis-attrs="deviceOid/id;reading/select,outdoor,power,today,compressor,fan,refrigerant,room,humidity,energy,yesterday,hour;titel;theme/select,light,dark;rahmen/checkbox;etikett/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:150px;height:100px">
-        <script type="text/javascript">
-            vis.binds.faikout.einzelwert('<%= this.data.attr('wid') %>', view, data, style);
-        <\/script>
+        <% vis.binds.faikout.einzelwert(this.data.wid, this.view, this.data, this.style); %>
     </div>
 </script>
