@@ -61,6 +61,9 @@ vis.binds.faikout = {
         'Summe': 'Total',
         'Dieser Monat': 'This month',
         'Dieses Jahr': 'This year',
+        'Letzte 24 Stunden': 'Last 24 hours',
+        'Letzte 31 Tage': 'Last 31 days',
+        'Letzte 12 Monate': 'Last 12 months',
         'Tag': 'Day',
         'Monat': 'Month',
         'Jahr': 'Year',
@@ -891,7 +894,7 @@ vis.binds.faikout = {
         svg += '</g><g class="fk-v-achse">';
         for (var j = 0; j <= 2; j++) {
             var v = spitze * j / 2;
-            var t = v >= 10 ? v.toFixed(0) : v.toFixed(v < 1 ? 2 : 1);
+            var t = b.zahl(v, v >= 10 || v === 0 ? 0 : (v < 1 ? 2 : 1));
             svg += '<text x="' + (LINKS - 4) + '" y="' + (y(v) + 3).toFixed(1) + '" text-anchor="end">' + t + '</text>';
         }
         // Beschriftung ausduennen, sonst kleben 24 oder 31 Werte aneinander.
@@ -910,8 +913,8 @@ vis.binds.faikout = {
                 svg += '<rect x="' + x.toFixed(1) + '" y="' + y(wert).toFixed(1) +
                        '" width="' + balkenB.toFixed(1) + '" height="' + h.toFixed(1) +
                        '" rx="1" fill="' + b.VERLAUF_FARBEN[r.art] + '">' +
-                       '<title>' + punkte[k].beschriftung + ' · ' + b.t('Kühlen') + ' ' + punkte[k].cooling.toFixed(1) +
-                       ' kWh · ' + b.t('Heizen') + ' ' + punkte[k].heating.toFixed(1) + ' kWh</title></rect>';
+                       '<title>' + punkte[k].beschriftung + ' · ' + b.t('Kühlen') + ' ' + b.zahl(punkte[k].cooling, 1) +
+                       ' kWh · ' + b.t('Heizen') + ' ' + b.zahl(punkte[k].heating, 1) + ' kWh</title></rect>';
             });
         });
         svg += '</g></svg>';
@@ -930,7 +933,9 @@ vis.binds.faikout = {
                 cooling: b.attr(data, 'show_cooling', 'zeige_kuehlen') !== false,
                 heating: b.attr(data, 'show_heating', 'zeige_heizen') !== false
             };
-            var BESCHRIFTUNG = { day: b.t('Heute'), month: b.t('Dieser Monat'), year: b.t('Dieses Jahr') };
+            // Die Reihen des Adapters reichen weiter zurueck (Tage z. B. 62) - gezeigt wird ein fester Ausschnitt.
+            var BESCHRIFTUNG = { day: b.t('Letzte 24 Stunden'), month: b.t('Letzte 31 Tage'), year: b.t('Letzte 12 Monate') };
+            var ANZAHL = { day: 24, month: 31, year: 12 };
 
             var $box = $('<div class="fk-verlauf"></div>').appendTo($wurzel);
             if (b.attr(data, 'rangeSwitch', 'umschalter') !== false) {
@@ -980,11 +985,12 @@ vis.binds.faikout = {
                         $fuss.find('.fk-v-summe').text('');
                         return;
                     }
+                    punkte = punkte.slice(-(ANZAHL[bereich] || punkte.length));
                     var w = $flaeche.width() || 400;
                     b.verlaufZeichnen($flaeche, punkte, arten, w, Math.max(110, Math.round(w * 0.42)));
                     var summe = punkte.reduce(function (a, p) { return a + p.cooling + p.heating; }, 0);
                     $fuss.find('.fk-v-summe').html(b.t('Summe') + ' <b>' +
-                        (summe >= 100 ? summe.toFixed(0) : summe.toFixed(1)) + ' kWh</b>');
+                        b.zahl(summe, summe >= 100 ? 0 : 1) + ' kWh</b>');
                 });
             }
 

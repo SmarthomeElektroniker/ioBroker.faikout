@@ -89,12 +89,26 @@ Out of the box a module reports its state every 60 seconds (`reporting` setting)
 is only confirmed with the next report — expect up to a minute. Enabling `livestatus` in the
 module's **Extra** settings makes it report immediately.
 
+## Visualisation (vis templates)
+
+The folder [`vis-templates/`](vis-templates/) contains ready-made **vis 1** views for two units: overview,
+one detail page per unit with controls, energy history and a phone view. They use only data points of
+`faikout.0` and the widgets of this adapter – no scripts, no other adapters. Import instructions:
+[vis-templates/README.md](vis-templates/README.md).
+
 ## Changelog
 
 <!--
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- VIS widgets: fixed rendering in the vis runtime – the widgets showed nothing and logged `missing ) after argument list`.
+  They now subscribe the data points of their device themselves (vis only subscribed the device object), so values
+  and states are shown and kept up to date. Energy history: works with vis 1 (`getStates`), shows a fixed range
+  (last 24 hours / 31 days / 12 months) and formats numbers in the VIS language.
+- New: vis templates (`vis-templates/`) – overview, detail page per unit, energy and phone view.
+
 ### 0.0.17
 - Fixed units of `status.comp` and `status.fanfreq`: the module sends Hz by default and rpm only with `ha.comprpm`/`ha.fanrpm`.
   The adapter now takes the unit from the module's Home Assistant discovery (a fractional fan value is always Hz),
