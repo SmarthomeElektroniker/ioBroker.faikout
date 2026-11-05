@@ -84,6 +84,49 @@ tests.integration(path.join(__dirname, '..'), {
             });
         });
 
+        // A setting the air conditioner does not take over is reported by the module on
+        // error/<name>/failed-set. Up to 0.0.18 only the bare payload appeared in the log.
+        suite('Setting rejected by the air conditioner (failed-set)', getHarness => {
+            it('stores the rejected setting in info.failedSet', async function () {
+                this.timeout(60000);
+                const harness = getHarness();
+                const port = await freePort();
+                await harness.changeAdapterConfig('faikout', { native: { port } });
+                await harness.startAdapterAndWait();
+                await new Promise(r => setTimeout(r, 2000));
+
+                const mqtt = require('mqtt');
+                const client = mqtt.connect(`mqtt://127.0.0.1:${port}`, { clientId: 'unit-test', reconnectPeriod: 0 });
+                await new Promise((res, rej) => {
+                    client.on('connect', res);
+                    client.on('error', rej);
+                    setTimeout(() => rej(new Error('connect timeout')), 10000);
+                });
+                const pub = (topic, obj) =>
+                    new Promise((res, rej) => client.publish(topic, JSON.stringify(obj), e => (e ? rej(e) : res())));
+
+                await pub('state/Reject AC', { up: true, id: 'DEF', target: 21, demand: 100 });
+                await pub('error/Reject AC/failed-set', { demand: 90 });
+                await new Promise(r => setTimeout(r, 2000));
+                client.end(true);
+
+                const dev = 'faikout.0.Reject_AC';
+                const obj = await harness.objects.getObjectAsync(`${dev}.info.failedSet`);
+                const state = await harness.states.getStateAsync(`${dev}.info.failedSet`);
+                const demand = await harness.states.getStateAsync(`${dev}.control.demand`);
+                if (!obj || obj.common.role !== 'json' || obj.common.write !== false) {
+                    throw new Error(`info.failedSet not described: ${JSON.stringify(obj && obj.common)}`);
+                }
+                const content = state && JSON.parse(state.val);
+                if (!content || !content.settings || content.settings.demand !== 90 || isNaN(Date.parse(content.time))) {
+                    throw new Error(`info.failedSet wrong: ${JSON.stringify(state)}`);
+                }
+                if (!demand || demand.val !== 100) {
+                    throw new Error(`control.demand must keep the value of the unit: ${JSON.stringify(demand)}`);
+                }
+            });
+        });
+
         // Up to 0.0.16 dma and restart were unknown fields and landed in status.*; they belong in info.*.
         suite('Known fields in the wrong channel (0.0.16 -> 0.0.17)', getHarness => {
             it('moves status.dma to info.dma and keeps the value', async function () {
