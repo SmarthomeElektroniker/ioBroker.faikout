@@ -89,6 +89,23 @@ Out of the box a module reports its state every 60 seconds (`reporting` setting)
 is only confirmed with the next report — expect up to a minute. Enabling `livestatus` in the
 module's **Extra** settings makes it report immediately.
 
+### Settings the air conditioner does not accept
+
+A module sends a setting to the air conditioner and reads it back. If the unit still reports its old
+value after several rounds (`s21.tries`, 10 by default), the module drops the change, shows the value
+of the unit again and publishes the rejected fields on `error/<name>/failed-set`. Until then the module
+already shows the requested value, so it looks as if something had reset it.
+
+The adapter logs this as a warning (`… the air conditioner did not accept demand=90 …`) and stores the
+last rejection in `<device>.info.failedSet` as JSON with the requested values and the time:
+`{"time":"2026-11-05T14:40:51.085Z","settings":{"demand":90}}`. The adapter itself does not send
+anything in this situation.
+
+Known case: **demand control** (`control.demand`). Some units acknowledge the command but keep
+reporting 100 % — seen on units that still have Daikin's own WiFi adapter fitted. The module can only
+pass on the percentage; the modes of Daikin's app (off / automatic / fixed) are not part of what is
+known about the S21 interface. Econo is only taken over while the unit is running.
+
 ## Visualisation (vis templates)
 
 The folder [`vis-templates/`](vis-templates/) contains ready-made **vis 1** views for two units: overview,
@@ -102,6 +119,11 @@ one detail page per unit with controls, energy history and a phone view. They us
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- A setting the air conditioner does not accept (module message `error/<name>/failed-set`, e.g. demand control) is
+  logged as a clear warning instead of the bare payload, and the last rejection is stored in the new state
+  `info.failedSet` (requested values and time). Other module errors are logged with their topic (`comms`, …).
+
 ### 0.0.18 (2026-10-25)
 - VIS widgets: fixed rendering in the vis runtime – the widgets showed nothing and logged `missing ) after argument list`.
   They now subscribe the data points of their device themselves (vis only subscribed the device object), so values

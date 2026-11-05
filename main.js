@@ -90,6 +90,9 @@ class Faikout extends utils.Adapter {
         /** Geraete, fuer die schon vor ausgeschaltetem ha.enable gewarnt wurde (einmal je Lauf). */
         this.haWarnung = new Set();
 
+        /** Letzte Warnung "Einstellung abgelehnt" je Geraet: {text, zeit} - gegen Wiederholungen im Log. */
+        this.abgelehntWarnung = new Map();
+
         this.broker = null;
         this.stopping = false;
         this.stundenTimer = null;
@@ -224,7 +227,13 @@ class Faikout extends utils.Adapter {
         } // command/…, Faikout/… - nicht ausgewertet
 
         if (t.art === 'error') {
-            this.log.warn(`${t.geraet}: ${text}`);
+            const abgelehnt = felder.abgelehntAuswerten(t.unter, text);
+            if (abgelehnt) {
+                this.einstellungAbgelehnt(t.geraet, abgelehnt).catch(e => this.log.warn(`${t.geraet}: ${e.message}`));
+            } else {
+                // Der Unterpfad sagt, WAS schiefging (comms, unsupported, ...) - bis 0.0.18 fehlte er.
+                this.log.warn(`${t.geraet}: ${t.unter ? `${t.unter}: ` : ''}${text}`);
+            }
             return;
         }
 
@@ -252,6 +261,41 @@ class Faikout extends utils.Adapter {
         } else if (t.art === 'info' && t.unter === 'upgrade') {
             this.werteUebernehmen(t.geraet, { version: daten.version, build: daten.build }).catch(() => {});
         }
+    }
+
+    /**
+     * Die Klimaanlage hat eine Einstellung nicht uebernommen (Meldung error/<Name>/failed-set).
+     *
+     * Bis 0.0.18 stand dafuer nur die nackte Nutzlast im Log (`Daikin 1OG: {"demand":90}`) - nicht
+     * zu erkennen, dass die ANLAGE abgelehnt hat und nicht der Adapter oder ein Skript den Wert
+     * zurueckgestellt hat. Jetzt: Klartext-Warnung und der Datenpunkt `info.failedSet` mit Feld,
+     * verlangtem Wert und Zeit. Den wirklichen Wert der Anlage liefert das Modul mit seiner
+     * naechsten Statusmeldung selbst; `control.*` wird hier deshalb nicht angefasst.
+     *
+     * Dieselbe Ablehnung kommt bei einem zyklisch schreibenden Skript immer wieder. Als Warnung
+     * erscheint sie hoechstens einmal je Stunde, dazwischen auf Debug-Stufe; der Datenpunkt wird
+     * jedes Mal aktualisiert.
+     *
+     * @param {string} geraetName  Name des Moduls
+     * @param {{settings: object, text: string, details?: object}} abgelehnt  Ergebnis von felder.abgelehntAuswerten()
+     */
+    async einstellungAbgelehnt(geraetName, abgelehnt) {
+        const jetzt = Date.now();
+        const letzte = this.abgelehntWarnung.get(geraetName);
+        const wiederholt = letzte && letzte.text === abgelehnt.text && jetzt - letzte.zeit < 3600000;
+        const stateId = `${this.geraetId(geraetName)}.info.${felder.objektId('failed-set')}`;
+        const meldung = `${geraetName}: the air conditioner did not accept ${abgelehnt.text}. The module gave up after several attempts and reports the value of the unit again (data point ${this.namespace}.${stateId}).`;
+        if (wiederholt) {
+            this.log.debug(meldung);
+        } else {
+            this.abgelehntWarnung.set(geraetName, { text: abgelehnt.text, zeit: jetzt });
+            this.log.warn(meldung);
+        }
+        const inhalt = { time: new Date(jetzt).toISOString(), settings: abgelehnt.settings };
+        if (abgelehnt.details) {
+            inhalt.details = abgelehnt.details;
+        }
+        await this.werteUebernehmen(geraetName, { 'failed-set': JSON.stringify(inhalt) });
     }
 
     /**
