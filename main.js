@@ -67,6 +67,21 @@ const VERBRAUCH_REIHEN = [
     },
 ];
 
+/**
+ * Ein unveraenderter Wert wird nicht bei jeder Nachricht neu geschrieben, aber spaetestens nach
+ * dieser Zeit wieder - damit der Zeitstempel (ts) eines Datenpunkts nicht stehen bleibt und
+ * Ueberwachungen wie device-watcher ein lebendes Geraet nicht fuer tot halten.
+ */
+const AUFFRISCHEN_MS = 5 * 60 * 1000;
+
+/**
+ * Zaehlerstaende (native.zaehler) werden ausser bei Stundenwechsel, Hinweisen und Beenden
+ * hoechstens so oft gesichert. Was nach einem Absturz dazwischen fehlt, faengt verbrauch.js ab:
+ * gerechnet wird immer Rohwert minus Basis, der Verbrauch landet also nur spaeter, nicht doppelt
+ * und nicht verloren.
+ */
+const SICHERN_MS = 10 * 60 * 1000;
+
 class Faikout extends utils.Adapter {
     constructor(options) {
         super({ ...options, name: 'faikout' });
@@ -92,6 +107,17 @@ class Faikout extends utils.Adapter {
 
         /** Letzte Warnung "Einstellung abgelehnt" je Geraet: {text, zeit} - gegen Wiederholungen im Log. */
         this.abgelehntWarnung = new Map();
+
+        /**
+         * Schreib-Zwischenspeicher: stateId -> {val, zeit} des zuletzt geschriebenen Werts.
+         * Bis 0.0.18 schrieb der Adapter bei jeder Statusmeldung alle Datenpunkte samt drei
+         * JSON-Reihen und dem Zaehlerstand ins Objekt - bei vier Geraeten 27 % CPU (Issue #5).
+         * Beim Start leer, der erste Durchlauf schreibt also alles.
+         */
+        this.geschrieben = new Map();
+
+        /** Stunde, fuer die die Stundenreihe (hoursJson) zuletzt geschrieben wurde, je stateId. */
+        this.reihenStunde = new Map();
 
         this.broker = null;
         this.stopping = false;
@@ -422,6 +448,9 @@ class Faikout extends utils.Adapter {
                 // jede Zaehlung wieder bei null an.
                 zaehler: (alt && alt.native && alt.native.zaehler) || {},
                 grenzen: (alt && alt.native && alt.native.grenzen) || null,
+                // Zeitpunkt der letzten Sicherung von native.zaehler und ob seitdem etwas dazukam.
+                gesichert: Date.now(),
+                zaehlerGeaendert: false,
             };
             // Gemerkte Einheiten aus einem frueheren Lauf; was die Discovery in diesem Lauf
             // schon geliefert hat, hat Vorrang.
@@ -483,10 +512,28 @@ class Faikout extends utils.Adapter {
                     await this.einheitSetzen(id, geraetName, feld, ausWert, 'value');
                 }
             }
-            await this.setState(stateId, { val: felder.umrechnen(def, wert), ack: true });
+            await this.wertSchreiben(stateId, felder.umrechnen(def, wert));
         }
 
         await this.zaehlerVerarbeiten(id, g, daten);
+    }
+
+    /**
+     * Schreibt einen Wert mit ack, aber nur, wenn er sich gegenueber dem zuletzt geschriebenen
+     * geaendert hat oder dieser aelter als AUFFRISCHEN_MS ist. Bewusst kein setStateChanged -
+     * das liest den Wert vorher aus der Datenbank und spart damit nichts.
+     *
+     * @param {string} stateId  Objekt-ID ohne Namensraum
+     * @param {string|number|boolean|null} val         Wert
+     */
+    async wertSchreiben(stateId, val) {
+        const jetzt = Date.now();
+        const letzt = this.geschrieben.get(stateId);
+        if (letzt && letzt.val === val && jetzt - letzt.zeit < AUFFRISCHEN_MS) {
+            return;
+        }
+        await this.setState(stateId, { val, ack: true });
+        this.geschrieben.set(stateId, { val, zeit: jetzt });
     }
 
     /**
@@ -497,19 +544,36 @@ class Faikout extends utils.Adapter {
      * @param {object} daten   gemeldete Felder mit den Lebensdauer-Zaehlern
      */
     async zaehlerVerarbeiten(id, g, daten) {
-        let veraendert = false;
+        const jetzt = new Date();
+        let sofortSichern = false;
         for (const z of ZAEHLER) {
             const roh = daten[z.feld];
             if (typeof roh !== 'number') {
                 continue;
             }
-            const ergebnis = verbrauch.verarbeiten(g.zaehler[z.feld] || null, roh, new Date());
+            const bisher = g.zaehler[z.feld] || null;
+            // Frueh abbrechen: gleicher Rohwert in derselben Stunde - es kaeme dasselbe heraus.
+            // Erst nachdem der Zweig in diesem Lauf einmal angelegt und geschrieben wurde.
+            if (g.angelegt.has(`${id}.${CONSUMPTION}.${z.zweig}`) && verbrauch.unveraendert(bisher, roh, jetzt)) {
+                continue;
+            }
+            const ergebnis = verbrauch.verarbeiten(bisher, roh, jetzt);
             g.zaehler[z.feld] = ergebnis.stand;
-            veraendert = true;
+            g.zaehlerGeaendert = true;
+            // Sofort sichern bei erstem Wert, Stundenwechsel (schliesst Tag und Monat ein) und
+            // allem, was einen Hinweis erzeugt (neu basieren, Luecke).
+            if (
+                !bisher ||
+                bisher.letzterWert === null ||
+                bisher.stunde !== ergebnis.stand.stunde ||
+                ergebnis.hinweise.length
+            ) {
+                sofortSichern = true;
+            }
             ergebnis.hinweise.forEach(h => this.log.info(`${g.name} ${z.name.en.toLowerCase()}: ${h}`));
             await this.verbrauchSchreiben(id, g, z, ergebnis.werte);
         }
-        if (veraendert) {
+        if (sofortSichern || (g.zaehlerGeaendert && Date.now() - g.gesichert >= SICHERN_MS)) {
             await this.zaehlerstandSichern(id, g);
         }
     }
@@ -526,13 +590,20 @@ class Faikout extends utils.Adapter {
             if (wert === null || wert === undefined) {
                 continue;
             }
-            await this.setState(`${basis}.${f.id}`, { val: wert, ack: true });
+            await this.wertSchreiben(`${basis}.${f.id}`, wert);
         }
+        // Die Stundenreihe aendert sich nur beim Stundenwechsel; Tages- und Monatsreihe tragen den
+        // laufenden Tag/Monat und werden ueber den Textvergleich in wertSchreiben() gefiltert.
+        const stunde = g.zaehler[z.feld] && g.zaehler[z.feld].stunde;
         for (const r of VERBRAUCH_REIHEN) {
-            await this.setState(`${basis}.${r.id}`, {
-                val: JSON.stringify(werte[r.quelle] || []),
-                ack: true,
-            });
+            const stateId = `${basis}.${r.id}`;
+            if (r.quelle === 'hours' && stunde && this.reihenStunde.get(stateId) === stunde) {
+                continue;
+            }
+            await this.wertSchreiben(stateId, JSON.stringify(werte[r.quelle] || []));
+            if (r.quelle === 'hours') {
+                this.reihenStunde.set(stateId, stunde);
+            }
         }
     }
 
@@ -739,6 +810,8 @@ class Faikout extends utils.Adapter {
     }
 
     async zaehlerstandSichern(id, g) {
+        g.gesichert = Date.now();
+        g.zaehlerGeaendert = false;
         await this.extendObject(id, { native: { zaehler: g.zaehler } });
     }
 
@@ -810,6 +883,9 @@ class Faikout extends utils.Adapter {
         if (!obj || !obj.common || !obj.common.write) {
             return;
         }
+        // Der Befehl hat den Datenpunkt ueberschrieben. Die naechste Rueckmeldung des Moduls muss
+        // ihn wieder mit ack setzen - auch wenn sie den alten Wert bringt (Anlage lehnt ab).
+        this.geschrieben.delete(id.slice(this.namespace.length + 1));
 
         // faikout.0.<GeraetId>.control.<feld>
         const teile = id.split('.');

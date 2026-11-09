@@ -123,6 +123,10 @@ one detail page per unit with controls, energy history and a phone view. They us
 - A setting the air conditioner does not accept (module message `error/<name>/failed-set`, e.g. demand control) is
   logged as a clear warning instead of the bare payload, and the last rejection is stored in the new state
   `info.failedSet` (requested values and time). Other module errors are logged with their topic (`comms`, …).
+- Much lower CPU and database load (issue #5): states are only written when their value changes (unchanged values are
+  refreshed every 5 minutes so their timestamp stays current), the hourly JSON series only at the change of hour, the
+  daily/monthly series only when their content changes, and the meter readings in the device object at the change of
+  hour, after a rebase, every 10 minutes at most and on shutdown – instead of everything on every module message.
 
 ### 0.0.18 (2026-10-25)
 - VIS widgets: fixed rendering in the vis runtime – the widgets showed nothing and logged `missing ) after argument list`.
