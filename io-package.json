@@ -68,6 +68,19 @@
       }
     ],
     "news": {
+      "0.0.19": {
+        "en": "Much lower CPU and database load: states are only written when they change; rejected settings (failed-set) are logged clearly and stored in info.failedSet",
+        "de": "Deutlich weniger CPU- und Datenbanklast: Datenpunkte werden nur bei Änderung geschrieben; abgelehnte Einstellungen (failed-set) im Klartext geloggt und in info.failedSet abgelegt",
+        "ru": "Значительно меньшая нагрузка на ЦП и базу данных: состояния записываются только при изменении; отклонённые настройки (failed-set) понятно записываются в журнал и сохраняются в info.failedSet",
+        "pt": "Carga de CPU e base de dados muito menor: os estados só são escritos quando mudam; definições rejeitadas (failed-set) são registadas de forma clara e guardadas em info.failedSet",
+        "nl": "Veel minder CPU- en databasebelasting: states worden alleen bij wijziging geschreven; geweigerde instellingen (failed-set) worden duidelijk gelogd en opgeslagen in info.failedSet",
+        "fr": "Charge CPU et base de données nettement réduite : les états ne sont écrits que lorsqu’ils changent ; les réglages refusés (failed-set) sont journalisés clairement et enregistrés dans info.failedSet",
+        "it": "Carico di CPU e database molto inferiore: gli stati vengono scritti solo quando cambiano; le impostazioni rifiutate (failed-set) vengono registrate chiaramente e salvate in info.failedSet",
+        "es": "Mucha menos carga de CPU y de base de datos: los estados solo se escriben cuando cambian; los ajustes rechazados (failed-set) se registran con claridad y se guardan en info.failedSet",
+        "pl": "Znacznie mniejsze obciążenie CPU i bazy danych: stany są zapisywane tylko przy zmianie; odrzucone ustawienia (failed-set) są czytelnie logowane i zapisywane w info.failedSet",
+        "uk": "Значно менше навантаження на ЦП і базу даних: стани записуються лише при зміні; відхилені налаштування (failed-set) зрозуміло записуються в журнал і зберігаються в info.failedSet",
+        "zh-cn": "大幅降低 CPU 和数据库负载：状态仅在变化时写入；被拒绝的设置（failed-set）以清晰的日志记录并保存在 info.failedSet 中"
+      },
       "0.0.18": {
         "en": "VIS widgets render again in the vis runtime and show live values; mode colour on all widgets; energy history with fixed ranges; new vis templates",
         "de": "VIS-Widgets werden in der vis-Laufzeit wieder gezeichnet und zeigen Live-Werte; Farbe der Betriebsart auf allen Widgets; Energieverlauf mit festen Zeiträumen; neue vis-Vorlagen",
@@ -145,19 +158,6 @@
         "pl": "Przy starcie nazwy i role istniejących stanów są aktualizowane do bieżącego opisu pól (także dla rzadko przesyłanych pól)",
         "uk": "Під час запуску назви та ролі наявних станів оновлюються до поточного опису полів (також для полів, що надходять рідко)",
         "zh-cn": "启动时，现有状态的名称和角色会更新为当前字段描述（包括很少上报的字段）"
-      },
-      "0.0.12": {
-        "en": "New state status.reason (disconnect reason from the MQTT last will, e.g. \"LWT\") with names in all languages",
-        "de": "Neuer Datenpunkt status.reason (Grund der Trennung aus dem MQTT-„Last Will“, z. B. „LWT“) mit Namen in allen Sprachen",
-        "ru": "Новое состояние status.reason (причина отключения из MQTT last will, например «LWT») с названиями на всех языках",
-        "pt": "Novo estado status.reason (motivo da desconexão do MQTT last will, p. ex. «LWT») com nomes em todos os idiomas",
-        "nl": "Nieuwe status status.reason (reden van verbreking uit de MQTT last will, bijv. \"LWT\") met namen in alle talen",
-        "fr": "Nouvel état status.reason (cause de la déconnexion issue du last will MQTT, p. ex. « LWT ») avec des noms dans toutes les langues",
-        "it": "Nuovo stato status.reason (motivo della disconnessione dal last will MQTT, ad es. \"LWT\") con nomi in tutte le lingue",
-        "es": "Nuevo estado status.reason (motivo de la desconexión del last will de MQTT, p. ej. «LWT») con nombres en todos los idiomas",
-        "pl": "Nowy stan status.reason (przyczyna rozłączenia z MQTT last will, np. „LWT”) z nazwami we wszystkich językach",
-        "uk": "Новий стан status.reason (причина відключення з MQTT last will, напр. «LWT») з назвами всіма мовами",
-        "zh-cn": "新状态 status.reason（来自 MQTT 遗嘱消息的断开原因，例如“LWT”），名称支持所有语言"
       }
     },
     "restartAdapters": [
