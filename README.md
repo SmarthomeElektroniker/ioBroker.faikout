@@ -119,7 +119,7 @@ one detail page per unit with controls, energy history and a phone view. They us
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.0.19 (2026-11-10)
 - A setting the air conditioner does not accept (module message `error/<name>/failed-set`, e.g. demand control) is
   logged as a clear warning instead of the bare payload, and the last rejection is stored in the new state
   `info.failedSet` (requested values and time). Other module errors are logged with their topic (`comms`, …).
@@ -153,16 +153,6 @@ one detail page per unit with controls, energy history and a phone view. They us
 
 ### 0.0.15
 - The MQTT broker's shutdown timeout uses the adapter's `setTimeout` (repository checker E5005).
-
-### 0.0.14
-- **Breaking:** the consumption subtree uses English IDs: `consumption.{total|heating|cooling}.{currentHour|lastHour|today|yesterday|thisMonth|lastMonth}`
-  and `hoursJson`/`daysJson`/`monthsJson` (entries keyed `hour`/`day`/`month`). On start the adapter copies the last values of the
-  old `verbrauch.*` states to the new IDs and deletes the old objects. Data recorded by the history adapter stays under the old IDs.
-- Config keys renamed to `historyRegister` / `historyInstance`; an existing configuration keeps working until it is saved again.
-- `status.autoe` is now subscribed - writes were silently dropped before.
-- Admin texts translated into all eleven languages; VIS widgets: English names, English select values (`light`/`dark`,
-  `day`/`month`/`year`, reading keys) and a dictionary for all eleven languages. Values saved by older views are still understood.
-- Names of states for unknown fields carry all eleven languages.
 
 [Older changelog entries can be found here](CHANGELOG_OLD.md)
 
