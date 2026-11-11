@@ -57,6 +57,9 @@
     "adminUI": {
       "config": "json"
     },
+    "supportedMessages": {
+      "deviceManager": true
+    },
     "dependencies": [
       {
         "js-controller": ">=6.0.11"
