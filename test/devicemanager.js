@@ -213,14 +213,15 @@ describe('Device-Manager: Karte', () => {
         expect(items.consumption.unit).to.equal('W');
     });
 
-    it('zeigt Fehler, sobald es sie gibt (abgelehnte Einstellung, Trennungsgrund)', async () => {
+    it('abgelehnte Einstellung und Trennungsgrund nicht auf der Karte (zu lang für eine Zeile)', async () => {
         const a = await adapterMitGeraet();
         await a.einstellungAbgelehnt('Wohnzimmer AC', { settings: { demand: 90 }, text: 'demand=90' });
         a.onMqtt('state/Wohnzimmer AC', Buffer.from(JSON.stringify({ up: false, reason: 'LWT' })));
         await warte();
         const items = (await kartenLaden(a)).karten[0].customInfo.schema.items;
-        expect(items.failedSet.oid).to.equal('faikout.0.Wohnzimmer_AC.info.failedSet');
-        expect(items.reason.oid).to.equal('faikout.0.Wohnzimmer_AC.status.reason');
+        expect(items.failedSet).to.equal(undefined);
+        expect(items.reason).to.equal(undefined);
+        expect(a.objekte.has('Wohnzimmer_AC.info.failedSet')).to.equal(true);
     });
 
     it('Bedienelemente: Ein/Aus, Betriebsart, Solltemperatur, Luefterstufe', async () => {
