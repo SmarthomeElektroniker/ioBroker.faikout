@@ -10,6 +10,7 @@ const { FaikoutBroker } = require('./lib/broker');
 const felder = require('./lib/fields');
 const namen = require('./lib/namen');
 const verbrauch = require('./lib/verbrauch');
+const { FaikoutDeviceManagement } = require('./lib/devicemanager');
 
 /** Topics, die der Adapter auswertet. Alles andere wird still verworfen. */
 const BEKANNTE_ARTEN = new Set(['state', 'info', 'error', 'event']);
@@ -122,6 +123,12 @@ class Faikout extends utils.Adapter {
         this.broker = null;
         this.stopping = false;
         this.stundenTimer = null;
+
+        /**
+         * Karten im Device-Manager des Admins: laufender Betrieb und Alltagsbedienung, bewusst
+         * ohne Konfigurationsaktionen (siehe lib/devicemanager.js).
+         */
+        this.deviceManagement = new FaikoutDeviceManagement(this);
 
         this.on('ready', this.onReady.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
@@ -936,6 +943,7 @@ class Faikout extends utils.Adapter {
             if (this.stundenTimer) {
                 this.clearTimeout(this.stundenTimer);
             }
+            this.deviceManagement.beenden();
             // Zaehlerstaende sichern, damit nach dem Neustart weitergezaehlt wird.
             for (const [id, g] of this.geraete) {
                 await this.zaehlerstandSichern(id, g);
