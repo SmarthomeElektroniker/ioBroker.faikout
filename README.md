@@ -119,6 +119,13 @@ one detail page per unit with controls, energy history and a phone view. They us
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- Device manager support (`@iobroker/dm-utils`): one card per air conditioner in the admin tab "Devices"
+  with the running operation (on/off, mode, current action, room/target/outside temperature, fan speed, humidity,
+  power, energy today, last rejected setting, disconnect reason), connection of the module, warning when the unit
+  does not respond, WiFi signal. Controls for daily use only: power, mode, target temperature, fan speed. They write
+  the existing `control.*` states, so commands take the usual path. No configuration actions on the cards.
+
 ### 0.0.19 (2026-11-10)
 - A setting the air conditioner does not accept (module message `error/<name>/failed-set`, e.g. demand control) is
   logged as a clear warning instead of the bare payload, and the last rejection is stored in the new state
