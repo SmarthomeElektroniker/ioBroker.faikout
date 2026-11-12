@@ -282,7 +282,8 @@ class Faikout extends utils.Adapter {
         }
 
         // state/<Name> ist die Hauptmeldung im Klartext. state/<Name>/status liefert dasselbe
-        // im nativen Format (mode "C" statt "cool") - das waere doppelt und wird uebergangen.
+        // im nativen Format (mode "C" statt "cool") - das waere doppelt und wird uebergangen,
+        // bis auf die Betriebsart bei ausgeschalteter Anlage (selectedMode).
         if (t.art === 'state' && !t.unter) {
             if (felder.ohneHaEnable(daten) && !this.haWarnung.has(t.geraet)) {
                 this.haWarnung.add(t.geraet);
@@ -290,7 +291,19 @@ class Faikout extends utils.Adapter {
                     `${t.geraet}: the module sends diagnostics only - enable the setting "ha.enable" ("Home Assistant") in the module, otherwise no temperatures, mode or energy values arrive.`,
                 );
             }
-            this.werteUebernehmen(t.geraet, daten).catch(e => this.log.warn(`${t.geraet}: ${e.message}`));
+            // Die gewaehlte Betriebsart (ohne "off") laeuft als eigenes Feld mit.
+            const gewaehlt = felder.gewaehlteBetriebsart(daten, false);
+            const werte = gewaehlt ? { ...daten, selectedMode: gewaehlt } : daten;
+            this.werteUebernehmen(t.geraet, werte).catch(e => this.log.warn(`${t.geraet}: ${e.message}`));
+        } else if (t.art === 'state' && t.unter === 'status') {
+            // Aus der nativen Meldung nur die Betriebsart einer AUSGESCHALTETEN Anlage - der Rest
+            // steht schon in state/<Name>.
+            const gewaehlt = felder.gewaehlteBetriebsart(daten, true);
+            if (gewaehlt) {
+                this.werteUebernehmen(t.geraet, { selectedMode: gewaehlt }).catch(e =>
+                    this.log.warn(`${t.geraet}: ${e.message}`),
+                );
+            }
         } else if (t.art === 'info' && t.unter === 'upgrade') {
             this.werteUebernehmen(t.geraet, { version: daten.version, build: daten.build }).catch(() => {});
         }

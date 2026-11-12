@@ -9,7 +9,15 @@
 
 const { expect } = require('chai');
 const proxyquire = require('proxyquire').noCallThru();
-const { MODUS_TEXTE, LUEFTER_TEXTE, TAETIGKEIT_TEXTE, TEXTE, UMSCHALTEN } = require('../lib/devicemanager');
+const {
+    MODUS_TEXTE,
+    LUEFTER_TEXTE,
+    TAETIGKEIT_TEXTE,
+    TEXTE,
+    UMSCHALTEN,
+    STUFEN_KNOPF,
+    BALKEN_STUFEN,
+} = require('../lib/devicemanager');
 const felder = require('../lib/fields');
 const namen = require('../lib/namen');
 
@@ -199,7 +207,7 @@ describe('Device-Manager: Karte', () => {
         expect(status.warning).to.equal(undefined);
     });
 
-    it('Karte: Betriebsart und Luefterstufe bedienbar, Sollwert mit Schieber, Rest nur lesend', async () => {
+    it('Karte: Betriebsart waehlbar, Sollwert mit Schieber, Luefterstufe als Stufenregler, Rest lesend', async () => {
         const a = await adapterMitGeraet();
         const { customInfo } = (await kartenLaden(a)).karten[0];
         const items = customInfo.schema.items;
@@ -209,34 +217,34 @@ describe('Device-Manager: Karte', () => {
             'temp',
             'target',
             'targetSlider',
-            'fanLabel',
             'fan',
+            'fanSteps',
             'outside',
             'consumption',
             'energyToday',
         ]);
         // keine Ein/Aus-Zeile mehr - das ist der Umschalter in der Statuszeile
         expect(items.power).to.equal(undefined);
-        const bedienbar = ['mode', 'targetSlider', 'fan'];
-        // Beschriftung der Auswahlfelder links daneben, die Auswahl selbst ohne eigene Beschriftung
+        // Beschriftung der Betriebsart links daneben, die Auswahl selbst ohne eigene Beschriftung
         // (sonst laeuft der Rahmen durch den Text)
-        for (const k of ['mode', 'fan']) {
-            expect(items[`${k}Label`].type).to.equal('staticText');
-            expect(items[`${k}Label`].text).to.eql(namen.vollerName(felder.FELDER[k].name));
-            expect(items[k].label).to.equal('');
-            expect(items[`${k}Label`].xs + items[k].xs).to.equal(12);
-        }
-        for (const [k, i] of Object.entries(items).filter(([key]) => !key.endsWith('Label'))) {
+        expect(items.modeLabel.type).to.equal('staticText');
+        expect(items.modeLabel.text).to.eql(namen.vollerName(felder.FELDER.mode.name));
+        expect(items.mode.label).to.equal('');
+        expect(items.modeLabel.xs + items.mode.xs).to.equal(12);
+        const bedienbar = ['mode', 'targetSlider'];
+        for (const [k, i] of Object.entries(items).filter(([key]) => !['modeLabel', 'fanSteps'].includes(key))) {
             expect(i.type).to.equal('state');
             expect(i.foreign).to.equal(true);
             expect(a.objekte.has(a.rel(i.oid)), i.oid).to.equal(true);
             // bedienbar heisst: NICHT readOnly (sonst graut der Admin das Feld aus)
             expect(!!i.readOnly, k).to.equal(!bedienbar.includes(k));
         }
+        // die Auswahl haengt an control.selectedMode und kennt kein "Aus"
+        expect(items.mode.oid).to.equal('faikout.0.Wohnzimmer_AC.control.selectedMode');
         expect(items.mode.control).to.equal('select');
-        expect(items.mode.options.map(o => o.value)).to.eql(felder.MODES);
-        expect(items.fan.control).to.equal('select');
-        expect(items.fan.options.map(o => o.value)).to.eql(felder.FAN_MODES);
+        expect(items.mode.options.map(o => o.value)).to.eql(['heat_cool', 'cool', 'heat', 'dry', 'fan_only']);
+        // aktuelle Luefterstufe als Lesezeile ueber dem Stufenregler
+        expect(items.fan.oid).to.equal('faikout.0.Wohnzimmer_AC.control.fan');
         const s = items.targetSlider;
         expect([s.control, s.min, s.max, s.step, s.controlDelay]).to.eql(['slider', 16, 29, 0.5, 1000]);
         expect(s.oid).to.equal('faikout.0.Wohnzimmer_AC.control.target');
@@ -244,26 +252,169 @@ describe('Device-Manager: Karte', () => {
         expect(items.consumption.unit).to.equal('W');
     });
 
+    describe('Luefterstufe als Stufenregler', () => {
+        const regler = async (meldung = MELDUNG) => {
+            const a = await adapterMitGeraet(meldung);
+            return (await kartenLaden(a)).karten[0].customInfo.schema.items.fanSteps;
+        };
+        /** Welche Knoepfe bei Stufe `wert` zu sehen sind (so rechnet der Admin `hidden` aus). */
+        const sichtbar = (panel, wert) =>
+            Object.entries(panel.items)
+                .filter(([, i]) => !new Function('_states', `return ${i.hidden};`)({ v: { val: wert } }))
+                .map(([k]) => k);
+
+        it('ein Knopf je Stufe: Auto, Leise und fuenf Balken - jeder schreibt seine Stufe', async () => {
+            const p = await regler();
+            expect(p.type).to.equal('panel');
+            const werte = [...new Set(Object.values(p.items).map(i => i.buttonValue))];
+            expect(werte).to.eql(['auto', 'night', ...BALKEN_STUFEN]);
+            expect([...werte].sort()).to.eql([...felder.FAN_MODES].sort());
+            for (const i of Object.values(p.items)) {
+                expect(i.type).to.equal('state');
+                expect(i.control).to.equal('button');
+                expect(i.oid).to.equal('faikout.0.Wohnzimmer_AC.control.fan');
+                expect(i.dependsOnStates).to.eql({ v: 'faikout.0.Wohnzimmer_AC.control.fan' });
+                expect(i.readOnly).to.equal(undefined);
+                expect(i.tooltip).to.equal(LUEFTER_TEXTE[i.buttonValue]);
+                expect(i.falseText, i.buttonValue).to.not.equal('');
+            }
+            expect(p.items.autoOn.falseText).to.equal(STUFEN_KNOPF.auto);
+            expect(p.items.nightOn.falseText.de).to.equal('Leise');
+            // sieben Knoepfe passen in eine Zeile (12 Spalten)
+            const breite = ['autoOn', 'nightOn', 'step1On', 'step2On', 'step3On', 'step4On', 'step5On']
+                .map(k => p.items[k].xs)
+                .reduce((x, y) => x + y, 0);
+            expect(breite).to.be.at.most(12);
+        });
+
+        it('Balken bis zur gewaehlten Stufe gefuellt, aktive Sonderstufe hervorgehoben', async () => {
+            const p = await regler();
+            expect(sichtbar(p, 'medium')).to.eql([
+                'autoOff',
+                'nightOff',
+                'step1On',
+                'step2On',
+                'step3On',
+                'step4Off',
+                'step5Off',
+            ]);
+            expect(sichtbar(p, 'high')).to.eql([
+                'autoOff',
+                'nightOff',
+                'step1On',
+                'step2On',
+                'step3On',
+                'step4On',
+                'step5On',
+            ]);
+            expect(sichtbar(p, 'auto')).to.eql([
+                'autoOn',
+                'nightOff',
+                'step1Off',
+                'step2Off',
+                'step3Off',
+                'step4Off',
+                'step5Off',
+            ]);
+            expect(sichtbar(p, 'night')).to.eql([
+                'autoOff',
+                'nightOn',
+                'step1Off',
+                'step2Off',
+                'step3Off',
+                'step4Off',
+                'step5Off',
+            ]);
+            // gefuellt und leer unterscheiden sich in der Farbe, die Hoehe steigt
+            expect(p.items.step1On.falseTextStyle.backgroundColor).to.not.equal(
+                p.items.step1Off.falseTextStyle.backgroundColor,
+            );
+            expect(p.items.step5On.falseTextStyle.height).to.be.above(p.items.step1On.falseTextStyle.height);
+            expect(p.items.autoOn.variant).to.equal('contained');
+            expect(p.items.autoOff.variant).to.equal('outlined');
+        });
+
+        it('ein Klick auf einen Balken schickt die Stufe (auch bei ausgeschalteter Anlage)', async () => {
+            const a = await adapterMitGeraet({ ...MELDUNG, power: false, mode: 'off' });
+            const p = (await kartenLaden(a)).karten[0].customInfo.schema.items.fanSteps;
+            // so schreibt der Admin beim Klick: buttonValue ohne ack in den Datenpunkt
+            await a.onStateChange(p.items.step2Off.oid, { val: p.items.step2Off.buttonValue, ack: false });
+            expect(a.veroeffentlicht).to.eql([{ topic: 'command/Wohnzimmer AC/fan', nutzlast: 'lowMedium' }]);
+        });
+    });
+
     it('Bedienung auch bei ausgeschalteter Anlage: nichts haengt am Ein/Aus-Zustand', async () => {
         const a = await adapterMitGeraet({ ...MELDUNG, power: false, mode: 'off' });
+        a.onMqtt('state/Wohnzimmer AC/status', Buffer.from(JSON.stringify({ power: false, mode: 'C' })));
+        await warte();
         const k = (await kartenLaden(a)).karten[0];
         const items = k.customInfo.schema.items;
-        for (const key of ['mode', 'targetSlider', 'fan']) {
+        for (const key of ['mode', 'targetSlider']) {
             expect(items[key].readOnly, key).to.equal(undefined);
             expect(items[key].disabled, key).to.equal(undefined);
             expect(items[key].hidden, key).to.equal(undefined);
         }
-        // "Aus" bleibt als Auswahl, damit der aktuelle Wert angezeigt wird
-        expect(items.mode.options.map(o => o.value)).to.include('off');
-        expect(k.controls.map(c => c.id)).to.eql(['mode', 'target', 'fan']);
+        expect(items.fanSteps.hidden).to.equal(undefined);
+        expect(items.mode.options.map(o => o.value)).not.to.include('off');
+        expect(k.controls.map(c => c.id)).to.eql(['selectedMode', 'target', 'fan']);
     });
 
     it('Betriebsart waehlen, waehrend die Anlage aus ist: ein Befehl mode, kein eigener power-Befehl', async () => {
         // Das Modul schaltet bei command/<Name>/mode selbst ein (Faikout.c: power = Wert != "off").
         const a = await adapterMitGeraet({ ...MELDUNG, power: false, mode: 'off' });
+        a.onMqtt('state/Wohnzimmer AC/status', Buffer.from(JSON.stringify({ power: false, mode: 'H' })));
+        await warte();
         // so schreibt der Admin aus der Kartenzeile (ConfigState): ohne ack in den Datenpunkt
-        await a.onStateChange('faikout.0.Wohnzimmer_AC.control.mode', { val: 'cool', ack: false });
+        await a.onStateChange('faikout.0.Wohnzimmer_AC.control.selectedMode', { val: 'cool', ack: false });
         expect(a.veroeffentlicht).to.eql([{ topic: 'command/Wohnzimmer AC/mode', nutzlast: 'cool' }]);
+    });
+
+    describe('gewaehlte Betriebsart (control.selectedMode)', () => {
+        const wert = a => a.werte.get('Wohnzimmer_AC.control.selectedMode');
+        it('laeuft: wie control.mode', async () => {
+            const a = await adapterMitGeraet();
+            expect(wert(a)).to.eql({ val: 'heat', ack: true });
+            const o = a.objekte.get('Wohnzimmer_AC.control.selectedMode');
+            expect(o.common.write).to.equal(true);
+            expect(Object.keys(o.common.states)).to.eql(['heat_cool', 'cool', 'heat', 'dry', 'fan_only']);
+            expect(o.common.name.de).to.equal('Gewählte Betriebsart');
+        });
+        it('aus: aus der nativen Meldung state/<Name>/status (mode "H"), state/ meldet nur "off"', async () => {
+            const a = await adapterMitGeraet({ ...MELDUNG, power: false, mode: 'off' });
+            expect(wert(a)).to.equal(undefined);
+            expect(a.werte.get('Wohnzimmer_AC.control.mode').val).to.equal('off');
+            a.onMqtt('state/Wohnzimmer AC/status', Buffer.from(JSON.stringify({ power: false, mode: 'H', fan: '4' })));
+            await warte();
+            expect(wert(a).val).to.equal('heat');
+            // die native Meldung legt sonst nichts an (Fan "4" bleibt beim Klartext)
+            expect(a.werte.get('Wohnzimmer_AC.control.fan').val).to.equal('auto');
+        });
+        it('laeuft: native Meldung zaehlt nicht (Faikout-Automatik meldet dort die echte Betriebsart)', async () => {
+            const a = await adapterMitGeraet({ ...MELDUNG, mode: 'heat_cool' });
+            a.onMqtt('state/Wohnzimmer AC/status', Buffer.from(JSON.stringify({ power: true, mode: 'H' })));
+            await warte();
+            expect(wert(a).val).to.equal('heat_cool');
+        });
+        it('aus ohne native Meldung: der letzte Wert bleibt', async () => {
+            const a = await adapterMitGeraet({ ...MELDUNG, mode: 'cool' });
+            a.onMqtt('state/Wohnzimmer AC', Buffer.from(JSON.stringify({ ...MELDUNG, power: false, mode: 'off' })));
+            await warte();
+            expect(wert(a).val).to.equal('cool');
+        });
+        it('Kuerzel der nativen Meldung', () => {
+            const n = m => felder.gewaehlteBetriebsart({ power: false, mode: m }, true);
+            expect(['F', 'H', 'C', 'A', 'D', '4', 'X'].map(n)).to.eql([
+                'fan_only',
+                'heat',
+                'cool',
+                'heat_cool',
+                'dry',
+                null,
+                null,
+            ]);
+            expect(felder.gewaehlteBetriebsart({ mode: 'off' }, false)).to.equal(null);
+            expect(felder.gewaehlteBetriebsart({ mode: 'dry' }, false)).to.equal('dry');
+        });
     });
 
     it('Luftfeuchte als Zahl mit %, nicht als Fortschrittsbalken', async () => {
@@ -309,10 +460,13 @@ describe('Device-Manager: Karte', () => {
         const a = await adapterMitGeraet();
         const { controls } = (await kartenLaden(a)).karten[0];
         expect(controls.map(c => [c.id, c.type])).to.eql([
-            ['mode', 'select'],
+            ['selectedMode', 'select'],
             ['target', 'slider'],
             ['fan', 'select'],
         ]);
+        // Beschriftung "Betriebsart", Auswahl ohne "Aus"
+        expect(controls[0].label).to.eql(namen.vollerName(felder.FELDER.mode.name));
+        expect(controls[0].options.map(o => o.value)).not.to.include('off');
         for (const c of controls) {
             expect(c.stateId).to.equal(`faikout.0.Wohnzimmer_AC.control.${c.id}`);
             expect(c.handler).to.be.a('function');
@@ -424,12 +578,14 @@ describe('Device-Manager: Bedienen (Attrappe, keine echte Anlage)', () => {
 
     it('Betriebsart und Luefterstufe nur mit gueltigem Wert', async () => {
         const a = await adapterMitGeraet();
-        expect((await bediene(a, 'mode', 'cool')).val).to.equal('cool');
+        expect((await bediene(a, 'selectedMode', 'cool')).val).to.equal('cool');
         expect((await bediene(a, 'fan', 'night')).val).to.equal('night');
-        expect((await bediene(a, 'mode', 'turbo')).error.code).to.equal(400);
+        expect((await bediene(a, 'selectedMode', 'turbo')).error.code).to.equal(400);
+        // "Aus" ist keine Betriebsart - ausgeschaltet wird nur ueber den Umschalter
+        expect((await bediene(a, 'selectedMode', 'off')).error.code).to.equal(400);
         expect((await bediene(a, 'fan', 'irgendwas')).error).to.be.an('object');
         expect(a.gesetzt.map(g => [g.id, g.wert.val])).to.eql([
-            ['Wohnzimmer_AC.control.mode', 'cool'],
+            ['Wohnzimmer_AC.control.selectedMode', 'cool'],
             ['Wohnzimmer_AC.control.fan', 'night'],
         ]);
         await zustellen(a);
@@ -464,7 +620,7 @@ describe('Device-Manager: Bedienen (Attrappe, keine echte Anlage)', () => {
     it('unbekanntes Geraet oder Bedienelement wird abgelehnt', async () => {
         const a = await adapterMitGeraet();
         const dm = a.deviceManagement;
-        expect((await dm.bedienen('Gibtsnicht', 'mode', 'cool')).error).to.be.an('object');
+        expect((await dm.bedienen('Gibtsnicht', 'selectedMode', 'cool')).error).to.be.an('object');
         expect((await dm.bedienen('Wohnzimmer_AC', 'power', true)).error).to.be.an('object');
         expect((await dm.bedienen('Wohnzimmer_AC', 'demand', 50)).error).to.be.an('object');
         expect(a.gesetzt).to.eql([]);
@@ -498,9 +654,9 @@ describe('Device-Manager: Weg ueber sendTo wie aus dem Admin', () => {
         expect(geladen).to.contain('Wohnzimmer_AC');
         expect(geladen).not.to.contain('handler');
 
-        nachricht(a, 'dm:deviceControl', { deviceId: 'Wohnzimmer_AC', controlId: 'mode', state: 'dry' }, 3);
+        nachricht(a, 'dm:deviceControl', { deviceId: 'Wohnzimmer_AC', controlId: 'selectedMode', state: 'dry' }, 3);
         await warte();
-        expect(a.gesetzt).to.eql([{ id: 'Wohnzimmer_AC.control.mode', wert: { val: 'dry', ack: false } }]);
+        expect(a.gesetzt).to.eql([{ id: 'Wohnzimmer_AC.control.selectedMode', wert: { val: 'dry', ack: false } }]);
         const antwort = a.gesendet.find(g => g.befehl === 'dm:deviceControl').nachricht;
         expect(JSON.stringify(antwort)).to.contain('"val":"dry"');
     });
@@ -511,7 +667,7 @@ describe('Device-Manager: Weg ueber sendTo wie aus dem Admin', () => {
         nachricht(a, 'dm:loadDevices', {}, 10);
         await warte();
         let nr = 11;
-        for (const controlId of ['mode', 'target', 'fan']) {
+        for (const controlId of ['selectedMode', 'target', 'fan']) {
             nachricht(a, 'dm:deviceControlState', { deviceId: 'Wohnzimmer_AC', controlId }, nr++);
         }
         await warte();
@@ -553,6 +709,7 @@ describe('Device-Manager: Uebersetzungen', () => {
         ...Object.fromEntries(Object.entries(MODUS_TEXTE).map(([k, v]) => [`Modus.${k}`, v])),
         ...Object.fromEntries(Object.entries(LUEFTER_TEXTE).map(([k, v]) => [`Luefter.${k}`, v])),
         ...Object.fromEntries(Object.entries(TAETIGKEIT_TEXTE).map(([k, v]) => [`Taetigkeit.${k}`, v])),
+        ...Object.fromEntries(Object.entries(STUFEN_KNOPF).map(([k, v]) => [`Knopf.${k}`, v])),
     };
     it('Rueckfragen enthalten in jeder Sprache den Platzhalter {name}', () => {
         for (const l of SPRACHEN) {

@@ -39,7 +39,9 @@ noted in the log.
 Objects are grouped per device:
 
 - `<device>.control.*` — writable: power, mode, target temperature, fan, swing, preset, demand,
-  econo, powerful, comfort, streamer, sensor, LED, quiet, humidify
+  econo, powerful, comfort, streamer, sensor, LED, quiet, humidify. `selectedMode` is the operating mode
+  without "off": while the unit runs it equals `mode`, while it is off it keeps the mode set last (taken
+  from the module's native status). Writing it sends the mode and switches the unit on.
 - `<device>.status.*` — readings: temperatures, humidity, energy, power, compressor and fan speed
 - `<device>.info.*` — device diagnostics: IP, WiFi signal, uptime, firmware
 
@@ -123,10 +125,12 @@ one detail page per unit with controls, energy history and a phone view. They us
 - Device manager support (`@iobroker/dm-utils`): one card per air conditioner in the admin tab "Devices"
   with the running operation (mode, current action, room/target/outside temperature, fan speed, humidity,
   power, energy today), connection of the module, warning when the unit does not respond, WiFi signal.
-  On/off is a toggle in the status line that follows the state live and asks for confirmation. Mode, target
-  temperature (slider) and fan speed can be changed directly on the card, also while the unit is off; choosing a
-  mode switches the unit on. All controls write the existing `control.*` states, so commands take the usual path.
-  No configuration actions on the cards.
+  On/off is a toggle in the status line that follows the state live and asks for confirmation. Mode (without
+  "off", shows the last mode while the unit is off), target temperature (slider) and fan speed (Auto, Quiet and
+  five level bars) can be changed directly on the card, also while the unit is off; choosing a mode switches the
+  unit on. All controls write the `control.*` states, so commands take the usual path. No configuration actions
+  on the cards.
+- New state `control.selectedMode` (see above). German name of the outside temperature with "ß".
 
 ### 0.0.19 (2026-11-10)
 - A setting the air conditioner does not accept (module message `error/<name>/failed-set`, e.g. demand control) is
