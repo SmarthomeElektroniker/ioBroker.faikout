@@ -956,7 +956,6 @@ class Faikout extends utils.Adapter {
             if (this.stundenTimer) {
                 this.clearTimeout(this.stundenTimer);
             }
-            this.deviceManagement.beenden();
             // Zaehlerstaende sichern, damit nach dem Neustart weitergezaehlt wird.
             for (const [id, g] of this.geraete) {
                 await this.zaehlerstandSichern(id, g);

@@ -128,8 +128,8 @@ one detail page per unit with controls, energy history and a phone view. They us
   On/off is a toggle in the status line that follows the state live and asks for confirmation. Mode (without
   "off", shows the last mode while the unit is off), target temperature (slider) and fan speed (Auto, Quiet and
   five level bars) can be changed directly on the card, also while the unit is off; choosing a mode switches the
-  unit on. All controls write the `control.*` states, so commands take the usual path. No configuration actions
-  on the cards.
+  unit on. Everything is on the card itself, there is no separate control dialog. All controls write the
+  `control.*` states, so commands take the usual path. No configuration actions on the cards.
 - New state `control.selectedMode` (see above). German name of the outside temperature with "ß".
 
 ### 0.0.19 (2026-11-10)
