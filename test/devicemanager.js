@@ -243,8 +243,10 @@ describe('Device-Manager: Karte', () => {
         expect(items.mode.oid).to.equal('faikout.0.Wohnzimmer_AC.control.selectedMode');
         expect(items.mode.control).to.equal('select');
         expect(items.mode.options.map(o => o.value)).to.eql(['heat_cool', 'cool', 'heat', 'dry', 'fan_only']);
-        // aktuelle Luefterstufe als Lesezeile ueber dem Stufenregler
+        // aktuelle Luefterstufe als Lesezeile (Klartext, kein ausgegrautes Auswahlfeld) ueber dem Regler
         expect(items.fan.oid).to.equal('faikout.0.Wohnzimmer_AC.control.fan');
+        expect(items.fan.control).to.equal('text');
+        expect(items.fan.options.find(o => o.value === 'mediumHigh').label).to.equal(LUEFTER_TEXTE.mediumHigh);
         const s = items.targetSlider;
         expect([s.control, s.min, s.max, s.step, s.controlDelay]).to.eql(['slider', 16, 29, 0.5, 1000]);
         expect(s.oid).to.equal('faikout.0.Wohnzimmer_AC.control.target');
@@ -289,6 +291,10 @@ describe('Device-Manager: Karte', () => {
 
         it('Balken bis zur gewaehlten Stufe gefuellt, aktive Sonderstufe hervorgehoben', async () => {
             const p = await regler();
+            // Knoepfe und Balken unten buendig
+            for (const i of Object.values(p.items)) {
+                expect(i.style).to.include({ alignItems: 'flex-end', height: 36 });
+            }
             expect(sichtbar(p, 'medium')).to.eql([
                 'autoOff',
                 'nightOff',
