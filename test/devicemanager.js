@@ -16,6 +16,7 @@ const {
     TEXTE,
     UMSCHALTEN,
     STUFEN_TOOLTIP,
+    WLAN_TEXTE,
     STUFEN_SYMBOL,
     BALKEN_STUFEN,
 } = require('../lib/devicemanager');
@@ -190,25 +191,73 @@ describe('Device-Manager: Karte', () => {
         expect(k.model).to.eql({ stateId: 'faikout.0.Wohnzimmer_AC.status.model' });
     });
 
-    it('Verbindung vom Modul, Warnung wenn die Klimaanlage nicht antwortet, WLAN-Signal', async () => {
+    it('EIN WLAN-Symbol fuer Verbindung und Signal, keine eingebaute Verbindungs-/Signalanzeige', async () => {
         const a = await adapterMitGeraet();
-        const { status } = (await kartenLaden(a)).karten[0];
-        expect(status.connection).to.eql({
-            stateId: 'faikout.0.Wohnzimmer_AC.info.up',
-            mapping: { true: 'connected', false: 'disconnected' },
-        });
-        expect(status.warning.stateId).to.equal('faikout.0.Wohnzimmer_AC.info.online');
-        expect(status.warning.mapping.true).to.equal(false);
-        expect(status.warning.mapping.false).to.equal(TEXTE.nichtErreichbar);
-        expect(status.rssi).to.eql({ stateId: 'faikout.0.Wohnzimmer_AC.info.rssi' });
+        const k = (await kartenLaden(a)).karten[0];
+        // die eingebauten Anzeigen zeichneten ein zweites Symbol und einen eigenen Balken
+        expect(k.status.connection).to.equal(undefined);
+        expect(k.status.rssi).to.equal(undefined);
+        // Warnung, wenn die Klimaanlage hinter dem Modul nicht antwortet, bleibt
+        expect(k.status.warning.stateId).to.equal('faikout.0.Wohnzimmer_AC.info.online');
+        expect(k.status.warning.mapping.false).to.equal(TEXTE.nichtErreichbar);
+        const w = k.indicators.find(i => i.id === 'wlan');
+        expect(w.value).to.eql({ objectId: 'faikout.0.Wohnzimmer_AC', property: 'native.wlan' });
+        expect(w.text).to.eql({ stateId: 'faikout.0.Wohnzimmer_AC.info.rssi' });
+        expect(w.unit).to.equal('dBm');
+        expect(w.levels.map(l => l.value)).to.eql(['s4', 's3', 's2', 's1', 'off']);
+        for (const l of w.levels) {
+            expect(l.tooltip).to.equal(WLAN_TEXTE[l.value]);
+            expect(l.icon).to.match(/^data:image\/svg\+xml;base64,/);
+        }
+        // Boegen je Stufe: s4 drei gefuellte Boegen, s1 keiner; getrennt grau und durchgestrichen
+        const svg = v => Buffer.from(w.levels.find(l => l.value === v).icon.split(',')[1], 'base64').toString();
+        const blau = v => (svg(v).match(/#2196f3/g) || []).length;
+        expect([blau('s4'), blau('s3'), blau('s2'), blau('s1'), blau('off')]).to.eql([4, 3, 2, 1, 0]);
+        expect(svg('off')).to.contain('M4 3.5 20 20.5');
+        const off = w.levels.find(l => l.value === 'off');
+        expect(off.text).to.equal(WLAN_TEXTE.getrennt);
+        expect(off.color).to.equal('error');
+        // steht vor dem Ein/Aus-Umschalter
+        expect(k.indicators.map(i => i.id)).to.eql(['wlan', 'power']);
     });
 
-    it('ohne `up` zeigt `online` die Verbindung', async () => {
-        const a = await adapterMitGeraet();
-        a.objekte.delete('Wohnzimmer_AC.info.up');
-        const { status } = (await kartenLaden(a)).karten[0];
-        expect(status.connection.stateId).to.equal('faikout.0.Wohnzimmer_AC.info.online');
-        expect(status.warning).to.equal(undefined);
+    it('WLAN-Stufe im Geraeteobjekt: Grenzen, getrennt, nur bei Aenderung geschrieben', async () => {
+        expect([-40, -55, -56, -65, -66, -75, -76, -90].map(r => felder.wlanStufe(r, true))).to.eql([
+            's4',
+            's4',
+            's3',
+            's3',
+            's2',
+            's2',
+            's1',
+            's1',
+        ]);
+        expect(felder.wlanStufe(-50, false)).to.equal('off');
+        expect(felder.wlanStufe(undefined, undefined)).to.equal(null);
+        const a = await adapterMitGeraet(); // rssi -61, up true
+        expect(a.objekte.get('Wohnzimmer_AC').native.wlan).to.equal('s3');
+        // eine weitere Meldung, damit der Geraetezustand sicher steht (die ersten beiden Meldungen
+        // der Attrappe laufen parallel an)
+        a.onMqtt('state/Wohnzimmer AC', Buffer.from(JSON.stringify({ ...MELDUNG, rssi: -60 })));
+        await warte();
+        const schreiben = [];
+        const alt = a.extendObject.bind(a);
+        a.extendObject = async (id, obj) => {
+            if (obj && obj.native && 'wlan' in obj.native) {
+                schreiben.push(id);
+            }
+            return alt(id, obj);
+        };
+        a.onMqtt('state/Wohnzimmer AC', Buffer.from(JSON.stringify({ ...MELDUNG, rssi: -63 })));
+        await warte();
+        expect(schreiben).to.eql([]); // gleiche Stufe: native.wlan wird nicht geschrieben
+        a.onMqtt('state/Wohnzimmer AC', Buffer.from(JSON.stringify({ up: false })));
+        await warte();
+        expect(a.objekte.get('Wohnzimmer_AC').native.wlan).to.equal('off');
+        a.onMqtt('state/Wohnzimmer AC', Buffer.from(JSON.stringify({ up: true })));
+        await warte();
+        expect(a.objekte.get('Wohnzimmer_AC').native.wlan).to.equal('s3');
+        expect(schreiben).to.have.length(2); // off, dann wieder s3
     });
 
     it('Karte: Betriebsart waehlbar, Sollwert mit Schieber, Luefterstufe als Stufenregler, Rest lesend', async () => {
@@ -316,6 +365,10 @@ describe('Device-Manager: Karte', () => {
 
         it('Balken bis zur gewaehlten Stufe gefuellt, aktive Sonderstufe hervorgehoben', async () => {
             const p = await regler();
+            // klarer Abstand zwischen den Symbolknoepfen und den Balken
+            expect(p.items.nightOn.style.marginRight).to.be.at.least(10);
+            expect(p.items.nightOff.style.marginRight).to.be.at.least(10);
+            expect(p.items.autoOn.style.marginRight).to.equal(0);
             // Knoepfe und Balken unten buendig
             for (const i of Object.values(p.items).filter(i => i.type === 'state')) {
                 expect(i.style).to.include({ alignItems: 'flex-end', height: 36 });
@@ -487,8 +540,7 @@ describe('Device-Manager: Karte', () => {
     it('Ein/Aus-Umschalter in der Statuszeile: Symbol, Text und Tooltip folgen control.power', async () => {
         const a = await adapterMitGeraet();
         const k = (await kartenLaden(a)).karten[0];
-        expect(k.indicators).to.have.length(1);
-        const ind = k.indicators[0];
+        const ind = k.indicators.find(i => i.id === 'power');
         expect(ind.value).to.eql({ stateId: 'faikout.0.Wohnzimmer_AC.control.power' });
         expect(ind.actionId).to.equal(UMSCHALTEN);
         expect(ind.hideIfEmpty).to.equal(false);
@@ -506,7 +558,7 @@ describe('Device-Manager: Karte', () => {
         const a = await adapterMitGeraet();
         a.objekte.get('Wohnzimmer_AC.control.power').common.write = false;
         const k = (await kartenLaden(a)).karten[0];
-        expect(k.indicators).to.equal(undefined);
+        expect(k.indicators.map(i => i.id)).to.eql(['wlan']);
         expect(k.actions).to.equal(undefined);
     });
 
@@ -634,6 +686,7 @@ describe('Device-Manager: Uebersetzungen', () => {
         ...Object.fromEntries(Object.entries(LUEFTER_TEXTE).map(([k, v]) => [`Luefter.${k}`, v])),
         ...Object.fromEntries(Object.entries(TAETIGKEIT_TEXTE).map(([k, v]) => [`Taetigkeit.${k}`, v])),
         ...Object.fromEntries(Object.entries(STUFEN_TOOLTIP).map(([k, v]) => [`Tooltip.${k}`, v])),
+        ...Object.fromEntries(Object.entries(WLAN_TEXTE).map(([k, v]) => [`WLAN.${k}`, v])),
     };
     it('Rueckfragen enthalten in jeder Sprache den Platzhalter {name}', () => {
         for (const l of SPRACHEN) {

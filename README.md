@@ -124,7 +124,8 @@ one detail page per unit with controls, energy history and a phone view. They us
 ### **WORK IN PROGRESS**
 - Device manager support (`@iobroker/dm-utils`): one card per air conditioner in the admin tab "Devices"
   with the running operation (mode, current action, room/target/outside temperature, fan speed, humidity,
-  power, energy today), connection of the module, warning when the unit does not respond, WiFi signal.
+  power, energy today), one WiFi symbol for connection and signal (four levels plus dBm, crossed out
+  when the module is disconnected), warning when the unit does not respond.
   On/off is a toggle in the status line that follows the state live and asks for confirmation. Mode (without
   "off", shows the last mode while the unit is off), target temperature (slider) and fan speed (Auto, Quiet and
   five level bars) can be changed directly on the card, also while the unit is off; choosing a mode switches the

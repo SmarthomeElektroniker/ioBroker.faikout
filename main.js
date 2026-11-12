@@ -471,6 +471,10 @@ class Faikout extends utils.Adapter {
                 // Zeitpunkt der letzten Sicherung von native.zaehler und ob seitdem etwas dazukam.
                 gesichert: Date.now(),
                 zaehlerGeaendert: false,
+                // WLAN-Stufe fuer die Geraetekarte (native.wlan), dazu die letzten Rohwerte
+                wlan: (alt && alt.native && alt.native.wlan) || null,
+                rssi: undefined,
+                up: undefined,
             };
             // Gemerkte Einheiten aus einem frueheren Lauf; was die Discovery in diesem Lauf
             // schon geliefert hat, hat Vorrang.
@@ -536,6 +540,34 @@ class Faikout extends utils.Adapter {
         }
 
         await this.zaehlerVerarbeiten(id, g, daten);
+        await this.wlanStufeAktualisieren(id, g, daten);
+    }
+
+    /**
+     * Haelt die WLAN-Stufe der Geraetekarte im Geraeteobjekt aktuell (native.wlan: s1..s4/off).
+     * Die Karte zeigt damit EIN WLAN-Symbol, das Signalstaerke und Verbindung zusammenfasst - dafuer
+     * braucht sie rssi und up zugleich, eine Kartenanzeige haengt aber nur an einem Wert. Geschrieben
+     * wird nur, wenn sich die Stufe aendert (selten), nicht bei jedem dBm.
+     *
+     * @param {string} id     Objekt-ID des Geraets
+     * @param {object} g      gemerkter Zustand des Geraets
+     * @param {object} daten  gemeldete Felder
+     */
+    async wlanStufeAktualisieren(id, g, daten) {
+        if (typeof daten.rssi === 'number') {
+            g.rssi = daten.rssi;
+        }
+        if (typeof daten.up === 'boolean') {
+            g.up = daten.up;
+        }
+        if (!('rssi' in daten) && !('up' in daten)) {
+            return;
+        }
+        const stufe = felder.wlanStufe(g.rssi, g.up);
+        if (stufe && stufe !== g.wlan) {
+            g.wlan = stufe;
+            await this.extendObject(id, { native: { wlan: stufe } });
+        }
     }
 
     /**
