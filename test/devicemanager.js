@@ -197,6 +197,8 @@ describe('Device-Manager: Karte', () => {
         // die eingebauten Anzeigen zeichneten ein zweites Symbol und einen eigenen Balken
         expect(k.status.connection).to.equal(undefined);
         expect(k.status.rssi).to.equal(undefined);
+        // ohne connectionType zeichnet der Admin kein zweites, blasses WLAN-Symbol
+        expect(k.connectionType).to.equal(undefined);
         // Warnung, wenn die Klimaanlage hinter dem Modul nicht antwortet, bleibt
         expect(k.status.warning.stateId).to.equal('faikout.0.Wohnzimmer_AC.info.online');
         expect(k.status.warning.mapping.false).to.equal(TEXTE.nichtErreichbar);
