@@ -258,6 +258,10 @@ describe('Device-Manager: Karte', () => {
         expect(s.oid).to.equal('faikout.0.Wohnzimmer_AC.control.target');
         expect(items.energyToday.oid).to.equal('faikout.0.Wohnzimmer_AC.consumption.total.today');
         expect(items.consumption.unit).to.equal('W');
+        // kurze Beschriftung auf der Karte, der Datenpunkt heisst weiter "Momentanleistung"
+        expect(items.consumption.label.de).to.equal('Leistung');
+        expect(items.consumption.label.en).to.equal('Power');
+        expect(a.objekte.get('Wohnzimmer_AC.status.consumption').common.name.de).to.equal('Momentanleistung');
     });
 
     describe('Luefterstufe als Stufenregler', () => {
