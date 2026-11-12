@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.0.19",
+    "version": "0.1.0",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -71,6 +71,19 @@
       }
     ],
     "news": {
+      "0.1.0": {
+        "en": "Device cards in the admin (device manager): on/off with confirmation, operating mode, target temperature and fan speed directly on the card, Wi-Fi signal and live values; new state control.selectedMode",
+        "de": "Gerätekarten im Admin (Geräteverwaltung): Ein/Aus mit Rückfrage, Betriebsart, Solltemperatur und Lüfterstufe direkt auf der Karte, WLAN-Signal und laufende Werte; neuer Datenpunkt control.selectedMode",
+        "ru": "Карточки устройств в админке (менеджер устройств): вкл./выкл. с подтверждением, режим работы, заданная температура и скорость вентилятора прямо на карточке, сигнал Wi-Fi и текущие значения; новая точка данных control.selectedMode",
+        "pt": "Cartões de dispositivo no admin (gestor de dispositivos): ligar/desligar com confirmação, modo de funcionamento, temperatura desejada e velocidade do ventilador diretamente no cartão, sinal Wi-Fi e valores atuais; novo estado control.selectedMode",
+        "nl": "Apparaatkaarten in de admin (apparaatbeheer): aan/uit met bevestiging, bedrijfsmodus, streeftemperatuur en ventilatorstand direct op de kaart, wifi-signaal en actuele waarden; nieuw datapunt control.selectedMode",
+        "fr": "Cartes d’appareil dans l’admin (gestionnaire d’appareils) : marche/arrêt avec confirmation, mode de fonctionnement, température de consigne et vitesse du ventilateur directement sur la carte, signal Wi-Fi et valeurs actuelles ; nouvel état control.selectedMode",
+        "it": "Schede dispositivo nell’admin (gestione dispositivi): accensione/spegnimento con conferma, modalità operativa, temperatura desiderata e velocità ventola direttamente sulla scheda, segnale Wi-Fi e valori attuali; nuovo stato control.selectedMode",
+        "es": "Tarjetas de dispositivo en el admin (gestor de dispositivos): encendido/apagado con confirmación, modo de funcionamiento, temperatura objetivo y velocidad del ventilador directamente en la tarjeta, señal Wi-Fi y valores actuales; nuevo estado control.selectedMode",
+        "pl": "Karty urządzeń w panelu admina (menedżer urządzeń): włączanie/wyłączanie z potwierdzeniem, tryb pracy, temperatura zadana i prędkość wentylatora bezpośrednio na karcie, sygnał Wi-Fi i bieżące wartości; nowy stan control.selectedMode",
+        "uk": "Картки пристроїв в адмінці (менеджер пристроїв): увімк./вимк. з підтвердженням, режим роботи, задана температура та швидкість вентилятора прямо на картці, сигнал Wi-Fi і поточні значення; нова точка даних control.selectedMode",
+        "zh-cn": "管理界面中的设备卡片（设备管理器）：带确认的开关、运行模式、目标温度和风扇转速可直接在卡片上设置，显示 Wi-Fi 信号和实时数值；新增状态 control.selectedMode"
+      },
       "0.0.19": {
         "en": "Much lower CPU and database load: states are only written when they change; rejected settings (failed-set) are logged clearly and stored in info.failedSet",
         "de": "Deutlich weniger CPU- und Datenbanklast: Datenpunkte werden nur bei Änderung geschrieben; abgelehnte Einstellungen (failed-set) im Klartext geloggt und in info.failedSet abgelegt",
@@ -148,19 +161,6 @@
         "pl": "Stany zużycia przemianowane na angielskie ID (consumption.total.today ...), istniejące wartości są przenoszone; status.autoe można zapisywać; pełne tłumaczenia panelu i widżetów",
         "uk": "Стани споживання перейменовано на англійські ID (consumption.total.today ...), наявні значення переносяться; status.autoe можна записувати; повні переклади адмінки та віджетів",
         "zh-cn": "能耗状态改为英文 ID（consumption.total.today 等），现有数值自动迁移；status.autoe 可写入；管理界面和小部件完整翻译"
-      },
-      "0.0.13": {
-        "en": "On start, names and roles of existing states are updated to the current field description (also for rarely reported fields)",
-        "de": "Beim Start werden Namen und Rollen vorhandener Datenpunkte an die aktuelle Feldbeschreibung angeglichen (auch bei selten gemeldeten Feldern)",
-        "ru": "При запуске названия и роли существующих состояний приводятся к текущему описанию полей (в том числе для редко передаваемых полей)",
-        "pt": "Ao iniciar, os nomes e funções dos estados existentes são atualizados para a descrição atual dos campos (também para campos raramente enviados)",
-        "nl": "Bij het starten worden namen en rollen van bestaande states bijgewerkt naar de huidige veldbeschrijving (ook voor zelden gemelde velden)",
-        "fr": "Au démarrage, les noms et rôles des états existants sont mis à jour selon la description actuelle des champs (y compris les champs rarement transmis)",
-        "it": "All'avvio, nomi e ruoli degli stati esistenti vengono allineati alla descrizione attuale dei campi (anche per campi trasmessi raramente)",
-        "es": "Al iniciar, los nombres y roles de los estados existentes se actualizan a la descripción actual de los campos (también para campos que se envían rara vez)",
-        "pl": "Przy starcie nazwy i role istniejących stanów są aktualizowane do bieżącego opisu pól (także dla rzadko przesyłanych pól)",
-        "uk": "Під час запуску назви та ролі наявних станів оновлюються до поточного опису полів (також для полів, що надходять рідко)",
-        "zh-cn": "启动时，现有状态的名称和角色会更新为当前字段描述（包括很少上报的字段）"
       }
     },
     "restartAdapters": [

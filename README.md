@@ -121,7 +121,7 @@ one detail page per unit with controls, energy history and a phone view. They us
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.1.0 (2026-11-12)
 - Device manager support (`@iobroker/dm-utils`): one card per air conditioner in the admin tab "Devices"
   with the running operation (mode, current action, room/target/outside temperature, fan speed, humidity,
   power, energy today), one WiFi symbol for connection and signal (four levels plus dBm, crossed out
