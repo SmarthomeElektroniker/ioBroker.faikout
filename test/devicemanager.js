@@ -15,7 +15,8 @@ const {
     TAETIGKEIT_TEXTE,
     TEXTE,
     UMSCHALTEN,
-    STUFEN_KNOPF,
+    STUFEN_TOOLTIP,
+    STUFEN_SYMBOL,
     BALKEN_STUFEN,
 } = require('../lib/devicemanager');
 const felder = require('../lib/fields');
@@ -290,11 +291,23 @@ describe('Device-Manager: Karte', () => {
                 expect(i.oid).to.equal('faikout.0.Wohnzimmer_AC.control.fan');
                 expect(i.dependsOnStates).to.eql({ v: 'faikout.0.Wohnzimmer_AC.control.fan' });
                 expect(i.readOnly).to.equal(undefined);
-                expect(i.tooltip).to.equal(LUEFTER_TEXTE[i.buttonValue]);
+                expect(i.tooltip).to.equal(STUFEN_TOOLTIP[i.buttonValue] || LUEFTER_TEXTE[i.buttonValue]);
                 expect(i.falseText, i.buttonValue).to.not.equal('');
             }
-            expect(p.items.autoOn.falseText).to.equal(STUFEN_KNOPF.auto);
-            expect(p.items.nightOn.falseText.de).to.equal('Leise');
+            // Auto und Leise als Symbole (Hintergrundbild), Tooltips "Automatisch" / "Leise"
+            for (const k of ['autoOn', 'autoOff', 'nightOn', 'nightOff']) {
+                expect(p.items[k].falseText).to.equal('\u200b');
+                expect(p.items[k].falseTextStyle.backgroundImage).to.match(/^url\("data:image\/svg\+xml;base64,/);
+                expect(p.items[k].falseTextStyle.height).to.equal(30);
+            }
+            const svg = k => Buffer.from(p.items[k].falseTextStyle.backgroundImage.slice(31, -2), 'base64').toString();
+            expect(svg('autoOn')).to.contain(STUFEN_SYMBOL.auto).and.contain('stroke="#ffffff"');
+            expect(svg('nightOff')).to.contain(STUFEN_SYMBOL.night).and.not.contain('#ffffff');
+            expect(p.items.autoOn.tooltip.de).to.equal('Automatisch');
+            expect(p.items.nightOn.tooltip.de).to.equal('Leise');
+            expect(p.items.autoOn.falseTextStyle.backgroundColor).to.not.equal(
+                p.items.autoOff.falseTextStyle.backgroundColor,
+            );
         });
 
         it('Balken bis zur gewaehlten Stufe gefuellt, aktive Sonderstufe hervorgehoben', async () => {
@@ -344,8 +357,6 @@ describe('Device-Manager: Karte', () => {
                 p.items.step1Off.falseTextStyle.backgroundColor,
             );
             expect(p.items.step5On.falseTextStyle.height).to.be.above(p.items.step1On.falseTextStyle.height);
-            expect(p.items.autoOn.variant).to.equal('contained');
-            expect(p.items.autoOff.variant).to.equal('outlined');
         });
 
         it('ein Klick auf einen Balken schickt die Stufe (auch bei ausgeschalteter Anlage)', async () => {
@@ -618,7 +629,7 @@ describe('Device-Manager: Uebersetzungen', () => {
         ...Object.fromEntries(Object.entries(MODUS_TEXTE).map(([k, v]) => [`Modus.${k}`, v])),
         ...Object.fromEntries(Object.entries(LUEFTER_TEXTE).map(([k, v]) => [`Luefter.${k}`, v])),
         ...Object.fromEntries(Object.entries(TAETIGKEIT_TEXTE).map(([k, v]) => [`Taetigkeit.${k}`, v])),
-        ...Object.fromEntries(Object.entries(STUFEN_KNOPF).map(([k, v]) => [`Knopf.${k}`, v])),
+        ...Object.fromEntries(Object.entries(STUFEN_TOOLTIP).map(([k, v]) => [`Tooltip.${k}`, v])),
     };
     it('Rueckfragen enthalten in jeder Sprache den Platzhalter {name}', () => {
         for (const l of SPRACHEN) {
@@ -637,5 +648,79 @@ describe('Device-Manager: Uebersetzungen', () => {
         expect(Object.keys(MODUS_TEXTE)).to.eql(felder.MODES);
         expect(Object.keys(LUEFTER_TEXTE)).to.eql(felder.FAN_MODES);
         expect(Object.keys(TAETIGKEIT_TEXTE)).to.eql(felder.HVAC_ACTIONS);
+    });
+});
+
+describe('Device-Manager: alle elf Sprachen, nichts unuebersetzt', () => {
+    /**
+     * Sucht in einer beliebigen Struktur jedes Uebersetzungsobjekt (Objekt mit Schluessel "en")
+     * und meldet fehlende Sprachen sowie Eintraege, die woertlich dem Englischen gleichen.
+     */
+    const pruefe = (wurzel, wo) => {
+        const fehler = [];
+        // Woerter, die in einer Sprache wirklich wie im Englischen heissen ("sprache:wort");
+        // derzeit keine
+        const gleichErlaubt = new Set([]);
+        const lauf = (x, pfad) => {
+            if (!x || typeof x !== 'object') {
+                return;
+            }
+            if (typeof x.en === 'string' && Object.keys(x).every(k => typeof x[k] === 'string')) {
+                for (const l of SPRACHEN) {
+                    if (typeof x[l] !== 'string' || !x[l].trim()) {
+                        fehler.push(`${wo}${pfad}: ${l} fehlt`);
+                    } else if (l !== 'en' && x[l] === x.en && !gleichErlaubt.has(`${l}:${x[l]}`)) {
+                        fehler.push(`${wo}${pfad}: ${l} = englisch "${x.en}"`);
+                    }
+                }
+                return;
+            }
+            for (const [k, v] of Object.entries(x)) {
+                lauf(v, `${pfad}.${k}`);
+            }
+        };
+        lauf(wurzel, '');
+        return fehler;
+    };
+
+    it('jede Beschriftung, jeder Tooltip und jede Rueckfrage der Karte (aus der echten Karte gelesen)', async () => {
+        const a = await adapterMitGeraet({ ...MELDUNG, hum: 50, action: 'heating' });
+        const k = (await kartenLaden(a)).karten[0];
+        // Funktionen (handler) und HTML-Muster der Luftfeuchte zaehlen nicht als Text
+        const karte = JSON.parse(JSON.stringify(k));
+        const fehler = pruefe(karte, 'Karte');
+        // die Rueckfragen entstehen erst beim Klick
+        fehler.push(...pruefe({ ein: TEXTE.frageEinschalten, aus: TEXTE.frageAusschalten }, 'Rueckfrage'));
+        expect(fehler).to.eql([]);
+        // es wurden wirklich Texte gefunden (Kontrolle des Pruefers selbst)
+        expect(JSON.stringify(karte)).to.contain('"zh-cn"');
+    });
+
+    it('Namen der Datenpunkte auf der Karte, auch control.selectedMode', () => {
+        const felderDerKarte = [
+            'power',
+            'mode',
+            'selectedMode',
+            'target',
+            'fan',
+            'temp',
+            'outside',
+            'hum',
+            'consumption',
+            'action',
+        ];
+        const namenListe = Object.fromEntries(felderDerKarte.map(f => [f, namen.vollerName(felder.FELDER[f].name)]));
+        expect(pruefe(namenListe, 'Datenpunkt')).to.eql([]);
+    });
+
+    it('News im io-package', () => {
+        const io = require('../io-package.json');
+        expect(pruefe(io.common.news, 'news')).to.eql([]);
+    });
+
+    it('der Pruefer selbst findet fehlende und englische Eintraege', () => {
+        const f = pruefe({ a: { en: 'Fan', de: 'Fan', ru: 'Вентилятор' } }, 'x');
+        expect(f).to.include('x.a: de = englisch "Fan"');
+        expect(f).to.include('x.a: pt fehlt');
     });
 });
