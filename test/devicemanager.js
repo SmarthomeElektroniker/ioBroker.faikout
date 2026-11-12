@@ -11,6 +11,7 @@ const { expect } = require('chai');
 const proxyquire = require('proxyquire').noCallThru();
 const { MODUS_TEXTE, LUEFTER_TEXTE, TAETIGKEIT_TEXTE, TEXTE, UMSCHALTEN } = require('../lib/devicemanager');
 const felder = require('../lib/fields');
+const namen = require('../lib/namen');
 
 const SPRACHEN = felder.SPRACHEN;
 
@@ -203,10 +204,12 @@ describe('Device-Manager: Karte', () => {
         const { customInfo } = (await kartenLaden(a)).karten[0];
         const items = customInfo.schema.items;
         expect(Object.keys(items)).to.eql([
+            'modeLabel',
             'mode',
             'temp',
             'target',
             'targetSlider',
+            'fanLabel',
             'fan',
             'outside',
             'consumption',
@@ -215,7 +218,15 @@ describe('Device-Manager: Karte', () => {
         // keine Ein/Aus-Zeile mehr - das ist der Umschalter in der Statuszeile
         expect(items.power).to.equal(undefined);
         const bedienbar = ['mode', 'targetSlider', 'fan'];
-        for (const [k, i] of Object.entries(items)) {
+        // Beschriftung der Auswahlfelder links daneben, die Auswahl selbst ohne eigene Beschriftung
+        // (sonst laeuft der Rahmen durch den Text)
+        for (const k of ['mode', 'fan']) {
+            expect(items[`${k}Label`].type).to.equal('staticText');
+            expect(items[`${k}Label`].text).to.eql(namen.vollerName(felder.FELDER[k].name));
+            expect(items[k].label).to.equal('');
+            expect(items[`${k}Label`].xs + items[k].xs).to.equal(12);
+        }
+        for (const [k, i] of Object.entries(items).filter(([key]) => !key.endsWith('Label'))) {
             expect(i.type).to.equal('state');
             expect(i.foreign).to.equal(true);
             expect(a.objekte.has(a.rel(i.oid)), i.oid).to.equal(true);
