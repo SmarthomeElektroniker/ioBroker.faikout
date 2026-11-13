@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -71,6 +71,19 @@
       }
     ],
     "news": {
+      "0.2.0": {
+        "en": "Numeric twins of the text control states (modeNum, fanNum, swingNum, presetNum) with level.mode roles for Lovelace and the type detector; one command per write, ack only with the module confirmation",
+        "de": "Zahl-Datenpunkte neben den Text-Steuerfeldern (modeNum, fanNum, swingNum, presetNum) mit level.mode-Rollen für Lovelace und den Type-Detector; ein Befehl pro Schreibvorgang, ack erst mit der Bestätigung des Moduls",
+        "ru": "Числовые аналоги текстовых управляющих состояний (modeNum, fanNum, swingNum, presetNum) с ролями level.mode для Lovelace и детектора типов; одна команда на каждую запись, ack только после подтверждения модуля",
+        "pt": "Estados numéricos ao lado dos estados de controlo em texto (modeNum, fanNum, swingNum, presetNum) com funções level.mode para o Lovelace e o detetor de tipos; um comando por escrita, ack apenas com a confirmação do módulo",
+        "nl": "Numerieke tegenhangers van de tekstuele besturingsdatapunten (modeNum, fanNum, swingNum, presetNum) met level.mode-rollen voor Lovelace en de typedetector; één commando per schrijfactie, ack pas na bevestiging door de module",
+        "fr": "Équivalents numériques des états de commande textuels (modeNum, fanNum, swingNum, presetNum) avec les rôles level.mode pour Lovelace et le détecteur de type ; une seule commande par écriture, ack uniquement après confirmation du module",
+        "it": "Stati numerici accanto agli stati di controllo testuali (modeNum, fanNum, swingNum, presetNum) con ruoli level.mode per Lovelace e il rilevatore di tipo; un solo comando per scrittura, ack solo con la conferma del modulo",
+        "es": "Estados numéricos junto a los estados de control de texto (modeNum, fanNum, swingNum, presetNum) con roles level.mode para Lovelace y el detector de tipos; un solo comando por escritura, ack solo con la confirmación del módulo",
+        "pl": "Liczbowe odpowiedniki tekstowych stanów sterujących (modeNum, fanNum, swingNum, presetNum) z rolami level.mode dla Lovelace i detektora typów; jedno polecenie na zapis, ack dopiero po potwierdzeniu przez moduł",
+        "uk": "Числові відповідники текстових керувальних станів (modeNum, fanNum, swingNum, presetNum) з ролями level.mode для Lovelace і детектора типів; одна команда на кожен запис, ack лише після підтвердження модуля",
+        "zh-cn": "为文本控制状态新增数值对应项（modeNum、fanNum、swingNum、presetNum），带 level.mode 角色，适用于 Lovelace 和类型检测器；每次写入只发送一条命令，模块确认后才设置 ack"
+      },
       "0.1.0": {
         "en": "Device cards in the admin (device manager): on/off with confirmation, operating mode, target temperature and fan speed directly on the card, Wi-Fi signal and live values; new state control.selectedMode",
         "de": "Gerätekarten im Admin (Geräteverwaltung): Ein/Aus mit Rückfrage, Betriebsart, Solltemperatur und Lüfterstufe direkt auf der Karte, WLAN-Signal und laufende Werte; neuer Datenpunkt control.selectedMode",
@@ -148,19 +161,6 @@
         "pl": "Limit czasu zamykania brokera MQTT korzysta z timera adaptera (kontrola E5005)",
         "uk": "Тайм-аут зупинки MQTT-брокера використовує таймер адаптера (перевірка E5005)",
         "zh-cn": "MQTT 代理的关闭超时使用适配器计时器（检查 E5005）"
-      },
-      "0.0.14": {
-        "en": "Consumption states renamed to English IDs (consumption.total.today ...), existing values are migrated; status.autoe can be written; complete translations of admin and widgets",
-        "de": "Verbrauchsdatenpunkte auf englische IDs umbenannt (consumption.total.today ...), vorhandene Werte werden übernommen; status.autoe ist beschreibbar; vollständige Übersetzungen von Admin und Widgets",
-        "ru": "Состояния потребления переименованы в английские ID (consumption.total.today ...), существующие значения переносятся; status.autoe можно записывать; полные переводы админки и виджетов",
-        "pt": "Estados de consumo renomeados para IDs em inglês (consumption.total.today ...), os valores existentes são migrados; status.autoe pode ser escrito; traduções completas do admin e dos widgets",
-        "nl": "Verbruiksstatussen hernoemd naar Engelse ID’s (consumption.total.today ...), bestaande waarden worden overgenomen; status.autoe is schrijfbaar; volledige vertalingen van admin en widgets",
-        "fr": "États de consommation renommés en ID anglais (consumption.total.today ...), les valeurs existantes sont migrées ; status.autoe est modifiable ; traductions complètes de l’admin et des widgets",
-        "it": "Stati di consumo rinominati con ID inglesi (consumption.total.today ...), i valori esistenti vengono migrati; status.autoe è scrivibile; traduzioni complete di admin e widget",
-        "es": "Estados de consumo renombrados a ID en inglés (consumption.total.today ...), los valores existentes se migran; status.autoe se puede escribir; traducciones completas del admin y los widgets",
-        "pl": "Stany zużycia przemianowane na angielskie ID (consumption.total.today ...), istniejące wartości są przenoszone; status.autoe można zapisywać; pełne tłumaczenia panelu i widżetów",
-        "uk": "Стани споживання перейменовано на англійські ID (consumption.total.today ...), наявні значення переносяться; status.autoe можна записувати; повні переклади адмінки та віджетів",
-        "zh-cn": "能耗状态改为英文 ID（consumption.total.today 等），现有数值自动迁移；status.autoe 可写入；管理界面和小部件完整翻译"
       }
     },
     "restartAdapters": [

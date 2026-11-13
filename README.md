@@ -114,6 +114,25 @@ reporting 100 % — seen on units that still have Daikin's own WiFi adapter fitt
 pass on the percentage; the modes of Daikin's app (off / automatic / fixed) are not part of what is
 known about the S21 interface. Econo is only taken over while the unit is running.
 
+### Lovelace, type detector and other tools that expect numbers
+
+The module speaks text (`mode` = `"cool"`), and the text states stay the main form for scripts, vis and
+the device cards. Lovelace, however, converts the keys of `common.states` to numbers when it writes a
+climate entity; with text keys this gives `NaN` and the command is lost. Use the numeric twins in
+`<device>.control.*` for such tools:
+
+| State       | Role                        | Values                                                              |
+| ----------- | --------------------------- | ------------------------------------------------------------------- |
+| `modeNum`   | `level.mode.airconditioner` | 0 off, 1 heat_cool, 2 cool, 3 heat, 4 dry, 5 fan_only               |
+| `fanNum`    | `level.mode.fan`            | 0 auto, 1 night, 2 low, 3 lowMedium, 4 medium, 5 mediumHigh, 6 high |
+| `swingNum`  | `level.mode.swing`          | 0 off, 1 on, 2 vertical, 3 horizontal, 4 both, 5 comfort            |
+| `presetNum` | `level.mode`                | 0 home, 1 eco, 2 boost                                              |
+
+The roles let the type detector find them as part of an air conditioner. Writing `2`, `"2"` or the label
+`"cool"` to `modeNum` sends one command `cool` to the module; `modeNum` and `mode` are both set with
+`ack=true` when the module confirms. A value outside the list is discarded with a warning in the log.
+The twins are created with the first report of a module after the update.
+
 ## Visualisation (vis templates)
 
 The folder [`vis-templates/`](vis-templates/) contains ready-made **vis 1** views for two units: overview,
@@ -127,6 +146,13 @@ one detail page per unit with controls, energy history and a phone view. They us
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### 0.2.0 (2026-11-13)
+- Numeric twins of the text control states: `control.modeNum`, `fanNum`, `swingNum` and `presetNum` with
+  `common.states` (`{0: "off", 1: "heat_cool", ...}`) and the roles `level.mode.airconditioner`,
+  `level.mode.fan`, `level.mode.swing` and `level.mode`, for Lovelace and the type detector (forum thread
+  85668). Both forms are writable; a command on either sends exactly one command to the module, both are set
+  with `ack=true` when the module confirms. Text states, vis widgets and device cards are unchanged.
+
 ### 0.1.0 (2026-11-12)
 - Device manager support (`@iobroker/dm-utils`): one card per air conditioner in the admin tab "Devices"
   with the running operation (mode, current action, room/target/outside temperature, fan speed, humidity,
