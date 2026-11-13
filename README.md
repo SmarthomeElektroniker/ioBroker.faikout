@@ -42,6 +42,12 @@ Objects are grouped per device:
   econo, powerful, comfort, streamer, sensor, LED, quiet, humidify. `selectedMode` is the operating mode
   without "off": while the unit runs it equals `mode`, while it is off it keeps the mode set last (taken
   from the module's native status). Writing it sends the mode and switches the unit on.
+- `mode`, `fan`, `swing` and `preset` are text, as the module speaks them. Each has a numeric twin
+  (`modeNum`, `fanNum`, `swingNum`, `presetNum`) with `common.states` such as
+  `{0: "off", 1: "heat_cool", 2: "cool", 3: "heat", 4: "dry", 5: "fan_only"}` for Lovelace and other
+  tools that expect numbers. Both are writable and mean the same: a command on either sends exactly one
+  command to the module (as text); both are set with `ack=true` when the module confirms. The numbers
+  are fixed; new values of a future firmware are appended.
 - `<device>.status.*` — readings: temperatures, humidity, energy, power, compressor and fan speed
 - `<device>.info.*` — device diagnostics: IP, WiFi signal, uptime, firmware
 

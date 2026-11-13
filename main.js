@@ -293,7 +293,8 @@ class Faikout extends utils.Adapter {
             }
             // Die gewaehlte Betriebsart (ohne "off") laeuft als eigenes Feld mit.
             const gewaehlt = felder.gewaehlteBetriebsart(daten, false);
-            const werte = gewaehlt ? { ...daten, selectedMode: gewaehlt } : daten;
+            // Dazu die Zahl-Zwillinge (modeNum, fanNum ...) fuer Lovelace und Co.
+            const werte = felder.zahlZwillingeErgaenzen(gewaehlt ? { ...daten, selectedMode: gewaehlt } : daten);
             this.werteUebernehmen(t.geraet, werte).catch(e => this.log.warn(`${t.geraet}: ${e.message}`));
         } else if (t.art === 'state' && t.unter === 'status') {
             // Aus der nativen Meldung nur die Betriebsart einer AUSGESCHALTETEN Anlage - der Rest
@@ -956,7 +957,21 @@ class Faikout extends utils.Adapter {
 
         // Der ECHTE Geraetename gehoert ins Topic, nicht die bereinigte Objekt-ID.
         const topic = `command/${g.name}/${suffix}`;
-        const nutzlast = this.nutzlast(feld, state.val);
+        let nutzlast;
+        if (def && def.zahlZu) {
+            // Zahl-Zwilling (modeNum ...): das Modul versteht nur Text. Der Text-Datenpunkt
+            // bleibt unberuehrt - beide ziehen mit der Bestaetigung des Moduls nach. Ihn hier
+            // mitzuschreiben (ack=false) loeste einen zweiten Befehl aus.
+            nutzlast = felder.zahlZuText(feld, state.val);
+            if (nutzlast === null) {
+                this.log.warn(
+                    `${g.name}: value ${JSON.stringify(state.val)} for ${feld} is not valid (allowed: ${JSON.stringify(def.states)}) - command discarded.`,
+                );
+                return;
+            }
+        } else {
+            nutzlast = this.nutzlast(feld, state.val);
+        }
         const ok = await this.broker.publish(topic, nutzlast);
         if (ok) {
             this.log.debug(`-> ${topic} = ${nutzlast}`);
