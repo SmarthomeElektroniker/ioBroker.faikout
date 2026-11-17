@@ -697,7 +697,7 @@ vis.binds.faikout = {
                     .on('click', function () {
                         var alt = ctx.wert(z.feld);
                         // `swing` ist eine Liste (off/on), alle anderen sind Schalter.
-                        // `swing` kennt off/on/V/H/H+V/C (SWING_* in Faikout.c). Umgeschaltet wird nur
+                        // `swing` kennt off/on/V/H/H+V/C/H+C (SWING_* in Faikout.c). Umgeschaltet wird nur
                     // zwischen aus und ein; die Achsen setzt man ueber swingv/swingh.
                     if (z.feld === 'control.swing') vis.setValue(ctx.oid(z.feld), alt === 'off' ? 'on' : 'off');
                         else vis.setValue(ctx.oid(z.feld), !alt);
@@ -1102,7 +1102,7 @@ vis.binds.faikout = {
                 .html(b.SYM[z.sym] + (mitText ? '<span>' + z.name + '</span>' : ''))
                 .on('click', function () {
                     var alt = ctx.wert(z.feld);
-                    // `swing` kennt off/on/V/H/H+V/C (SWING_* in Faikout.c). Umgeschaltet wird nur
+                    // `swing` kennt off/on/V/H/H+V/C/H+C (SWING_* in Faikout.c). Umgeschaltet wird nur
                     // zwischen aus und ein; die Achsen setzt man ueber swingv/swingh.
                     if (z.feld === 'control.swing') vis.setValue(ctx.oid(z.feld), alt === 'off' ? 'on' : 'off');
                     else vis.setValue(ctx.oid(z.feld), !alt);

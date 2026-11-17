@@ -50,6 +50,7 @@ describe('Zahl und Text: Feldkunde', () => {
             3: 'horizontal',
             4: 'both',
             5: 'comfort',
+            6: 'horizontalComfort',
         });
         expect(felder.FELDER.presetNum.states).to.eql({ 0: 'home', 1: 'eco', 2: 'boost' });
         expect(felder.FELDER.fanNum.role).to.equal('level.mode.fan');
