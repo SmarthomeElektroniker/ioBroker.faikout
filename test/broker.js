@@ -211,12 +211,12 @@ describe('Feldkunde', () => {
         expect(u.echtAbJetzt).to.equal(true);
     });
 
-    it('kennt alle sechs swing-Werte, nicht nur off/on', () => {
-        // Die HA-Discovery meldet nur off|on, das Gerät sendet aber auch H, V, H+V und C
+    it('kennt alle sieben swing-Werte, nicht nur off/on', () => {
+        // Die HA-Discovery meldet nur off|on, das Gerät sendet aber auch H, V, H+V, C und H+C
         // (SWING_* in Faikout.c). Live stand am Wohnzimmer-Gerät "V" - mit einer Liste aus
         // nur off/on wäre das im VIS ein unbekannter Zustand.
         const s = felder.FELDER.swing.states;
-        for (const w of ['off', 'on', 'V', 'H', 'H+V', 'C']) {
+        for (const w of ['off', 'on', 'V', 'H', 'H+V', 'C', 'H+C']) {
             expect(s, `swing muss "${w}" kennen`).to.have.property(w);
         }
     });

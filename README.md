@@ -121,12 +121,12 @@ the device cards. Lovelace, however, converts the keys of `common.states` to num
 climate entity; with text keys this gives `NaN` and the command is lost. Use the numeric twins in
 `<device>.control.*` for such tools:
 
-| State       | Role                        | Values                                                              |
-| ----------- | --------------------------- | ------------------------------------------------------------------- |
-| `modeNum`   | `level.mode.airconditioner` | 0 off, 1 heat_cool, 2 cool, 3 heat, 4 dry, 5 fan_only               |
-| `fanNum`    | `level.mode.fan`            | 0 auto, 1 night, 2 low, 3 lowMedium, 4 medium, 5 mediumHigh, 6 high |
-| `swingNum`  | `level.mode.swing`          | 0 off, 1 on, 2 vertical, 3 horizontal, 4 both, 5 comfort            |
-| `presetNum` | `level.mode`                | 0 home, 1 eco, 2 boost                                              |
+| State       | Role                        | Values                                                                        |
+| ----------- | --------------------------- | ----------------------------------------------------------------------------- |
+| `modeNum`   | `level.mode.airconditioner` | 0 off, 1 heat_cool, 2 cool, 3 heat, 4 dry, 5 fan_only                         |
+| `fanNum`    | `level.mode.fan`            | 0 auto, 1 night, 2 low, 3 lowMedium, 4 medium, 5 mediumHigh, 6 high           |
+| `swingNum`  | `level.mode.swing`          | 0 off, 1 on, 2 vertical, 3 horizontal, 4 both, 5 comfort, 6 horizontalComfort |
+| `presetNum` | `level.mode`                | 0 home, 1 eco, 2 boost                                                        |
 
 The roles let the type detector find them as part of an air conditioner. Writing `2`, `"2"` or the label
 `"cool"` to `modeNum` sends one command `cool` to the module; `modeNum` and `mode` are both set with
@@ -146,6 +146,12 @@ one detail page per unit with controls, energy history and a phone view. They us
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- `control.swing` / `swingNum`: new value `H+C` (`horizontalComfort`, number 6) for comfort mode with
+  horizontal swing. Comfort is a mode of the vertical louvres; the swing selector (e.g. in Lovelace) can now
+  combine it with horizontal swing. Needs Faikout firmware with `H+C` support; older firmware reports `C`
+  during comfort and treats a written `H+C` as `off`.
+
 ### 0.2.0 (2026-11-13)
 - Numeric twins of the text control states: `control.modeNum`, `fanNum`, `swingNum` and `presetNum` with
   `common.states` (`{0: "off", 1: "heat_cool", ...}`) and the roles `level.mode.airconditioner`,
