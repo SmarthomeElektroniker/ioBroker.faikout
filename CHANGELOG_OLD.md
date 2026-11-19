@@ -1,4 +1,21 @@
 # Older changes
+## 0.0.17
+- Fixed units of `status.comp` and `status.fanfreq`: the module sends Hz by default and rpm only with `ha.comprpm`/`ha.fanrpm`.
+  The adapter now takes the unit from the module's Home Assistant discovery (a fractional fan value is always Hz),
+  sets it on the state and remembers it per device. The VIS widgets show the unit of the state.
+- All fields the module can report are described: new `status.action` (with `no.hvacaction` off), `status.loopback`,
+  `status.bletemp`/`blehum`/`blebat`, `info.dma`, `info.restart`, `info.ipv6`, `info.secureboot`, `info.nvsecryption`.
+  `dma` and `restart` were created as unknown fields under `status.*` up to 0.0.16 and are moved to `info.*` on start.
+- New tab "Module settings" in the instance configuration: which settings the faikout module needs for the complete set of
+  data points (all eleven languages). Same table in the README.
+- Warning in the log when a module is connected without `ha.enable`.
+
+## 0.0.16
+- Release notes in `io-package.json` trimmed to seven entries and translated into all languages (repository checker E1032/E1144).
+
+## 0.0.15
+- The MQTT broker's shutdown timeout uses the adapter's `setTimeout` (repository checker E5005).
+
 ## 0.0.14
 - **Breaking:** the consumption subtree uses English IDs: `consumption.{total|heating|cooling}.{currentHour|lastHour|today|yesterday|thisMonth|lastMonth}`
   and `hoursJson`/`daysJson`/`monthsJson` (entries keyed `hour`/`day`/`month`). On start the adapter copies the last values of the

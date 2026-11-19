@@ -146,7 +146,7 @@ one detail page per unit with controls, energy history and a phone view. They us
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.2.1 (2026-11-19)
 - `control.swing` / `swingNum`: new value `H+C` (`horizontalComfort`, number 6) for comfort mode with
   horizontal swing. Comfort is a mode of the vertical louvres; the swing selector (e.g. in Lovelace) can now
   combine it with horizontal swing. Needs Faikout firmware with `H+C` support; older firmware reports `C`
@@ -197,23 +197,6 @@ one detail page per unit with controls, energy history and a phone view. They us
 - VIS widgets: the accent colour follows the mode again (heating orange, cooling blue, off grey) – jQuery 1.11 in vis 1
   cannot set CSS custom properties with `.css()`, so it always stayed blue.
 - New: vis templates (`vis-templates/`) – overview, detail page per unit, energy and phone view.
-
-### 0.0.17
-- Fixed units of `status.comp` and `status.fanfreq`: the module sends Hz by default and rpm only with `ha.comprpm`/`ha.fanrpm`.
-  The adapter now takes the unit from the module's Home Assistant discovery (a fractional fan value is always Hz),
-  sets it on the state and remembers it per device. The VIS widgets show the unit of the state.
-- All fields the module can report are described: new `status.action` (with `no.hvacaction` off), `status.loopback`,
-  `status.bletemp`/`blehum`/`blebat`, `info.dma`, `info.restart`, `info.ipv6`, `info.secureboot`, `info.nvsecryption`.
-  `dma` and `restart` were created as unknown fields under `status.*` up to 0.0.16 and are moved to `info.*` on start.
-- New tab "Module settings" in the instance configuration: which settings the faikout module needs for the complete set of
-  data points (all eleven languages). Same table in the README.
-- Warning in the log when a module is connected without `ha.enable`.
-
-### 0.0.16
-- Release notes in `io-package.json` trimmed to seven entries and translated into all languages (repository checker E1032/E1144).
-
-### 0.0.15
-- The MQTT broker's shutdown timeout uses the adapter's `setTimeout` (repository checker E5005).
 
 [Older changelog entries can be found here](CHANGELOG_OLD.md)
 

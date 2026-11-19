@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -71,6 +71,19 @@
       }
     ],
     "news": {
+      "0.2.1": {
+        "en": "Renamed modules are recognised by their hardware ID: no more writes to deleted objects, consumption counters continue under the new name (issue #6); deleted objects are noticed at runtime; new swing value H+C (comfort with horizontal swing)",
+        "de": "Umbenannte Module werden an ihrer Hardware-ID erkannt: keine Schreibzugriffe mehr auf gelöschte Objekte, Verbrauchszähler laufen unter dem neuen Namen weiter (Issue #6); gelöschte Objekte werden zur Laufzeit erkannt; neuer Schwenkwert H+C (Komfort mit waagerechtem Schwenken)",
+        "ru": "Переименованные модули распознаются по аппаратному ID: больше нет записи в удалённые объекты, счётчики потребления продолжаются под новым именем (issue #6); удалённые объекты обнаруживаются во время работы; новое значение качания H+C (комфорт с горизонтальным качанием)",
+        "pt": "Módulos renomeados são reconhecidos pelo ID de hardware: sem gravações em objetos excluídos, os contadores de consumo continuam com o novo nome (issue #6); objetos excluídos são detectados em execução; novo valor de oscilação H+C (conforto com oscilação horizontal)",
+        "nl": "Hernoemde modules worden herkend aan hun hardware-ID: geen schrijfacties meer naar verwijderde objecten, verbruikstellers lopen door onder de nieuwe naam (issue #6); verwijderde objecten worden tijdens het draaien opgemerkt; nieuwe zwenkwaarde H+C (comfort met horizontaal zwenken)",
+        "fr": "Les modules renommés sont reconnus par leur ID matériel : plus d'écriture vers des objets supprimés, les compteurs de consommation continuent sous le nouveau nom (issue #6) ; les objets supprimés sont détectés en cours d'exécution ; nouvelle valeur d'oscillation H+C (confort avec oscillation horizontale)",
+        "it": "I moduli rinominati vengono riconosciuti dall'ID hardware: nessuna scrittura su oggetti eliminati, i contatori di consumo proseguono con il nuovo nome (issue #6); gli oggetti eliminati vengono rilevati durante l'esecuzione; nuovo valore di oscillazione H+C (comfort con oscillazione orizzontale)",
+        "es": "Los módulos renombrados se reconocen por su ID de hardware: ya no se escribe en objetos eliminados, los contadores de consumo continúan con el nuevo nombre (issue #6); los objetos eliminados se detectan en ejecución; nuevo valor de oscilación H+C (confort con oscilación horizontal)",
+        "pl": "Moduły o zmienionej nazwie są rozpoznawane po identyfikatorze sprzętowym: brak zapisów do usuniętych obiektów, liczniki zużycia działają dalej pod nową nazwą (issue #6); usunięte obiekty są wykrywane w trakcie działania; nowa wartość nachylenia H+C (komfort z poziomym ruchem)",
+        "uk": "Перейменовані модулі розпізнаються за апаратним ID: більше немає запису у видалені об'єкти, лічильники споживання продовжуються під новою назвою (issue #6); видалені об'єкти виявляються під час роботи; нове значення гойдання H+C (комфорт із горизонтальним гойданням)",
+        "zh-cn": "重命名的模块通过硬件 ID 识别：不再写入已删除的对象，用电计数器在新名称下继续（issue #6）；运行时可识别已删除的对象；新的摆风值 H+C（舒适模式加水平摆风）"
+      },
       "0.2.0": {
         "en": "Numeric twins of the text control states (modeNum, fanNum, swingNum, presetNum) with level.mode roles for Lovelace and the type detector; one command per write, ack only with the module confirmation",
         "de": "Zahl-Datenpunkte neben den Text-Steuerfeldern (modeNum, fanNum, swingNum, presetNum) mit level.mode-Rollen für Lovelace und den Type-Detector; ein Befehl pro Schreibvorgang, ack erst mit der Bestätigung des Moduls",
@@ -148,19 +161,6 @@
         "pl": "Informacje o wydaniu skrócone do siedmiu wpisów i przetłumaczone (kontrola repozytorium E1032/E1144)",
         "uk": "Примітки до випуску скорочено до семи записів і перекладено (перевірка репозиторію E1032/E1144)",
         "zh-cn": "发行说明精简为七条并已翻译（仓库检查 E1032/E1144）"
-      },
-      "0.0.15": {
-        "en": "Shutdown timeout of the MQTT broker uses the adapter timer (checker E5005)",
-        "de": "Abschalt-Zeitlimit des MQTT-Brokers nutzt den Adapter-Zeitgeber (Checker E5005)",
-        "ru": "Тайм-аут остановки MQTT-брокера использует таймер адаптера (проверка E5005)",
-        "pt": "O tempo limite de encerramento do broker MQTT usa o temporizador do adaptador (verificação E5005)",
-        "nl": "Afsluittime-out van de MQTT-broker gebruikt de timer van de adapter (controle E5005)",
-        "fr": "Le délai d'arrêt du broker MQTT utilise le minuteur de l'adaptateur (contrôle E5005)",
-        "it": "Il timeout di arresto del broker MQTT usa il timer dell'adattatore (controllo E5005)",
-        "es": "El tiempo de espera de cierre del broker MQTT usa el temporizador del adaptador (comprobación E5005)",
-        "pl": "Limit czasu zamykania brokera MQTT korzysta z timera adaptera (kontrola E5005)",
-        "uk": "Тайм-аут зупинки MQTT-брокера використовує таймер адаптера (перевірка E5005)",
-        "zh-cn": "MQTT 代理的关闭超时使用适配器计时器（检查 E5005）"
       }
     },
     "restartAdapters": [
