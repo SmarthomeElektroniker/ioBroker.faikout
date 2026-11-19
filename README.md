@@ -151,6 +151,15 @@ one detail page per unit with controls, energy history and a phone view. They us
   horizontal swing. Comfort is a mode of the vertical louvres; the swing selector (e.g. in Lovelace) can now
   combine it with horizontal swing. Needs Faikout firmware with `H+C` support; older firmware reports `C`
   during comfort and treats a written `H+C` as `off`.
+- Renamed modules (issue #6): after changing the hostname of a module, the adapter kept the old name in memory
+  until the next restart and, once its objects were deleted, logged `State "...consumption..." has no existing
+  object` every hour. The module is now recognised by its hardware ID (`info.id`): the old name is no longer
+  updated, its consumption counters (today, month, JSON series) continue under the new name, and its objects
+  stay untouched until you delete them (SmarthomeElektroniker)
+- Deleted objects are noticed while the adapter runs: a deleted device is dropped, a deleted state or branch is
+  created again before the next write; states are no longer written to objects that do not exist
+  (SmarthomeElektroniker)
+- Dev dependency `@iobroker/testing` 6.3.2 (SmarthomeElektroniker)
 
 ### 0.2.0 (2026-11-13)
 - Numeric twins of the text control states: `control.modeNum`, `fanNum`, `swingNum` and `presetNum` with

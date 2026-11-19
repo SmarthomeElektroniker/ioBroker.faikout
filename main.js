@@ -132,6 +132,7 @@ class Faikout extends utils.Adapter {
 
         this.on('ready', this.onReady.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
+        this.on('objectChange', this.onObjectChange.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
 
@@ -141,6 +142,9 @@ class Faikout extends utils.Adapter {
         await this.setState('info.connection', { val: false, ack: true });
         await this.verbrauchUmziehen();
         await this.objekteAbgleichen();
+        // Geloeschte Objekte mitbekommen (Issue #6): sonst schreibt der Adapter weiter in einen
+        // Zweig, den er fuer angelegt haelt - "State ... has no existing object".
+        await this.subscribeObjectsAsync('*');
 
         const port = Number(this.config.port) || 1888;
         this.broker = new FaikoutBroker({
@@ -186,8 +190,17 @@ class Faikout extends utils.Adapter {
     }
 
     async stundenwechsel() {
-        for (const [id, g] of this.geraete) {
+        // Kopie: geraetVergessen() nimmt waehrend der Schleife Eintraege heraus.
+        for (const [id, g] of [...this.geraete]) {
+            // Issue #6: Ein umbenanntes Modul blieb bis zum Neustart als Geist in this.geraete, und
+            // jede volle Stunde gingen setState-Aufrufe auf die vom Nutzer geloeschten Objekte.
+            if (!(await this.geraetNochDa(id, g))) {
+                continue;
+            }
             for (const z of ZAEHLER) {
+                if (this.geraete.get(id) !== g) {
+                    break; // inzwischen geloescht oder umbenannt
+                }
                 const ergebnis = verbrauch.pruefen(g.zaehler[z.feld], new Date());
                 if (!ergebnis.werte) {
                     continue;
@@ -463,6 +476,12 @@ class Faikout extends utils.Adapter {
             const alt = await this.getObjectAsync(id);
             g = {
                 name: geraetName,
+                // Geraeteobjekt gab es vor diesem Lauf nicht - Kandidat fuer die Uebernahme der
+                // Zaehler eines umbenannten Moduls (siehe modulIdPruefen()).
+                neu: !alt,
+                // Hardware-ID des Moduls (Feld `id`, die MAC ohne Doppelpunkte). Erst gesetzt, wenn
+                // sie in diesem Lauf gemeldet und gegen die anderen Geraete geprueft wurde.
+                modulId: null,
                 angelegt: new Set(),
                 feuchteEcht: !!(alt && alt.native && alt.native.feuchteEcht),
                 // Die Zaehlerstaende muessen den Adapter-Neustart ueberleben, sonst faengt
@@ -492,6 +511,11 @@ class Faikout extends utils.Adapter {
         }
         // Der Name kann sich aendern, wenn der Hostname im Modul umgestellt wird.
         g.name = geraetName;
+
+        // Hardware-ID: erkennt ein umbenanntes Modul, bevor die Zaehler verarbeitet werden.
+        if (typeof daten.id === 'string' && daten.id && g.modulId !== daten.id) {
+            await this.modulIdPruefen(id, g, daten.id);
+        }
 
         for (const [feld, wert] of Object.entries(daten)) {
             if (wert === null || wert === undefined) {
@@ -863,9 +887,187 @@ class Faikout extends utils.Adapter {
     }
 
     async zaehlerstandSichern(id, g) {
+        // Nie ein geloeschtes Geraeteobjekt per extendObject als Rumpf wiederbeleben (Issue #6).
+        if (!(await this.geraetNochDa(id, g))) {
+            return;
+        }
         g.gesichert = Date.now();
         g.zaehlerGeaendert = false;
         await this.extendObject(id, { native: { zaehler: g.zaehler } });
+    }
+
+    // ---------------------------------------------------------------- Umbenennen und Loeschen (Issue #6)
+
+    /**
+     * Ist das Geraet noch im Speicher UND sein Geraeteobjekt noch vorhanden? Fehlt das Objekt (vom
+     * Nutzer geloescht), wird das Geraet vergessen. Meldet sich das Modul weiter, entsteht es mit
+     * der naechsten Nachricht vollstaendig neu.
+     *
+     * @param {string} id  Objekt-ID des Geraets
+     * @param {object} g   gemerkter Zustand des Geraets
+     * @returns {Promise<boolean>} true, wenn weitergeschrieben werden darf
+     */
+    async geraetNochDa(id, g) {
+        if (this.geraete.get(id) !== g) {
+            return false;
+        }
+        if (await this.getObjectAsync(id)) {
+            return true;
+        }
+        this.geraetVergessen(id, 'its objects were deleted');
+        return false;
+    }
+
+    /**
+     * Nimmt ein Geraet aus allen Speichern des laufenden Adapters, die am Geraet bzw. seinem Namen
+     * haengen. Die Einheiten (this.einheiten) bleiben: sie stammen aus der Discovery, die nicht
+     * wiederholt wird, und schaden ohne Geraet nicht.
+     *
+     * @param {string} id     Objekt-ID des Geraets
+     * @param {string} grund  Grund fuers Log
+     */
+    geraetVergessen(id, grund) {
+        const g = this.geraete.get(id);
+        if (!g) {
+            return;
+        }
+        this.geraete.delete(id);
+        const praefix = `${id}.`;
+        for (const speicher of [this.geschrieben, this.reihenStunde]) {
+            for (const schluessel of [...speicher.keys()]) {
+                if (schluessel.startsWith(praefix)) {
+                    speicher.delete(schluessel);
+                }
+            }
+        }
+        this.haWarnung.delete(g.name);
+        this.abgelehntWarnung.delete(g.name);
+        this.log.info(`"${g.name}" (${this.namespace}.${id}) is no longer updated: ${grund}.`);
+        this.verbindungPruefen();
+    }
+
+    /**
+     * Ein Objekt im eigenen Namensraum wurde geloescht. Alles, was der Adapter darueber im Speicher
+     * hat, muss weg - sonst haelt er den Datenpunkt fuer angelegt und schreibt per setState auf ein
+     * Objekt, das es nicht mehr gibt. Ist es das Geraeteobjekt selbst, wird das Geraet vergessen.
+     *
+     * @param {string} volleId  Objekt-ID mit Namensraum
+     * @param {ioBroker.Object | null | undefined} obj  neues Objekt, null/undefined beim Loeschen
+     */
+    onObjectChange(volleId, obj) {
+        if (obj || !volleId.startsWith(`${this.namespace}.`)) {
+            return;
+        }
+        const id = volleId.slice(this.namespace.length + 1);
+        const geraetId = id.split('.')[0];
+        const g = this.geraete.get(geraetId);
+        if (!g) {
+            return;
+        }
+        if (id === geraetId) {
+            this.geraetVergessen(geraetId, 'its objects were deleted');
+            return;
+        }
+        this.geschrieben.delete(id);
+        this.reihenStunde.delete(id);
+        // Den Eintrag selbst, alles darunter und die Zweige darueber (consumption.total steht fuer
+        // den ganzen Zweig) - fehlt einer seiner Datenpunkte, wird der Zweig neu angelegt.
+        for (const a of [...g.angelegt]) {
+            if (a === id || a.startsWith(`${id}.`) || id.startsWith(`${a}.`)) {
+                g.angelegt.delete(a);
+            }
+        }
+    }
+
+    /**
+     * Prueft die Hardware-ID eines Moduls gegen die anderen Geraete. Der Objektbaum haengt am
+     * Hostnamen; wird der im Modul umgestellt, meldet sich dasselbe Modul unter neuem Namen.
+     * Bis 0.2.0 lief das alte Geraet dann im Speicher weiter (Issue #6).
+     *
+     * Ein anderes Geraet mit derselben ID ist der fruehere Name dieses Moduls. Es wird vergessen und
+     * im Objekt als umbenannt markiert (native.renamedTo), damit es nicht bei jedem Start erneut
+     * auffaellt; seine Objekte und Verlaufsdaten bleiben unangetastet - loeschen kann sie der Nutzer.
+     * Die Zaehlerstaende (Basis fuer heute, Monat und die JSON-Reihen) werden uebernommen, wenn das
+     * Geraet unter dem neuen Namen noch keine eigene Geschichte hat: Geraeteobjekt in diesem Lauf
+     * neu angelegt, noch kein Zaehlerstand, oder selbst frueher als umbenannt markiert (Modul hat
+     * seinen alten Namen zurueck). Sonst bleiben die eigenen Zaehler - nichts wird ueberschrieben.
+     *
+     * @param {string} id       Objekt-ID des Geraets
+     * @param {object} g        gemerkter Zustand des Geraets
+     * @param {string} modulId  gemeldete Hardware-ID
+     */
+    async modulIdPruefen(id, g, modulId) {
+        g.modulId = modulId;
+        const eigen = await this.getObjectAsync(id);
+        const eigenNative = (eigen && eigen.native) || {};
+        const ohneGeschichte = g.neu || !Object.keys(g.zaehler).length || !!eigenNative.renamedTo;
+
+        // aid -> {name, zaehler, objekt}
+        const frueher = new Map();
+        // Im Speicher: das Modul lief in diesem Lauf schon unter dem alten Namen.
+        for (const [aid, ag] of this.geraete) {
+            if (aid !== id && ag.modulId === modulId) {
+                frueher.set(aid, { name: ag.name, zaehler: ag.zaehler, objekt: false });
+            }
+        }
+        // Im Objektbaum: alter Name aus einem frueheren Lauf. native.modulId gibt es erst nach 0.2.0, davor
+        // steht die ID nur im Datenpunkt info.id.
+        try {
+            for (const geraet of await this.getDevicesAsync()) {
+                const aid = geraet._id.slice(this.namespace.length + 1);
+                const n = geraet.native || {};
+                if (aid === id || n.renamedTo) {
+                    continue;
+                }
+                let gleich = n.modulId === modulId;
+                if (!gleich && !n.modulId) {
+                    const st = await this.getStateAsync(`${aid}.info.id`);
+                    gleich = !!st && st.val === modulId;
+                }
+                if (!gleich) {
+                    continue;
+                }
+                const bekannt = frueher.get(aid);
+                frueher.set(aid, {
+                    name: bekannt ? bekannt.name : n.faikoutName || aid,
+                    // Speicherstand ist aktueller als der zuletzt gesicherte im Objekt.
+                    zaehler: bekannt ? bekannt.zaehler : n.zaehler || null,
+                    objekt: true,
+                });
+            }
+        } catch (e) {
+            this.log.debug(`Device lookup for module ${modulId} skipped: ${e.message}`);
+        }
+
+        let uebernommen = null;
+        for (const [aid, alt] of frueher) {
+            this.geraetVergessen(aid, `module ${modulId} now reports as "${g.name}"`);
+            if (alt.objekt) {
+                await this.extendObject(aid, { native: { modulId, renamedTo: id } });
+            }
+            const hatZaehler = alt.zaehler && Object.keys(alt.zaehler).length;
+            if (ohneGeschichte && hatZaehler && !uebernommen) {
+                g.zaehler = JSON.parse(JSON.stringify(alt.zaehler));
+                uebernommen = alt.name;
+            }
+            const zusatz = uebernommen === alt.name ? 'Consumption counters taken over. ' : '';
+            this.log.info(
+                `"${g.name}": module ${modulId} was known as "${alt.name}" (${this.namespace}.${aid}). ${zusatz}The old objects are no longer updated and can be deleted.`,
+            );
+        }
+
+        const native = { modulId };
+        if (eigenNative.renamedTo) {
+            native.renamedTo = null;
+        }
+        if (uebernommen) {
+            native.zaehler = g.zaehler;
+            g.gesichert = Date.now();
+            g.zaehlerGeaendert = false;
+        }
+        if (eigen && (eigenNative.modulId !== modulId || eigenNative.renamedTo || uebernommen)) {
+            await this.extendObject(id, { native });
+        }
     }
 
     async objektAnlegen(geraetId, def, feld, stateId, einheit = def.unit) {
