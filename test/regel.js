@@ -253,6 +253,8 @@ describe('Regelung: Faehigkeit', () => {
         expect(faehigkeit.bewerten(null, { art: 'status', vollstaendig: true, demand: 70 }).wert).to.equal('ja');
         expect(faehigkeit.bewerten(null, { art: 'status', vollstaendig: true }).wert).to.equal('nein');
         expect(faehigkeit.bewerten(null, { art: 'status', vollstaendig: false }).wert).to.equal('unbekannt');
+        const fehlt = faehigkeit.bewerten(null, { art: 'status', vollstaendig: true });
+        expect(faehigkeit.bewerten(fehlt, { art: 'status', vollstaendig: true, demand: 100 }).wert).to.equal('unbekannt');
     });
 });
 
