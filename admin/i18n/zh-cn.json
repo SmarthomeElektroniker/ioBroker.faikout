@@ -80,5 +80,22 @@
   "colName": "名称 / 主机名",
   "colIp": "IP",
   "colFirmware": "固件 / 硬件",
-  "colStatus": "状态"
+  "colStatus": "状态",
+  "headerBind": "连接模块",
+  "textBind": "将单个模块的 MQTT host 设置为此适配器（模块使用的地址 : 代理端口）。选择模块，点击“检查”，阅读预览，然后点击“连接”。模块会重启，并须在 90 秒内连到这里。“还原”会写回之前的 MQTT host。只更改 MQTT host（如果此适配器设置了用户，还包括 MQTT 用户/密码），不涉及固件和其他设置。",
+  "labelBindIp": "模块（来自搜索）",
+  "helpBindIp": "请先搜索或检查一个地址",
+  "labelBindPass": "模块的设置密码（如已设置）",
+  "helpBindPass": "仅用于本次操作，绝不保存",
+  "btnBindCheck": "检查",
+  "labelBindPreview": "预览",
+  "labelBindOtherOk": "替换其他代理",
+  "helpBindOtherOk": "该模块当前向另一个 MQTT 代理上报，之后将停止",
+  "btnBind": "连接",
+  "confirmBindTitle": "更改模块？",
+  "confirmBindText": "将更改预览中模块的 MQTT host，模块会重启。继续吗？",
+  "btnCancel": "取消",
+  "btnBindBack": "还原",
+  "confirmBackTitle": "还原模块？",
+  "confirmBackText": "将写回“连接”之前读取的 MQTT host，模块会重启。继续吗？"
 }

@@ -80,5 +80,22 @@
   "colName": "Nombre / nombre de host",
   "colIp": "IP",
   "colFirmware": "Firmware / hardware",
-  "colStatus": "Estado"
+  "colStatus": "Estado",
+  "headerBind": "Conectar un módulo",
+  "textBind": "Configura el MQTT host de UN módulo para este adaptador (dirección para los módulos : puerto del broker). Elija el módulo, pulse Comprobar, lea la vista previa y luego Conectar. El módulo se reinicia y debe informar aquí en 90 s. Restaurar vuelve a escribir el MQTT host anterior. Solo se cambia el MQTT host (y el usuario/contraseña MQTT si este adaptador tiene usuario): sin firmware ni otros ajustes.",
+  "labelBindIp": "Módulo (de la búsqueda)",
+  "helpBindIp": "Primero busque o compruebe una dirección",
+  "labelBindPass": "Contraseña de ajustes del módulo (si existe)",
+  "helpBindPass": "Solo se usa para esta acción; nunca se guarda",
+  "btnBindCheck": "Comprobar",
+  "labelBindPreview": "Vista previa",
+  "labelBindOtherOk": "Reemplazar otro broker",
+  "helpBindOtherOk": "El módulo informa actualmente a otro broker MQTT y dejará de hacerlo",
+  "btnBind": "Conectar",
+  "confirmBindTitle": "¿Cambiar el módulo?",
+  "confirmBindText": "Se cambiará el MQTT host del módulo de la vista previa y el módulo se reiniciará. ¿Continuar?",
+  "btnCancel": "Cancelar",
+  "btnBindBack": "Restaurar",
+  "confirmBackTitle": "¿Restaurar el módulo?",
+  "confirmBackText": "Se vuelve a escribir el MQTT host leído antes de Conectar y el módulo se reinicia. ¿Continuar?"
 }

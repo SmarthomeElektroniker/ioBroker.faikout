@@ -80,5 +80,22 @@
   "colName": "Naam / hostnaam",
   "colIp": "IP",
   "colFirmware": "Firmware / hardware",
-  "colStatus": "Status"
+  "colStatus": "Status",
+  "headerBind": "Module koppelen",
+  "textBind": "Zet de MQTT host van ÉÉN module op deze adapter (adres voor modules : brokerpoort). Kies de module, klik op Controleren, lees de voorvertoning en klik dan op Koppelen. De module herstart en moet zich binnen 90 s hier melden. Terugzetten schrijft de vorige MQTT host terug. Alleen de MQTT host wordt gewijzigd (en MQTT-gebruiker/-wachtwoord als deze adapter een gebruiker heeft) - geen firmware, geen andere instellingen.",
+  "labelBindIp": "Module (uit de zoekopdracht)",
+  "helpBindIp": "Eerst zoeken of een adres controleren",
+  "labelBindPass": "Instellingenwachtwoord van de module (indien ingesteld)",
+  "helpBindPass": "Alleen voor deze ene actie - wordt nooit opgeslagen",
+  "btnBindCheck": "Controleren",
+  "labelBindPreview": "Voorvertoning",
+  "labelBindOtherOk": "Andere broker vervangen",
+  "helpBindOtherOk": "De module meldt nu aan een andere MQTT-broker en stopt daarmee",
+  "btnBind": "Koppelen",
+  "confirmBindTitle": "Module wijzigen?",
+  "confirmBindText": "De MQTT host van de module uit de voorvertoning wordt gewijzigd en de module herstart. Doorgaan?",
+  "btnCancel": "Annuleren",
+  "btnBindBack": "Terugzetten",
+  "confirmBackTitle": "Module terugzetten?",
+  "confirmBackText": "De vóór het koppelen gelezen MQTT host wordt teruggeschreven en de module herstart. Doorgaan?"
 }

@@ -80,5 +80,22 @@
   "colName": "Name / host name",
   "colIp": "IP",
   "colFirmware": "Firmware / hardware",
-  "colStatus": "Status"
+  "colStatus": "Status",
+  "headerBind": "Connect a module",
+  "textBind": "Sets the MQTT host of ONE module to this adapter (address for modules : broker port). Choose the module, click Check, read the preview, then Connect. The module restarts and must report here within 90 s. Restore writes the previous MQTT host back. Only the MQTT host is changed (plus MQTT user/password if this adapter has a user) - no firmware, no other settings.",
+  "labelBindIp": "Module (from the search)",
+  "helpBindIp": "Search or check an address first",
+  "labelBindPass": "Settings password of the module (if set)",
+  "helpBindPass": "Used only for this one action - never saved",
+  "btnBindCheck": "Check",
+  "labelBindPreview": "Preview",
+  "labelBindOtherOk": "Replace other broker",
+  "helpBindOtherOk": "The module currently reports to another MQTT broker and will stop doing so",
+  "btnBind": "Connect",
+  "confirmBindTitle": "Change the module?",
+  "confirmBindText": "The MQTT host of the module shown in the preview will be changed and the module restarts. Continue?",
+  "btnCancel": "Cancel",
+  "btnBindBack": "Restore",
+  "confirmBackTitle": "Restore the module?",
+  "confirmBackText": "The MQTT host read before Connect is written back and the module restarts. Continue?"
 }

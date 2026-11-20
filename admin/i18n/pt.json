@@ -80,5 +80,22 @@
   "colName": "Nome / nome de host",
   "colIp": "IP",
   "colFirmware": "Firmware / hardware",
-  "colStatus": "Estado"
+  "colStatus": "Estado",
+  "headerBind": "Ligar um módulo",
+  "textBind": "Define o MQTT host de UM módulo para este adaptador (endereço para módulos : porta do broker). Escolha o módulo, clique em Verificar, leia a pré-visualização e depois Ligar. O módulo reinicia e tem de comunicar aqui em 90 s. Repor volta a escrever o MQTT host anterior. Só o MQTT host é alterado (e utilizador/palavra-passe MQTT, se este adaptador tiver utilizador) - sem firmware nem outras definições.",
+  "labelBindIp": "Módulo (da pesquisa)",
+  "helpBindIp": "Primeiro pesquise ou verifique um endereço",
+  "labelBindPass": "Palavra-passe das definições do módulo (se definida)",
+  "helpBindPass": "Usada só para esta ação - nunca é guardada",
+  "btnBindCheck": "Verificar",
+  "labelBindPreview": "Pré-visualização",
+  "labelBindOtherOk": "Substituir outro broker",
+  "helpBindOtherOk": "O módulo comunica atualmente com outro broker MQTT e deixará de o fazer",
+  "btnBind": "Ligar",
+  "confirmBindTitle": "Alterar o módulo?",
+  "confirmBindText": "O MQTT host do módulo da pré-visualização será alterado e o módulo reinicia. Continuar?",
+  "btnCancel": "Cancelar",
+  "btnBindBack": "Repor",
+  "confirmBackTitle": "Repor o módulo?",
+  "confirmBackText": "O MQTT host lido antes de Ligar é reposto e o módulo reinicia. Continuar?"
 }

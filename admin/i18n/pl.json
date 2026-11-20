@@ -80,5 +80,22 @@
   "colName": "Nazwa / nazwa hosta",
   "colIp": "IP",
   "colFirmware": "Oprogramowanie / sprzęt",
-  "colStatus": "Status"
+  "colStatus": "Status",
+  "headerBind": "Podłącz moduł",
+  "textBind": "Ustawia MQTT host JEDNEGO modułu na ten adapter (adres dla modułów : port brokera). Wybierz moduł, kliknij Sprawdź, przeczytaj podgląd, potem Podłącz. Moduł uruchomi się ponownie i musi zgłosić się tu w ciągu 90 s. Przywróć zapisuje poprzedni MQTT host. Zmieniany jest tylko MQTT host (oraz użytkownik/hasło MQTT, jeśli ten adapter ma użytkownika) - bez oprogramowania i innych ustawień.",
+  "labelBindIp": "Moduł (z wyszukiwania)",
+  "helpBindIp": "Najpierw wyszukaj lub sprawdź adres",
+  "labelBindPass": "Hasło ustawień modułu (jeśli ustawione)",
+  "helpBindPass": "Używane tylko do tej jednej czynności - nigdy nie zapisywane",
+  "btnBindCheck": "Sprawdź",
+  "labelBindPreview": "Podgląd",
+  "labelBindOtherOk": "Zastąp inny broker",
+  "helpBindOtherOk": "Moduł raportuje obecnie do innego brokera MQTT i przestanie to robić",
+  "btnBind": "Podłącz",
+  "confirmBindTitle": "Zmienić moduł?",
+  "confirmBindText": "MQTT host modułu z podglądu zostanie zmieniony, moduł uruchomi się ponownie. Kontynuować?",
+  "btnCancel": "Anuluj",
+  "btnBindBack": "Przywróć",
+  "confirmBackTitle": "Przywrócić moduł?",
+  "confirmBackText": "MQTT host odczytany przed Podłącz zostanie zapisany z powrotem, moduł uruchomi się ponownie. Kontynuować?"
 }

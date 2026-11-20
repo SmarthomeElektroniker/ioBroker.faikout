@@ -803,7 +803,7 @@
                     "command": "mqtthostWert",
                     "copyToClipboard": true,
                     "label": "labelMqtthostValue",
-                    "jsonData": "{\"adresse\":\"${data.moduleAddress}\",\"port\":\"${data.port}\"}",
+                    "jsonData": "{\"adresse\":${JSON.stringify(data.moduleAddress ?? '')},\"port\":${JSON.stringify(data.port ?? '')}}",
                     "alsoDependsOn": [
                         "moduleAddress",
                         "port"
@@ -819,7 +819,7 @@
                     "type": "textSendTo",
                     "container": "html",
                     "command": "anleitung",
-                    "jsonData": "{\"adresse\":\"${data.moduleAddress}\",\"port\":\"${data.port}\",\"user\":\"${data.user}\"}",
+                    "jsonData": "{\"adresse\":${JSON.stringify(data.moduleAddress ?? '')},\"port\":${JSON.stringify(data.port ?? '')},\"user\":${JSON.stringify(data.user ?? '')}}",
                     "alsoDependsOn": [
                         "moduleAddress",
                         "port",
@@ -860,7 +860,7 @@
                     "useNative": true,
                     "showProcess": true,
                     "timeout": 60000,
-                    "jsonData": "{\"adresse\":\"${data.moduleAddress}\"}",
+                    "jsonData": "{\"adresse\":${JSON.stringify(data.moduleAddress ?? '')}}",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -887,7 +887,7 @@
                     "useNative": true,
                     "showProcess": true,
                     "timeout": 15000,
-                    "jsonData": "{\"ziel\":\"${data._target}\",\"adresse\":\"${data.moduleAddress}\"}",
+                    "jsonData": "{\"ziel\":${JSON.stringify(data._target ?? '')},\"adresse\":${JSON.stringify(data.moduleAddress ?? '')}}",
                     "disabled": "!data._target",
                     "xs": 12,
                     "sm": 12,
@@ -938,6 +938,141 @@
                     "md": 12,
                     "lg": 12,
                     "xl": 12
+                },
+                "bindHeader": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerBind",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "bindText": {
+                    "type": "staticText",
+                    "text": "textBind",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_bindIp": {
+                    "type": "selectSendTo",
+                    "command": "modulListe",
+                    "label": "labelBindIp",
+                    "help": "helpBindIp",
+                    "alsoDependsOn": [
+                        "_found"
+                    ],
+                    "noTranslation": true,
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_bindPass": {
+                    "type": "password",
+                    "label": "labelBindPass",
+                    "help": "helpBindPass",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_bindCheck": {
+                    "type": "sendTo",
+                    "command": "anbindenPruefen",
+                    "label": "btnBindCheck",
+                    "variant": "outlined",
+                    "useNative": true,
+                    "showProcess": true,
+                    "timeout": 20000,
+                    "jsonData": "{\"ip\":${JSON.stringify(data._bindIp ?? '')},\"adresse\":${JSON.stringify(data.moduleAddress ?? '')},\"pass\":${JSON.stringify(data._bindPass ?? '')}}",
+                    "disabled": "!data._bindIp || !data.moduleAddress",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_bindPreview": {
+                    "type": "text",
+                    "label": "labelBindPreview",
+                    "readOnly": true,
+                    "minRows": 4,
+                    "maxRows": 8,
+                    "newLine": true,
+                    "hidden": "!data._bindPreview",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_bindOtherOk": {
+                    "type": "checkbox",
+                    "label": "labelBindOtherOk",
+                    "help": "helpBindOtherOk",
+                    "newLine": true,
+                    "hidden": "!data._bindOther || data._bindPlan !== data._bindIp",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_bindDo": {
+                    "type": "sendTo",
+                    "command": "anbinden",
+                    "label": "btnBind",
+                    "variant": "contained",
+                    "useNative": true,
+                    "showProcess": true,
+                    "timeout": 120000,
+                    "jsonData": "{\"ip\":${JSON.stringify(data._bindIp ?? '')},\"pass\":${JSON.stringify(data._bindPass ?? '')},\"andererOk\":${!!data._bindOtherOk}}",
+                    "disabled": "!data._bindPlan || data._bindPlan !== data._bindIp || (data._bindOther && !data._bindOtherOk)",
+                    "confirm": {
+                        "text": "confirmBindText",
+                        "title": "confirmBindTitle",
+                        "ok": "btnBind",
+                        "cancel": "btnCancel",
+                        "type": "warning"
+                    },
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_bindBack": {
+                    "type": "sendTo",
+                    "command": "zurueckstellen",
+                    "label": "btnBindBack",
+                    "variant": "outlined",
+                    "useNative": true,
+                    "showProcess": true,
+                    "timeout": 30000,
+                    "jsonData": "{\"ip\":${JSON.stringify(data._bindIp ?? '')},\"pass\":${JSON.stringify(data._bindPass ?? '')}}",
+                    "disabled": "!data._bindIp",
+                    "confirm": {
+                        "text": "confirmBackText",
+                        "title": "confirmBackTitle",
+                        "ok": "btnBindBack",
+                        "cancel": "btnCancel",
+                        "type": "warning"
+                    },
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
                 }
             }
         },

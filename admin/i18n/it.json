@@ -80,5 +80,22 @@
   "colName": "Nome / nome host",
   "colIp": "IP",
   "colFirmware": "Firmware / hardware",
-  "colStatus": "Stato"
+  "colStatus": "Stato",
+  "headerBind": "Collega un modulo",
+  "textBind": "Imposta il MQTT host di UN modulo su questo adattatore (indirizzo per i moduli : porta del broker). Scegli il modulo, clicca Verifica, leggi l'anteprima, poi Collega. Il modulo si riavvia e deve collegarsi qui entro 90 s. Ripristina riscrive il MQTT host precedente. Viene cambiato solo il MQTT host (e utente/password MQTT se questo adattatore ha un utente) - nessun firmware, nessun'altra impostazione.",
+  "labelBindIp": "Modulo (dalla ricerca)",
+  "helpBindIp": "Prima cerca o verifica un indirizzo",
+  "labelBindPass": "Password delle impostazioni del modulo (se impostata)",
+  "helpBindPass": "Usata solo per questa azione - mai salvata",
+  "btnBindCheck": "Verifica",
+  "labelBindPreview": "Anteprima",
+  "labelBindOtherOk": "Sostituisci altro broker",
+  "helpBindOtherOk": "Il modulo invia attualmente a un altro broker MQTT e smetterà di farlo",
+  "btnBind": "Collega",
+  "confirmBindTitle": "Modificare il modulo?",
+  "confirmBindText": "Il MQTT host del modulo dell'anteprima verrà modificato e il modulo si riavvierà. Continuare?",
+  "btnCancel": "Annulla",
+  "btnBindBack": "Ripristina",
+  "confirmBackTitle": "Ripristinare il modulo?",
+  "confirmBackText": "Il MQTT host letto prima di Collega viene riscritto e il modulo si riavvia. Continuare?"
 }

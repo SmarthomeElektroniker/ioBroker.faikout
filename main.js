@@ -13,6 +13,7 @@ const verbrauch = require('./lib/verbrauch');
 const { FaikoutDeviceManagement } = require('./lib/devicemanager');
 const discovery = require('./lib/discovery');
 const suche = require('./lib/suche');
+const anbinden = require('./lib/anbinden');
 
 /** Topics, die der Adapter auswertet. Alles andere wird still verworfen. */
 const BEKANNTE_ARTEN = new Set(['state', 'info', 'error', 'event']);
@@ -127,6 +128,22 @@ class Faikout extends utils.Adapter {
 
         /** Laeuft gerade eine Suche (Reiter "Module suchen")? Nur eine zur Zeit. */
         this.sucheLaeuft = false;
+
+        /** Letzte Meldung je Modul-Hostname (Topic) - Erfolgskontrolle beim Anbinden. */
+        this.gesehen = new Map();
+
+        /** Module der letzten Suche (ohne Formularwerte) fuer die Auswahl "Modul anbinden". */
+        this.letzteSuche = [];
+
+        /**
+         * Anbinden: Plan aus "Pruefen" und Rueckweg je IP. Nur im Speicher - enthaelt den alten
+         * mqtthost/mqttuser des Moduls, der nie geloggt oder gespeichert wird.
+         */
+        this.anbindenPlaene = new Map();
+        this.rueckwege = new Map();
+
+        /** Laeuft gerade ein Anbinden/Zurueckstellen? Nur eins zur Zeit. */
+        this.anbindenLaeuft = false;
 
         this.broker = null;
         this.stopping = false;
@@ -289,6 +306,7 @@ class Faikout extends utils.Adapter {
         if (!t) {
             return;
         } // command/…, Faikout/… - nicht ausgewertet
+        this.gesehen.set(t.geraet, Date.now());
 
         if (t.art === 'error') {
             const abgelehnt = felder.abgelehntAuswerten(t.unter, text);
@@ -1296,10 +1314,52 @@ class Faikout extends utils.Adapter {
                                 ? `Module check: ${r.fingerprints.length ? 'faikout module answered' : 'no faikout module'}`
                                 : `Module search: ${r.fingerprints.length} faikout module(s) among ${r.kandidaten} mDNS candidate(s)`,
                         );
+                        if (!ziel) {
+                            this.letzteSuche = r.fingerprints.map(f => ({
+                                ip: f.adresse,
+                                name: f.titel || f.hostname || f.adresse,
+                                status: f.status,
+                            }));
+                        } else {
+                            for (const f of r.fingerprints) {
+                                this.letzteSuche = this.letzteSuche.filter(x => x.ip !== f.adresse);
+                                this.letzteSuche.push({
+                                    ip: f.adresse,
+                                    name: f.titel || f.hostname || f.adresse,
+                                    status: f.status,
+                                });
+                            }
+                        }
                         const zeilen = r.zeilen.map(({ code: _c, ...z }) => z);
                         return antworten({ native: { _found: zeilen }, result: r.text });
                     } finally {
                         this.sucheLaeuft = false;
+                    }
+                }
+                case 'modulListe':
+                    // selectSendTo: Module der letzten Suche
+                    return antworten(
+                        this.letzteSuche.map(m => ({
+                            label: `${m.name} (${m.ip})${m.status === 'verbunden' ? ' ✓' : ''}`,
+                            value: m.ip,
+                        })),
+                    );
+                case 'anbindenPruefen':
+                    return antworten(await this.anbindenPruefen(msg));
+                case 'anbinden':
+                case 'zurueckstellen': {
+                    if (this.anbindenLaeuft) {
+                        return antworten({ error: 'Another module is being changed right now' });
+                    }
+                    this.anbindenLaeuft = true;
+                    try {
+                        return antworten(
+                            obj.command === 'anbinden'
+                                ? await this.anbindenAusfuehren(msg)
+                                : await this.zurueckstellen(msg),
+                        );
+                    } finally {
+                        this.anbindenLaeuft = false;
                     }
                 }
                 default:
@@ -1312,6 +1372,213 @@ class Faikout extends utils.Adapter {
             this.log.warn(`${obj.command}: ${e.message}`);
             antworten({ error: e.message });
         }
+    }
+
+    /**
+     * "Pruefen": frischer Fingerprint der gewaehlten IP und Vorschau. Schreibt nichts (bei
+     * Passwortschutz meldet ein POST nur mit `password` an - das speichert nichts).
+     *
+     * @param {Record<string, unknown>} msg Formularwerte (ip, adresse, pass)
+     * @returns {Promise<object>} Antwort fuer den Admin
+     */
+    async anbindenPruefen(msg) {
+        const sprache = await this.sprache();
+        const ip = feldWert(msg.ip);
+        if (!ip) {
+            return { error: anbinden.t('keinPlan', sprache) };
+        }
+        const adresse = feldWert(msg.adresse) || String(this.config.moduleAddress || '').trim();
+        if (!adresse) {
+            return { error: anbinden.t('keineAdresse', sprache) };
+        }
+        const gelesen = await anbinden.lesen(ip, feldWert(msg.pass), { timeoutMs: 3000, timer: this });
+        const fehler = this.anbindenLesefehler(gelesen, ip, sprache);
+        if (fehler) {
+            this.anbindenPlaene.delete(ip);
+            return { error: fehler, native: { _bindPlan: '', _bindPreview: '', _bindOther: false } };
+        }
+        const plan = anbinden.planen(gelesen, this.anbindenZiel(adresse));
+        if (plan.schonHier) {
+            this.anbindenPlaene.delete(ip);
+            const text = anbinden.t('schonHier', sprache, { name: plan.titel });
+            return { result: text, native: { _bindPlan: '', _bindPreview: text, _bindOther: false } };
+        }
+        this.anbindenPlaene.set(ip, plan);
+        this.log.info(`Connect: module "${plan.titel}" (${ip}) checked, waiting for confirmation`);
+        const text = anbinden.vorschau(plan, sprache);
+        return { native: { _bindPlan: ip, _bindPreview: text, _bindOther: plan.anderer, _bindOtherOk: false } };
+    }
+
+    /**
+     * "Anbinden": frischer Fingerprint, Vergleich mit dem Plan, EIN POST, Erfolgskontrolle.
+     *
+     * @param {Record<string, unknown>} msg Formularwerte (ip, pass, andererOk)
+     * @returns {Promise<object>} Antwort fuer den Admin
+     */
+    async anbindenAusfuehren(msg) {
+        const sprache = await this.sprache();
+        const ip = feldWert(msg.ip);
+        const plan = this.anbindenPlaene.get(ip);
+        if (!plan || Date.now() - plan.zeit > anbinden.PLAN_MS) {
+            this.anbindenPlaene.delete(ip);
+            return { error: anbinden.t('keinPlan', sprache) };
+        }
+        if (plan.anderer && !(msg.andererOk === true || msg.andererOk === 'true')) {
+            return { error: anbinden.t('andererNichtBestaetigt', sprache) };
+        }
+        const passwort = feldWert(msg.pass);
+        // Unmittelbar vorher: dieselbe IP frisch lesen und mit dem Plan vergleichen.
+        const gelesen = await anbinden.lesen(ip, passwort, { timeoutMs: 3000, timer: this });
+        const fehler = this.anbindenLesefehler(gelesen, ip, sprache);
+        if (fehler) {
+            return { error: fehler };
+        }
+        const frisch = anbinden.planen(gelesen, {
+            ...this.anbindenZiel(plan.neu.mqtthost.slice(0, plan.neu.mqtthost.lastIndexOf(':'))),
+        });
+        const anders = anbinden.abweichung(plan, frisch);
+        if (anders) {
+            this.anbindenPlaene.delete(ip);
+            return { error: anbinden.t('geaendert', sprache, { was: anders }), native: { _bindPlan: '' } };
+        }
+        this.anbindenPlaene.delete(ip);
+        const benutzer = plan.neu.mqttuser !== undefined;
+        const daten = anbinden.koerper({
+            passwort: plan.geschuetzt ? passwort : undefined,
+            mqtthost: plan.neu.mqtthost,
+            mqttuser: benutzer ? plan.neu.mqttuser : undefined,
+            mqttpass: benutzer ? String(this.config.pass || '') : undefined,
+        });
+        const start = Date.now();
+        this.log.info(`Connect: setting MQTT host of module "${plan.titel}" (${ip}) to this adapter, module restarts`);
+        const r = await anbinden.posten(ip, daten, { timer: this });
+        if (!r.ok) {
+            this.log.warn(`Connect: module "${plan.titel}" (${ip}) rejected the change: ${r.fehler}`);
+            return { error: anbinden.t('modulFehler', sprache, { fehler: r.fehler }), native: { _bindPlan: '' } };
+        }
+        // Rueckweg: alte Werte, nur im Speicher.
+        this.rueckwege.set(ip, {
+            titel: plan.titel,
+            hostname: plan.hostname,
+            revkId: plan.revkId,
+            geschuetzt: plan.geschuetzt,
+            mqtthost: plan.alt.mqtthost,
+            mqttuser: benutzer ? plan.alt.mqttuser : undefined,
+        });
+        const ok = await anbinden.warten(() => this.modulGemeldetSeit(plan.hostname, start), {
+            // wartenMs nur kuerzer als die Vorgabe (Tests/Werkzeuge), nie laenger
+            maxMs: Math.min(Number(msg.wartenMs) > 0 ? Number(msg.wartenMs) : anbinden.ERFOLG_MS, anbinden.ERFOLG_MS),
+            timer: this,
+            abbruch: () => this.stopping,
+        });
+        const s = Math.round((Date.now() - start) / 1000);
+        if (ok) {
+            this.log.info(`Connect: module "${plan.titel}" (${ip}) connected after ${s} s`);
+            const text = anbinden.t('erfolg', sprache, { name: plan.titel, s });
+            return { result: text, native: { _bindPlan: '', _bindPreview: text } };
+        }
+        this.log.warn(`Connect: module "${plan.titel}" (${ip}) did not connect within ${s} s`);
+        const text = anbinden.t('zeitueberschreitung', sprache, { name: plan.titel, s });
+        return { error: text, native: { _bindPlan: '', _bindPreview: text } };
+    }
+
+    /**
+     * "Zurueckstellen": vorher gelesenen alten mqtthost (ggf. mqttuser) zurueckschreiben.
+     *
+     * @param {Record<string, unknown>} msg Formularwerte (ip, pass)
+     * @returns {Promise<object>} Antwort fuer den Admin
+     */
+    async zurueckstellen(msg) {
+        const sprache = await this.sprache();
+        const ip = feldWert(msg.ip);
+        const weg = this.rueckwege.get(ip);
+        if (!weg) {
+            return { error: anbinden.t('keinRueckweg', sprache, { ip: ip || '-' }) };
+        }
+        const passwort = feldWert(msg.pass);
+        // Auch hier: frisch lesen - es muss noch dasselbe Modul sein.
+        const gelesen = await anbinden.lesen(ip, passwort, { timeoutMs: 3000, timer: this });
+        const fehler = this.anbindenLesefehler(gelesen, ip, sprache);
+        if (fehler) {
+            return { error: fehler };
+        }
+        if ((weg.revkId && gelesen.fp.revkId !== weg.revkId) || gelesen.fp.hostname !== weg.hostname) {
+            return { error: anbinden.t('geaendert', sprache, { was: 'revkId/hostname' }) };
+        }
+        const benutzer = weg.mqttuser !== undefined;
+        const daten = anbinden.koerper({
+            passwort: weg.geschuetzt || gelesen.fp.geschuetzt ? passwort : undefined,
+            mqtthost: weg.mqtthost,
+            mqttuser: benutzer ? weg.mqttuser : undefined,
+            // das alte Passwort ist nicht rueckholbar - mqttpass bleibt, wie es ist (Warnung unten)
+        });
+        this.log.info(`Restore: writing the previous MQTT host back to module "${weg.titel}" (${ip}), module restarts`);
+        const r = await anbinden.posten(ip, daten, { timer: this });
+        if (!r.ok) {
+            this.log.warn(`Restore: module "${weg.titel}" (${ip}) rejected the change: ${r.fehler}`);
+            return { error: anbinden.t('modulFehler', sprache, { fehler: r.fehler }) };
+        }
+        this.rueckwege.delete(ip);
+        let text = anbinden.t('zurueck', sprache, {
+            name: weg.titel,
+            alt: weg.mqtthost || anbinden.t('leer', sprache),
+        });
+        if (benutzer) {
+            text += anbinden.t('passwortWarnung', sprache);
+        }
+        return { result: text, native: { _bindPlan: '', _bindPreview: text } };
+    }
+
+    /**
+     * Fehlertext, wenn das gelesene Modul nicht angebunden werden kann.
+     *
+     * @param {{fp: object, fehler?: string}} gelesen Ergebnis von anbinden.lesen()
+     * @param {string} ip Adresse
+     * @param {string} sprache Sprachkuerzel
+     * @returns {string} '' = alles in Ordnung
+     */
+    anbindenLesefehler(gelesen, ip, sprache) {
+        if (gelesen.fehler) {
+            return anbinden.t('modulFehler', sprache, { fehler: gelesen.fehler });
+        }
+        if (gelesen.fp.art === 'weblogin') {
+            return anbinden.t('weblogin', sprache);
+        }
+        if (!gelesen.fp.faikout) {
+            return anbinden.t('keinModul', sprache, { ip });
+        }
+        if (gelesen.fp.art === 'passwort') {
+            return anbinden.t('passwortNoetig', sprache);
+        }
+        return '';
+    }
+
+    /**
+     * Zielwerte fuer anbinden.planen().
+     *
+     * @param {string} adresse Adresse fuer Module
+     * @returns {{adresse: string, port: number, user: string, eigeneAdressen: string[]}} Ziel
+     */
+    anbindenZiel(adresse) {
+        return {
+            adresse,
+            port: Number(this.config.port) || 1888,
+            user: String(this.config.user || ''),
+            eigeneAdressen: this.eigeneAdressen(adresse),
+        };
+    }
+
+    /**
+     * Hat sich das Modul seit `seit` am Broker gemeldet (verbunden UND eine Nachricht geschickt)?
+     *
+     * @param {string} hostname Hostname = Topic des Moduls
+     * @param {number} seit Zeitpunkt (ms)
+     * @returns {boolean} gemeldet
+     */
+    modulGemeldetSeit(hostname, seit) {
+        const zuletzt = this.gesehen.get(hostname) || 0;
+        const clients = [...this.mqttClients].map(c => c.slice(c.indexOf(':') + 1));
+        return zuletzt > seit && clients.some(c => c === hostname || c.startsWith(`${hostname}_`));
     }
 
     /**

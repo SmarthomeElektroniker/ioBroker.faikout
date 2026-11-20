@@ -80,6 +80,18 @@ The tab **Find modules** in the instance settings helps with step 3:
   adapter, set to this adapter but not connected, no MQTT broker set, other MQTT broker, settings
   protected by password, or web login required.
 
+- **Connect a module** sets the MQTT host of ONE module to this adapter: choose the module from
+  the search, click **Check** (fresh read of the module, preview of host name, IP, firmware and
+  MQTT host old → new), then **Connect** and confirm. If the module currently uses another MQTT
+  broker, "Replace other broker" has to be ticked as well. Right before saving the module is read
+  again; if anything changed since the check, nothing is saved. The module gets one POST with
+  `mqtthost=<address>:<port>` (plus MQTT user/password if this adapter has a user) and restarts;
+  it has to report to this adapter within 90 s. **Restore** writes the MQTT host read before
+  back (an old MQTT password cannot be read back - you get a warning if it was changed). A
+  settings password of the module is used for that one action only and never saved. Nothing else
+  is changed: no second broker, no firmware update, no OTA settings, and never several modules
+  at once.
+
 Values from the modules' settings forms (broker, user, passwords) are neither logged nor saved.
 
 ### Running ioBroker in Docker
@@ -173,6 +185,8 @@ one detail page per unit with controls, energy history and a phone view. They us
   address, read-only fingerprint of the module's settings page, status per module (connected,
   no broker, other broker, password protected, web login); new setting "Address for modules" with
   the ready-to-copy MQTT host value.
+- "Connect a module": sets the MQTT host of one module to this adapter after a check and a
+  confirmation, verifies that it reports within 90 s, and can restore the previous MQTT host.
 
 ### 0.2.1 (2026-11-19)
 - `control.swing` / `swingNum`: new value `H+C` (`horizontalComfort`, number 6) for comfort mode with

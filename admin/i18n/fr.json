@@ -80,5 +80,22 @@
   "colName": "Nom / nom d'hôte",
   "colIp": "IP",
   "colFirmware": "Micrologiciel / matériel",
-  "colStatus": "Statut"
+  "colStatus": "Statut",
+  "headerBind": "Connecter un module",
+  "textBind": "Règle le MQTT host d'UN module sur cet adaptateur (adresse pour les modules : port du broker). Choisissez le module, cliquez sur Vérifier, lisez l'aperçu, puis Connecter. Le module redémarre et doit se signaler ici sous 90 s. Restaurer réécrit l'ancien MQTT host. Seul le MQTT host est modifié (ainsi que l'utilisateur/mot de passe MQTT si cet adaptateur a un utilisateur) - pas de micrologiciel, aucun autre réglage.",
+  "labelBindIp": "Module (issu de la recherche)",
+  "helpBindIp": "Recherchez ou vérifiez d'abord une adresse",
+  "labelBindPass": "Mot de passe des réglages du module (si défini)",
+  "helpBindPass": "Utilisé uniquement pour cette action - jamais enregistré",
+  "btnBindCheck": "Vérifier",
+  "labelBindPreview": "Aperçu",
+  "labelBindOtherOk": "Remplacer l'autre broker",
+  "helpBindOtherOk": "Le module se signale actuellement à un autre broker MQTT et cessera de le faire",
+  "btnBind": "Connecter",
+  "confirmBindTitle": "Modifier le module ?",
+  "confirmBindText": "Le MQTT host du module de l'aperçu sera modifié et le module redémarrera. Continuer ?",
+  "btnCancel": "Annuler",
+  "btnBindBack": "Restaurer",
+  "confirmBackTitle": "Restaurer le module ?",
+  "confirmBackText": "Le MQTT host lu avant Connecter est réécrit et le module redémarre. Continuer ?"
 }
