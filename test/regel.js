@@ -357,6 +357,21 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         );
     });
 
+    it('zwei Meldungen gleichzeitig: geschrieben wird erst, wenn die Objekte stehen', async () => {
+        const { a } = aufbau({});
+        const geschrieben = [];
+        const setState = a.setState.bind(a);
+        a.setState = async (id, w) => {
+            if (id.includes('.regel.') && !a.objekte.has(id)) {
+                geschrieben.push(id);
+            }
+            return setState(id, w);
+        };
+        const daten = new Anlage({ name: 'Daikin P' }).status();
+        await Promise.all([a.regelung.meldung('Daikin_P', 'Daikin P', daten), a.regelung.meldung('Daikin_P', 'Daikin P', daten)]);
+        expect(geschrieben).to.eql([]);
+    });
+
     it('legt die Datenpunkte mit Vorgaben an (probelauf true, aktiv aus der Einstellung)', async () => {
         const { a, uhr } = aufbau({});
         await laufen(a, uhr, new Anlage({ name: 'Daikin V' }), 1);
