@@ -57,8 +57,10 @@
     "adminUI": {
       "config": "json"
     },
+    "messagebox": true,
     "supportedMessages": {
-      "deviceManager": true
+      "deviceManager": true,
+      "custom": true
     },
     "dependencies": [
       {
@@ -173,7 +175,8 @@
     "user": "",
     "pass": "",
     "historyRegister": true,
-    "historyInstance": "history.0"
+    "historyInstance": "history.0",
+    "moduleAddress": ""
   },
   "encryptedNative": [
     "pass"

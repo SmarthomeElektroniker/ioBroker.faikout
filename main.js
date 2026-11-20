@@ -11,6 +11,8 @@ const felder = require('./lib/fields');
 const namen = require('./lib/namen');
 const verbrauch = require('./lib/verbrauch');
 const { FaikoutDeviceManagement } = require('./lib/devicemanager');
+const discovery = require('./lib/discovery');
+const suche = require('./lib/suche');
 
 /** Topics, die der Adapter auswertet. Alles andere wird still verworfen. */
 const BEKANNTE_ARTEN = new Set(['state', 'info', 'error', 'event']);
@@ -120,6 +122,12 @@ class Faikout extends utils.Adapter {
         /** Stunde, fuer die die Stundenreihe (hoursJson) zuletzt geschrieben wurde, je stateId. */
         this.reihenStunde = new Map();
 
+        /** Client-IDs der Module, die gerade am Broker haengen ("Faikout:<Hostname>[_<ID-Ende>]"). */
+        this.mqttClients = new Set();
+
+        /** Laeuft gerade eine Suche (Reiter "Module suchen")? Nur eine zur Zeit. */
+        this.sucheLaeuft = false;
+
         this.broker = null;
         this.stopping = false;
         this.stundenTimer = null;
@@ -134,6 +142,8 @@ class Faikout extends utils.Adapter {
         this.on('stateChange', this.onStateChange.bind(this));
         this.on('objectChange', this.onObjectChange.bind(this));
         this.on('unload', this.onUnload.bind(this));
+        // dm:* beantwortet der Device-Manager selbst; hier nur die Befehle der Einstellungsseite.
+        this.on('message', this.onMessage.bind(this));
     }
 
     // ---------------------------------------------------------------- Start
@@ -154,7 +164,14 @@ class Faikout extends utils.Adapter {
             log: this.log,
             timer: this,
             onMessage: (topic, payload) => this.onMqtt(topic, payload),
-            onClient: () => this.verbindungPruefen(),
+            onClient: (clientId, verbunden) => {
+                if (verbunden) {
+                    this.mqttClients.add(String(clientId));
+                } else {
+                    this.mqttClients.delete(String(clientId));
+                }
+                this.verbindungPruefen();
+            },
         });
 
         try {
@@ -164,7 +181,8 @@ class Faikout extends utils.Adapter {
             return;
         }
 
-        this.log.info(`Ready. Configure the faikout modules with MQTT host <ioBroker IP>:${port}.`);
+        const adresse = String(this.config.moduleAddress || '').trim() || '<ioBroker IP>';
+        this.log.info(`Ready. Configure the faikout modules with MQTT host ${adresse}:${port}.`);
         this.subscribeStates('*.control.*');
         // `autoe` liegt im Kanal status, ist aber beschreibbar (Review 11.10.2026: Schreibbefehle
         // darauf gingen bisher ins Leere, weil nur control.* abonniert war).
@@ -1197,6 +1215,152 @@ class Faikout extends utils.Adapter {
         return String(wert);
     }
 
+    // ---------------------------------------------------------------- Module suchen
+
+    /**
+     * Befehle aus den Instanzeinstellungen (Reiter "Module suchen").
+     *
+     * Nur lesend: Gesucht wird einmalig je Klick, nie im Hintergrund. Formularwerte der Module
+     * (Broker, Benutzer) werden nicht geloggt und nicht gespeichert.
+     *
+     * @param {ioBroker.Message} obj Nachricht
+     */
+    async onMessage(obj) {
+        if (!obj || !obj.command || obj.command.startsWith('dm:')) {
+            return;
+        }
+        const antworten = antwort => {
+            if (obj.callback) {
+                this.sendTo(obj.from, obj.command, antwort, obj.callback);
+            }
+        };
+        const msg = obj.message && typeof obj.message === 'object' ? obj.message : {};
+        try {
+            switch (obj.command) {
+                case 'adresseVorschlag': {
+                    // defaultSendTo: Rohwert = Vorbelegung des Felds "Adresse fuer Module"
+                    const vorhanden = feldWert(msg.value) || String(this.config.moduleAddress || '').trim();
+                    return antworten(vorhanden || discovery.adressenErmitteln().vorschlag || null);
+                }
+                case 'adresseHinweis': {
+                    const sprache = await this.sprache();
+                    const a = discovery.adressenErmitteln();
+                    const liste = a.adressen.join(', ') || '-';
+                    return antworten(
+                        a.nurDocker
+                            ? suche.text(suche.ERGEBNIS_TEXTE.dockerHinweis, sprache, { a: liste })
+                            : suche.text(suche.ERGEBNIS_TEXTE.adressenErkannt, sprache, { a: liste }),
+                    );
+                }
+                case 'mqtthostWert': {
+                    const adresse = feldWert(msg.adresse) || String(this.config.moduleAddress || '').trim();
+                    const port = Number(feldWert(msg.port)) || Number(this.config.port) || 1888;
+                    return antworten(adresse ? `${adresse}:${port}` : '');
+                }
+                case 'anleitung': {
+                    const sprache = await this.sprache();
+                    return antworten(
+                        htmlZeilen(
+                            discovery.anleitung({
+                                adresse: feldWert(msg.adresse) || String(this.config.moduleAddress || '').trim(),
+                                port: Number(feldWert(msg.port)) || Number(this.config.port) || 1888,
+                                user: msg.user !== undefined ? feldWert(msg.user) : this.config.user,
+                                sprache: sprache === 'de' ? 'de' : 'en',
+                            }),
+                        ),
+                    );
+                }
+                case 'suchen':
+                case 'adressePruefen': {
+                    const sprache = await this.sprache();
+                    const ziel = obj.command === 'adressePruefen' ? feldWert(msg.ziel) : '';
+                    if (obj.command === 'adressePruefen' && !ziel) {
+                        return antworten({ error: suche.text(suche.ERGEBNIS_TEXTE.adresseFehlt, sprache) });
+                    }
+                    if (this.sucheLaeuft) {
+                        return antworten({ error: 'A search is already running' });
+                    }
+                    this.sucheLaeuft = true;
+                    try {
+                        const r = await suche.suchen({
+                            ziel,
+                            adressen: this.eigeneAdressen(feldWert(msg.adresse)),
+                            port: Number(this.config.port) || 1888,
+                            geraete: this.geraeteFuerSuche(),
+                            sprache,
+                            timer: this,
+                        });
+                        // Im Log nur die Anzahl - keine Adressen von Brokern, keine Formularwerte.
+                        this.log.info(
+                            ziel
+                                ? `Module check: ${r.fingerprints.length ? 'faikout module answered' : 'no faikout module'}`
+                                : `Module search: ${r.fingerprints.length} faikout module(s) among ${r.kandidaten} mDNS candidate(s)`,
+                        );
+                        const zeilen = r.zeilen.map(({ code: _c, ...z }) => z);
+                        return antworten({ native: { _found: zeilen }, result: r.text });
+                    } finally {
+                        this.sucheLaeuft = false;
+                    }
+                }
+                default:
+                    // Unbekanntes bleibt unbeantwortet (wie bisher), damit fremde Absender nicht haengen
+                    // bleiben, sondern in ihr eigenes Zeitlimit laufen.
+                    this.log.debug(`Unknown message "${obj.command}" ignored`);
+                    return;
+            }
+        } catch (e) {
+            this.log.warn(`${obj.command}: ${e.message}`);
+            antworten({ error: e.message });
+        }
+    }
+
+    /**
+     * Sprache der ioBroker-Installation (system.config), Rueckfall Englisch.
+     *
+     * @returns {Promise<string>} Sprachkuerzel
+     */
+    async sprache() {
+        try {
+            const cfg = await this.getForeignObjectAsync('system.config');
+            return (cfg && cfg.common && cfg.common.language) || 'en';
+        } catch {
+            return 'en';
+        }
+    }
+
+    /**
+     * Adressen, unter denen die Module diesen Broker erreichen koennen: eingetragene "Adresse fuer
+     * Module" (auch der ungespeicherte Wert aus dem Formular) und alle eigenen IPv4-Adressen.
+     *
+     * @param {string} [formular] ungespeicherter Wert aus dem Formular
+     * @returns {string[]} Adressen
+     */
+    eigeneAdressen(formular) {
+        const liste = [formular, this.config.moduleAddress, ...discovery.adressenErmitteln().adressen]
+            .map(a =>
+                String(a || '')
+                    .trim()
+                    .toLowerCase(),
+            )
+            .filter(Boolean);
+        return [...new Set(liste)];
+    }
+
+    /**
+     * Geraete dieses Adapters fuer den Abgleich der Suchergebnisse.
+     *
+     * @returns {Array<{name: string, modulId: string|null, verbunden: boolean}>} Geraete
+     */
+    geraeteFuerSuche() {
+        const clients = [...this.mqttClients].map(c => c.slice(c.indexOf(':') + 1));
+        return [...this.geraete.values()].map(g => ({
+            name: g.name,
+            modulId: g.modulId,
+            // Client-ID der Module: "<App>:<Hostname>" oder "<App>:<Hostname>_<Ende der ID>"
+            verbunden: clients.some(c => c === g.name || c.startsWith(`${g.name}_`)),
+        }));
+    }
+
     // ---------------------------------------------------------------- Ende
 
     async onUnload(callback) {
@@ -1218,6 +1382,31 @@ class Faikout extends utils.Adapter {
         }
         callback();
     }
+}
+
+/**
+ * Mehrzeiligen Text sicher als HTML ausgeben (Werte stammen aus dem Formular).
+ *
+ * @param {string} text Text mit Zeilenumbruechen
+ * @returns {string} HTML
+ */
+function htmlZeilen(text) {
+    const maskiert = String(text).replace(
+        /[&<>"']/g,
+        c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+    );
+    return maskiert.split('\n').join('<br>');
+}
+
+/**
+ * Wert aus jsonData des Admins: unaufgeloeste Platzhalter ("${data.x}") zaehlen als leer.
+ *
+ * @param {unknown} v Wert
+ * @returns {string} bereinigter Text
+ */
+function feldWert(v) {
+    const s = v === undefined || v === null ? '' : String(v).trim();
+    return s.includes('${') || s === 'undefined' || s === 'null' ? '' : s;
 }
 
 if (require.main !== module) {

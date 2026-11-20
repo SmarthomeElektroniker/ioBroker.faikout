@@ -40,7 +40,14 @@ class Attrappe {
         this.log = { debug: leer, info: leer, warn: m => this.warnungen.push(m), error: m => this.warnungen.push(m) };
     }
     on(ereignis, f) {
-        this.lauscher[ereignis] = f;
+        // wie EventEmitter: alle Lauscher bekommen das Ereignis (Device-Manager und main.js fuer 'message')
+        const vorher = this.lauscher[ereignis];
+        this.lauscher[ereignis] = vorher
+            ? (...args) => {
+                  vorher(...args);
+                  return f(...args);
+              }
+            : f;
     }
     rel(id) {
         return id.startsWith(`${this.namespace}.`) ? id.slice(this.namespace.length + 1) : id;
@@ -166,9 +173,9 @@ describe('Device-Manager: Instanz', () => {
         expect(a.lauscher.message).to.be.a('function');
     });
 
-    it('io-package meldet supportedMessages.deviceManager', () => {
+    it('io-package meldet supportedMessages.deviceManager (und custom fuer "Module suchen")', () => {
         const io = require('../io-package.json');
-        expect(io.common.supportedMessages).to.eql({ deviceManager: true });
+        expect(io.common.supportedMessages).to.eql({ deviceManager: true, custom: true });
     });
 });
 
@@ -673,7 +680,7 @@ describe('Device-Manager: Weg ueber sendTo wie aus dem Admin', () => {
         expect(a.warnungen).to.eql([]);
     });
 
-    it('fremde Nachrichten (ohne dm:) bleiben unbeantwortet', async () => {
+    it('unbekannte Nachrichten (ohne dm:) bleiben unbeantwortet', async () => {
         const a = await adapterMitGeraet();
         nachricht(a, 'getIrgendwas', {}, 4);
         await warte();

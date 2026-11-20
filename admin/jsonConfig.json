@@ -738,6 +738,209 @@
                 }
             }
         },
+        "tabSearch": {
+            "type": "panel",
+            "label": "tabSearch",
+            "items": {
+                "searchHeaderAddress": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerSearchAddress",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "searchTextAddress": {
+                    "type": "staticText",
+                    "text": "textSearchAddress",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "moduleAddress": {
+                    "type": "text",
+                    "label": "labelModuleAddress",
+                    "help": "helpModuleAddress",
+                    "defaultSendTo": "adresseVorschlag",
+                    "validator": "!!(data.moduleAddress && data.moduleAddress.trim())",
+                    "validatorErrorText": "errorModuleAddress",
+                    "validatorNoSaveOnError": false,
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_addressHint": {
+                    "type": "textSendTo",
+                    "container": "div",
+                    "command": "adresseHinweis",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 8,
+                    "xl": 8
+                },
+                "searchHeaderInstructions": {
+                    "type": "header",
+                    "size": 5,
+                    "text": "headerSearchInstructions",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_mqtthostValue": {
+                    "type": "textSendTo",
+                    "container": "text",
+                    "command": "mqtthostWert",
+                    "copyToClipboard": true,
+                    "label": "labelMqtthostValue",
+                    "jsonData": "{\"adresse\":\"${data.moduleAddress}\",\"port\":\"${data.port}\"}",
+                    "alsoDependsOn": [
+                        "moduleAddress",
+                        "port"
+                    ],
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_instructions": {
+                    "type": "textSendTo",
+                    "container": "html",
+                    "command": "anleitung",
+                    "jsonData": "{\"adresse\":\"${data.moduleAddress}\",\"port\":\"${data.port}\",\"user\":\"${data.user}\"}",
+                    "alsoDependsOn": [
+                        "moduleAddress",
+                        "port",
+                        "user"
+                    ],
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "newLine": true
+                },
+                "searchHeader": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerSearch",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "searchText": {
+                    "type": "staticText",
+                    "text": "textSearch",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_search": {
+                    "type": "sendTo",
+                    "command": "suchen",
+                    "label": "btnSearch",
+                    "variant": "contained",
+                    "useNative": true,
+                    "showProcess": true,
+                    "timeout": 60000,
+                    "jsonData": "{\"adresse\":\"${data.moduleAddress}\"}",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_target": {
+                    "type": "text",
+                    "label": "labelSearchTarget",
+                    "help": "helpSearchTarget",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_check": {
+                    "type": "sendTo",
+                    "command": "adressePruefen",
+                    "label": "btnCheckTarget",
+                    "variant": "outlined",
+                    "useNative": true,
+                    "showProcess": true,
+                    "timeout": 15000,
+                    "jsonData": "{\"ziel\":\"${data._target}\",\"adresse\":\"${data.moduleAddress}\"}",
+                    "disabled": "!data._target",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_found": {
+                    "type": "table",
+                    "label": "labelFound",
+                    "noDelete": true,
+                    "newLine": true,
+                    "doNotSave": true,
+                    "items": [
+                        {
+                            "type": "text",
+                            "attr": "name",
+                            "title": "colName",
+                            "readOnly": true,
+                            "width": "25%",
+                            "filter": false,
+                            "sort": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "ip",
+                            "title": "colIp",
+                            "readOnly": true,
+                            "width": "15%"
+                        },
+                        {
+                            "type": "text",
+                            "attr": "firmware",
+                            "title": "colFirmware",
+                            "readOnly": true,
+                            "width": "25%"
+                        },
+                        {
+                            "type": "text",
+                            "attr": "status",
+                            "title": "colStatus",
+                            "readOnly": true,
+                            "width": "35%"
+                        }
+                    ],
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                }
+            }
+        },
         "tabHelp": {
             "type": "panel",
             "label": "tabHelp",

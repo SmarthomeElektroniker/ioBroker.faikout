@@ -59,6 +59,28 @@ Objects are grouped per device:
    connections, which is the usual case inside a home network.
 3. Open the web interface of each faikout module, go to **Settings → Basic** and set
    **MQTT host** to `<ioBroker IP>:<port>`. The module reconnects on its own.
+   The tab **Find modules** shows the exact value to copy (see below).
+
+### Find modules
+
+The tab **Find modules** in the instance settings helps with step 3:
+
+- **Address for modules** is the address under which the modules reach this ioBroker. It is
+  pre-filled from the network interfaces of the host. If only Docker addresses (172.16.0.0/12)
+  are found, enter the address of the Docker host yourself. Below it the ready-to-copy value
+  for **MQTT host** (`address:port`) is shown.
+- **Search** asks once via mDNS for `_http._tcp` (every faikout module announces its web interface
+  there) and reads the settings page `/revk-settings` of every candidate - read only, with a 2 s
+  timeout and at most 4 requests at a time. Nothing is changed on the modules, and there is no
+  background or scheduled search. Answers repeated by an mDNS reflector (e.g. a UniFi gateway)
+  are attributed to the address in the A record, not to the reflector.
+- **Check address** reads the settings page of one IP address or host name - useful in Docker
+  (bridge network), where mDNS does not reach the modules. There is no range scan.
+- The result lists name / host name, IP, firmware / hardware and the status: connected to this
+  adapter, set to this adapter but not connected, no MQTT broker set, other MQTT broker, settings
+  protected by password, or web login required.
+
+Values from the modules' settings forms (broker, user, passwords) are neither logged nor saved.
 
 ### Running ioBroker in Docker
 
@@ -146,6 +168,12 @@ one detail page per unit with controls, energy history and a phone view. They us
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- New tab "Find modules" in the instance settings: one-off mDNS search or check of a single
+  address, read-only fingerprint of the module's settings page, status per module (connected,
+  no broker, other broker, password protected, web login); new setting "Address for modules" with
+  the ready-to-copy MQTT host value.
+
 ### 0.2.1 (2026-11-19)
 - `control.swing` / `swingNum`: new value `H+C` (`horizontalComfort`, number 6) for comfort mode with
   horizontal swing. Comfort is a mode of the vertical louvres; the swing selector (e.g. in Lovelace) can now
