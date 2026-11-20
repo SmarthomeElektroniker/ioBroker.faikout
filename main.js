@@ -331,6 +331,15 @@ class Faikout extends utils.Adapter {
             const abgelehnt = felder.abgelehntAuswerten(t.unter, text);
             if (abgelehnt) {
                 this.einstellungAbgelehnt(t.geraet, abgelehnt).catch(e => this.log.warn(`${t.geraet}: ${e.message}`));
+            } else if (
+                t.unter === 'temp' &&
+                /"description"\s*:\s*"Unknown"/.test(text) &&
+                this.regelung &&
+                this.regelung.autoAn(this.geraetId(t.geraet))
+            ) {
+                // Firmware-Eigenheit: Bei eingeschaltetem Faikout-Auto legt `command/<Name>/temp` das
+                // Ziel als autot ab und meldet trotzdem "Unknown" - der Befehl hat gewirkt.
+                this.log.debug(`${t.geraet}: temp stored as auto target (module reports "Unknown" - harmless)`);
             } else {
                 // Der Unterpfad sagt, WAS schiefging (comms, unsupported, ...) - bis 0.0.18 fehlte er.
                 this.log.warn(`${t.geraet}: ${t.unter ? `${t.unter}: ` : ''}${text}`);
@@ -369,6 +378,9 @@ class Faikout extends utils.Adapter {
         } else if (t.art === 'state' && t.unter === 'status') {
             // Aus der nativen Meldung nur die Betriebsart einer AUSGESCHALTETEN Anlage - der Rest
             // steht schon in state/<Name>.
+            if (this.regelung) {
+                this.regelung.nativ(this.geraetId(t.geraet), daten);
+            }
             const gewaehlt = felder.gewaehlteBetriebsart(daten, true);
             if (gewaehlt) {
                 this.werteUebernehmen(t.geraet, { selectedMode: gewaehlt }).catch(e =>
@@ -1252,6 +1264,9 @@ class Faikout extends utils.Adapter {
         } else {
             nutzlast = this.nutzlast(feld, state.val);
         }
+        if (suffix === 'temp' && this.regelung) {
+            this.regelung.zielGesetzt(geraetId, state.val);
+        }
         const ok = await this.broker.publish(topic, nutzlast);
         if (ok) {
             this.log.debug(`-> ${topic} = ${nutzlast}`);
@@ -1289,6 +1304,9 @@ class Faikout extends utils.Adapter {
         if (!obj || !obj.command || obj.command.startsWith('dm:')) {
             return;
         }
+        if (await require('./lib/oberflaeche').nachricht(this, obj)) {
+            return;
+        } // Oberflaeche der Regelung
         const antworten = antwort => {
             if (obj.callback) {
                 this.sendTo(obj.from, obj.command, antwort, obj.callback);

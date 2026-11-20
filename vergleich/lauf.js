@@ -367,13 +367,17 @@ async function lauf(o) {
         await adapter.setForeignStateAsync(id, { val, ack: false });
         await uhr.ruhe(6);
     };
-    const fremdQuelle = new kern.Adapter({ name: 'sim' }); // schreibt die "externen Fuehler" (zaehlt nicht mit)
+    let fremdQuelle = null; // schreibt die "externen Fuehler" (zaehlt nicht mit)
     const schritt = async sek => {
         for (let i = 0; i < sek; i++) {
             welt.vor(1000);
             await uhr.vor(1000);
             if (extern && Math.round(uhr.t / 1000) % 60 === 0) {
                 const vorher = { ...bestand.zaehler };
+                if (!fremdQuelle) {
+                    kern.vorbereiten(bestand, optionen);
+                    fremdQuelle = new kern.Adapter({ name: 'sim' });
+                }
                 for (const [n, w] of fuehlerStand) {
                     for (const [f, v] of Object.entries(w)) {
                         await fremdQuelle.setForeignStateAsync(`sim.0.${n}.${f}`, { val: v, ack: true });

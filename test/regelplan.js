@@ -682,12 +682,12 @@ describe('Regelung: Koordinator (Vorrang)', () => {
     it('control: nur bei fremdem Raumfuehler, immer vollstaendig; BLE ohne env; Faikout-Auto nur env', () => {
         expect(koordinator.koordinieren(eingang(), k, null, T).control).to.equal(null);
         const dp = eingang({ fuehler: { aussen: m(5), raum: m(20.4, 'dp'), feuchte: m(50) } });
-        expect(koordinator.koordinieren(dp, k, null, T).control).to.eql({ env: 20.4, target: [20.5, 21.5] });
+        expect(koordinator.koordinieren(dp, k, null, T).control).to.eql({ env: 20.4, target: [21, 22] });
         const ble = eingang({
             status: { power: true, mode: 'heat', target: 21, fan: 'auto', ble: true },
             fuehler: { aussen: m(5), raum: m(20.4, 'ble'), feuchte: m(50) },
         });
-        expect(koordinator.koordinieren(ble, k, null, T).control).to.eql({ target: [20.5, 21.5] });
+        expect(koordinator.koordinieren(ble, k, null, T).control).to.eql({ target: [21, 22] });
         const auto = koordinator.koordinieren(
             { ...dp, status: { ...dp.status, autoe: true, autor: 1 } },
             { ...k, betrieb: 'faikout' },
@@ -703,8 +703,26 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         expect(koordinator.koordinieren(trocken, k, null, T).control).to.equal(null);
     });
 
+    it('Zielband ohne Plan: der vom Modul nachgefuehrte Anlagen-Sollwert schaukelt das Band nicht hoch', () => {
+        const ohnePlan = ueber =>
+            eingang({
+                schalter: { plan: false, feuchte: false, bedarf: true },
+                szene: null,
+                fuehler: { aussen: m(5), raum: m(20.4, 'dp'), feuchte: m(50) },
+                ...ueber,
+            });
+        let r = koordinator.koordinieren(ohnePlan(), k, null, T);
+        expect(r.control.target).to.eql([21, 22]);
+        // das Modul stellt die Anlage auf 27,5 - das Band bleibt bei 21
+        for (let i = 1; i <= 30; i++) {
+            const st = { power: true, mode: 'heat', target: i % 2 ? 27.5 : 16, fan: 'auto', demand: 100 };
+            r = koordinator.koordinieren(ohnePlan({ status: st }), k, r.zustand, T + i * 60000);
+            expect(r.control.target).to.eql([21, 22]);
+        }
+    });
+
     it('control-Takt: sofort, bei Aenderung fruehestens nach 2 min, spaetestens nach 5 min', () => {
-        const c = { env: 20.4, target: [20.5, 21.5] };
+        const c = { env: 20.4, target: [21, 22] };
         const letzte = { text: JSON.stringify(c), zeit: T };
         expect(koordinator.controlFaellig(c, null, T)).to.equal(true);
         expect(koordinator.controlFaellig(c, letzte, T + 4 * 60000)).to.equal(false);
@@ -837,7 +855,7 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         expect(ctl.length).to.be.within(5, 11);
         for (const c of ctl) {
             expect(c).to.have.all.keys('env', 'target');
-            expect(c.target).to.eql([20.5, 21.5]);
+            expect(c.target).to.eql([21, 22]);
         }
         expect(a.wert('Plan_G.regel.fuehler.raumQuelle')).to.equal('Datenpunkt');
         // Fuehler friert ein: Rueckfall auf den Fuehler der Anlage, control hoert auf
@@ -886,7 +904,7 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 6);
         expect(a.wert('Plan_I.regel.fuehler.raumQuelle')).to.equal('BLE-Fühler am Modul');
         expect(a.wert('Plan_I.regel.fuehler.raum')).to.equal(20.8);
-        expect(themen(anlage, 'control').map(n => JSON.parse(n))[0]).to.eql({ target: [20.5, 21.5] });
+        expect(themen(anlage, 'control').map(n => JSON.parse(n))[0]).to.eql({ target: [21, 22] });
         anlage.ble = null;
         await laufen(a, uhr, anlage, 3);
         expect(a.wert('Plan_I.regel.fuehler.raumQuelle')).to.equal('Fühler der Anlage');
