@@ -20,6 +20,8 @@ const SZENARIEN = [
     { name: 'heizenKalterTag', fuehler: 'extern' },
     { name: 'uebergang' },
     { name: 'uebergang', fuehler: 'extern' },
+    { name: 'uebergang', fuehler: 'traege', mischen: 30 },
+    { name: 'heizenKalterTag', fuehler: 'traege', mischen: 30 },
     { name: 'sonneAufAussenfuehler' },
     { name: 'fuehlerFriertEin' },
     { name: 'fuehlerNichtNumerisch' },
@@ -51,7 +53,7 @@ for (const s of SZENARIEN) {
         continue;
     }
     for (const v of varianten) {
-        const kennung = `${s.name}${s.fuehler ? '-extern' : ''}__${v.art === 'fremd' ? 'fremd' : `eigen-${v.variante}`}`;
+        const kennung = `${s.name}${s.fuehler ? `-${s.fuehler}` : ''}__${v.art === 'fremd' ? 'fremd' : `eigen-${v.variante}`}`;
         const a = [
             path.join(__dirname, 'lauf.js'),
             '--art',
@@ -77,6 +79,9 @@ for (const s of SZENARIEN) {
             '--mess',
             path.join(aus, `${kennung}.jsonl`),
         ];
+        if (s.mischen) {
+            a.push('--mischen', String(s.mischen));
+        }
         if (s.minuten) {
             a.push('--minuten', String(s.minuten));
         }
