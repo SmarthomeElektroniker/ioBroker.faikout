@@ -80,10 +80,39 @@ class Anlage {
         this.verbunden = true;
         this.nimmtDemand = opt.nimmtDemand || 'immer';
         this.fehler = []; // failed-set-Meldungen
+        this.fan = opt.fan ?? 'auto';
+        this.hum = opt.hum;
+        this.ble = opt.ble || null; // {temp, hum}
+        this.autoe = opt.autoe;
+        this.lehntAb = opt.lehntAb || []; // Felder, die die Anlage nie uebernimmt
+        this.befehle = []; // Mitschnitt aller Befehle
+        this.control = null;
     }
     /** Antwort auf command/<Name>/demand - wie Firmware + Anlage. */
     befehl(topic, nutzlast) {
-        if (topic !== `command/${this.name}/demand` || !this.verbunden) {
+        if (!this.verbunden || !topic.startsWith(`command/${this.name}/`)) {
+            return;
+        }
+        this.befehle.push({ topic, nutzlast });
+        const feld = topic.slice(`command/${this.name}/`.length);
+        if (feld !== 'demand') {
+            // Firmware: mode schaltet zugleich ein (off = aus); temp setzt den Sollwert
+            if (this.lehntAb.includes(feld)) {
+                this.fehler.push({ [feld]: nutzlast });
+            } else if (feld === 'power') {
+                this.power = nutzlast === 'true';
+            } else if (feld === 'mode') {
+                this.power = nutzlast !== 'off';
+                if (this.power) {
+                    this.mode = nutzlast;
+                }
+            } else if (feld === 'temp') {
+                this.target = Number(nutzlast);
+            } else if (feld === 'fan') {
+                this.fan = nutzlast;
+            } else if (feld === 'control') {
+                this.control = JSON.parse(nutzlast);
+            }
             return;
         }
         const w = Number(nutzlast);
@@ -97,7 +126,20 @@ class Anlage {
     /** Statusmeldung im Klartextformat (state/<Name>). */
     status() {
         const comp = this.power && this.mode !== 'fan_only' ? Math.round(20 + (this.demand / 100) * 40) : 0;
+        const zusatz = {};
+        if (this.hum !== undefined) {
+            zusatz.hum = this.hum;
+        }
+        if (this.ble) {
+            zusatz.bletemp = this.ble.temp;
+            zusatz.blehum = this.ble.hum;
+        }
+        if (this.autoe !== undefined) {
+            zusatz.autoe = this.autoe;
+        }
         return {
+            ...zusatz,
+            fan: this.fan,
             power: this.power,
             mode: this.power ? this.mode : 'off',
             target: this.target,

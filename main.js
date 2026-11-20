@@ -212,8 +212,13 @@ class Faikout extends utils.Adapter {
         // darauf gingen bisher ins Leere, weil nur control.* abonniert war).
         this.subscribeStates('*.status.autoe');
         // Schalter der Bedarfsregelung - laufen NICHT ueber den Befehlsweg ans Modul.
-        this.subscribeStates('*.regel.bedarf.aktiv');
-        this.subscribeStates('*.regel.bedarf.probelauf');
+        this.subscribeStates('*.regel.*');
+        // Zeittakt der Regelung: Schaltpunkte des Wochenplans, Ablauf von Sperren, Fuehleralter.
+        this.regelTakt = this.setInterval(() => {
+            if (this.regelung) {
+                this.regelung.takt().catch(e => this.log.warn(`Climate control: ${e.message}`));
+            }
+        }, 30000);
         this.stundenTaktStarten();
     }
 
@@ -1189,11 +1194,10 @@ class Faikout extends utils.Adapter {
         } // nur eigene Befehle, nicht die eigenen Rueckmeldungen
 
         // Schalter der Bedarfsregelung: nie ein Befehl ans Modul.
-        const regelTeil = `.regel.bedarf.`;
-        if (id.includes(regelTeil)) {
-            const teileR = id.split('.');
+        const teileR = id.split('.');
+        if (teileR[3] === 'regel') {
             if (this.regelung) {
-                await this.regelung.schalter(teileR[2], teileR[teileR.length - 1], state.val);
+                await this.regelung.schalter(teileR[2], teileR.slice(4).join('.'), state.val);
             }
             return;
         }
@@ -1671,6 +1675,13 @@ class Faikout extends utils.Adapter {
         try {
             if (this.stundenTimer) {
                 this.clearTimeout(this.stundenTimer);
+            }
+            if (this.regelTakt) {
+                this.clearInterval(this.regelTakt);
+            }
+            // Zustand der Regelung sichern (Sperren, Haltezeiten, laufender Feuchteeingriff).
+            if (this.regelung) {
+                await this.regelung.sichernAlle();
             }
             // Zaehlerstaende sichern, damit nach dem Neustart weitergezaehlt wird.
             for (const [id, g] of this.geraete) {

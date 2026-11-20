@@ -260,7 +260,7 @@ describe('Regelung: Faehigkeit', () => {
 
 describe('Regelung: Zustand und Einstellungen', () => {
     it('liest Unsinn als leeren Zustand und bewahrt einen gueltigen', () => {
-        expect(zustand.lesen('{kaputt').v).to.equal(1);
+        expect(zustand.lesen('{kaputt').v).to.equal(zustand.VERSION);
         expect(zustand.lesen('{"v":99}').bedarf.aussenVerlauf).to.eql([]);
         const z = zustand.leer();
         z.bedarf.aussenVerlauf = [[T0, 3]];
@@ -343,6 +343,7 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         const { a, uhr } = aufbau({ regelAktiv: true });
         const anlage = new Anlage({ name: 'Daikin N', outside: 0 });
         await laufen(a, uhr, anlage, 20);
+        await a.regelung.sichernAlle(); // wie beim Beenden des Adapters
         const gespeichert = a.wert('Daikin_N.regel.bedarf.zustandJson');
         expect(JSON.parse(gespeichert).bedarf.aussenVerlauf.length).to.be.at.least(15);
         // neuer Adapter, gleiche Datenbank
