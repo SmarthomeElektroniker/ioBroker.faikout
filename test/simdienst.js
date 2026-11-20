@@ -177,7 +177,7 @@ describe('Simulator: Physik', () => {
         p.schritt(60);
         const vorher = p.messwerte().outside;
         p.einfluss.fuehlerZusatz = 12;
-        expect(p.messwerte().outside).to.equal(vorher + 12);
+        expect(p.messwerte().outside).to.be.closeTo(vorher + 12, 0.11);
         expect(p.aussen()).to.be.within(-1, 1);
         p.einfluss.fuehlerZusatz = 0;
         p.einfrieren('home', true);
@@ -208,17 +208,7 @@ describe('Simulator: Modul-Protokoll', () => {
             fan: 'auto',
         });
         expect(z.ts).to.match(/^2027-01-15T06:00:0\dZ$/);
-        expect(z).to.include.keys(
-            'temp',
-            'achome',
-            'inlet',
-            'outside',
-            'liquid',
-            'comp',
-            'consumption',
-            'energy',
-            'action',
-        );
+        expect(z).to.include.keys('temp', 'achome', 'outside', 'liquid', 'comp', 'consumption', 'energy', 'action');
         expect(s.raus.find(x => x.topic === 'state/sim-test').retain).to.equal(true);
         // Schreibweise wie die Firmware: %.2f im Klartext, %.1f nativ
         expect(s.raus.filter(x => x.topic === 'state/sim-test').pop().payload).to.match(
@@ -557,13 +547,56 @@ describe('Simulator: Modul-Protokoll', () => {
                 raum.push(s.physik.luft);
             }
         }
-        expect(Math.min(...raum)).to.be.above(19.8);
+        expect(Math.min(...raum)).to.be.above(19.5); // Regelpunkt 20,5, Einbruch beim Abtauen
         expect(Math.max(...raum)).to.be.below(22.5);
         expect(Math.max(...ziele)).to.be.at.least(26); // heatover
         expect(Math.min(...ziele)).to.be.at.most(16); // heatback, begrenzt auf tmin
         expect(s.letzte('state/sim-test')).to.include({ mode: 'heat_cool', target: 21 });
         expect(s.anzahl('info/sim-test/automation')).to.be.at.least(15);
         expect(s.modul.zaehler.flash).to.equal(0);
+    });
+});
+
+describe('Simulator: Faikout-Auto bei Frost', function () {
+    this.timeout(10000);
+    const lauf = physikOpt => {
+        const s = aufbau('s21', {
+            einstellungen: { autoe: true, autot: 21, autor: 0.5 },
+            physik: { raum: 18, aussenMittel: -4, aussenHub: 0, ...physikOpt },
+        });
+        s.start();
+        let imBand = null;
+        const raum = [];
+        for (let i = 0; i < 4 * 3600; i++) {
+            s.tick(1);
+            if (imBand === null && s.physik.luft >= 20.3) {
+                imBand = i / 60;
+            }
+            if (i >= 2 * 3600 && !s.physik.abtauen) {
+                raum.push(s.physik.luft);
+            }
+        }
+        return { s, imBand, mittel: raum.reduce((a, b) => a + b, 0) / raum.length };
+    };
+
+    it('erreicht bei -4 Grad aussen binnen 60 min den Regelpunkt (untere Bandkante) und taktet nicht', () => {
+        // Die Firmware heizt, bis der (vorhergesagte) Raumwert `min` + pushtemp erreicht (Z. 4201, 4460):
+        // geregelt wird beim Heizen auf die UNTERE Bandkante 20,5/20,6, nicht auf die Bandmitte.
+        const { s, imBand, mittel } = lauf({});
+        expect(imBand).to.be.a('number');
+        expect(imBand).to.be.below(60);
+        expect(mittel).to.be.within(20.2, 21);
+        expect(s.physik.starts).to.be.at.most(3); // 4 h: kein Takten
+        expect(s.letzte('state/sim-test')).to.not.have.any.keys('inlet'); // S21 kennt kein inlet
+    });
+
+    it('grober 0,5-K-Fuehler und sofort abschaltende Anlage: die Vorhersage der Firmware laesst die Anlage takten', () => {
+        // Faikout.c Z. 4180-4195: ein Sprung von 0,5 K in 30 s wird mit tpredictt/tpredicts = 4 zu +1 K
+        // hochgerechnet -> "am Ziel" -> Sollwert der Anlage auf 16 -> Verdichter aus, 3 min Sperrzeit.
+        // Beide Annahmen (0,1-K-Fuehler, 120 s Abschaltverzoegerung) entscheiden also ueber das Ergebnis.
+        const { s, mittel } = lauf({ fuehlerAufloesung: 0.5, ausVerzoegerung: 0 });
+        expect(s.physik.starts).to.be.at.least(12);
+        expect(mittel).to.be.below(20.3);
     });
 });
 

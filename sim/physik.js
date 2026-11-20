@@ -48,7 +48,6 @@ function saettigung(t) {
 }
 
 const grenze = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
-const halbe = x => Math.round(x * 2) / 2;
 
 const VORGABE = {
     // Raum
@@ -76,9 +75,17 @@ const VORGABE = {
     sperrzeit: 180, // s
     ausSchwelle: 0.8, // K ueber Ziel (Heizen): Verdichter aus
     einSchwelle: 0.0, // K: Verdichter wieder ein
+    // ANNAHME: Die Anlage schaltet nicht sofort ab, wenn der Sollwert unter den Raumwert faellt -
+    // sie faehrt erst auf Mindestfrequenz und stoppt, wenn das so lange anhaelt.
+    ausVerzoegerung: 120, // s
     abtauNach: 4800, // s aufgelaufene Heizlaufzeit unter abtauGrenze
     abtauGrenze: 5, // Grad aussen
     fuehlerEinfluss: 1.5, // K: laufende Anlage verfaelscht ihren eigenen Aussenfuehler
+    // Schrittweite der Anlagenfuehler: S21 liefert home/outside/liquid ueber RH/Ra/RI in 0,1 K
+    // (daikin_s21.h Z. 109-113); nur Anlagen ohne diese Abfragen fallen auf F9 mit 0,5 K zurueck
+    // (Faikout.c Z. 688, 3843). Mit 0,5 laesst jeder Sprung die Vorhersage der Firmware
+    // (Z. 4180-4195) um 1 K ausschlagen - das Faikout-Auto taktet dann die Anlage.
+    fuehlerAufloesung: 0.1,
 };
 
 /** Raum, Aussenluft und Anlage. */
@@ -125,6 +132,7 @@ class Physik {
         this.comp = 0;
         this.laeuft = false;
         this.seitWechsel = 1e6;
+        this.zuWarmSeit = 0;
         this.integral = 0;
         this.heizt = true;
         this.qWirksam = 0;
@@ -251,7 +259,8 @@ class Physik {
                 this.abtauZaehler = 0;
             }
         } else {
-            if (this.laeuft && abw < -p.ausSchwelle && this.seitWechsel >= p.mindestLauf) {
+            this.zuWarmSeit = abw < -p.ausSchwelle ? this.zuWarmSeit + TAKT : 0;
+            if (this.laeuft && this.zuWarmSeit >= p.ausVerzoegerung && this.seitWechsel >= p.mindestLauf) {
                 this.laeuft = false;
                 this.seitWechsel = 0;
                 this.integral = 0;
@@ -341,7 +350,7 @@ class Physik {
     }
 
     /**
-     * Was die Anlage ueber ihre Fuehler meldet (S21-Aufloesung 0,5 K) - samt Szenario-Eingriffen.
+     * Was die Anlage ueber ihre Fuehler meldet (Schrittweite `fuehlerAufloesung`) - samt Szenario-Eingriffen.
      *
      * @returns {{home: number, inlet: number, outside: number, liquid: number, comp: number, fanrpm: number,
      *   consumption: number, Whoutside: number, Whheating: number, Whcooling: number, hum: number, antifreeze: boolean}}
@@ -350,6 +359,7 @@ class Physik {
     messwerte() {
         const p = this.p;
         const anteil = this.comp / p.fMax;
+        const stufe = x => Math.round(Math.round(x / p.fuehlerAufloesung) * p.fuehlerAufloesung * 100) / 100;
         let eigen = 0;
         if (this.comp > 0) {
             eigen = this.abtauen ? 3 : this.heizt ? -p.fuehlerEinfluss * anteil : p.fuehlerEinfluss * 1.5 * anteil;
@@ -359,10 +369,10 @@ class Physik {
             liquid = this.abtauen ? 2 : this.heizt ? 28 + 18 * anteil : 14 - 8 * anteil;
         }
         const w = {
-            home: halbe(this.luft),
-            inlet: halbe(this.luft + (this.comp > 0 && this.heizt && !this.abtauen ? 1 : 0)),
-            outside: halbe(this.aussen() + this.einfluss.fuehlerZusatz + eigen),
-            liquid: halbe(liquid),
+            home: stufe(this.luft),
+            inlet: stufe(this.luft + (this.comp > 0 && this.heizt && !this.abtauen ? 1 : 0)),
+            outside: stufe(this.aussen() + this.einfluss.fuehlerZusatz + eigen),
+            liquid: stufe(liquid),
             comp: Math.round(this.comp),
             fanrpm: Math.round(this.luefter / 10) * 10,
             consumption: Math.round(this.watt / 10) * 10, // S21 meldet in 10-W-Schritten (Faikout.c Z. 720)

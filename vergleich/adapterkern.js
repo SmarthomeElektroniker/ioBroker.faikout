@@ -52,7 +52,9 @@ class Adapter extends EventEmitter {
         this.version = optionenAktuell.version || '0.0.0';
         this.FORBIDDEN_CHARS = /[^._\-/ :!#$%&()+=@^{}|~\p{Ll}\p{Lu}\p{Nd}]+/gu;
         this.bestand = bestandAktuell;
-        this.bestand.adapter.add(this);
+        if (this.name !== 'sim') {
+            this.bestand.adapter.add(this);
+        }
         this.abos = [];
         this.objektAbos = [];
         this.gestoppt = false;

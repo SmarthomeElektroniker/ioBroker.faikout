@@ -219,8 +219,7 @@ const S21_FELDER = [
     'quiet',
     'demand',
     'heat',
-    'home',
-    'inlet',
+    'home', // kein inlet: den meldet nur das X50A-Protokoll (Faikout.c Z. 1014)
     'outside',
     'liquid',
     'comp',

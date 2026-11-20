@@ -13,6 +13,8 @@
  * im Testcontainer.
  */
 
+process.env.TZ = 'Europe/Berlin';
+
 const Module = require('node:module');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -23,6 +25,7 @@ const { Welt } = require('../sim/welt');
 const { ModulHttp } = require('../sim/http');
 const { auswerten } = require('../sim/messung');
 const { szenario: szenarioHolen } = require('../sim/szenarien');
+const wochenplan = require('../lib/regel/wochenplan');
 
 const arg = name => {
     const i = process.argv.indexOf(`--${name}`);
@@ -213,6 +216,10 @@ async function lauf(o) {
     uhr.einbauen();
     const bus = new Bus();
     const zeilen = [];
+    const fuehlerStand = new Map(); // wahre Raumwerte als "externer Fuehler" (Datenpunkte sim.0.<modul>.*)
+    const extern = o.fuehler === 'extern';
+    const mitPlan = !!o.plan;
+    const mitFeuchte = !!o.feuchte;
     const marken = [];
     const faikoutAuto = o.art === 'fremd' || o.variante === 'faikout';
     const startZiel = (sz.anlage && sz.anlage.temp) || 21;
@@ -228,7 +235,14 @@ async function lauf(o) {
         ],
         senden: (modul, topic, payload, opt) => bus.vonModul(topic, payload, !!(opt && opt.retain)),
         uhr: () => Date.now(),
-        messung: z => zeilen.push(z),
+        messung: z => {
+            zeilen.push(z);
+            fuehlerStand.set(z.modul, {
+                raum: Math.round(z.raum * 10) / 10,
+                feuchte: Math.round(z.feuchte),
+                aussen: Math.round(z.aussen * 10) / 10,
+            });
+        },
         beiMarke: m => marken.push({ ...m, zeit: Date.now() }),
     });
     bus.welt = welt;
@@ -242,6 +256,8 @@ async function lauf(o) {
     const bestand = new kern.Bestand();
     const eigen = o.art === 'eigen';
     const config = { ...iopack.native };
+    const { szenen } = wochenplan.szenenLesen(null);
+    const plan = wochenplan.vorgabePlan(szenen);
     if (eigen) {
         Object.assign(config, {
             regelProbelauf: false,
@@ -249,14 +265,61 @@ async function lauf(o) {
             regelGeraete: namen.map(n => ({
                 geraet: n,
                 betrieb: o.variante === 'faikout' && !n.includes('tcl') ? 'faikout' : 'adapter',
+                ...(extern
+                    ? {
+                          raumQuelle: 'dp',
+                          raumDp: `sim.0.${n}.raum`,
+                          feuchteQuelle: 'dp',
+                          feuchteDp: `sim.0.${n}.feuchte`,
+                      }
+                    : {}),
             })),
             historyRegister: false,
         });
     } else {
         Object.assign(config, {
-            devices: namen.map(n => ({ name: n, ip: n, enabled: true, useDemand: true })),
+            devices: namen.map(n => ({ name: n, ip: n, enabled: true, useDemand: true, useHumidity: mitFeuchte })),
             demandEnabled: true,
         });
+        for (const n of namen) {
+            const ordner = n.replace(/[^a-zA-Z0-9_-]/g, '_');
+            // Raumfuehler der Bedarfsregelung: mit externem Fuehler der gelieferte env-Wert (Vorgabe des
+            // Adapters), sonst der Fuehler der Anlage.
+            config[n] = extern ? {} : { demandRoomTempId: `faikout-ac.0.${ordner}.home` };
+        }
+        if (extern) {
+            config.envSensors = namen.map(n => ({ deviceName: n, sensorStateId: `sim.0.${n}.raum`, intervalSec: 30 }));
+        }
+        if (mitFeuchte) {
+            config.humCfg = Object.fromEntries(
+                namen.map(n => [
+                    n,
+                    extern ? { humTempStateId: `sim.0.${n}.raum`, humHumStateId: `sim.0.${n}.feuchte` } : {},
+                ]),
+            );
+        }
+        if (mitPlan) {
+            // derselbe Wochenplan als Schaltzeiten: je Wechsel Ziel und Luefter der Szene
+            const eintraege = [];
+            plan.forEach((tag, d) => {
+                for (const punkt of tag) {
+                    const s = szenen.get(punkt.s);
+                    for (const n of namen) {
+                        eintraege.push({
+                            enabled: true,
+                            deviceName: n,
+                            days: [d],
+                            time: `${String(Math.floor(punkt.t / 60)).padStart(2, '0')}:${String(punkt.t % 60).padStart(2, '0')}`,
+                            actions: [
+                                { field: 'autot', value: s.soll },
+                                { field: 'fan', value: s.fan === 'night' ? 'Q' : 'A' },
+                            ],
+                        });
+                    }
+                }
+            });
+            config.schedule = eintraege;
+        }
     }
     const optionen = {
         name: iopack.common.name,
@@ -304,10 +367,20 @@ async function lauf(o) {
         await adapter.setForeignStateAsync(id, { val, ack: false });
         await uhr.ruhe(6);
     };
+    const fremdQuelle = new kern.Adapter({ name: 'sim' }); // schreibt die "externen Fuehler" (zaehlt nicht mit)
     const schritt = async sek => {
         for (let i = 0; i < sek; i++) {
             welt.vor(1000);
             await uhr.vor(1000);
+            if (extern && Math.round(uhr.t / 1000) % 60 === 0) {
+                const vorher = { ...bestand.zaehler };
+                for (const [n, w] of fuehlerStand) {
+                    for (const [f, v] of Object.entries(w)) {
+                        await fremdQuelle.setForeignStateAsync(`sim.0.${n}.${f}`, { val: v, ack: true });
+                    }
+                }
+                Object.assign(bestand.zaehler, vorher);
+            }
         }
     };
 
@@ -352,10 +425,15 @@ async function lauf(o) {
     };
 
     // ---- Wochenplan (nur in den Plan-Szenarien)
-    if (o.plan && eigen) {
+    if (eigen && mitPlan) {
         for (const id of [...bestand.objekte.keys()].filter(k => k.endsWith('.regel.plan.wocheJson'))) {
-            await setze(id, JSON.stringify(o.plan));
+            await setze(id, JSON.stringify(plan));
             await setze(id.replace('wocheJson', 'aktiv'), true);
+        }
+    }
+    if (eigen && mitFeuchte) {
+        for (const id of [...bestand.objekte.keys()].filter(k => k.endsWith('.regel.feuchte.aktiv'))) {
+            await setze(id, true);
         }
     }
 
@@ -371,8 +449,10 @@ async function lauf(o) {
             await schritt(60);
             if (welt.soll !== soll && welt.soll !== null) {
                 soll = welt.soll;
-                // Der Bewohner stellt die Wunschtemperatur am Adapter um.
-                for (const n of namen) {
+                // Der Bewohner stellt die Wunschtemperatur am Adapter um - ausser er hat es im selben
+                // Augenblick an der Fernbedienung getan (Szenario "handeingriff").
+                const perHand = (sz.ereignisse || []).some(e => e.art === 'handeingriff' && e.nachMin === min + 1);
+                for (const n of perHand ? [] : namen) {
                     const id = n.replace(/[^a-zA-Z0-9_-]/g, '_');
                     if (eigen) {
                         const ziel = `${optionen.name}.0.${adapter.geraetId ? adapter.geraetId(n) : id}.control.target`;
@@ -406,6 +486,9 @@ async function lauf(o) {
     const ergebnis = {
         art: o.art,
         variante: eigen ? o.variante : 'faikout-auto + demand',
+        fuehler: o.fuehler || 'intern',
+        plan: mitPlan,
+        feuchte: mitFeuchte,
         adapter: `${iopack.common.name} ${iopack.common.version}`,
         szenario: o.szenario,
         dauerMin,
@@ -476,7 +559,9 @@ if (require.main === module) {
         logDatei: arg('log'),
         messDatei: arg('mess'),
         zustaende: arg('zustaende') ? arg('zustaende').split(',') : null,
-        plan: arg('plan') ? JSON.parse(fs.readFileSync(arg('plan'), 'utf8')) : null,
+        plan: arg('plan') === 'ja',
+        feuchte: arg('feuchte') === 'ja',
+        fuehler: arg('fuehler') || 'intern',
     };
     lauf(o)
         .then(e => {
