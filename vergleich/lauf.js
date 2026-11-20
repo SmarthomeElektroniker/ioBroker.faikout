@@ -430,6 +430,7 @@ async function lauf(o) {
             setStateJeStunde: Math.round((bestand.zaehler.setState - vorlauf.setState) / stunden),
             setObject: bestand.zaehler.setObject,
             objekte: bestand.objekte.size,
+            haeufigste: [...bestand.jeId.entries()].sort((x, y) => y[1] - x[1]).slice(0, 25),
         },
         log: { ...bestand.log, meldungen: [...bestand.meldungen.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15) },
         rechenzeit: {

@@ -87,6 +87,10 @@ const AUFFRISCHEN_MS = 5 * 60 * 1000;
  */
 const SICHERN_MS = 10 * 60 * 1000;
 
+/** Laufwerte: hoechstens ein Schreibvorgang je Minute (siehe wertSchreiben). */
+const LAUFWERTE = /\.info\.(ts|uptime|mqttUp)$/;
+const LAUFWERT_MS = 60 * 1000;
+
 class Faikout extends utils.Adapter {
     constructor(options) {
         super({ ...options, name: 'faikout' });
@@ -663,6 +667,12 @@ class Faikout extends utils.Adapter {
         const jetzt = Date.now();
         const letzt = this.geschrieben.get(stateId);
         if (letzt && letzt.val === val && jetzt - letzt.zeit < AUFFRISCHEN_MS) {
+            return;
+        }
+        // Laufwerte (Zeitstempel, Laufzeit) aendern sich mit JEDER Meldung. Ein Modul, das bei jeder
+        // Leistungsaenderung meldet, erzeugte so mehrere Schreibvorgaenge je Minute ohne neuen
+        // Inhalt - sie werden hoechstens einmal je Minute geschrieben.
+        if (letzt && jetzt - letzt.zeit < LAUFWERT_MS && LAUFWERTE.test(stateId)) {
             return;
         }
         await this.setState(stateId, { val, ack: true });

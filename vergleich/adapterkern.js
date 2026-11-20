@@ -18,6 +18,7 @@ class Bestand {
         this.meldungen = new Map(); // warn/error-Texte (auf Muster gekuerzt) -> Anzahl
         this.zeilen = [];
         this.adapter = new Set();
+        this.jeId = new Map();
     }
 }
 
@@ -207,6 +208,7 @@ class Adapter extends EventEmitter {
         };
         b.werte.set(id, s);
         b.zaehler.setState++;
+        b.jeId.set(id, (b.jeId.get(id) || 0) + 1);
         b.zaehler[s.ack ? 'setStateAck' : 'setStateBefehl']++;
         for (const a of b.adapter) {
             if (!a.gestoppt && a.abos.some(p => passt(p, id))) {

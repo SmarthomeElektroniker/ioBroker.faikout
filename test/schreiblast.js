@@ -129,11 +129,16 @@ describe('Schreiblast je Nachricht (Issue #5)', () => {
         await warte();
         const vorher = a.zahl.setState;
 
+        // Laufwerte (uptime, ts) hoechstens einmal je Minute - nach 1 s also noch nicht.
         uhr += 1000;
         a.onMqtt('state/Daikin 1OG', meldung(3774300, { uptime: 1001 }));
         await warte();
+        expect(a.zahl.setState - vorher).to.equal(0);
+        uhr += 60000;
+        a.onMqtt('state/Daikin 1OG', meldung(3774300, { uptime: 1061 }));
+        await warte();
         expect(a.zahl.setState - vorher).to.equal(1);
-        expect(a.werte.get('Daikin_1OG.info.uptime').val).to.equal(1001);
+        expect(a.werte.get('Daikin_1OG.info.uptime').val).to.equal(1061);
 
         // 5 Wh mehr: Gesamt- und Heizzaehler, je laufende Stunde/heute/Monat (2 × 4: Gesamtzaehler
         // in status, currentHour, today, thisMonth) plus Tages- und Monatsreihe je Zweig (2 × 2).
