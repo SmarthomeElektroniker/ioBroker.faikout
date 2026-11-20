@@ -749,6 +749,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         expect(koordinator.controlFaellig(c, letzte, T + 4 * 60000)).to.equal(false);
         expect(koordinator.controlFaellig(c, letzte, T + 5 * 60000)).to.equal(true);
         expect(koordinator.controlFaellig({ ...c, env: 20.6 }, letzte, T + 60000)).to.equal(false);
+        expect(koordinator.controlFaellig({ ...c, env: 20.5 }, letzte, T + 2 * 60000)).to.equal(false); // Rauschen 0,1 K
         expect(koordinator.controlFaellig({ ...c, env: 20.6 }, letzte, T + 2 * 60000)).to.equal(true);
         expect(koordinator.controlFaellig(null, letzte, T + 3600000)).to.equal(false);
     });
@@ -916,7 +917,7 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await scharf(a, 'Plan_G');
         await laufen(a, uhr, anlage, 20, i => a.fremd.set('alias.0.raum', { val: 20.2 + (i % 2) * 0.1, ts: uhr.t }));
         const ctl = themen(anlage, 'control').map(n => JSON.parse(n));
-        expect(ctl.length).to.be.within(5, 11);
+        expect(ctl.length).to.be.within(4, 6);
         for (const c of ctl) {
             expect(c).to.have.all.keys('env', 'target');
             expect(c.target).to.eql([21, 22]);
