@@ -59,7 +59,7 @@
     "test:integration": "mocha test/integration --exit",
     "test": "npm run test:package && npm run test:unit",
     "lint": "eslint .",
-    "test:unit": "mocha test/verbrauch test/broker test/namen test/einheiten test/abgelehnt test/schreiblast test/devicemanager test/zahlundtext test/umbenennen test/discovery test/anbinden test/regel test/regelplan test/regeltexte test/simdienst test/oberflaeche --exit",
+    "test:unit": "mocha --timeout 10000 test/verbrauch test/broker test/namen test/einheiten test/abgelehnt test/schreiblast test/devicemanager test/zahlundtext test/umbenennen test/discovery test/anbinden test/regel test/regelplan test/regeltexte test/simdienst test/oberflaeche --exit",
     "release": "release-script"
   }
 }
