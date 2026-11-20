@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "0.2.1",
+    "version": "1.0.0",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -73,6 +73,19 @@
       }
     ],
     "news": {
+      "1.0.0": {
+        "en": "Climate control: demand limit by outdoor curve or previous day, weekly schedule with scenes per device, humidity/dew point control, manual override, sensor sources with fallback and sensor correction for external room sensors; module search and connection; module settings can be read and written; device cards with schedule and details dialog; new VIS widget; dry run as default",
+        "de": "Klimaregelung: Leistungsgrenze nach Außenkennlinie oder Vortag, Wochenplan mit Szenen je Gerät, Feuchte-/Taupunktregelung, Handeingriff, Fühlerquellen mit Rückfall und Fühlerkorrektur für fremde Raumfühler; Module suchen und anbinden; Modul-Einstellungen lesen und schreiben; Gerätekarten mit Wochenplan- und Details-Dialog; neuer VIS-Baustein; Probelauf als Vorgabe",
+        "ru": "Управление климатом: ограничение мощности по наружной кривой или по предыдущему дню, недельное расписание со сценами для каждого устройства, регулирование влажности и точки росы, ручное вмешательство, источники датчиков с резервом и коррекция для внешних комнатных датчиков; поиск и подключение модулей; чтение и запись настроек модуля; карточки устройств с диалогами расписания и подробностей; новый виджет VIS; пробный режим по умолчанию",
+        "pt": "Controlo de clima: limite de potência por curva exterior ou pelo dia anterior, plano semanal com cenas por aparelho, controlo de humidade/ponto de orvalho, intervenção manual, fontes de sensores com alternativa e correção para sensores de sala externos; procurar e ligar módulos; ler e escrever definições do módulo; cartões de aparelho com diálogos de plano e detalhes; novo widget VIS; modo de ensaio por omissão",
+        "nl": "Klimaatregeling: vermogenslimiet volgens buitencurve of vorige dag, weekschema met scènes per apparaat, vocht-/dauwpuntregeling, handmatige ingreep, sensorbronnen met terugval en sensorcorrectie voor externe kamersensoren; modules zoeken en koppelen; module-instellingen lezen en schrijven; apparaatkaarten met schema- en detaildialoog; nieuwe VIS-widget; proefdraaien als standaard",
+        "fr": "Régulation climatique : limite de puissance selon la courbe extérieure ou la veille, programme hebdomadaire avec scènes par appareil, régulation de l'humidité et du point de rosée, intervention manuelle, sources de capteurs avec repli et correction pour capteurs d'ambiance externes ; recherche et raccordement des modules ; lecture et écriture des réglages du module ; cartes d'appareil avec dialogues de programme et de détails ; nouveau widget VIS ; marche d'essai par défaut",
+        "it": "Regolazione del clima: limite di potenza secondo curva esterna o giorno precedente, programma settimanale con scene per apparecchio, regolazione di umidità e punto di rugiada, intervento manuale, sorgenti dei sensori con ripiego e correzione per sensori ambiente esterni; ricerca e collegamento dei moduli; lettura e scrittura delle impostazioni del modulo; schede dispositivo con finestre di programma e dettagli; nuovo widget VIS; funzionamento di prova predefinito",
+        "es": "Regulación de clima: límite de potencia según curva exterior o día anterior, plan semanal con escenas por aparato, regulación de humedad y punto de rocío, intervención manual, fuentes de sensores con respaldo y corrección para sensores de sala externos; búsqueda y conexión de módulos; lectura y escritura de los ajustes del módulo; tarjetas de dispositivo con diálogos de plan y detalles; nuevo widget VIS; modo de prueba por defecto",
+        "pl": "Regulacja klimatu: limit mocy według krzywej zewnętrznej lub poprzedniego dnia, plan tygodniowy ze scenami dla każdego urządzenia, regulacja wilgotności i punktu rosy, ingerencja ręczna, źródła czujników z rezerwą i korekta dla zewnętrznych czujników pokojowych; wyszukiwanie i podłączanie modułów; odczyt i zapis ustawień modułu; karty urządzeń z oknami planu i szczegółów; nowy widżet VIS; tryb próbny domyślnie",
+        "uk": "Керування кліматом: обмеження потужності за зовнішньою кривою або попереднім днем, тижневий розклад зі сценами для кожного пристрою, регулювання вологості й точки роси, ручне втручання, джерела датчиків із резервом і корекція для зовнішніх кімнатних датчиків; пошук і підключення модулів; читання й запис налаштувань модуля; картки пристроїв із діалогами розкладу та подробиць; новий віджет VIS; пробний режим за замовчуванням",
+        "zh-cn": "气候调节：按室外曲线或前一天限制功率，每台设备带场景的周计划，湿度/露点调节，手动干预，带回退的传感器来源以及外部室内传感器的修正；搜索并连接模块；读取和写入模块设置；带计划和详情对话框的设备卡片；新的 VIS 小部件；默认试运行"
+      },
       "0.2.1": {
         "en": "Renamed modules are recognised by their hardware ID: no more writes to deleted objects, consumption counters continue under the new name (issue #6); deleted objects are noticed at runtime; new swing value H+C (comfort with horizontal swing)",
         "de": "Umbenannte Module werden an ihrer Hardware-ID erkannt: keine Schreibzugriffe mehr auf gelöschte Objekte, Verbrauchszähler laufen unter dem neuen Namen weiter (Issue #6); gelöschte Objekte werden zur Laufzeit erkannt; neuer Schwenkwert H+C (Komfort mit waagerechtem Schwenken)",
@@ -150,19 +163,6 @@
         "pl": "Jednostki prędkości sprężarki i wentylatora rozpoznawane z modułu (Hz lub obr./min), opisane wszystkie pola modułu, nowa karta „Ustawienia modułu”",
         "uk": "Одиниці частоти компресора й вентилятора визначаються з модуля (Гц або об/хв), описано всі поля модуля, нова вкладка «Налаштування модуля»",
         "zh-cn": "压缩机和风扇转速的单位由模块识别（Hz 或 rpm），已描述全部模块字段，新增“模块设置”选项卡"
-      },
-      "0.0.16": {
-        "en": "Release notes trimmed to seven entries and translated (repository checker E1032/E1144)",
-        "de": "Versionshinweise auf sieben Einträge gekürzt und übersetzt (Repository-Checker E1032/E1144)",
-        "ru": "Примечания к выпуску сокращены до семи записей и переведены (проверка репозитория E1032/E1144)",
-        "pt": "Notas de versão reduzidas a sete entradas e traduzidas (verificador do repositório E1032/E1144)",
-        "nl": "Releaseopmerkingen ingekort tot zeven items en vertaald (repositorycontrole E1032/E1144)",
-        "fr": "Notes de version réduites à sept entrées et traduites (contrôle du dépôt E1032/E1144)",
-        "it": "Note di rilascio ridotte a sette voci e tradotte (controllo del repository E1032/E1144)",
-        "es": "Notas de la versión reducidas a siete entradas y traducidas (comprobación del repositorio E1032/E1144)",
-        "pl": "Informacje o wydaniu skrócone do siedmiu wpisów i przetłumaczone (kontrola repozytorium E1032/E1144)",
-        "uk": "Примітки до випуску скорочено до семи записів і перекладено (перевірка репозиторію E1032/E1144)",
-        "zh-cn": "发行说明精简为七条并已翻译（仓库检查 E1032/E1144）"
       }
     },
     "restartAdapters": [

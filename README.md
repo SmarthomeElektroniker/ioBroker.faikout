@@ -242,7 +242,15 @@ one detail page per unit with controls, energy history and a phone view. They us
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 1.0.0 (2026-11-21)
+- Climate control per unit: demand limit by outdoor curve or "Auto" (previous day plus margin),
+  weekly schedule with scenes, public holidays and absence, humidity and dew point control, manual
+  override, frost protection, dry run as default. Every decision is shown with its reason.
+- Sensor sources with fallback (BLE sensor at the module, any data point, sensor of the unit);
+  external or slow room sensors are handled by a slow correction of the unit's setpoint.
+- Device cards with control state, weekly schedule dialog and details dialog; new VIS widget.
+- Module settings can be read and written (with preview, backup and read-back).
+- The reason why a unit does not accept the power limit is explained (Daikin Wi-Fi module and app).
 - New tab "Find modules" in the instance settings: one-off mDNS search or check of a single
   address, read-only fingerprint of the module's settings page, status per module (connected,
   no broker, other broker, password protected, web login); new setting "Address for modules" with
