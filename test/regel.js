@@ -294,7 +294,7 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
             const w = JSON.parse(a.wert('Daikin_Wohnzimmer.regel.bedarf.wuerdeSenden'));
             expect(w.aktion).to.equal('wuerde');
             expect(a.wert('Daikin_Wohnzimmer.regel.bedarf.probelauf')).to.equal(true);
-            expect(a.wert('Daikin_Wohnzimmer.regel.bedarf.sollwert')).to.be.within(40, 100);
+            expect(a.wert('Daikin_Wohnzimmer.regel.bedarf.sollwert')).to.be.within(30, 100);
             expect(a.zeilen.filter(z => /would send/.test(z.text)).length).to.be.at.least(1);
         }
     });

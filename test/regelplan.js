@@ -486,7 +486,15 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         const r = koordinator.koordinieren(eingang(), k, null, T);
         expect(r.wunsch).to.eql({ power: true, mode: 'heat', target: 21, fan: 'auto' });
         expect(r.demand).to.equal(60); // Kennlinie bei 5 °C: ~61 % -> 60
-        const ab = koordinator.koordinieren(eingang({ szene: { ...szenen.get('absenken'), deckel: 40 } }), k, null, T);
+        const ab = koordinator.koordinieren(
+            eingang({
+                szene: { ...szenen.get('absenken'), deckel: 40 },
+                fuehler: { aussen: m(5), raum: m(20.2), feuchte: m(50) },
+            }),
+            k,
+            null,
+            T,
+        );
         expect(ab.demand).to.equal(40);
         expect(ab.gruende.join(' ')).to.match(/Deckel/);
     });
@@ -532,6 +540,29 @@ describe('Regelung: Koordinator (Vorrang)', () => {
             T,
         );
         expect(weit.demand).to.equal(100);
+    });
+
+    it('Ueberheizschutz: 1,5 K ueber dem Ziel -> Mindeststufe 30 %, auch unter der Untergrenze und dem Deckel', () => {
+        const warm = koordinator.koordinieren(
+            eingang({ fuehler: { aussen: m(5), raum: m(22.6), feuchte: m(50) } }),
+            k,
+            null,
+            T,
+        );
+        expect(warm.demand).to.equal(30);
+        expect(warm.gruende.join(' ')).to.match(/Überheizschutz/);
+        const knapp = koordinator.koordinieren(
+            eingang({ fuehler: { aussen: m(5), raum: m(22.3), feuchte: m(50) } }),
+            k,
+            null,
+            T,
+        );
+        expect(knapp.demand).to.be.above(30);
+        const aus = { ...k, bedarf: bedarf.konfigPruefen({ ueberAbK: 0 }).konfig };
+        expect(
+            koordinator.koordinieren(eingang({ fuehler: { aussen: m(5), raum: m(23), feuchte: m(50) } }), aus, null, T)
+                .demand,
+        ).to.equal(45);
     });
 
     it('Frostschutz steht ueber dem Plan, aber unter dem Handeingriff', () => {
