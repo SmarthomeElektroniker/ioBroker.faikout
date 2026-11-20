@@ -176,7 +176,20 @@
     "pass": "",
     "historyRegister": true,
     "historyInstance": "history.0",
-    "moduleAddress": ""
+    "moduleAddress": "",
+    "regelProbelauf": true,
+    "regelAktiv": false,
+    "regelStrategie": "kennlinie",
+    "regelUntergrenze": 40,
+    "regelObergrenze": 95,
+    "regelKennlinieHeizen": "-10:95, 0:75, 7:55, 15:40",
+    "regelKennlinieKuehlen": "25:40, 30:65, 35:95",
+    "regelVortagBezug": "spitze",
+    "regelVortagZuschlag": 10,
+    "regelVortagReferenzW": 1000,
+    "regelVortagMin": 40,
+    "regelVortagMax": 95,
+    "regelQuellen": []
   },
   "encryptedNative": [
     "pass"

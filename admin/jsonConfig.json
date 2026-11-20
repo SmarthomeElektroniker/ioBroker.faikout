@@ -1076,6 +1076,230 @@
                 }
             }
         },
+        "tabRegelung": {
+            "type": "panel",
+            "label": "tabRegelung",
+            "items": {
+                "regelHeader": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerRegelung",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "regelText": {
+                    "type": "staticText",
+                    "text": "textRegelung",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "regelProbelauf": {
+                    "type": "checkbox",
+                    "label": "labelRegelProbelauf",
+                    "default": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelAktiv": {
+                    "type": "checkbox",
+                    "label": "labelRegelAktiv",
+                    "default": false,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelStrategie": {
+                    "type": "select",
+                    "label": "labelRegelStrategie",
+                    "default": "kennlinie",
+                    "options": [
+                        {
+                            "label": "optKennlinie",
+                            "value": "kennlinie"
+                        },
+                        {
+                            "label": "optVortag",
+                            "value": "vortag"
+                        }
+                    ],
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelUntergrenze": {
+                    "type": "number",
+                    "label": "labelUntergrenze",
+                    "min": 30,
+                    "max": 100,
+                    "step": 5,
+                    "default": 40,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelObergrenze": {
+                    "type": "number",
+                    "label": "labelObergrenze",
+                    "min": 30,
+                    "max": 100,
+                    "step": 5,
+                    "default": 95,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelKennlinieHeizen": {
+                    "type": "text",
+                    "label": "labelKennlinieHeizen",
+                    "default": "-10:95, 0:75, 7:55, 15:40",
+                    "hidden": "data.regelStrategie === 'vortag'",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelKennlinieKuehlen": {
+                    "type": "text",
+                    "label": "labelKennlinieKuehlen",
+                    "default": "25:40, 30:65, 35:95",
+                    "hidden": "data.regelStrategie === 'vortag'",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelVortagBezug": {
+                    "type": "select",
+                    "label": "labelVortagBezug",
+                    "default": "spitze",
+                    "options": [
+                        {
+                            "label": "optSpitze",
+                            "value": "spitze"
+                        },
+                        {
+                            "label": "optMittel",
+                            "value": "mittel"
+                        }
+                    ],
+                    "hidden": "data.regelStrategie !== 'vortag'",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelVortagZuschlag": {
+                    "type": "number",
+                    "label": "labelVortagZuschlag",
+                    "min": 0,
+                    "max": 60,
+                    "default": 10,
+                    "hidden": "data.regelStrategie !== 'vortag'",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelVortagReferenzW": {
+                    "type": "number",
+                    "label": "labelVortagReferenz",
+                    "min": 100,
+                    "max": 10000,
+                    "default": 1000,
+                    "hidden": "data.regelStrategie !== 'vortag'",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelVortagMin": {
+                    "type": "number",
+                    "label": "labelVortagMin",
+                    "min": 30,
+                    "max": 100,
+                    "step": 5,
+                    "default": 40,
+                    "hidden": "data.regelStrategie !== 'vortag'",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelVortagMax": {
+                    "type": "number",
+                    "label": "labelVortagMax",
+                    "min": 30,
+                    "max": 100,
+                    "step": 5,
+                    "default": 95,
+                    "hidden": "data.regelStrategie !== 'vortag'",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "regelQuellen": {
+                    "type": "table",
+                    "label": "labelRegelQuellen",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "items": [
+                        {
+                            "type": "text",
+                            "attr": "geraet",
+                            "title": "colGeraet",
+                            "width": "30%",
+                            "default": ""
+                        },
+                        {
+                            "type": "objectId",
+                            "attr": "aussen",
+                            "title": "colAussen",
+                            "width": "35%",
+                            "default": ""
+                        },
+                        {
+                            "type": "objectId",
+                            "attr": "raum",
+                            "title": "colRaum",
+                            "width": "35%",
+                            "default": ""
+                        }
+                    ]
+                }
+            }
+        },
         "tabHelp": {
             "type": "panel",
             "label": "tabHelp",

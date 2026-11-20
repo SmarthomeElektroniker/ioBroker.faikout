@@ -14,6 +14,7 @@ const { FaikoutDeviceManagement } = require('./lib/devicemanager');
 const discovery = require('./lib/discovery');
 const suche = require('./lib/suche');
 const anbinden = require('./lib/anbinden');
+const { Bedarfsregelung } = require('./lib/regel');
 
 /** Topics, die der Adapter auswertet. Alles andere wird still verworfen. */
 const BEKANNTE_ARTEN = new Set(['state', 'info', 'error', 'event']);
@@ -147,6 +148,9 @@ class Faikout extends utils.Adapter {
         /** Laeuft gerade ein Anbinden/Zurueckstellen? Nur eins zur Zeit. */
         this.anbindenLaeuft = false;
 
+        /** Bedarfsregelung (Leistungsgrenze demand), entsteht in onReady mit der Konfiguration. */
+        this.regelung = null;
+
         this.broker = null;
         this.stopping = false;
         this.stundenTimer = null;
@@ -174,6 +178,7 @@ class Faikout extends utils.Adapter {
         // Geloeschte Objekte mitbekommen (Issue #6): sonst schreibt der Adapter weiter in einen
         // Zweig, den er fuer angelegt haelt - "State ... has no existing object".
         await this.subscribeObjectsAsync('*');
+        this.regelung = new Bedarfsregelung(this);
 
         const port = Number(this.config.port) || 1888;
         this.broker = new FaikoutBroker({
@@ -206,6 +211,9 @@ class Faikout extends utils.Adapter {
         // `autoe` liegt im Kanal status, ist aber beschreibbar (Review 11.10.2026: Schreibbefehle
         // darauf gingen bisher ins Leere, weil nur control.* abonniert war).
         this.subscribeStates('*.status.autoe');
+        // Schalter der Bedarfsregelung - laufen NICHT ueber den Befehlsweg ans Modul.
+        this.subscribeStates('*.regel.bedarf.aktiv');
+        this.subscribeStates('*.regel.bedarf.probelauf');
         this.stundenTaktStarten();
     }
 
@@ -346,7 +354,9 @@ class Faikout extends utils.Adapter {
             const gewaehlt = felder.gewaehlteBetriebsart(daten, false);
             // Dazu die Zahl-Zwillinge (modeNum, fanNum ...) fuer Lovelace und Co.
             const werte = felder.zahlZwillingeErgaenzen(gewaehlt ? { ...daten, selectedMode: gewaehlt } : daten);
-            this.werteUebernehmen(t.geraet, werte).catch(e => this.log.warn(`${t.geraet}: ${e.message}`));
+            this.werteUebernehmen(t.geraet, werte)
+                .then(() => this.regelung && this.regelung.meldung(this.geraetId(t.geraet), t.geraet, daten))
+                .catch(e => this.log.warn(`${t.geraet}: ${e.message}`));
         } else if (t.art === 'state' && t.unter === 'status') {
             // Aus der nativen Meldung nur die Betriebsart einer AUSGESCHALTETEN Anlage - der Rest
             // steht schon in state/<Name>.
@@ -394,6 +404,9 @@ class Faikout extends utils.Adapter {
             inhalt.details = abgelehnt.details;
         }
         await this.werteUebernehmen(geraetName, { 'failed-set': JSON.stringify(inhalt) });
+        if (this.regelung) {
+            await this.regelung.abgelehnt(this.geraetId(geraetName), abgelehnt.settings);
+        }
     }
 
     /**
@@ -970,6 +983,9 @@ class Faikout extends utils.Adapter {
             return;
         }
         this.geraete.delete(id);
+        if (this.regelung) {
+            this.regelung.geraete.delete(id);
+        }
         const praefix = `${id}.`;
         for (const speicher of [this.geschrieben, this.reihenStunde]) {
             for (const schluessel of [...speicher.keys()]) {
@@ -1171,6 +1187,16 @@ class Faikout extends utils.Adapter {
         if (!state || state.ack) {
             return;
         } // nur eigene Befehle, nicht die eigenen Rueckmeldungen
+
+        // Schalter der Bedarfsregelung: nie ein Befehl ans Modul.
+        const regelTeil = `.regel.bedarf.`;
+        if (id.includes(regelTeil)) {
+            const teileR = id.split('.');
+            if (this.regelung) {
+                await this.regelung.schalter(teileR[2], teileR[teileR.length - 1], state.val);
+            }
+            return;
+        }
 
         const obj = await this.getObjectAsync(id);
         if (!obj || !obj.common || !obj.common.write) {
