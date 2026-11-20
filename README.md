@@ -169,30 +169,65 @@ The twins are created with the first report of a module after the update.
 
 ## Climate control
 
-The tab **Climate control** of the instance settings and the device cards (admin, device manager)
-operate the built-in control. Everything starts in **dry run**: the adapter calculates and shows what
-it would do, but sends nothing until the dry run is switched off.
+The tab **Climate control** of the instance settings, the device cards (admin, device manager) and
+the vis widget "Climate control" operate the built-in control. A step-by-step guide with pictures:
+[English](docs/en/README.md) · [Deutsch](docs/de/README.md).
 
-- **Per unit** (one entry per air conditioner): who controls (the adapter, or the module's own
-  "Faikout auto"), sensor sources (automatic, sensor of the unit, BLE sensor on the module or any
-  ioBroker data point), frost protection, the demand strategy with its curve and limits, and the
-  scenes. Empty values fall back to the defaults further down; values can be taken over from
-  another unit. The heating and cooling curve are drawn live, with the current operating point of
-  the unit.
+Everything starts in **dry run**: the adapter calculates and shows what it would do, but sends
+nothing until the dry run is switched off – in the settings and, per unit, in the data point
+`regel.bedarf.probelauf`.
+
+- **Per unit** (one entry per air conditioner, shown with its name): who controls, the demand
+  strategy with curve and limits, the scenes, sensor sources and frost protection. Empty values
+  fall back to the defaults further down. "Take over values from another unit" copies scenes
+  and/or curve from one unit to another (saved at once).
+- **Who controls**: *Adapter controls* (schedule, scenes, power limit, humidity – nothing is stored
+  in the module) or *Faikout auto* (the module controls to the target itself; the adapter supplies
+  target, sensor value and schedule). With Faikout auto the power limit is only set with the
+  strategy "Auto", and every change of the target is stored in the module's flash memory – the
+  settings warn when a schedule changes the target six or more times a day.
 - **Demand control** limits the power (`demand`) in 5 % steps, either by a curve over the outside
-  temperature or as "Auto" (yesterday's consumption plus a margin). With "Faikout auto" the power
-  limit is only set with the strategy "Auto".
+  temperature (drawn live, with the current operating point) or as "Auto" (yesterday's consumption
+  plus a margin).
 - **Scenes and weekly schedule**: a scene is a complete state of the unit (on/off, mode, target,
-  fan, power cap). The weekly schedule is edited on the device card (clock button): click into a
-  block to add a switching time, drag a line to move it, copy and paste whole days, load the
-  default schedule, set an absence.
+  fan, power cap). The schedule is edited on the device card (clock button): click into a block to
+  add a switching time, drag a line to move it, click a line to change or delete it, copy and paste
+  whole days, load the default schedule, set an absence.
+- **Sensor sources**: automatic, sensor of the unit, BLE sensor on the module or any ioBroker data
+  point. A room data point either adjusts the setpoint of the unit (recommended) or is sent to the
+  module.
 - **Humidity and dew point**, **manual override** (schedule and scenes wait after someone used the
-  remote control; "Release" on the card ends the wait) and **public holidays** are set once for all
-  units.
-- **Device card**: state and reason, power limit, current scene and next switching time, three
-  symbol buttons to switch demand control, humidity control and the weekly schedule on and off,
-  sensors with a warning when a fallback sensor is used. The chart button shows how the adapter
-  decides right now (curve with operating point, steps of the calculation, last 24 hours).
+  remote control; "Release" on the card ends the wait) and **public holidays** are set once for
+  all units.
+- **Device card**: state and reason, power limit, scene and next switching time, three symbol
+  buttons for demand control, humidity control and weekly schedule, sensors with a warning when a
+  fallback sensor is used. The chart button explains the current decision (curve with operating
+  point, steps of the calculation, last 24 hours).
+
+### Power limit on Daikin units
+
+The power limit (`demand`) only has an effect on a Daikin unit if
+
+1. the **original Daikin Wi-Fi module is switched on** (remote control: hold "Powerful" for
+   5 seconds until "SP 1" appears). No internet and no cloud connection are needed – the app may be
+   offline – and
+2. **demand control is set to "On"** in the Daikin app.
+
+"Off" in the app always means 100 %; values sent by the faikout module then have no effect. With
+"On", both the app and faikout may write, the last value wins. "Auto" means the cloud controls. A
+value rejected while the unit is switched off says nothing – the adapter keeps showing "not tested
+yet".
+
+### Changing settings in the module
+
+The tab **Module settings** reads a fixed list of settings from the module (HTTP GET only), shows
+the difference to the form and writes after a confirmation: one MQTT message
+`setting/<module name>` with only the changed values, then it reads back and reports the result
+per setting. Before every write the state that was read is kept (the last five per module) and
+can be loaded into the form again. Settings a module does not offer (this depends on firmware and
+unit) are named and never written. Firmware/OTA, broker, Wi-Fi, passwords and the host name can
+never be written from here. Every write wears the flash memory of the module and restarts it for
+some settings.
 
 ## Visualisation (vis templates)
 

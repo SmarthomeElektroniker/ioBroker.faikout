@@ -152,10 +152,21 @@
                     "doNotSave": true,
                     "newLine": true,
                     "xs": 12,
-                    "sm": 12,
-                    "md": 6,
-                    "lg": 6,
-                    "xl": 6
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_modAdresse": {
+                    "type": "text",
+                    "label": "labelModAdresse",
+                    "help": "helpModAdresse",
+                    "doNotSave": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
                 },
                 "_modRead": {
                     "type": "sendTo",
@@ -165,8 +176,8 @@
                     "useNative": true,
                     "showProcess": true,
                     "timeout": 30000,
-                    "jsonData": "{\"ip\":${JSON.stringify(data._modIp ?? \"\")}}",
-                    "disabled": "!data._modIp",
+                    "jsonData": "{\"ip\":${JSON.stringify(data._modAdresse || data._modIp || \"\")}}",
+                    "disabled": "!data._modIp && !data._modAdresse",
                     "xs": 12,
                     "sm": 6,
                     "md": 4,
@@ -266,13 +277,29 @@
                     "lg": 6,
                     "xl": 6
                 },
+                "_modFehlt": {
+                    "type": "staticText",
+                    "text": "${data._modFehlt || \"\"}",
+                    "noTranslation": true,
+                    "doNotSave": true,
+                    "hidden": "!data._modStand || !data._modFehlt",
+                    "newLine": true,
+                    "style": {
+                        "opacity": 0.75
+                    },
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
                 "_modCheck": {
                     "type": "sendTo",
                     "command": "modulEinstellungenPruefen",
                     "label": "btnModCheck",
                     "variant": "outlined",
                     "useNative": true,
-                    "jsonData": "{\"ip\":${JSON.stringify(data._modIp ?? \"\")},\"stand\":${JSON.stringify(data._modStand ?? \"\")},\"plan\":${JSON.stringify(data._modPlan ?? \"\")},\"formular\":{\"_modReporting\":${JSON.stringify(data._modReporting ?? null)},\"_modLivestatus\":${JSON.stringify(data._modLivestatus ?? null)},\"_modHa1c\":${JSON.stringify(data._modHa1c ?? null)},\"_modThermostat\":${JSON.stringify(data._modThermostat ?? null)},\"_modNodemand\":${JSON.stringify(data._modNodemand ?? null)},\"_modTopicgroup1\":${JSON.stringify(data._modTopicgroup1 ?? null)}}}",
+                    "jsonData": "{\"ip\":${JSON.stringify(data._modAdresse || data._modIp || \"\")},\"stand\":${JSON.stringify(data._modStand ?? \"\")},\"plan\":${JSON.stringify(data._modPlan ?? \"\")},\"formular\":{\"_modReporting\":${JSON.stringify(data._modReporting ?? null)},\"_modLivestatus\":${JSON.stringify(data._modLivestatus ?? null)},\"_modHa1c\":${JSON.stringify(data._modHa1c ?? null)},\"_modThermostat\":${JSON.stringify(data._modThermostat ?? null)},\"_modNodemand\":${JSON.stringify(data._modNodemand ?? null)},\"_modTopicgroup1\":${JSON.stringify(data._modTopicgroup1 ?? null)}}}",
                     "hidden": "!data._modStand",
                     "newLine": true,
                     "xs": 12,
@@ -289,7 +316,7 @@
                     "useNative": true,
                     "showProcess": true,
                     "timeout": 120000,
-                    "jsonData": "{\"ip\":${JSON.stringify(data._modIp ?? \"\")},\"stand\":${JSON.stringify(data._modStand ?? \"\")},\"plan\":${JSON.stringify(data._modPlan ?? \"\")},\"formular\":{\"_modReporting\":${JSON.stringify(data._modReporting ?? null)},\"_modLivestatus\":${JSON.stringify(data._modLivestatus ?? null)},\"_modHa1c\":${JSON.stringify(data._modHa1c ?? null)},\"_modThermostat\":${JSON.stringify(data._modThermostat ?? null)},\"_modNodemand\":${JSON.stringify(data._modNodemand ?? null)},\"_modTopicgroup1\":${JSON.stringify(data._modTopicgroup1 ?? null)}}}",
+                    "jsonData": "{\"ip\":${JSON.stringify(data._modAdresse || data._modIp || \"\")},\"stand\":${JSON.stringify(data._modStand ?? \"\")},\"plan\":${JSON.stringify(data._modPlan ?? \"\")},\"formular\":{\"_modReporting\":${JSON.stringify(data._modReporting ?? null)},\"_modLivestatus\":${JSON.stringify(data._modLivestatus ?? null)},\"_modHa1c\":${JSON.stringify(data._modHa1c ?? null)},\"_modThermostat\":${JSON.stringify(data._modThermostat ?? null)},\"_modNodemand\":${JSON.stringify(data._modNodemand ?? null)},\"_modTopicgroup1\":${JSON.stringify(data._modTopicgroup1 ?? null)}}}",
                     "hidden": "!data._modStand",
                     "disabled": "!data._modPlan",
                     "confirm": {
@@ -306,19 +333,57 @@
                     "xl": 4
                 },
                 "_modVorschau": {
-                    "type": "text",
-                    "label": "labelModVorschau",
-                    "readOnly": true,
-                    "minRows": 2,
-                    "maxRows": 8,
+                    "type": "staticText",
+                    "text": "${data._modVorschau || \"\"}",
+                    "noTranslation": true,
                     "doNotSave": true,
                     "hidden": "!data._modVorschau",
                     "newLine": true,
+                    "style": {
+                        "whiteSpace": "pre-line",
+                        "border": "1px solid rgba(128,128,128,0.5)",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "lineHeight": 1.6
+                    },
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
                     "xl": 12
+                },
+                "_modSicherung": {
+                    "type": "selectSendTo",
+                    "command": "modulEinstellungenSicherungen",
+                    "label": "labelModSicherung",
+                    "help": "helpModSicherung",
+                    "jsonData": "{\"stand\":${JSON.stringify(data._modStand ?? \"\")}}",
+                    "alsoDependsOn": [
+                        "_modStand"
+                    ],
+                    "doNotSave": true,
+                    "hidden": "!data._modStand",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "_modRestore": {
+                    "type": "sendTo",
+                    "command": "modulEinstellungenWiederherstellen",
+                    "label": "btnModRestore",
+                    "variant": "outlined",
+                    "useNative": true,
+                    "jsonData": "{\"ip\":${JSON.stringify(data._modAdresse || data._modIp || \"\")},\"stand\":${JSON.stringify(data._modStand ?? \"\")},\"zeit\":${JSON.stringify(data._modSicherung ?? \"\")}}",
+                    "hidden": "!data._modStand",
+                    "disabled": "!data._modSicherung",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
                 },
                 "moduleHeader": {
                     "type": "header",
@@ -1446,9 +1511,10 @@
                             "type": "textSendTo",
                             "container": "html",
                             "command": "regelKann",
-                            "jsonData": "{\"geraet\":${JSON.stringify(data.geraet ?? \"\")}}",
+                            "jsonData": "{\"geraet\":${JSON.stringify(data.geraet ?? \"\")},\"betrieb\":${JSON.stringify(data.betrieb ?? \"adapter\")}}",
                             "alsoDependsOn": [
-                                "geraet"
+                                "geraet",
+                                "betrieb"
                             ],
                             "xs": 12,
                             "sm": 12,
@@ -1937,6 +2003,73 @@
                             "xl": 8
                         },
                         {
+                            "attr": "fuehlerWeg",
+                            "type": "select",
+                            "label": "labelFuehlerWeg",
+                            "options": [
+                                {
+                                    "label": "optWegSollwert",
+                                    "value": "sollwert"
+                                },
+                                {
+                                    "label": "optWegModul",
+                                    "value": "modul"
+                                }
+                            ],
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 8,
+                            "lg": 8,
+                            "xl": 8,
+                            "default": "sollwert",
+                            "hidden": "data.raumQuelle !== 'dp'",
+                            "newLine": true
+                        },
+                        {
+                            "attr": "korrAbstandMin",
+                            "type": "number",
+                            "label": "labelKorrAbstand",
+                            "min": 10,
+                            "max": 180,
+                            "xs": 12,
+                            "sm": 6,
+                            "md": 4,
+                            "lg": 4,
+                            "xl": 4,
+                            "default": 30,
+                            "hidden": "data.raumQuelle !== 'dp' || data.fuehlerWeg === 'modul'"
+                        },
+                        {
+                            "attr": "_tWeg",
+                            "type": "staticText",
+                            "text": "textWegSollwert",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
+                            "hidden": "data.raumQuelle !== 'dp' || data.fuehlerWeg === 'modul'",
+                            "style": {
+                                "opacity": 0.8
+                            }
+                        },
+                        {
+                            "attr": "raumTraegeMin",
+                            "type": "number",
+                            "label": "labelRaumTraege",
+                            "min": 0,
+                            "max": 240,
+                            "xs": 12,
+                            "sm": 6,
+                            "md": 4,
+                            "lg": 4,
+                            "xl": 4,
+                            "default": 0,
+                            "hidden": "data.raumQuelle !== 'dp'",
+                            "help": "helpRaumTraege",
+                            "newLine": true
+                        },
+                        {
                             "attr": "feuchteQuelle",
                             "type": "select",
                             "label": "labelFeuchteQuelle",
@@ -2097,7 +2230,8 @@
                             "command": "regelUebernehmen",
                             "label": "btnKopie",
                             "variant": "outlined",
-                            "useNative": true,
+                            "reloadBrowser": true,
+                            "showProcess": true,
                             "jsonData": "{\"von\":${JSON.stringify(data._kopieVon ?? \"\")},\"nach\":${JSON.stringify(data._kopieNach ?? \"\")},\"was\":${JSON.stringify(data._kopieWas ?? \"szenen\")},\"zeilen\":${JSON.stringify(data.regelGeraete || [])}}",
                             "disabled": "!data._kopieVon || !data._kopieNach || data._kopieVon === data._kopieNach",
                             "confirm": {

@@ -410,6 +410,19 @@
                 overflow-x: hidden;
                 overflow-y: auto;
             }
+            #flash {
+                margin-top: 8px;
+                padding: 8px 12px;
+                border: 1px solid #d98a00;
+                border-radius: 8px;
+                background: rgba(217, 138, 0, 0.14);
+                font-size: 13px;
+                line-height: 1.4;
+                user-select: text;
+            }
+            #flash[hidden] {
+                display: none;
+            }
             .chip .extra {
                 opacity: 0.9;
                 font-size: 12px;
@@ -430,6 +443,11 @@
                 border: 1px solid var(--line);
                 border-radius: 8px;
                 padding: 10px 12px;
+            }
+            /* dunkel: die Standardlinie verschwindet auf dem Dialoggrund des Admins */
+            body.dark .box,
+            body.dark .add {
+                border-color: rgba(255, 255, 255, 0.3);
             }
             #notes {
                 margin-top: 10px;
@@ -493,6 +511,11 @@
         <div
             id="status"
             aria-live="polite"
+        ></div>
+        <div
+            id="flash"
+            role="alert"
+            hidden
         ></div>
         <div id="foot">
             <div class="box">
@@ -648,6 +671,7 @@
                 let draftTimer = null;
                 function changed() {
                     render();
+                    flashHint();
                     clearTimeout(draftTimer);
                     draftTimer = setTimeout(async () => {
                         const program = sorted().map(p => ({
@@ -826,6 +850,7 @@
                         notes.push(info.texts.pFeiertag);
                     }
                     $('notes').textContent = notes.join(' ');
+                    flashHint();
                     absence = { ...absence, ...(info.abwesenheit || {}) };
                     $('absLabel').textContent = info.texts.pAbwesenheit;
                     $('absFromLabel').textContent = info.texts.pVon;
@@ -863,6 +888,31 @@
                         $(id).onchange = take;
                     }
                     show();
+                }
+                /**
+                 * Faikout-Auto speichert jede Zielaenderung im Modul (Flash): Hinweis, sobald ein Tag zu viele
+                 * Schaltpunkte mit Zielaenderung hat. Gezaehlt wird wie im Adapter (oberflaeche.zielwechselMax).
+                 */
+                function flashHint() {
+                    const el = $('flash');
+                    if (!info || !info.faikoutAuto) {
+                        el.hidden = true;
+                        return;
+                    }
+                    const ziel = t => (info.types.find(x => x.type === t) || {}).ziel || '';
+                    const pts = sorted().slice();
+                    let before = pts.length ? ziel(pts[pts.length - 1].type) : '';
+                    const perDay = [0, 0, 0, 0, 0, 0, 0];
+                    for (const p of pts) {
+                        const z = ziel(p.type);
+                        if (z !== before) {
+                            perDay[Math.floor(p.m / DAY)]++;
+                        }
+                        before = z;
+                    }
+                    const n = Math.max(...perDay);
+                    el.hidden = n < (info.zielwechselWarnung || 6);
+                    el.textContent = info.texts.kFaikoutPlan.replace('{n}', String(n));
                 }
                 function setProgram(program) {
                     const di = Object.fromEntries(DAYS.map((d, i) => [d, i]));

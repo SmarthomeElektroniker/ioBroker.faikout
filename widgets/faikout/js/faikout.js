@@ -68,6 +68,21 @@ vis.binds.faikout = {
         'Monat': 'Month',
         'Jahr': 'Year',
         'Gesamt': 'Total',
+        'Leistungsgrenze': 'Power limit',
+        'aktiv': 'active',
+        'Handeingriff': 'manual override',
+        'gestört': 'fault',
+        'keine Verbindung': 'no connection',
+        'ausgeschaltet': 'switched off',
+        'Probelauf': 'Dry run',
+        'nicht unterstützt': 'not supported',
+        'ruht (Faikout-Auto)': 'rests (Faikout auto)',
+        'nicht begrenzt': 'not limited',
+        'Bedarfsregelung': 'Demand control',
+        'Feuchteregelung': 'Humidity control',
+        'Wochenplan': 'Weekly schedule',
+        'an': 'on',
+        'aus': 'off',
         'verbunden': 'connected',
         'offline': 'offline'
     },
@@ -664,6 +679,174 @@ vis.binds.faikout = {
                     $wurzel.find('.fk-leistung-zahl').text(w);
                 }
             };
+        });
+    },
+
+    /* ================================================================== Regelung (nur Anzeige) */
+
+    /** Stuetzpunkte aus der Konfiguration: Text "x:y, x:y" oder Liste von {x, y} bzw. [x, y]. */
+    kennliniePunkte: function (roh, vorgabe) {
+        var liste = roh;
+        if (typeof roh === 'string') {
+            liste = roh.trim() ? roh.split(/[;,]\s*/).map(function (paar) {
+                return paar.split(/[:=]/).map(function (z) { return Number(String(z).trim()); });
+            }) : [];
+        }
+        var punkte = window.faikoutKennlinienbild.punkteSaeubern(liste);
+        return punkte.length >= 2 ? punkte : vorgabe;
+    },
+
+    /**
+     * Kennlinie und Grenzen eines Geraets. Bevorzugt aus dem Datenpunkt regel.bedarf.kennlinieJson
+     * (falls der Adapter ihn fuehrt), sonst aus den Instanzeinstellungen: Zeile des Geraets in
+     * regelGeraete (ueber ID oder Name), leere Werte fallen auf die Vorgabe der Instanz zurueck.
+     */
+    kennlinieLaden: function (ctx, fertig) {
+        var b = vis.binds.faikout;
+        var VOR = { heizen: [[-10, 95], [0, 75], [7, 55], [15, 40]], kuehlen: [[25, 40], [30, 65], [35, 95]], untergrenze: 40, obergrenze: 95 };
+        var zahl = function (v, d) { return v === undefined || v === null || v === '' || isNaN(Number(v)) ? d : Number(v); };
+        var ausDp = ctx.hat('regel.bedarf.kennlinieJson') ? ctx.wert('regel.bedarf.kennlinieJson') : null;
+        if (ausDp) {
+            try {
+                var k = JSON.parse(ausDp);
+                return fertig({
+                    heizen: b.kennliniePunkte(k.heizen, VOR.heizen), kuehlen: b.kennliniePunkte(k.kuehlen, VOR.kuehlen),
+                    untergrenze: zahl(k.untergrenze, VOR.untergrenze), obergrenze: zahl(k.obergrenze, VOR.obergrenze)
+                });
+            } catch (e) { /* weiter mit den Instanzeinstellungen */ }
+        }
+        var teile = ctx.prefix.split('.');
+        var id = teile.slice(2).join('.');
+        vis.conn.getObject(ctx.prefix, function (e1, geraet) {
+            var name = geraet && geraet.common && geraet.common.name;
+            if (name && typeof name === 'object') name = name.en || name.de;
+            vis.conn.getObject('system.adapter.' + teile[0] + '.' + teile[1], function (e2, inst) {
+                var c = (inst && inst.native) || {};
+                var zeile = {};
+                (Array.isArray(c.regelGeraete) ? c.regelGeraete : []).forEach(function (z) {
+                    if (z && (z.geraet === id || z.geraet === name)) zeile = z;
+                });
+                var eigen = function (v) { return v !== undefined && v !== null && v !== '' && !(Array.isArray(v) && !v.length); };
+                fertig({
+                    heizen: b.kennliniePunkte(eigen(zeile.kennlinieHeizen) ? zeile.kennlinieHeizen : c.regelKennlinieHeizen, VOR.heizen),
+                    kuehlen: b.kennliniePunkte(eigen(zeile.kennlinieKuehlen) ? zeile.kennlinieKuehlen : c.regelKennlinieKuehlen, VOR.kuehlen),
+                    untergrenze: zahl(zeile.untergrenze, zahl(c.regelUntergrenze, VOR.untergrenze)),
+                    obergrenze: zahl(zeile.obergrenze, zahl(c.regelObergrenze, VOR.obergrenze))
+                });
+            });
+        });
+    },
+
+    /** Symbole der drei Regelungen (wie auf der Geraetekarte im Admin). */
+    REGEL_SYMBOLE: {
+        bedarf: '<path d="M4.6 17.2a9 9 0 1 1 14.8 0"/><path d="M12 13.6 16.2 8.2"/><circle cx="12" cy="14.2" r="1.3"/>',
+        feuchte: '<path d="M12 3.2c3 3.6 5.6 6.8 5.6 10.1a5.6 5.6 0 0 1-11.2 0C6.4 10 9 6.8 12 3.2z"/>',
+        plan: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/>'
+    },
+
+    /**
+     * Baustein "Regelung": Zustand, Szene und naechste Schaltung, Kennlinie mit Arbeitspunkt,
+     * Leistungsgrenze als Stufenbalken, welche Regelungen laufen. Nur Anzeige - bedient wird
+     * ueber die uebrigen Bausteine bzw. die Geraetekarte.
+     */
+    regelung: function (widgetID, view, data) {
+        vis.binds.faikout.start(widgetID, data, function ($wurzel, ctx) {
+            var b = vis.binds.faikout;
+            var bild = window.faikoutKennlinienbild;
+            if (!ctx.hat('regel.zustand')) return b.fehlt($wurzel, 'regel.zustand');
+            data = $.extend({}, data, { schalter: false });
+            b.kopf($wurzel, ctx, data);
+            var stufen = '';
+            for (var i = 0; i < bild.BALKEN_ANZAHL; i++) stufen += '<span></span>';
+            $wurzel.append(
+                '<div class="fk-regel">' +
+                ' <div class="fk-regel-kopf"><div><div class="fk-regel-szene"></div><div class="fk-regel-naechste"></div></div>' +
+                '  <div class="fk-regel-raum"><span class="fk-regel-raum-zahl">–</span><small>°C</small></div></div>' +
+                ' <div class="fk-regel-zustand"><span class="fk-regel-chip"></span><span class="fk-regel-probe"></span></div>' +
+                ' <div class="fk-regel-bild"></div>' +
+                ' <div class="fk-regel-grenze"><span>' + b.t('Leistungsgrenze') + '</span><b class="fk-regel-prozent">–</b></div>' +
+                ' <div class="fk-regel-balken">' + stufen + '</div>' +
+                ' <div class="fk-regel-fuss"><span class="fk-regel-werte"></span><span class="fk-regel-symbole">' +
+                ['bedarf', 'feuchte', 'plan'].map(function (n) {
+                    return '<svg class="fk-regel-symbol" data-art="' + n + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + b.REGEL_SYMBOLE[n] + '</svg>';
+                }).join('') + '</span></div>' +
+                '</div>');
+            b.fuss($wurzel, ctx, data);
+            var kennlinie = null;
+            var ZUSTAND = { ok: 'aktiv', hand: 'Handeingriff', 'gestört': 'gestört', offline: 'keine Verbindung', aus: 'ausgeschaltet' };
+            var TITEL = { bedarf: 'Bedarfsregelung', feuchte: 'Feuchteregelung', plan: 'Wochenplan' };
+
+            var zeichnen = function () {
+                b.farbe($wurzel, ctx.akzent());
+                var zustand = ctx.wert('regel.zustand') || 'aus';
+                var faehig = ctx.wert('info.demandFaehig');
+                var ruht = ctx.wert('regel.betrieb') === 'faikout' && ctx.wert('regel.bedarf.strategie') !== 'vortag';
+                var aktiv = ctx.wert('regel.bedarf.aktiv') === true && faehig !== 'nein' && !ruht;
+                var soll = parseFloat(ctx.wert('regel.bedarf.sollwert'));
+                var probe = ctx.wert('regel.bedarf.probelauf') !== false;
+                // Zustand
+                $wurzel.find('.fk-regel-chip').text(b.t(ZUSTAND[zustand] || zustand)).attr('data-zustand', zustand)
+                    .attr('title', ctx.wert('regel.grund') || '');
+                $wurzel.find('.fk-regel-probe').text(probe && zustand !== 'aus' ? b.t('Probelauf') : '');
+                // Szene und naechste Schaltung
+                var planAn = ctx.wert('regel.plan.aktiv') === true;
+                var szene = planAn ? ctx.wert('regel.plan.szene') : '';
+                var ziel = b.zahl(ctx.wert('control.target'), 1);
+                $wurzel.find('.fk-regel-szene').text((szene ? szene + ' · ' : '') + (ziel !== null ? b.t('Soll') + ' ' + ziel + ' °C' : ''));
+                var naechster = Number(ctx.wert('regel.plan.naechster'));
+                var text = '';
+                if (planAn && naechster > 0) {
+                    var d = new Date(naechster);
+                    text = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' ' + (ctx.wert('regel.plan.naechsteSzene') || '');
+                    if (d.toDateString() !== new Date().toDateString()) text = d.toLocaleDateString(b.sprache(), { weekday: 'short' }) + ' ' + text;
+                }
+                $wurzel.find('.fk-regel-naechste').text(text ? '→ ' + text : '');
+                var raum = b.zahl(ctx.hat('regel.fuehler.raum') && ctx.wert('regel.fuehler.raum') !== null ? ctx.wert('regel.fuehler.raum') : ctx.wert('status.temp'), 1);
+                $wurzel.find('.fk-regel-raum-zahl').text(raum === null ? '–' : raum);
+                // Leistungsgrenze
+                var n = aktiv && !isNaN(soll) ? bild.balkenStufen(soll) : 0;
+                $wurzel.find('.fk-regel-balken span').each(function (i) {
+                    $(this).toggleClass('fk-voll', i < n).toggleClass('fk-spitze', i + 1 === n);
+                });
+                $wurzel.find('.fk-regel-prozent').text(
+                    faehig === 'nein' ? b.t('nicht unterstützt') : ruht ? b.t('ruht (Faikout-Auto)') : !aktiv ? b.t('nicht begrenzt') : isNaN(soll) ? '–' : Math.round(soll) + ' %');
+                $wurzel.find('.fk-regel-balken').toggleClass('fk-ruht', !aktiv);
+                // Kennlinie mit Arbeitspunkt
+                if (kennlinie) {
+                    var an = ctx.hat('control.power') ? !!ctx.wert('control.power') : true;
+                    var modus = ctx.wert('control.mode');
+                    var kuehlen = modus === 'cool' || (modus === 'heat_cool' && ctx.wert('status.action') === 'cooling');
+                    var x = parseFloat(ctx.wert('regel.bedarf.aussenMittel'));
+                    if (isNaN(x)) x = parseFloat(ctx.wert('regel.fuehler.aussen'));
+                    $wurzel.find('.fk-regel-bild').html(bild.kennlinie({
+                        punkte: kuehlen ? kennlinie.kuehlen : kennlinie.heizen,
+                        richtung: kuehlen ? 'kuehlen' : 'heizen',
+                        untergrenze: kennlinie.untergrenze,
+                        obergrenze: kennlinie.obergrenze,
+                        arbeitspunkt: isNaN(x) ? null : { x: x, wert: an && aktiv && !isNaN(soll) ? soll : null },
+                        kompakt: true,
+                        blass: !aktiv || !an,
+                        breite: 260,
+                        hoehe: 96
+                    }));
+                }
+                // Fusszeile: aussen, Leistung, welche Regelungen laufen
+                var werte = [];
+                var aussen = b.zahl(ctx.wert('regel.fuehler.aussen') !== null ? ctx.wert('regel.fuehler.aussen') : ctx.wert('status.outside'), 1);
+                if (aussen !== null) werte.push(b.t('Außen').toLowerCase() + ' ' + aussen + ' °C');
+                var watt = b.zahl(ctx.wert('status.consumption'), 0);
+                if (watt !== null) werte.push(watt + ' W');
+                $wurzel.find('.fk-regel-werte').text(werte.join(' · '));
+                $wurzel.find('.fk-regel-symbol').each(function () {
+                    var art = $(this).attr('data-art');
+                    var ein = ctx.wert('regel.' + art + '.aktiv') === true;
+                    $(this).attr('class', 'fk-regel-symbol' + (ein ? ' fk-an' : ''))
+                        .find('title').remove();
+                    $(this).prepend($(document.createElementNS('http://www.w3.org/2000/svg', 'title')).text(b.t(TITEL[art]) + ': ' + b.t(ein ? 'an' : 'aus')));
+                });
+            };
+            b.kennlinieLaden(ctx, function (k) { kennlinie = k; zeichnen(); });
+            return zeichnen;
         });
     },
 

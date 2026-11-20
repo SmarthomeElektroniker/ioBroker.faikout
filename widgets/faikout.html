@@ -11,6 +11,7 @@
 -->
 
 <link rel="stylesheet" type="text/css" href="widgets/faikout/css/faikout.css"/>
+<script type="text/javascript" src="widgets/faikout/js/kennlinienbild.js"></script>
 <script type="text/javascript" src="widgets/faikout/js/faikout.js"></script>
 
 <script type="text/javascript">
@@ -158,6 +159,19 @@
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;etikett/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:280px;height:150px">
         <% vis.binds.faikout.leistung(this.data.wid, this.view, this.data, this.style); %>
+    </div>
+</script>
+
+<!-- ==================================================== Regelung (nur Anzeige) -->
+<script id="tplFaikoutRegelung"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="val"
+        data-vis-name="Climate control (display)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;fuss/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:300px;height:330px">
+        <% vis.binds.faikout.regelung(this.data.wid, this.view, this.data, this.style); %>
     </div>
 </script>
 

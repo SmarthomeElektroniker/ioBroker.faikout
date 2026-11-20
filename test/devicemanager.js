@@ -914,6 +914,8 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(grenze({})).to.contain('>45<').and.to.contain('Probelauf: nicht gesendet');
         expect(grenze({}).match(/opacity:1"/g)).to.have.length(4); // 30, 35, 40, 45 %
         expect(grenze({ f: 'nein' })).to.contain('nicht unterstützt').and.to.contain('>–<');
+        // Tooltip am Etikett: warum eine Daikin die Leistungsgrenze nicht uebernimmt
+        expect(grenze({ f: 'nein' })).to.contain('title="Bei Daikin wirkt die Leistungsgrenze nur').and.to.contain('SP 1');
         expect(grenze({ b: 'faikout' })).to.contain('ruht (Faikout-Auto)').and.to.contain('>–<');
         expect(grenze({ b: 'faikout', st: 'vortag' })).to.contain('>45<').and.not.to.contain('ruht');
         expect(grenze({ a: false })).to.contain('nicht begrenzt');
@@ -927,6 +929,9 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(f).to.contain('Außen 4,5 °C').and.to.contain('Raum 20,6 °C · Rückfall').and.not.to.contain('Feuchte');
         expect(f).to.contain('title="Fühler der Anlage (Rückfall: Datenpunkt zu alt)"');
         expect(muster(dm.regelFuehlerHtml().de, { av: null, fa: true })).to.contain('Außen fehlt').and.to.contain('Feuchte fehlt');
+        // mit dem Datenpunkt regel.fuehler.<art>Stand zaehlt der, nicht mehr das Wort im Quellentext
+        const stand = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Sensor of the unit (fallback)', as: 'rueckfall', rv: 20, rq: 'x (Rückfall: y)', rs: 'ok' });
+        expect(stand).to.contain('Außen 4,5 °C · Rückfall').and.to.contain('Raum 20 °C<');
         expect(muster(dm.regelHandHtml().de, { h: true, b: new Date(2026, 10, 20, 22, 0).getTime() })).to.contain('<b>22:00</b>');
     });
 
@@ -1107,5 +1112,31 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         lauf(JSON.parse(JSON.stringify(k)), 'Karte');
         expect(fehlt).to.eql([]);
         expect(dm.WOCHENTAGE).to.have.all.keys(SPRACHEN);
+    });
+});
+
+describe('Device-Manager: Fuehlerkorrektur neben der Solltemperatur', () => {
+    it('Etikett nur mit Datenpunkt regel.fuehler.korrektur und nur bei wirksamer Korrektur', async () => {
+        const a = await adapterMitGeraet();
+        const id = [...a.objekte.values()].find(x => x.type === 'device')._id.slice(a.namespace.length + 1);
+        expect((await kartenLaden(a)).karten[0].customInfo.schema.items.regelKorrektur).to.equal(undefined);
+        for (const rel of ['regel.fuehler.korrektur', 'regel.fuehler.ziel']) {
+            a.objekte.set(`${id}.${rel}`, { _id: `${a.namespace}.${id}.${rel}`, type: 'state', common: { type: 'number' }, native: {} });
+        }
+        const items = (await kartenLaden(a)).karten[0].customInfo.schema.items;
+        const e = items.regelKorrektur;
+        // steht direkt hinter Sollwert und Schieber
+        const namenListe = Object.keys(items);
+        expect(namenListe.indexOf('regelKorrektur')).to.equal(namenListe.indexOf('targetSlider') + 1);
+        expect(e.hidden).to.contain('Math.abs(_states.k.val) >= 0.05');
+        const text = werte =>
+            new Function('_states', `return \`${e.text.func.de}\``)(
+                Object.fromEntries(Object.entries(werte).map(([k, v]) => [k, { val: v }])),
+            );
+        expect(text({ k: 1, z: 21 })).to.contain('Fühlerkorrektur +1,0 K · Ziel 21,0 °C');
+        expect(text({ k: -0.5 })).to.contain('Fühlerkorrektur −0,5 K').and.not.to.contain('Ziel');
+        for (const l of SPRACHEN) {
+            expect(e.text.func[l]).to.be.a('string');
+        }
     });
 });

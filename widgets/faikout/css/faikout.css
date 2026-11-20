@@ -231,3 +231,30 @@
     margin-top: 6px; font-size: 12px; opacity: .65;
 }
 .fk-v-fuss b { font-weight: 600; opacity: 1; font-size: 13px; }
+
+/* ------------------------------------------------------------------ Regelung (nur Anzeige) */
+.fk-regel { display: flex; flex-direction: column; gap: 8px; padding: 4px 14px 10px; flex: 1; min-height: 0; }
+.fk-regel-kopf { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.fk-regel-szene { font-size: 13px; font-weight: 600; }
+.fk-regel-naechste { font-size: 11px; color: var(--fk-leise); min-height: 14px; }
+.fk-regel-raum { font-size: 30px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; white-space: nowrap; }
+.fk-regel-raum small { font-size: 14px; font-weight: 500; color: var(--fk-leise); margin-left: 2px; }
+.fk-regel-zustand { display: flex; gap: 6px; flex-wrap: wrap; }
+.fk-regel-chip, .fk-regel-probe { font-size: 11px; line-height: 1.5; padding: 0 8px; border-radius: 9px; border: 1px solid var(--fk-still); color: var(--fk-leise); }
+.fk-regel-chip[data-zustand="ok"] { border-color: var(--fk-gut); color: var(--fk-gut); }
+.fk-regel-chip[data-zustand="hand"], .fk-regel-probe { border-color: var(--fk-warn); color: var(--fk-warn); }
+.fk-regel-chip[data-zustand="gestört"] { border-color: var(--fk-t5); color: var(--fk-t5); }
+.fk-regel-probe:empty { display: none; }
+.fk-regel-bild { color: var(--fk-text); min-height: 60px; flex: 1; }
+.fk-regel-bild svg { max-width: none !important; }
+.fk-regel-grenze { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--fk-leise); }
+.fk-regel-grenze b { font-size: 15px; color: var(--fk-text); font-variant-numeric: tabular-nums; }
+.fk-regel-balken { display: flex; align-items: flex-end; gap: 3px; height: 14px; }
+.fk-regel-balken span { flex: 1; height: 9px; border-radius: 2px; background: var(--fk-rand-stark); opacity: .55; }
+.fk-regel-balken span.fk-voll { background: var(--fk-text); opacity: 1; }
+.fk-regel-balken span.fk-spitze { height: 14px; }
+.fk-regel-balken.fk-ruht span { opacity: .3; }
+.fk-regel-fuss { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--fk-leise); }
+.fk-regel-symbole { display: flex; gap: 6px; }
+.fk-regel-symbol { width: 16px; height: 16px; color: var(--fk-still); opacity: .6; }
+.fk-regel-symbol.fk-an { color: var(--fk-akzent); opacity: 1; }
