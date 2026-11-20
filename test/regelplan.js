@@ -505,7 +505,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         expect(r.demand).to.equal(100);
     });
 
-    it('Handeingriff sperrt Plan und Feuchte, die Leistungsgrenze laeuft weiter', () => {
+    it('Handeingriff sperrt Plan und Szenen, die Leistungsgrenze laeuft weiter', () => {
         const r = koordinator.koordinieren(
             eingang({ gesperrt: true, status: { power: true, mode: 'heat', target: 24, fan: 'high', demand: 100 } }),
             k,
@@ -565,7 +565,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         ).to.equal(45);
     });
 
-    it('Frostschutz steht ueber dem Plan, aber unter dem Handeingriff', () => {
+    it('Frostschutz steht ueber dem Plan und ueber dem Handeingriff', () => {
         const kf = { ...k, frostAb: 8 };
         const e = eingang({
             szene: szenen.get('aus'),
@@ -574,8 +574,9 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         });
         const r = koordinator.koordinieren(e, kf, null, T);
         expect(r.wunsch).to.include({ power: true, mode: 'heat', target: 10 });
+        // Handeingriff sperrt nur Plan und Szenen - der Frostschutz bleibt
         const hand = koordinator.koordinieren({ ...e, gesperrt: true }, kf, null, T);
-        expect(hand.wunsch).to.eql({});
+        expect(hand.wunsch).to.include({ power: true, mode: 'heat', target: 10 });
         // Hysterese: bei 8,5 °C bleibt der Schutz, bei 9,5 °C endet er
         const bleibt = koordinator.koordinieren(
             { ...e, fuehler: { ...e.fuehler, raum: m(8.5) } },
@@ -674,7 +675,27 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         );
         expect(ok.wunsch).to.eql({ power: true, target: 21, fan: 'auto' });
         expect(ok.zustandText).to.equal('ok');
-        expect(ok.demand).to.equal(60);
+        // Leistungsgrenze bei Faikout-Auto nur im Modus "Auto" (Vortag + Zuschlag)
+        expect(ok.demand).to.equal(null);
+        expect(ok.bedarfRuht).to.equal(true);
+        const vortagK = { ...kf, bedarf: bedarf.konfigPruefen({ strategie: 'vortag' }).konfig };
+        const st = {
+            power: true,
+            mode: 'heat_cool',
+            heat: true,
+            target: 21,
+            fan: 'auto',
+            demand: 100,
+            autoe: true,
+            autor: 1,
+        };
+        const mitVortag = koordinator.koordinieren(
+            eingang({ status: st, vortag: { spitzeW: 500, mittelW: 400, stunden: 5 } }),
+            vortagK,
+            null,
+            T,
+        );
+        expect(mitVortag.demand).to.equal(60); // 500 W von 1000 W + 10 Punkte
         const ohne = koordinator.koordinieren(eingang(), kf, null, T);
         expect(ohne.zustandText).to.equal('gestört');
     });
@@ -730,6 +751,49 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         expect(koordinator.controlFaellig({ ...c, env: 20.6 }, letzte, T + 60000)).to.equal(false);
         expect(koordinator.controlFaellig({ ...c, env: 20.6 }, letzte, T + 2 * 60000)).to.equal(true);
         expect(koordinator.controlFaellig(null, letzte, T + 3600000)).to.equal(false);
+    });
+});
+
+describe('Regelung: Einstellungen je Geraet', () => {
+    const { konfigAusInstanz } = require('../lib/regel');
+
+    it('Kennlinie, Grenzen und Szenen je Geraet; leer faellt auf Instanz- und Werksvorgabe zurueck', () => {
+        const e = konfigAusInstanz({
+            regelUntergrenze: 45,
+            regelKennlinieHeizen: '-10:90, 15:45',
+            regelGeraete: [
+                { geraet: 'A', kennlinieHeizen: '-5:80, 10:50', obergrenze: 85, szenen: [{ name: 'Tag', soll: 22 }] },
+                { geraet: 'B', strategie: 'vortag', vortagZuschlag: 15 },
+            ],
+        });
+        const a = e.fuer('A', 'A').konfig;
+        expect(a.bedarf.heizen).to.eql([
+            [-5, 80],
+            [10, 50],
+        ]);
+        expect([a.bedarf.untergrenze, a.bedarf.obergrenze]).to.eql([45, 85]);
+        expect([...a.szenen.keys()]).to.eql(['tag']);
+        const b = e.fuer('B', 'B').konfig;
+        expect(b.bedarf.heizen).to.eql([
+            [-10, 90],
+            [15, 45],
+        ]);
+        expect(b.bedarf.strategie).to.equal('vortag');
+        expect(b.bedarf.vortag.zuschlag).to.equal(15);
+        expect([...b.szenen.keys()]).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
+        expect(e.fuer('C', 'C').konfig.bedarf.obergrenze).to.equal(95);
+    });
+
+    it('fehlerhafte Szene oder Kennlinie stoert nur das eine Geraet', () => {
+        const e = konfigAusInstanz({
+            regelGeraete: [
+                { geraet: 'A', szenen: [{ name: 'X', soll: 99 }] },
+                { geraet: 'B', kennlinieHeizen: '0:50, 10:90' },
+            ],
+        });
+        expect(e.fuer('A', 'A').fehler).to.match(/Zieltemperatur/);
+        expect(e.fuer('B', 'B').fehler).to.match(/nicht fallend/);
+        expect(e.fuer('C', 'C').fehler).to.equal(null);
     });
 });
 
