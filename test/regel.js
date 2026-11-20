@@ -383,3 +383,26 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         expect(a.gesendet).to.have.length(0);
     });
 });
+
+describe('Regelung: control-Nachricht (spaetere Etappe)', () => {
+    const { controlNachricht } = require('../lib/regel/control');
+    it('baut nie eine Teil-control: env und Band immer zusammen', () => {
+        expect(controlNachricht({ betrieb: 'adapter', env: 21.3, min: 20.5, max: 21.5 })).to.eql({ env: 21.3, target: [20.5, 21.5] });
+        expect(controlNachricht({ betrieb: 'adapter', env: 21.3 })).to.equal(null);
+        expect(controlNachricht({ betrieb: 'adapter', min: 20, max: 21 })).to.equal(null);
+        expect(controlNachricht({ betrieb: 'adapter', env: 21, min: 22, max: 21 })).to.equal(null);
+        for (const env of [null, 20, 21.5]) {
+            for (const min of [null, 20]) {
+                for (const max of [null, 21]) {
+                    const n = controlNachricht({ betrieb: 'adapter', env, min, max });
+                    expect(n === null || ('env' in n && 'target' in n)).to.equal(true);
+                }
+            }
+        }
+    });
+    it('BLE gekoppelt: kein env; Faikout-Auto: kein target', () => {
+        expect(controlNachricht({ betrieb: 'adapter', env: 21, min: 20, max: 21, ble: true })).to.eql({ target: [20, 21] });
+        expect(controlNachricht({ betrieb: 'faikoutAuto', env: 21, min: 20, max: 21 })).to.eql({ env: 21 });
+        expect(controlNachricht({ betrieb: 'faikoutAuto', env: 21, ble: true })).to.equal(null);
+    });
+});
