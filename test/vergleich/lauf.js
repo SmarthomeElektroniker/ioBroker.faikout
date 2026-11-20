@@ -217,7 +217,9 @@ async function lauf(o) {
     const bus = new Bus();
     const zeilen = [];
     const fuehlerStand = new Map(); // wahre Raumwerte als "externer Fuehler" (Datenpunkte sim.0.<modul>.*)
-    const extern = o.fuehler === 'extern';
+    const extern = o.fuehler === 'extern' || o.fuehler === 'traege';
+    const traege = o.fuehler === 'traege'; // Fuehler in einem anderen Raum: Tiefpass 30 min + Totzeit 5 min
+    const traegeStand = new Map();
     const mitPlan = !!o.plan;
     const mitFeuchte = !!o.feuchte;
     const marken = [];
@@ -237,8 +239,17 @@ async function lauf(o) {
         uhr: () => Date.now(),
         messung: z => {
             zeilen.push(z);
+let raumWert = z.raum;
+            if (traege) {
+                const s = traegeStand.get(z.modul) || { tp: z.raum, verlauf: [] };
+                s.tp += (1 - Math.exp(-1 / 30)) * (z.raum - s.tp); // je simulierter Minute
+                s.verlauf.push(s.tp);
+                raumWert = s.verlauf.length > 5 ? s.verlauf[s.verlauf.length - 6] : s.verlauf[0];
+                s.verlauf = s.verlauf.slice(-10);
+                traegeStand.set(z.modul, s);
+            }
             fuehlerStand.set(z.modul, {
-                raum: Math.round(z.raum * 10) / 10,
+                raum: Math.round(raumWert * 10) / 10,
                 feuchte: Math.round(z.feuchte),
                 aussen: Math.round(z.aussen * 10) / 10,
             });
@@ -271,6 +282,7 @@ async function lauf(o) {
                           raumDp: `sim.0.${n}.raum`,
                           feuchteQuelle: 'dp',
                           feuchteDp: `sim.0.${n}.feuchte`,
+                          raumTraegeMin: Number(o.mischen) || 0,
                       }
                     : {}),
             })),
@@ -566,6 +578,7 @@ if (require.main === module) {
         plan: arg('plan') === 'ja',
         feuchte: arg('feuchte') === 'ja',
         fuehler: arg('fuehler') || 'intern',
+        mischen: arg('mischen'),
     };
     lauf(o)
         .then(e => {

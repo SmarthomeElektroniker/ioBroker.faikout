@@ -382,6 +382,29 @@ describe('Regelung: Fuehlerquellen', () => {
         expect(quellen.waehlen('aussen', 'auto', {}, T).text).to.equal('kein Fühler vorhanden');
     });
 
+    it('traeger Fremdfuehler: schnelle Aenderungen vom Anlagenfuehler, auf Dauer der Fremdwert', () => {
+        const tau = 30 * 60000;
+        let r = quellen.mischen(20, 20.5, null, T, tau);
+        expect(r.wert).to.equal(20); // Start: nur der Fremdwert
+        // Anlage heizt: intern steigt um 1 K, fremd merkt noch nichts
+        r = quellen.mischen(20, 21.5, r.zustand, T + 60000, tau);
+        expect(r.wert).to.be.closeTo(21, 0.1);
+        // intern bleibt oben, der schnelle Anteil klingt ab
+        let z = r.zustand;
+        for (let i = 2; i <= 180; i++) {
+            r = quellen.mischen(20, 21.5, z, T + i * 60000, tau);
+            z = r.zustand;
+        }
+        expect(r.wert).to.equal(20);
+        // Luecke (Neustart): neu aufsetzen; ohne Anlagenfuehler oder ausgeschaltet: unveraendert
+        expect(quellen.mischen(20, 25, z, T + 10 * 3600000, tau).wert).to.equal(20);
+        expect(quellen.mischen(20, null, z, T, tau).wert).to.equal(20);
+        expect(quellen.mischen(20, 21.5, z, T, 0).wert).to.equal(20);
+        // Sprung des Anlagenfuehlers ist auf 2 K begrenzt
+        const a = quellen.mischen(20, 20, null, T, tau);
+        expect(quellen.mischen(20, 30, a.zustand, T + 60000, tau).wert).to.equal(22);
+    });
+
     it('feste Wahl "intern" nimmt den BLE-Wert nicht', () => {
         expect(quellen.waehlen('raum', 'intern', { ble: frisch(21), intern: frisch(23) }, T)).to.include({
             quelle: 'intern',
@@ -464,6 +487,10 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         frostAb: 0,
         frostZiel: 10,
         band: 0.5,
+        fuehlerWeg: 'modul',
+        korrAbstandMs: 20 * 60000,
+        korrTotK: 0.3,
+        korrMaxK: 3,
     };
     const m = (wert, quelle = 'intern') => ({
         messung: wert === null ? null : { wert, zeit: T - 30000 },
@@ -742,6 +769,124 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         }
     });
 
+    describe('Fuehlerkorrektur (fremder Raumfuehler, Anlage regelt selbst)', () => {
+        const ks = { ...k, fuehlerWeg: 'sollwert', korrAbstandMs: 30 * 60000, korrMittelMs: 45 * 60000 };
+        const mit = (fremd, st = {}, ueber = {}) =>
+            eingang({
+                status: { power: true, mode: 'heat', target: 21, fan: 'auto', demand: 100, ...st },
+                internRaum: st.target ?? 21,
+                fuehler: { aussen: m(5), raum: m(fremd, 'dp'), feuchte: m(50) },
+                ...ueber,
+            });
+        /**
+         * Laeuft minutenweise; die Anlage uebernimmt jeden Sollwert sofort, ihr eigener Fuehler folgt ihm.
+         * `fremd(soll, minute)` liefert den Fremdfuehler.
+         */
+        const lauf = (minuten, fremd, start = {}, ueber = {}) => {
+            let z = start.zustand || null;
+            let soll = start.soll ?? 21;
+            const sollwerte = [];
+            let r;
+            const t0 = start.t0 || 0;
+            for (let i = 0; i < minuten; i++) {
+                const jetzt = T + (t0 + i) * 60000;
+                const ein = mit(fremd(soll, i), { target: soll, ...(ueber.st || {}) }, ueber.e || {});
+                // Fuehlerwerte sind frisch (die Hilfsfunktion m() stempelt sie auf T)
+                ein.fuehler.aussen.messung.zeit = jetzt;
+                ein.fuehler.raum.messung.zeit = jetzt;
+                r = koordinator.koordinieren(ein, ks, z, jetzt);
+                z = r.zustand;
+                if (r.wunsch.target !== undefined && r.wunsch.target !== soll) {
+                    soll = r.wunsch.target;
+                    sollwerte.push([t0 + i, soll]);
+                }
+            }
+            return { r, zustand: z, soll, sollwerte, t0: t0 + minuten };
+        };
+
+        it('keine control-Nachricht; der Sollwert der Anlage wandert langsam, bis der Fremdfuehler das Ziel zeigt', () => {
+            // Fremdfuehler (anderer Raum) zeigt dauerhaft 1,2 K weniger als die Anlage einstellt
+            const a = lauf(8 * 60, soll => Math.round((soll - 1.2) * 10) / 10);
+            expect(a.r.control).to.equal(null);
+            expect(a.soll).to.be.within(22, 22.5); // 21 + ~1,2 K
+            expect(a.sollwerte[0][0]).to.be.at.least(30); // erste Korrektur fruehestens nach einem Abstand
+            for (let i = 1; i < a.sollwerte.length; i++) {
+                expect(a.sollwerte[i][0] - a.sollwerte[i - 1][0]).to.be.at.least(30);
+                expect(Math.abs(a.sollwerte[i][1] - a.sollwerte[i - 1][1])).to.equal(0.5);
+            }
+            expect(a.sollwerte.length).to.be.at.most(4); // kein Pendeln
+            expect(a.r.gruende.join(' ')).to.match(/Fühlerkorrektur: Ziel 21 °C, Anlage 22(\.5)? °C/);
+            expect(a.r.bedarf.grund).to.match(/Ziel 21 °C/); // Leistungsgrenze rechnet mit dem Ziel im Raum
+        });
+
+        it('pendelnde Anlage und rauschender Fuehler loesen keine Schritte aus', () => {
+            // +-0,5 K Schwingung mit 2 h Periode um das Ziel
+            const a = lauf(
+                12 * 60,
+                (soll, i) => Math.round((21 + 0.5 * Math.sin((i / 120) * 2 * Math.PI) + (i % 2) * 0.1) * 10) / 10,
+            );
+            expect(a.sollwerte.length).to.be.at.most(2);
+            expect(a.soll).to.be.within(20.5, 21.5);
+        });
+
+        it('korrigiert nicht waehrend des Aufheizens (Anlage hat ihren Sollwert noch nicht erreicht oder Fuehler steigt)', () => {
+            const kalt = lauf(
+                180,
+                (soll, i) => Math.round((18 + i * 0.015) * 10) / 10,
+                {},
+                { e: { internRaum: 18.5 } },
+            );
+            expect(kalt.soll).to.equal(21);
+            // ohne Anlagenfuehler (IR-Bruecke): der steigende Fremdfuehler haelt die Mittelung an
+            const tcl = lauf(120, (soll, i) => Math.round((18 + i * 0.03) * 10) / 10, {}, { e: { internRaum: null } });
+            expect(tcl.soll).to.equal(21);
+        });
+
+        it('begrenzt die Korrektur auf 3 K', () => {
+            const a = lauf(24 * 60, () => 15);
+            expect(a.soll).to.equal(24);
+        });
+
+        it('Anlage mit ganzen Grad: Schritte von 1 K, Totband passend', () => {
+            const knapp = lauf(8 * 60, soll => soll - 0.5, {}, { st: { schritt: 1 } });
+            expect(knapp.soll).to.equal(21); // 0,5 K liegt im Totband von 0,6 K
+            const weit = lauf(8 * 60, soll => soll - 1.2, {}, { st: { schritt: 1 } });
+            expect(weit.soll).to.equal(22);
+        });
+
+        it('ohne Plan: neuer Sollwert von aussen ist ein neues Ziel, der eigene Befehl nicht', () => {
+            const ohne = { e: { schalter: { plan: false, feuchte: false, bedarf: true }, szene: null } };
+            const a = lauf(6 * 60, soll => Math.round((soll - 1.2) * 10) / 10, {}, ohne);
+            expect(a.zustand.koordinator.basisZiel).to.equal(21);
+            expect(a.soll).to.be.above(21.5);
+            // Fernbedienung: 24 -> neues Ziel 24, die Korrektur bleibt
+            const korr = a.zustand.koordinator.zielKorr;
+            const b = lauf(5, () => 21, { zustand: a.zustand, soll: 24, t0: a.t0 }, ohne);
+            expect(b.zustand.koordinator.basisZiel).to.equal(24);
+            expect(b.soll - 24).to.be.within(korr, korr + 0.5);
+            // Anlage uebernimmt den korrigierten Wert nicht (meldet weiter 24): Ziel schaukelt nicht hoch
+            let z = b.zustand;
+            for (let i = 0; i < 30; i++) {
+                z = koordinator.koordinieren(mit(21, { target: 24 }, ohne.e), ks, z, T + (b.t0 + i) * 60000).zustand;
+            }
+            expect(z.koordinator.basisZiel).to.equal(24);
+        });
+
+        it('Handeingriff, Geraet aus, Faikout-Auto: keine Korrektur', () => {
+            expect(koordinator.koordinieren(mit(20, {}, { gesperrt: true }), ks, null, T).wunsch).to.eql({});
+            expect(koordinator.koordinieren(mit(20, {}, { szene: szenen.get('aus') }), ks, null, T).wunsch).to.eql({
+                power: false,
+            });
+            const auto = koordinator.koordinieren(
+                mit(20, { autoe: true, autor: 1 }),
+                { ...ks, betrieb: 'faikout' },
+                null,
+                T,
+            );
+            expect(auto.control).to.eql({ env: 20 });
+        });
+    });
+
     it('control-Takt: sofort, bei Aenderung fruehestens nach 2 min, spaetestens nach 5 min', () => {
         const c = { env: 20.4, target: 21 };
         const letzte = { text: JSON.stringify(c), zeit: T };
@@ -908,7 +1053,7 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
     it('fremder Raumfuehler: vollstaendige control-Nachricht, hoechstens alle 2 min, mindestens alle 5 min', async () => {
         const konfig = {
             regelProbelauf: false,
-            regelGeraete: [{ geraet: 'Plan G', raumQuelle: 'dp', raumDp: 'alias.0.raum' }],
+            regelGeraete: [{ geraet: 'Plan G', raumQuelle: 'dp', raumDp: 'alias.0.raum', fuehlerWeg: 'modul' }],
         };
         const { a, uhr } = aufbau(konfig, START);
         const anlage = new Anlage({ name: 'Plan G', target: 21, mode: 'heat' });
