@@ -16,7 +16,6 @@ export default [
             'test/**',
             'coverage/**',
             'lokal/**',
-            'vergleich/**',
             '*.config.mjs',
         ],
     },

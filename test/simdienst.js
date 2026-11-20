@@ -12,13 +12,13 @@ const path = require('node:path');
 const net = require('node:net');
 const http = require('node:http');
 
-const { Physik } = require('../sim/physik');
-const { Modul } = require('../sim/modul');
-const { Welt } = require('../sim/welt');
-const { ModulHttp } = require('../sim/http');
-const { SZENARIEN, szenario } = require('../sim/szenarien');
-const { auswerten } = require('../sim/messung');
-const { Dienst, konfigLesen, brokerErlaubt } = require('../sim/dienst');
+const { Physik } = require('./simwelt/physik');
+const { Modul } = require('./simwelt/modul');
+const { Welt } = require('./simwelt/welt');
+const { ModulHttp } = require('./simwelt/http');
+const { SZENARIEN, szenario } = require('./simwelt/szenarien');
+const { auswerten } = require('./simwelt/messung');
+const { Dienst, konfigLesen, brokerErlaubt } = require('./simwelt/dienst');
 const felder = require('../lib/fields');
 const discovery = require('../lib/discovery');
 

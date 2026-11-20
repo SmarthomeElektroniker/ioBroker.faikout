@@ -36,7 +36,7 @@ const SZENARIEN = [
 
 const aus = arg('aus') || 'ergebnisse';
 fs.mkdirSync(aus, { recursive: true });
-const eigen = arg('eigen') || path.join(__dirname, '..');
+const eigen = arg('eigen') || path.join(__dirname, '..', '..');
 const fremd = arg('fremd');
 const nur = arg('nur');
 const varianten = [

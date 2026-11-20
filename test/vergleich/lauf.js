@@ -21,11 +21,11 @@ const path = require('node:path');
 const { EventEmitter } = require('node:events');
 const { Uhr, echt } = require('./uhr');
 const kern = require('./adapterkern');
-const { Welt } = require('../sim/welt');
-const { ModulHttp } = require('../sim/http');
-const { auswerten } = require('../sim/messung');
-const { szenario: szenarioHolen } = require('../sim/szenarien');
-const wochenplan = require('../lib/regel/wochenplan');
+const { Welt } = require('../simwelt/welt');
+const { ModulHttp } = require('../simwelt/http');
+const { auswerten } = require('../simwelt/messung');
+const { szenario: szenarioHolen } = require('../simwelt/szenarien');
+const wochenplan = require('../../lib/regel/wochenplan');
 
 const arg = name => {
     const i = process.argv.indexOf(`--${name}`);
@@ -554,8 +554,8 @@ async function lauf(o) {
 if (require.main === module) {
     const o = {
         art: arg('art') || 'eigen',
-        main: arg('main') || path.join(__dirname, '..', 'main.js'),
-        iopack: arg('iopack') || path.join(__dirname, '..', 'io-package.json'),
+        main: arg('main') || path.join(__dirname, '..', '..', 'main.js'),
+        iopack: arg('iopack') || path.join(__dirname, '..', '..', 'io-package.json'),
         variante: arg('variante') || 'adapter',
         szenario: arg('szenario') || 'heizenKalterTag',
         seed: Number(arg('seed')) || 1,
