@@ -697,6 +697,10 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         expect(auto.control).to.eql({ env: 20.4 });
         expect(koordinator.koordinieren({ ...dp, szene: szenen.get('aus') }, k, null, T).control).to.equal(null);
         expect(koordinator.koordinieren({ ...dp, gesperrt: true }, k, null, T).control).to.equal(null);
+        // nie eine control nur mit env ohne laufendes Faikout-Auto (Modul wuerde im Sekundentakt melden)
+        expect(koordinator.koordinieren(dp, { ...k, betrieb: 'faikout' }, null, T).control).to.equal(null);
+        const trocken = { ...dp, szene: { ...szenen.get('komfort'), mode: 'dry' } };
+        expect(koordinator.koordinieren(trocken, k, null, T).control).to.equal(null);
     });
 
     it('control-Takt: sofort, bei Aenderung fruehestens nach 2 min, spaetestens nach 5 min', () => {
