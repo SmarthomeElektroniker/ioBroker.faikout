@@ -438,6 +438,17 @@ describe('Module suchen: Nachrichten an den Adapter', () => {
         expect(a.logs.join('\n')).to.not.match(/10\.9\.9\.9|1777|geheimnutzer|192\.168\.30\.70/);
     });
 
+    it('Einzelpruefungen sammeln sich in der Tabelle, neue Suche beginnt von vorn', async () => {
+        const a = adapter();
+        await senden(a, 'adressePruefen', { ziel: '192.168.30.70' });
+        const r = await senden(a, 'adressePruefen', { ziel: '192.168.30.72' });
+        expect(r.native._found.map(z => z.ip)).to.eql(['192.168.30.70', '192.168.30.72']);
+        const r2 = await senden(a, 'adressePruefen', { ziel: '192.168.30.70' });
+        expect(r2.native._found.map(z => z.ip)).to.eql(['192.168.30.72', '192.168.30.70']);
+        const s = await senden(a, 'suchen', {});
+        expect(s.native._found.map(z => z.ip)).to.eql(['192.168.30.70']);
+    });
+
     it('adressePruefen ohne Adresse meldet einen Fehler', async () => {
         const r = await senden(adapter(), 'adressePruefen', { ziel: '${data._target}' });
         expect(r.error).to.match(/IP-Adresse/);

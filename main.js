@@ -134,6 +134,8 @@ class Faikout extends utils.Adapter {
 
         /** Module der letzten Suche (ohne Formularwerte) fuer die Auswahl "Modul anbinden". */
         this.letzteSuche = [];
+        /** Ergebniszeilen der Tabelle (ohne Formularwerte) - Einzelpruefungen sammeln sich hier. */
+        this.letzteZeilen = [];
 
         /**
          * Anbinden: Plan aus "Pruefen" und Rueckweg je IP. Nur im Speicher - enthaelt den alten
@@ -1330,8 +1332,16 @@ class Faikout extends utils.Adapter {
                                 });
                             }
                         }
-                        const zeilen = r.zeilen.map(({ code: _c, ...z }) => z);
-                        return antworten({ native: { _found: zeilen }, result: r.text });
+                        // Einzeladressen sammeln sich in der Tabelle (im Docker-Bridge-Netz der normale
+                        // Weg, ein Modul nach dem anderen); eine neue mDNS-Suche beginnt von vorn.
+                        const neu = r.zeilen.map(({ code: _c, ...z }) => z);
+                        if (!ziel) {
+                            this.letzteZeilen = neu;
+                        } else {
+                            const ips = new Set(neu.map(z => z.ip));
+                            this.letzteZeilen = [...(this.letzteZeilen || []).filter(z => !ips.has(z.ip)), ...neu];
+                        }
+                        return antworten({ native: { _found: this.letzteZeilen }, result: r.text });
                     } finally {
                         this.sucheLaeuft = false;
                     }
