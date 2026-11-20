@@ -189,7 +189,24 @@
     "regelVortagReferenzW": 1000,
     "regelVortagMin": 40,
     "regelVortagMax": 95,
-    "regelQuellen": []
+    "regelQuellen": [],
+    "regelTotband": 0.3,
+    "regelProzentProK": 10,
+    "regelBand": 0.5,
+    "regelHandModus": "schaltpunkt",
+    "regelHandStunden": 4,
+    "regelFeuchteDtpEin": 4,
+    "regelFeuchteDtpAus": 6,
+    "regelFeuchteRhEin": 65,
+    "regelFeuchteRhAus": 58,
+    "regelFeuchteMassnahme": "entfeuchten",
+    "regelFeuchteMinLauf": 20,
+    "regelFeuchtePause": 30,
+    "regelSzenen": [],
+    "regelFeiertagSonntag": false,
+    "regelFeiertageDE": true,
+    "regelFeiertage": "",
+    "regelGeraete": []
   },
   "encryptedNative": [
     "pass"

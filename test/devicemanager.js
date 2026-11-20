@@ -790,3 +790,322 @@ describe('Device-Manager: alle elf Sprachen, nichts unuebersetzt', () => {
         expect(f).to.include('x.a: pt fehlt');
     });
 });
+
+describe('Device-Manager: Regelung auf der Karte', () => {
+    const dm = require('../lib/devicemanager');
+    const oberflaeche = require('../lib/oberflaeche');
+    const ID = 'Wohnzimmer_AC';
+
+    /** Adapter mit den Datenpunkten regel.* eines Geraets (wie sie lib/regel anlegt). */
+    async function mitRegelung(werte = {}) {
+        const a = await adapterMitGeraet({ ...MELDUNG, hum: 50, action: 'heating' });
+        const id = [...a.objekte.values()].find(x => x.type === 'device')._id.slice(a.namespace.length + 1);
+        const standard = {
+            'regel.zustand': 'ok',
+            'regel.grund': 'Szene Komfort · Bedarf: Kennlinie Heizen bei 5 °C → 61 %',
+            'regel.betrieb': 'adapter',
+            'regel.verlaufJson': JSON.stringify([[Date.now() - 3600000, 60]]),
+            'regel.bedarf.aktiv': true,
+            'regel.bedarf.probelauf': true,
+            'regel.bedarf.sollwert': 60,
+            'regel.bedarf.rohwert': 61.3,
+            'regel.bedarf.aussenMittel': 5,
+            'regel.bedarf.grund': 'Kennlinie Heizen bei 5 °C → 61 %; Raum 21.5 °C / Ziel 21 °C | würde senden',
+            'regel.bedarf.strategie': 'kennlinie',
+            'regel.plan.aktiv': true,
+            'regel.plan.wocheJson': '',
+            'regel.plan.abwesenheitJson': '',
+            'regel.plan.szene': 'Komfort',
+            'regel.plan.naechster': Date.now() + 3600000,
+            'regel.plan.naechsteSzene': 'Absenken',
+            'regel.feuchte.aktiv': false,
+            'regel.hand.gesperrt': false,
+            'regel.hand.bis': null,
+            'regel.hand.aufheben': false,
+            'regel.fuehler.aussen': 5,
+            'regel.fuehler.aussenQuelle': 'Fühler der Anlage',
+            'regel.fuehler.raum': 21.5,
+            'regel.fuehler.raumQuelle': 'Fühler der Anlage',
+            'regel.fuehler.feuchte': 50,
+            'regel.fuehler.feuchteQuelle': 'Fühler der Anlage',
+            'info.demandFaehig': 'ja',
+            ...werte,
+        };
+        for (const [rel, val] of Object.entries(standard)) {
+            const schreibbar = /aktiv|probelauf|Json|aufheben/.test(rel) && !rel.includes('verlauf');
+            a.objekte.set(`${id}.${rel}`, {
+                _id: `${a.namespace}.${id}.${rel}`,
+                type: 'state',
+                common: { name: rel, type: typeof val, role: 'state', read: true, write: schreibbar },
+                native: {},
+            });
+            a.werte.set(`${id}.${rel}`, { val, ack: true });
+        }
+        a.sprache = async () => 'de';
+        a.gesetzt = [];
+        return { a, id };
+    }
+    /** Wertet ein Muster des Admins aus wie json-config (Template mit _states). */
+    const muster = (text, werte) =>
+        new Function('_states', `return \`${text.replace(/`/g, '\\`')}\``)(
+            Object.fromEntries(Object.entries(werte).map(([k, v]) => [k, { val: v }])),
+        );
+
+    it('ohne Datenpunkte regel.* bleibt die Karte wie bisher (kein Abschnitt, keine Aktionen)', async () => {
+        const a = await adapterMitGeraet();
+        const k = (await kartenLaden(a)).karten[0];
+        expect(Object.keys(k.customInfo.schema.items).some(x => x.startsWith('regel'))).to.equal(false);
+        expect(k.actions.map(x => x.id)).to.eql([UMSCHALTEN]);
+    });
+
+    it('Abschnitt Regelung: Zustand, Leistungsgrenze, Szene, Handeingriff, Schalter, Fuehler - und zwei Aktionen', async () => {
+        const { a, id } = await mitRegelung();
+        expect(id).to.equal(ID);
+        const k = (await kartenLaden(a)).karten[0];
+        const items = k.customInfo.schema.items;
+        expect(Object.keys(items).filter(x => x.startsWith('regel'))).to.eql([
+            'regelKopf',
+            'regelGrenze',
+            'regelPlan',
+            'regelHand',
+            'regelFortsetzen',
+            'regelKnoepfe',
+            'regelFuehler',
+        ]);
+        expect(k.actions.map(x => x.id)).to.eql([UMSCHALTEN, dm.WOCHENPLAN, dm.DETAILS]);
+        expect(k.controls).to.equal(undefined);
+        // alles haengt an den Datenpunkten der Regelung (live, ohne Neuladen)
+        expect(items.regelKopf.dependsOnStates).to.eql({
+            z: `faikout.0.${ID}.regel.zustand`,
+            g: `faikout.0.${ID}.regel.grund`,
+            p: `faikout.0.${ID}.regel.bedarf.probelauf`,
+        });
+        // Handeingriff: Hinweis und Knopf nur bei Sperre; der Knopf heisst "Freigeben" und schreibt den Knopf-Datenpunkt
+        expect(items.regelHand.hidden).to.equal('_states.h?.val !== true');
+        expect(items.regelFortsetzen).to.include({ oid: `faikout.0.${ID}.regel.hand.aufheben`, control: 'button', buttonValue: true });
+        expect(items.regelFortsetzen.falseText.de).to.equal('Freigeben');
+        // Szene nur bei eingeschaltetem Wochenplan
+        expect(items.regelPlan.hidden).to.equal('_states.a?.val !== true');
+    });
+
+    it('drei Symbolknoepfe: je Schalter ein gefuellter (aus-schalten) und ein blasser (ein-schalten) Knopf mit Tooltip', async () => {
+        const { a } = await mitRegelung();
+        const knoepfe = (await kartenLaden(a)).karten[0].customInfo.schema.items.regelKnoepfe.items;
+        for (const s of dm.REGEL_SCHALTER) {
+            const an = knoepfe[`${s.name}On`];
+            const aus = knoepfe[`${s.name}Off`];
+            expect(an.oid).to.equal(`faikout.0.${ID}.${s.rel}`);
+            expect(an).to.include({ control: 'button', buttonValue: false, hidden: '_states.v?.val !== true' });
+            expect(aus).to.include({ control: 'button', buttonValue: true, hidden: '_states.v?.val === true' });
+            expect(an.tooltip).to.equal(oberflaeche.TEXTE[s.an]);
+            expect(aus.tooltip).to.equal(oberflaeche.TEXTE[s.aus]);
+            expect(an.falseTextStyle.backgroundImage).to.contain('data:image/svg+xml');
+            expect(an.falseTextStyle.backgroundColor).not.to.equal(aus.falseTextStyle.backgroundColor);
+        }
+    });
+
+    it('Muster der Karte: Zustand, Probelauf, Balken, "ruht (Faikout-Auto)", nicht unterstuetzt, Fuehler-Rueckfall', () => {
+        const kopf = muster(dm.regelKopfHtml(true).de, { z: 'ok', g: 'Szene <b>Komfort</b>', p: true });
+        expect(kopf).to.contain('>aktiv<').and.to.contain('Probelauf').and.to.contain('Szene &lt;b>Komfort');
+        expect(muster(dm.regelKopfHtml(false).de, { z: 'hand', g: '', p: false })).to.contain('Handeingriff').and.not.to.contain('Probelauf');
+        expect(muster(dm.regelKopfHtml(true).de, { z: 'aus', g: '', p: true })).to.contain('ausgeschaltet').and.not.to.contain('Probelauf');
+
+        const grenze = w => muster(dm.regelGrenzeHtml(true).de, { s: 45, a: true, p: true, f: 'ja', b: 'adapter', st: 'kennlinie', ...w });
+        expect(grenze({})).to.contain('>45<').and.to.contain('Probelauf: nicht gesendet');
+        expect(grenze({}).match(/opacity:1"/g)).to.have.length(4); // 30, 35, 40, 45 %
+        expect(grenze({ f: 'nein' })).to.contain('nicht unterstützt').and.to.contain('>–<');
+        expect(grenze({ b: 'faikout' })).to.contain('ruht (Faikout-Auto)').and.to.contain('>–<');
+        expect(grenze({ b: 'faikout', st: 'vortag' })).to.contain('>45<').and.not.to.contain('ruht');
+        expect(grenze({ a: false })).to.contain('nicht begrenzt');
+        expect(muster(dm.regelGrenzeHtml(false).de, { s: 45, a: true, p: false, f: 'ja', b: 'adapter', st: 'kennlinie' })).not.to.contain('Probelauf');
+
+        const plan = muster(dm.regelPlanHtml().de, { s: 'Komfort', n: new Date(2026, 10, 20, 22, 0).getTime(), ns: 'Absenken' });
+        expect(plan).to.contain('Komfort').and.to.contain('22:00 Absenken');
+        expect(muster(dm.regelPlanHtml().de, { s: '', n: null, ns: '' })).to.contain('kein Wochenplan');
+
+        const f = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Fühler der Anlage', rv: 20.6, rq: 'Fühler der Anlage (Rückfall: Datenpunkt zu alt)', fv: null, fq: '', fa: false });
+        expect(f).to.contain('Außen 4,5 °C').and.to.contain('Raum 20,6 °C · Rückfall').and.not.to.contain('Feuchte');
+        expect(f).to.contain('title="Fühler der Anlage (Rückfall: Datenpunkt zu alt)"');
+        expect(muster(dm.regelFuehlerHtml().de, { av: null, fa: true })).to.contain('Außen fehlt').and.to.contain('Feuchte fehlt');
+        expect(muster(dm.regelHandHtml().de, { h: true, b: new Date(2026, 10, 20, 22, 0).getTime() })).to.contain('<b>22:00</b>');
+    });
+
+    it('jedes Muster laesst sich in jeder Sprache auswerten, auch ganz ohne Werte', () => {
+        for (const l of SPRACHEN) {
+            for (const m of [dm.regelKopfHtml(true), dm.regelGrenzeHtml(true), dm.regelPlanHtml(), dm.regelHandHtml(), dm.regelFuehlerHtml()]) {
+                expect(muster(m[l], {})).to.be.a('string');
+                // die Musterauswertung des Admins bricht an geschweiften Klammern im Ausdruck ab
+                expect(m[l].replace(/\$\{[^{}]*\}/g, '')).not.to.match(/[{}]/);
+            }
+        }
+    });
+
+    describe('Wochenplan-Dialog', () => {
+        /** Dialogkontext: `beimFormular` spielt die Wochenplan-Seite (bekommt die Kennung aus der URL). */
+        const kontext = beimFormular => {
+            const k = { formulare: [], meldungen: [] };
+            k.showForm = async (schema, opt) => {
+                k.formulare.push({ schema, opt });
+                return beimFormular(schema, opt, k.formulare.length);
+            };
+            k.showMessage = async text => k.meldungen.push(text);
+            return k;
+        };
+        const kennung = schema => /token=(\w+)/.exec(schema.items.raster.url)[1];
+
+        it('oeffnet die Wochenplan-Seite als iframe; Info liefert Plan, Szenen, Farben und Texte', async () => {
+            const { a } = await mitRegelung();
+            let info;
+            const k = kontext(async schema => {
+                expect(schema.items.raster).to.include({ type: 'iframe' });
+                expect(schema.items.raster.url).to.contain('adapter/faikout/wochenplan.html?instance=faikout.0&device=Wohnzimmer_AC&token=');
+                info = await a.deviceManagement.wochenplanNachricht('wochenplanInfo', { device: ID, token: kennung(schema) });
+                return undefined; // Abbrechen
+            });
+            expect(await a.deviceManagement.wochenplanDialog(ID, k)).to.eql({ refresh: false });
+            expect(k.formulare[0].opt.title.de).to.equal('Wochenplan von Wohnzimmer AC');
+            expect(info.program).to.eql([]);
+            expect(info.types.map(t => t.type)).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
+            expect(info.types[0].info).to.equal('21 °C · max. 95 %');
+            expect(info.types[3].info).to.equal('Anlage aus');
+            expect(info.farben.hell.komfort).to.be.a('string');
+            expect(info.texts.pVorgabe).to.equal('Vorgabeplan laden');
+            expect(info.abwesenheit.aktiv).to.equal(false);
+            // abgebrochen: nichts geschrieben, Entwurf weg
+            expect(a.gesetzt).to.eql([]);
+            expect(a.deviceManagement.planEntwuerfe.size).to.equal(0);
+        });
+
+        it('Vorgabeplan laden und OK: schreibt plan.wocheJson und abwesenheitJson ohne ack', async () => {
+            const { a } = await mitRegelung();
+            const k = kontext(async schema => {
+                const token = kennung(schema);
+                const v = await a.deviceManagement.wochenplanNachricht('wochenplanVorgabe', { device: ID, token });
+                const r = await a.deviceManagement.wochenplanNachricht('wochenplanEntwurf', {
+                    device: ID,
+                    token,
+                    program: v.program,
+                    abwesenheit: { aktiv: true, von: '2026-12-27T00:00', bis: '2027-01-03T00:00', szene: 'abwesend' },
+                });
+                expect(r).to.eql({ ok: true, count: v.program.length });
+                return {};
+            });
+            await a.deviceManagement.wochenplanDialog(ID, k);
+            const plan = a.gesetzt.find(g => g.id === `${ID}.regel.plan.wocheJson`);
+            expect(plan.wert.ack).to.equal(false);
+            expect(JSON.parse(plan.wert.val)).to.have.length(7);
+            expect(JSON.parse(plan.wert.val)[0][1]).to.eql({ t: 360, s: 'komfort' });
+            const abw = JSON.parse(a.gesetzt.find(g => g.id === `${ID}.regel.plan.abwesenheitJson`).wert.val);
+            expect(abw).to.eql({ von: new Date(2026, 11, 27).getTime(), bis: new Date(2027, 0, 3).getTime(), szene: 'abwesend' });
+            // Wochenplan war schon an: keine zweite Rueckfrage
+            expect(k.formulare).to.have.length(1);
+        });
+
+        it('Wochenplan aus: fragt nach dem Speichern, ob er eingeschaltet werden soll', async () => {
+            for (const antwort of [{}, undefined]) {
+                const { a } = await mitRegelung({ 'regel.plan.aktiv': false });
+                const k = kontext(async (schema, opt, nr) => {
+                    if (nr === 1) {
+                        await a.deviceManagement.wochenplanNachricht('wochenplanEntwurf', {
+                            device: ID,
+                            token: kennung(schema),
+                            program: [{ day: 'Mon', time: '06:00', type: 'komfort' }],
+                        });
+                        return {};
+                    }
+                    expect(schema.items.frage.text.de).to.contain('Jetzt einschalten?');
+                    expect(opt.buttons.map(b => b.label.de)).to.eql(['Einschalten', 'Nur speichern']);
+                    return antwort;
+                });
+                await a.deviceManagement.wochenplanDialog(ID, k);
+                const an = a.gesetzt.find(g => g.id === `${ID}.regel.plan.aktiv`);
+                expect(!!an).to.equal(!!antwort);
+                expect(a.gesetzt.some(g => g.id === `${ID}.regel.plan.wocheJson`)).to.equal(true);
+            }
+        });
+
+        it('Fehler im Klartext: unbekannte Szene und falsche Abwesenheit schon beim Entwurf, leerer Plan beim OK', async () => {
+            const { a } = await mitRegelung();
+            const k = kontext(async schema => {
+                const token = kennung(schema);
+                const n = (program, abwesenheit) =>
+                    a.deviceManagement.wochenplanNachricht('wochenplanEntwurf', { device: ID, token, program, abwesenheit });
+                expect((await n([{ day: 'Mon', time: '06:00', type: 'party' }])).error).to.contain('Szene "party" gibt es nicht');
+                const falsch = { aktiv: true, von: '2026-12-27T00:00', bis: '2026-12-26T00:00', szene: 'abwesend' };
+                expect((await n([{ day: 'Mon', time: '06:00', type: 'komfort' }], falsch)).error).to.equal(oberflaeche.TEXTE.pAbwFehler.de);
+                expect(await n([])).to.eql({ ok: true, count: 0 });
+                return {};
+            });
+            await a.deviceManagement.wochenplanDialog(ID, k);
+            expect(k.meldungen[0].de).to.equal('Der Wochenplan wurde nicht gespeichert: der Plan hat keinen Schaltpunkt');
+            expect(a.gesetzt).to.eql([]);
+        });
+
+        it('fremde oder abgelaufene Kennung wird abgewiesen', async () => {
+            const { a } = await mitRegelung();
+            const r = await a.deviceManagement.wochenplanNachricht('wochenplanInfo', { device: ID, token: 'falsch' });
+            expect(r.error).to.equal('unknown or expired dialog');
+        });
+
+        it('die Wochenplan-Seite liegt im Paket und spricht die richtigen Befehle', () => {
+            const html = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'admin', 'wochenplan.html'), 'utf8');
+            for (const b of ['wochenplanInfo', 'wochenplanEntwurf', 'wochenplanVorgabe']) {
+                expect(html).to.contain(`'${b}'`);
+                expect(oberflaeche.BEFEHLE.has(b)).to.equal(true);
+            }
+        });
+    });
+
+    describe('Details-Dialog', () => {
+        it('Kennlinie mit Arbeitspunkt, Rechenweg als Liste, Verlauf, Fuehler - nur Anzeige', async () => {
+            const { a } = await mitRegelung();
+            let gezeigt;
+            const k = { showForm: async (schema, opt) => ((gezeigt = { schema, opt }), undefined) };
+            expect(await a.deviceManagement.detailsDialog(ID, k)).to.eql({ refresh: false });
+            expect(gezeigt.opt.buttons).to.eql(['close']);
+            expect(gezeigt.opt.title.de).to.equal('Regelung von Wohnzimmer AC');
+            const html = gezeigt.schema.items.inhalt.text;
+            expect(gezeigt.schema.items.inhalt).to.include({ type: 'staticText', format: 'html', noTranslation: true });
+            expect(html.match(/<svg/g)).to.have.length(2);
+            expect(html).to.contain('Probelauf.').and.to.contain('würde senden 60 %');
+            expect(html).to.contain('<li style="margin:2px 0">Szene Komfort</li>');
+            expect(html).to.contain('Kennlinie Heizen bei 5 °C → 61 %</li>');
+            expect(html).to.contain('Leistungsgrenze, letzte 24 Stunden').and.to.contain('Adapter regelt');
+            expect(html).to.contain('21,5 °C').and.to.contain('Fühler der Anlage');
+            // nichts, was der Admin als Muster auswerten wuerde
+            expect(html).not.to.match(/[`\\]|\$\{/);
+            expect(a.gesetzt).to.eql([]);
+        });
+
+        it('Texte aus Datenpunkten werden maskiert (kein HTML, kein Muster)', async () => {
+            const { a } = await mitRegelung({ 'regel.grund': '<img src=x> ${1+1} `x`' });
+            const f = await a.deviceManagement.detailsFormular(ID, 'de');
+            expect(f.items.inhalt.text).to.contain('&lt;img src=x&gt; &#36;{1+1} &#96;x&#96;');
+        });
+    });
+
+    it('Uebersetzungen: Karte mit Regelung, Aktionen und Dialogtexte in allen elf Sprachen', async () => {
+        const { a } = await mitRegelung();
+        const k = (await kartenLaden(a)).karten[0];
+        const fehlt = [];
+        const lauf = (x, pfad) => {
+            if (!x || typeof x !== 'object') {
+                return;
+            }
+            if (typeof x.en === 'string') {
+                for (const l of SPRACHEN) {
+                    if (typeof x[l] !== 'string' || !x[l].trim()) {
+                        fehlt.push(`${pfad}: ${l}`);
+                    }
+                }
+                return;
+            }
+            for (const [s, v] of Object.entries(x)) {
+                lauf(v, `${pfad}.${s}`);
+            }
+        };
+        lauf(JSON.parse(JSON.stringify(k)), 'Karte');
+        expect(fehlt).to.eql([]);
+        expect(dm.WOCHENTAGE).to.have.all.keys(SPRACHEN);
+    });
+});

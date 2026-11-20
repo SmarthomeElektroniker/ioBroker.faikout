@@ -1,0 +1,1315 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        />
+        <title>Faikout weekly schedule</title>
+        <!--
+            Wochenraster des Wochenplans (Dialog der Geraetekarte von faikout, als iframe geladen).
+            Eine Zeile je Wochentag, 0-24 h; jeder Block ist ein Zeitraum mit seiner Szene. Die Linien
+            zwischen den Bloecken sind die Schaltpunkte.
+            - in einen Block klicken (oder "Neuer Schaltpunkt" im Menue): neuer Schaltpunkt an dieser Stelle;
+              danach oeffnet sich an der neuen Linie die Auswahl der Szene
+            - Linie ziehen: Schaltzeit verschieben (15-Minuten-Schritte); Linie anklicken: Szene aendern oder loeschen
+            - "+ Schaltpunkt" je Zeile; einen ganzen Tag kopieren und einfuegen; Vorgabeplan laden
+            - Abwesenheit: von/bis und die Szene, die in dieser Zeit gilt
+            - Tastatur: Tab zu Block oder Linie; Eingabe = Szene waehlen, Einfg oder "+" = neuer Schaltpunkt,
+              Pfeiltasten verschieben eine Linie (Umschalt = 1 h), Entf loescht sie
+            Die Seite fragt den Adapter nach Plan und Szenen (sendTo wochenplanInfo) und schickt jede Aenderung
+            als Entwurf (sendTo wochenplanEntwurf); erst das "OK" des Dialogs schreibt ihn.
+            Kein fremder Code: reines HTML, CSS und JavaScript; der Socket kommt vom Admin (/lib/js/socket.io.js).
+        -->
+        <script src="../../lib/js/socket.io.js"></script>
+        <style>
+            :root {
+                --bg: #ffffff;
+                --fg: #1f1f1f;
+                --muted: #6b6b6b;
+                --line: #d9d9d9;
+                --track: #f2f2f2;
+                --focus: #1565c0;
+                --menu: #ffffff;
+                --shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+                /* calm palette, white text >= 4.5:1 (WCAG AA) on every block */
+                --block-fg: #ffffff;
+                --c-none: #bdbdbd;
+            }
+            body.dark {
+                --bg: #1e1e1e;
+                --fg: #ececec;
+                --muted: #a9a9a9;
+                --line: #3a3a3a;
+                --track: #2a2a2a;
+                --focus: #90caf9;
+                --menu: #2c2c2c;
+                --shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+                /* dark: lighter, muted fills with dark text (>= 6:1), blocks >= 4.7:1 against the dialog */
+                --block-fg: #161616;
+                --c-none: #4a4a4a;
+            }
+            html,
+            body {
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                color: var(--fg);
+                font-family: Roboto, 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                user-select: none;
+            }
+            #legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin: 2px 0 12px 0;
+                align-items: center;
+            }
+            .swatch {
+                width: 14px;
+                height: 14px;
+                border-radius: 3px;
+                display: inline-block;
+                flex: none;
+            }
+            .chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 2px;
+                height: 30px;
+                padding: 0 4px 0 12px;
+                border-radius: 15px;
+                background: var(--chip, var(--c-none));
+                color: var(--block-fg);
+                white-space: nowrap;
+                font-size: 13px;
+            }
+            .chip.plain {
+                padding-right: 12px;
+            }
+            .chip .name {
+                margin-right: 6px;
+            }
+            .chip button {
+                border: 0;
+                background: transparent;
+                color: inherit;
+                font: inherit;
+                cursor: pointer;
+                border-radius: 12px;
+                height: 24px;
+                min-width: 24px;
+                padding: 0 4px;
+            }
+            .chip button:hover {
+                background: rgba(255, 255, 255, 0.18);
+            }
+            body.dark .chip button:hover {
+                background: rgba(0, 0, 0, 0.12);
+            }
+            .chip button:focus-visible,
+            .chip input:focus-visible {
+                outline: 2px solid var(--block-fg);
+                outline-offset: 0;
+            }
+            .chip .val {
+                font-weight: 500;
+                min-width: 52px;
+            }
+            .chip input {
+                width: 52px;
+                height: 22px;
+                border: 0;
+                border-radius: 11px;
+                padding: 0 6px;
+                text-align: center;
+                font: inherit;
+                font-weight: 500;
+                color: var(--fg);
+                background: var(--bg);
+            }
+            #grid {
+                display: grid;
+                grid-template-columns: 44px 1fr auto;
+                row-gap: 6px;
+                column-gap: 8px;
+                align-items: center;
+            }
+            .day {
+                font-weight: 500;
+            }
+            .day.today {
+                color: var(--focus);
+            }
+            .scale {
+                position: relative;
+                height: 16px;
+                color: var(--muted);
+                font-size: 12px;
+            }
+            .scale span {
+                position: absolute;
+                transform: translateX(-50%);
+            }
+            .track {
+                position: relative;
+                height: 40px;
+                background: var(--track);
+                border-radius: 6px;
+                overflow: visible;
+            }
+            .block {
+                cursor: copy;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                border: 0;
+                margin: 0;
+                padding: 0 6px;
+                color: var(--block-fg);
+                font: inherit;
+                font-size: 13px;
+                text-align: left;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                border-right: 1px solid var(--bg);
+            }
+            .block:first-child {
+                border-radius: 6px 0 0 6px;
+            }
+            .block.last {
+                border-radius: 0 6px 6px 0;
+                border-right: 0;
+            }
+            .block.only {
+                border-radius: 6px;
+            }
+            .block:focus-visible,
+            .handle:focus-visible,
+            .tool:focus-visible,
+            .menu button:focus-visible {
+                outline: 3px solid var(--focus);
+                outline-offset: 1px;
+                z-index: 5;
+            }
+            .handle {
+                position: absolute;
+                top: -4px;
+                bottom: -4px;
+                width: 12px;
+                margin-left: -6px;
+                border: 0;
+                padding: 0;
+                background: transparent;
+                cursor: ew-resize;
+                z-index: 3;
+                touch-action: none;
+            }
+            .handle::after {
+                content: '';
+                position: absolute;
+                left: 4px;
+                top: 6px;
+                bottom: 6px;
+                width: 4px;
+                border-radius: 2px;
+                background: var(--block-fg);
+                opacity: 0.7;
+            }
+            .handle.new::after {
+                opacity: 1;
+                animation: pulse 0.8s ease-in-out 2;
+            }
+            @keyframes pulse {
+                0%,
+                100% {
+                    box-shadow: 0 0 0 0 var(--focus);
+                }
+                50% {
+                    box-shadow: 0 0 0 5px var(--focus);
+                }
+            }
+            .handle:hover::after,
+            .handle.drag::after {
+                opacity: 1;
+            }
+            .tip {
+                position: absolute;
+                top: -22px;
+                transform: translateX(-50%);
+                background: var(--fg);
+                color: var(--bg);
+                font-size: 12px;
+                padding: 1px 5px;
+                border-radius: 3px;
+                pointer-events: none;
+                z-index: 6;
+            }
+            .now {
+                position: absolute;
+                top: -3px;
+                bottom: -3px;
+                width: 2px;
+                background: var(--fg);
+                pointer-events: none;
+                z-index: 2;
+            }
+            .tools {
+                display: flex;
+                gap: 2px;
+            }
+            .tool {
+                width: 30px;
+                height: 30px;
+                border: 0;
+                border-radius: 50%;
+                background: transparent;
+                color: var(--fg);
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .tool:hover {
+                background: var(--track);
+            }
+            .tool:disabled {
+                opacity: 0.3;
+                cursor: default;
+            }
+            .tool svg {
+                width: 18px;
+                height: 18px;
+                fill: currentColor;
+            }
+            #status {
+                margin-top: 12px;
+                color: var(--muted);
+                font-size: 12px;
+                min-height: 16px;
+            }
+            #status.error {
+                color: #e53935;
+            }
+            .menu {
+                position: absolute;
+                background: var(--menu);
+                color: var(--fg);
+                box-shadow: var(--shadow);
+                border-radius: 6px;
+                padding: 4px;
+                z-index: 20;
+                display: flex;
+                flex-direction: column;
+                min-width: 190px;
+            }
+            .menu button {
+                border: 0;
+                background: transparent;
+                color: inherit;
+                font: inherit;
+                text-align: left;
+                padding: 6px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .menu button:hover {
+                background: var(--track);
+            }
+            .menu hr {
+                border: 0;
+                border-top: 1px solid var(--line);
+                margin: 4px 0;
+                width: 100%;
+            }
+            #hint {
+                color: var(--muted);
+                font-size: 12px;
+                margin: 0 0 6px 0;
+            }
+            .track {
+                cursor: copy;
+            }
+            .preview {
+                position: absolute;
+                top: -3px;
+                bottom: -3px;
+                width: 2px;
+                margin-left: -1px;
+                background: var(--block-fg);
+                opacity: 0.8;
+                pointer-events: none;
+                z-index: 4;
+            }
+            .preview span {
+                position: absolute;
+                top: -20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--fg);
+                color: var(--bg);
+                font-size: 12px;
+                padding: 1px 5px;
+                border-radius: 3px;
+                white-space: nowrap;
+            }
+            .add {
+                border: 1px solid var(--line);
+                border-radius: 15px;
+                background: transparent;
+                color: var(--fg);
+                font: inherit;
+                font-size: 12px;
+                padding: 4px 10px;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+            .add:hover {
+                background: var(--track);
+            }
+            .add:focus-visible {
+                outline: 3px solid var(--focus);
+                outline-offset: 1px;
+            }
+            .menu button svg {
+                width: 18px;
+                height: 18px;
+                fill: currentColor;
+                flex: none;
+            }
+            .menu .danger {
+                color: #c62828;
+            }
+            body.dark .menu .danger {
+                color: #ef9a9a;
+            }
+            .menu .question {
+                padding: 6px 10px;
+                max-width: 260px;
+            }
+            .menu .row {
+                display: flex;
+                gap: 6px;
+                justify-content: flex-end;
+                padding: 4px;
+            }
+            .menu .title {
+                padding: 4px 10px 6px 10px;
+                color: var(--muted);
+                font-size: 12px;
+            }
+            html,
+            body {
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+            .chip .extra {
+                opacity: 0.9;
+                font-size: 12px;
+            }
+            #foot {
+                display: grid;
+                grid-template-columns: minmax(220px, 1fr) minmax(280px, 2fr);
+                gap: 12px;
+                margin-top: 8px;
+                user-select: text;
+            }
+            @media (max-width: 640px) {
+                #foot {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .box {
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                padding: 10px 12px;
+            }
+            #notes {
+                margin-top: 10px;
+                color: var(--muted);
+                font-size: 12px;
+                line-height: 1.4;
+            }
+            .switch {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 500;
+                cursor: pointer;
+            }
+            .switch input {
+                width: 18px;
+                height: 18px;
+                accent-color: var(--focus);
+            }
+            #absFields {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px 16px;
+                margin-top: 10px;
+            }
+            #absFields.off {
+                opacity: 0.45;
+            }
+            #absFields label {
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                font-size: 12px;
+                color: var(--muted);
+            }
+            #absFields input,
+            #absFields select {
+                font: inherit;
+                font-size: 14px;
+                color: var(--fg);
+                background: var(--bg);
+                border: 1px solid var(--line);
+                border-radius: 4px;
+                padding: 5px 8px;
+                min-width: 150px;
+                color-scheme: light;
+            }
+            body.dark #absFields input,
+            body.dark #absFields select {
+                color-scheme: dark;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="legend"></div>
+        <div id="hint"></div>
+        <div
+            id="grid"
+            role="grid"
+        ></div>
+        <div
+            id="status"
+            aria-live="polite"
+        ></div>
+        <div id="foot">
+            <div class="box">
+                <button
+                    id="preset"
+                    class="add"
+                ></button>
+                <div id="notes"></div>
+            </div>
+            <div class="box">
+                <label class="switch">
+                    <input
+                        type="checkbox"
+                        id="absOn"
+                    />
+                    <span id="absLabel"></span>
+                </label>
+                <div id="absFields">
+                    <label>
+                        <span id="absFromLabel"></span>
+                        <input
+                            type="datetime-local"
+                            id="absFrom"
+                        />
+                    </label>
+                    <label>
+                        <span id="absToLabel"></span>
+                        <input
+                            type="datetime-local"
+                            id="absTo"
+                        />
+                    </label>
+                    <label>
+                        <span id="absSceneLabel"></span>
+                        <select id="absScene"></select>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <script>
+            'use strict';
+            (function () {
+                const STEP = 15;
+                const DAY = 1440;
+                const WEEK = 7 * DAY;
+                
+                const q = new URLSearchParams(location.search);
+                const INSTANCE = q.get('instance') || 'faikout.0';
+                const DEVICE = q.get('device') || '';
+                const TOKEN = q.get('token') || '';
+                const $ = id => document.getElementById(id);
+                const ICON_COPY =
+                    '<svg viewBox="0 0 24 24"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/></svg>';
+                const ICON_PASTE =
+                    '<svg viewBox="0 0 24 24"><path d="M19,20H5V4H7V7H17V4H19M12,2A1,1 0 0,1 13,3A1,1 0 0,1 12,4A1,1 0 0,1 11,3A1,1 0 0,1 12,2M19,2H14.82C14.4,0.84 13.3,0 12,0C10.7,0 9.6,0.84 9.18,2H5A2,2 0 0,0 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V4A2,2 0 0,0 19,2Z"/></svg>';
+
+                // Material Design Icons content_cut and delete (Apache 2.0)
+                const ICON_SPLIT =
+                    '<svg viewBox="0 0 24 24"><path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zM6 8c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm0 12c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm6-7.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM19 3l-6 6 2 2 7-7V3z"/></svg>';
+                const ICON_DELETE =
+                    '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+                let info = null;
+                let points = []; // [{m: minutes since Monday 00:00, type}]
+                let absence = { aktiv: false, von: '', bis: '', szene: '' };
+                let clip = null;
+                let menu = null;
+                let socket = null;
+
+                // ---------- theme: follow the admin (same origin), otherwise the system ----------
+                function applyTheme() {
+                    let dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    try {
+                        const bg = getComputedStyle(window.parent.document.body).backgroundColor;
+                        const m = /rgba?\((\d+), *(\d+), *(\d+)/.exec(bg);
+                        if (m) {
+                            dark = 0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3] < 128;
+                        }
+                    } catch {
+                        // not embedded
+                    }
+                    document.body.classList.toggle('dark', !!dark);
+                    applyColors();
+                }
+
+                // ---------- model ----------
+                const sorted = () => points.sort((a, b) => a.m - b.m);
+                const label = t => (info ? (info.types.find(x => x.type === t) || {}).label || t : t);
+                const blockText = t => label(t);
+                const hhmm = m =>
+                    `${String(Math.floor((m % DAY) / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+                const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                function dayName(d, style) {
+                    // 2024-01-01 was a Monday
+                    try {
+                        return new Intl.DateTimeFormat(info ? info.lang : undefined, { weekday: style }).format(
+                            new Date(2024, 0, 1 + d),
+                        );
+                    } catch {
+                        return DAYS[d];
+                    }
+                }
+                function typeAt(m) {
+                    if (!points.length) {
+                        return null;
+                    }
+                    let t = points[points.length - 1].type;
+                    for (const p of points) {
+                        if (p.m <= m) {
+                            t = p.type;
+                        }
+                    }
+                    return t;
+                }
+                function normalise() {
+                    sorted();
+                    if (points.length < 2) {
+                        return;
+                    }
+                    // a switching point that repeats the period before it changes nothing
+                    for (let i = points.length - 1; i >= 0 && points.length > 1; i--) {
+                        const prev = points[(i - 1 + points.length) % points.length];
+                        if (prev !== points[i] && prev.type === points[i].type) {
+                            points.splice(i, 1);
+                        }
+                    }
+                }
+                function blocksOf(d) {
+                    const start = d * DAY;
+                    const end = start + DAY;
+                    const inner = points.filter(p => p.m > start && p.m < end).map(p => p.m);
+                    const cuts = [start, ...inner, end];
+                    const out = [];
+                    for (let i = 0; i < cuts.length - 1; i++) {
+                        out.push({ a: cuts[i], b: cuts[i + 1], type: typeAt(cuts[i]) });
+                    }
+                    return out;
+                }
+
+                // ---------- talking to the adapter ----------
+                function send(command, message) {
+                    return new Promise((resolve, reject) => {
+                        const timer = setTimeout(() => reject(new Error('timeout')), 15000);
+                        socket.emit('sendTo', INSTANCE, command, { device: DEVICE, token: TOKEN, ...message }, res => {
+                            clearTimeout(timer);
+                            if (res && res.error) {
+                                reject(new Error(res.error));
+                            } else {
+                                resolve(res);
+                            }
+                        });
+                    });
+                }
+                let draftTimer = null;
+                function changed() {
+                    render();
+                    clearTimeout(draftTimer);
+                    draftTimer = setTimeout(async () => {
+                        const program = sorted().map(p => ({
+                            day: DAYS[Math.floor(p.m / DAY)],
+                            time: hhmm(p.m),
+                            type: p.type,
+                        }));
+                        try {
+                            const r = await send('wochenplanEntwurf', { program, abwesenheit: absence });
+                            status(`${r.count} ${info.texts.pSchaltpunkte}`);
+                        } catch (err) {
+                            status(err.message, true);
+                        }
+                    }, 250);
+                }
+                function status(text, error) {
+                    $('status').textContent = text;
+                    $('status').classList.toggle('error', !!error);
+                }
+
+                // ---------- drawing ----------
+                function render() {
+                    closeMenu();
+                    const focusKey = document.activeElement && document.activeElement.dataset.key;
+                    const grid = $('grid');
+                    grid.innerHTML = '';
+                    grid.appendChild(document.createElement('div'));
+                    const scale = document.createElement('div');
+                    scale.className = 'scale';
+                    for (let h = 0; h <= 24; h += 2) {
+                        const s = document.createElement('span');
+                        s.style.left = `${(h / 24) * 100}%`;
+                        s.textContent = String(h);
+                        scale.appendChild(s);
+                    }
+                    grid.appendChild(scale);
+                    grid.appendChild(document.createElement('div'));
+                    const now = new Date();
+                    const today = (now.getDay() + 6) % 7;
+                    for (let d = 0; d < 7; d++) {
+                        const name = document.createElement('div');
+                        name.className = `day${d === today ? ' today' : ''}`;
+                        name.textContent = dayName(d, 'short');
+                        name.title = dayName(d, 'long');
+                        grid.appendChild(name);
+                        const track = document.createElement('div');
+                        track.className = 'track';
+                        track.dataset.day = String(d);
+                        track.setAttribute('role', 'row');
+                        track.setAttribute('aria-label', dayName(d, 'long'));
+                        const blocks = blocksOf(d);
+                        blocks.forEach((bl, i) => {
+                            const b = document.createElement('button');
+                            b.className = `block${blocks.length === 1 ? ' only' : i === blocks.length - 1 ? ' last' : ''}`;
+                            b.style.left = `${((bl.a - d * DAY) / DAY) * 100}%`;
+                            b.style.width = `${((bl.b - bl.a) / DAY) * 100}%`;
+                            b.style.background = `var(--c-${bl.type || 'none'})`;
+                            b.textContent = bl.type ? blockText(bl.type) : '–';
+                            b.title = `${dayName(d, 'long')} ${hhmm(bl.a)}–${bl.b % DAY ? hhmm(bl.b) : '24:00'}: ${bl.type ? blockText(bl.type) : '–'}`;
+                            b.setAttribute('aria-label', b.title);
+                            b.dataset.key = `b${d}-${bl.a}`;
+                            b.addEventListener('click', ev => clickBlock(ev, b, track, d, bl));
+                            b.addEventListener('keydown', ev => blockKey(ev, b, d, bl));
+                            b.addEventListener('contextmenu', ev => {
+                                ev.preventDefault();
+                                openMenuAt(b, d, bl.a, minuteAt(track, ev.clientX, d));
+                            });
+                            track.appendChild(b);
+                        });
+                        for (const p of points.filter(x => x.m >= d * DAY && x.m < (d + 1) * DAY)) {
+                            const h = document.createElement('button');
+                            h.className = 'handle';
+                            h.style.left = `${((p.m - d * DAY) / DAY) * 100}%`;
+                            h.title = `${dayName(d, 'long')} ${hhmm(p.m)}: ${blockText(p.type)}`;
+                            h.setAttribute('role', 'slider');
+                            h.setAttribute('aria-label', h.title);
+                            h.setAttribute('aria-valuetext', hhmm(p.m));
+                            h.dataset.key = `h${p.m}`;
+                            h.addEventListener('pointerdown', ev => startDrag(ev, h, track, d, p));
+                            h.addEventListener('keydown', ev => handleKey(ev, d, p));
+                            track.appendChild(h);
+                        }
+                        track.addEventListener('pointermove', ev => preview(ev, track, d));
+                        track.addEventListener('pointerleave', () => preview(null, track, d));
+                        if (d === today) {
+                            const n = document.createElement('div');
+                            n.className = 'now';
+                            n.style.left = `${((now.getHours() * 60 + now.getMinutes()) / DAY) * 100}%`;
+                            track.appendChild(n);
+                        }
+                        grid.appendChild(track);
+                        const tools = document.createElement('div');
+                        tools.className = 'tools';
+                        const copy = tool(ICON_COPY, info.texts.pTagKopieren, () => {
+                            clip = {
+                                start: typeAt(d * DAY),
+                                pts: points
+                                    .filter(p => p.m > d * DAY && p.m < (d + 1) * DAY)
+                                    .map(p => ({ m: p.m - d * DAY, type: p.type })),
+                            };
+                            render();
+                        });
+                        const paste = tool(ICON_PASTE, info.texts.pTagEinfuegen, () => pasteDay(d));
+                        paste.disabled = !clip;
+                        const add = document.createElement('button');
+                        add.className = 'add';
+                        add.textContent = info.texts.pNeu;
+                        add.addEventListener('click', () => addToDay(d));
+                        tools.append(add, copy, paste);
+                        grid.appendChild(tools);
+                    }
+                    if (focusKey) {
+                        const el = grid.querySelector(`[data-key="${focusKey}"]`);
+                        if (el) {
+                            el.focus();
+                        }
+                    }
+                }
+                function tool(icon, title, fn) {
+                    const b = document.createElement('button');
+                    b.className = 'tool';
+                    b.innerHTML = icon;
+                    b.title = title;
+                    b.setAttribute('aria-label', title);
+                    b.addEventListener('click', fn);
+                    return b;
+                }
+                /** Kopfzeile: je Szene ein farbiges Etikett "Komfort 21 °C · max. 95 %" (nur Anzeige). */
+                function legend() {
+                    const el = $('legend');
+                    el.innerHTML = '';
+                    for (const { type, info: extra } of info.types) {
+                        const c = document.createElement('div');
+                        c.className = 'chip plain';
+                        c.style.setProperty('--chip', `var(--c-${type})`);
+                        const name = document.createElement('span');
+                        name.className = 'name';
+                        name.textContent = label(type);
+                        c.appendChild(name);
+                        if (extra) {
+                            const x = document.createElement('span');
+                            x.className = 'extra';
+                            x.textContent = extra;
+                            c.appendChild(x);
+                        }
+                        el.appendChild(c);
+                    }
+                }
+                /** Farben der Szenen (vom Adapter, je Thema) als CSS-Variablen --c-<Szene>. */
+                function applyColors() {
+                    if (!info || !info.farben) {
+                        return;
+                    }
+                    const set = document.body.classList.contains('dark') ? info.farben.dunkel : info.farben.hell;
+                    for (const [id, farbe] of Object.entries(set || {})) {
+                        document.documentElement.style.setProperty(`--c-${id}`, farbe);
+                    }
+                }
+                /** Unterer Bereich: Vorgabeplan, Hinweise, Abwesenheit. */
+                function footer() {
+                    $('preset').textContent = info.texts.pVorgabe;
+                    $('preset').onclick = async () => {
+                        try {
+                            const r = await send('wochenplanVorgabe', {});
+                            setProgram(r.program);
+                            changed();
+                        } catch (err) {
+                            status(err.message, true);
+                        }
+                    };
+                    const notes = [];
+                    if (!info.planAktiv) {
+                        notes.push(info.texts.pPlanAus);
+                    }
+                    if (info.feiertagSonntag) {
+                        notes.push(info.texts.pFeiertag);
+                    }
+                    $('notes').textContent = notes.join(' ');
+                    absence = { ...absence, ...(info.abwesenheit || {}) };
+                    $('absLabel').textContent = info.texts.pAbwesenheit;
+                    $('absFromLabel').textContent = info.texts.pVon;
+                    $('absToLabel').textContent = info.texts.pBis;
+                    $('absSceneLabel').textContent = info.texts.pSzeneInZeit;
+                    const sel = $('absScene');
+                    sel.innerHTML = '';
+                    for (const { type } of info.types) {
+                        const o = document.createElement('option');
+                        o.value = type;
+                        o.textContent = label(type);
+                        sel.appendChild(o);
+                    }
+                    const show = () => {
+                        $('absOn').checked = !!absence.aktiv;
+                        $('absFrom').value = absence.von || '';
+                        $('absTo').value = absence.bis || '';
+                        sel.value = absence.szene || '';
+                        $('absFields').classList.toggle('off', !absence.aktiv);
+                        for (const id of ['absFrom', 'absTo', 'absScene']) {
+                            $(id).disabled = !absence.aktiv;
+                        }
+                    };
+                    const take = () => {
+                        absence = {
+                            aktiv: $('absOn').checked,
+                            von: $('absFrom').value,
+                            bis: $('absTo').value,
+                            szene: sel.value,
+                        };
+                        show();
+                        changed();
+                    };
+                    for (const id of ['absOn', 'absFrom', 'absTo', 'absScene']) {
+                        $(id).onchange = take;
+                    }
+                    show();
+                }
+                function setProgram(program) {
+                    const di = Object.fromEntries(DAYS.map((d, i) => [d, i]));
+                    points = (program || []).map(e => {
+                        const [h, mi] = String(e.time).split(':').map(Number);
+                        return { m: di[e.day] * DAY + h * 60 + mi, type: e.type };
+                    });
+                    normalise();
+                }
+
+                // ---------- editing ----------
+                const snap = m => Math.round(m / STEP) * STEP;
+                function minuteAt(track, clientX, d) {
+                    const r = track.getBoundingClientRect();
+                    return d * DAY + snap(Math.min(Math.max((clientX - r.left) / r.width, 0), 1) * DAY);
+                }
+                function limits(d, p) {
+                    sorted();
+                    const i = points.indexOf(p);
+                    const prev = points[i - 1];
+                    const next = points[i + 1];
+                    let lo = d * DAY;
+                    let hi = (d + 1) * DAY - STEP;
+                    if (prev && prev.m >= d * DAY) {
+                        lo = prev.m + STEP;
+                    }
+                    if (next && next.m < (d + 1) * DAY) {
+                        hi = next.m - STEP;
+                    }
+                    return [lo, hi];
+                }
+                function move(d, p, m) {
+                    const [lo, hi] = limits(d, p);
+                    p.m = Math.min(Math.max(m, lo), hi);
+                }
+                function startDrag(ev, handle, track, d, p) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    handle.focus();
+                    handle.classList.add('drag');
+                    preview(null, track, d);
+                    const from = p.m;
+                    const tip = document.createElement('div');
+                    tip.className = 'tip';
+                    track.appendChild(tip);
+                    const onMove = e => {
+                        move(d, p, minuteAt(track, e.clientX, d));
+                        const x = `${((p.m - d * DAY) / DAY) * 100}%`;
+                        handle.style.left = x;
+                        tip.style.left = x;
+                        tip.textContent = hhmm(p.m);
+                        // live preview of the two neighbouring blocks
+                        const blocks = track.querySelectorAll('.block');
+                        blocksOf(d).forEach((bl, i) => {
+                            if (blocks[i]) {
+                                blocks[i].style.left = `${((bl.a - d * DAY) / DAY) * 100}%`;
+                                blocks[i].style.width = `${((bl.b - bl.a) / DAY) * 100}%`;
+                            }
+                        });
+                    };
+                    let moved = false;
+                    const onMoveTracked = e => {
+                        if (Math.abs(e.clientX - ev.clientX) > 3) {
+                            moved = true;
+                        }
+                        if (moved) {
+                            onMove(e);
+                        }
+                    };
+                    const onUp = () => {
+                        window.removeEventListener('pointermove', onMoveTracked);
+                        window.removeEventListener('pointerup', onUp);
+                        if (!moved || p.m === from) {
+                            // a click on a line: change or delete this switching time
+                            tip.remove();
+                            handle.classList.remove('drag');
+                            openMenuAt(handle, d, p.m);
+                            return;
+                        }
+                        changed();
+                    };
+                    window.addEventListener('pointermove', onMoveTracked);
+                    window.addEventListener('pointerup', onUp);
+                }
+                function handleKey(ev, d, p) {
+                    const step = ev.shiftKey ? 60 : STEP;
+                    if (ev.key === 'ArrowLeft' || ev.key === 'ArrowDown') {
+                        move(d, p, p.m - step);
+                    } else if (ev.key === 'ArrowRight' || ev.key === 'ArrowUp') {
+                        move(d, p, p.m + step);
+                    } else if (ev.key === 'Delete' || ev.key === 'Backspace') {
+                        // same question as in the menu
+                        ev.preventDefault();
+                        openMenuAt(ev.target, d, p.m);
+                        const del = menu && menu.querySelector('button.danger');
+                        if (del) {
+                            del.click();
+                        }
+                        return;
+                    } else if (ev.key === 'Enter' || ev.key === ' ') {
+                        ev.preventDefault();
+                        openMenuAt(ev.target, d, p.m);
+                        return;
+                    } else if (ev.key === 'Insert' || ev.key === '+') {
+                        ev.preventDefault();
+                        const bl = blocksOf(d).find(x => x.a === p.m);
+                        if (bl) {
+                            insertAt(d, bl.a + snap((bl.b - bl.a) / 2));
+                        }
+                        return;
+                    } else {
+                        return;
+                    }
+                    ev.preventDefault();
+                    ev.target.dataset.key = `h${p.m}`;
+                    changed();
+                }
+                /** Preview line with the time where a click would add a switching time */
+                function preview(ev, track, d) {
+                    let line = track.querySelector('.preview');
+                    const onBlock = ev && ev.target && ev.target.classList.contains('block');
+                    if (!onBlock || menu) {
+                        if (line) {
+                            line.remove();
+                        }
+                        return;
+                    }
+                    const m = minuteAt(track, ev.clientX, d);
+                    if (points.some(p => p.m === m)) {
+                        if (line) {
+                            line.remove();
+                        }
+                        return;
+                    }
+                    if (!line) {
+                        line = document.createElement('div');
+                        line.className = 'preview';
+                        line.appendChild(document.createElement('span'));
+                        track.appendChild(line);
+                    }
+                    line.style.left = `${((m - d * DAY) / DAY) * 100}%`;
+                    line.firstChild.textContent = `+ ${hhmm(m)}`;
+                }
+                /** Click into a block: new switching time there; keyboard "click" (Enter) opens the choice */
+                function clickBlock(ev, btn, track, d, bl) {
+                    if (ev.detail === 0) {
+                        openMenuAt(btn, d, bl.a);
+                        return;
+                    }
+                    const m = minuteAt(track, ev.clientX, d);
+                    if (m <= bl.a || m >= bl.b || points.some(p => p.m === m)) {
+                        openMenuAt(btn, d, bl.a);
+                        return;
+                    }
+                    insertAt(d, m);
+                }
+                function blockKey(ev, btn, d, bl) {
+                    if (ev.key === 'Insert' || ev.key === '+') {
+                        ev.preventDefault();
+                        insertAt(d, bl.a + snap((bl.b - bl.a) / 2));
+                    }
+                }
+                /** "+ switching time": in the middle of the longest block of the day */
+                function addToDay(d) {
+                    const bl = blocksOf(d).sort((x, y) => y.b - y.a - (x.b - x.a))[0];
+                    insertAt(d, bl.a + snap((bl.b - bl.a) / 2));
+                }
+                /** New switching time: the period that follows is preselected, the choice opens at once */
+                /**
+                 * New switching time at minute m: any open menu closes, the line is added with the next period
+                 * preselected, gets the focus and pulses briefly; a quiet hint next to it fades after a few seconds.
+                 * The period is changed like for every switching time: click the line.
+                 */
+                function insertAt(d, m) {
+                    closeMenu();
+                    if (points.some(p => p.m === m) || !checkRoom(1)) {
+                        return;
+                    }
+                    const types = info.types.map(t => t.type);
+                    const cur = typeAt(m) || types[0];
+                    const p = { m, type: types[(types.indexOf(cur) + 1) % types.length] };
+                    points.push(p);
+                    sorted();
+                    changed();
+                    const h = $('grid').querySelector(`[data-key="h${m}"]`);
+                    if (!h) {
+                        return;
+                    }
+                    h.focus();
+                    h.classList.add('new');
+                    setTimeout(() => h.classList.remove('new'), 1600);
+                    openChooser(h, d, p);
+                }
+                /**
+                 * Separate small choice right after adding a switching time: "Choose the type for 14:00" and only
+                 * the types with their temperature. A click takes it and closes; Esc or a click elsewhere keeps the
+                 * preselected type.
+                 */
+                function openChooser(anchor, d, p) {
+                    closeMenu();
+                    const menuEl = document.createElement('div');
+                    menuEl.className = 'menu chooser';
+                    menuEl.setAttribute('role', 'menu');
+                    const title = document.createElement('div');
+                    title.className = 'title';
+                    title.textContent = info.texts.pSzeneAb.replace('{time}', hhmm(p.m));
+                    menuEl.setAttribute('aria-label', title.textContent);
+                    menuEl.appendChild(title);
+                    let first = null;
+                    for (const { type } of info.types) {
+                        const b = document.createElement('button');
+                        b.setAttribute('role', 'menuitem');
+                        b.innerHTML = `<span class="swatch" style="background:var(--c-${type})"></span>`;
+                        b.appendChild(document.createTextNode(blockText(type) + (type === p.type ? '  ✓' : '')));
+                        b.addEventListener('click', () => {
+                            closeMenu();
+                            const bl = blocksOf(d).find(x => x.a === p.m);
+                            if (bl && type !== p.type) {
+                                setType(d, bl, type);
+                            }
+                            const h = $('grid').querySelector(`[data-key="h${p.m}"]`);
+                            if (h) {
+                                h.focus();
+                            }
+                        });
+                        menuEl.appendChild(b);
+                        if (type === p.type || !first) {
+                            first = b;
+                        }
+                    }
+                    placeMenu(menuEl, anchor);
+                    first.focus();
+                }
+                function removePoint(p) {
+                    if (points.length <= 1) {
+                        return;
+                    }
+                    points.splice(points.indexOf(p), 1);
+                    normalise();
+                    changed();
+                }
+                function setType(d, bl, type) {
+                    const at = points.find(p => p.m === bl.a);
+                    if (at) {
+                        at.type = type;
+                    } else {
+                        if (!checkRoom(1)) {
+                            return;
+                        }
+                        points.push({ m: bl.a, type });
+                    }
+                    normalise();
+                    changed();
+                }
+                function pasteDay(d) {
+                    if (!clip) {
+                        return;
+                    }
+                    const keep = points.filter(p => p.m < d * DAY || p.m >= (d + 1) * DAY);
+                    const add = [
+                        { m: d * DAY, type: clip.start },
+                        ...clip.pts.map(p => ({ m: d * DAY + p.m, type: p.type })),
+                    ].filter(p => p.type);
+                    if (keep.length + add.length > info.max) {
+                        status(`${info.max} ${info.texts.pSchaltpunkte} max.`, true);
+                        return;
+                    }
+                    points = [...keep, ...add];
+                    normalise();
+                    changed();
+                }
+                function checkRoom(n) {
+                    if (points.length + n > info.max) {
+                        status(`${info.max} ${info.texts.pSchaltpunkte} max.`, true);
+                        return false;
+                    }
+                    return true;
+                }
+
+                // ---------- period menu ----------
+                function closeMenu() {
+                    if (menu) {
+                        menu.remove();
+                        menu = null;
+                    }
+                }
+                /**
+                 * Menu of the block from minute m on: on top "new switching time" (split), then the periods with
+                 * their temperatures, at the bottom "Delete" (with a question first).
+                 *
+                 * @param {HTMLElement} anchor Element the menu belongs to
+                 * @param {number} d Day
+                 * @param {number} m Start of the block (a switching time or the start of the day)
+                 * @param {number} [at] Where to split (right click); default the middle of the block
+                 */
+                function openMenuAt(anchor, d, m, at) {
+                    closeMenu();
+                    const bl = blocksOf(d).find(x => x.a === m) || { a: m, b: m + STEP, type: typeAt(m) };
+                    const menuEl = document.createElement('div');
+                    menuEl.className = 'menu';
+                    menuEl.setAttribute('role', 'menu');
+                    const item = (html, fn, cls) => {
+                        const b = document.createElement('button');
+                        b.setAttribute('role', 'menuitem');
+                        b.innerHTML = html;
+                        if (cls) {
+                            b.className = cls;
+                        }
+                        b.addEventListener('click', fn);
+                        menuEl.appendChild(b);
+                        return b;
+                    };
+                    let splitAt = at !== undefined && at > bl.a && at < bl.b ? at : bl.a + snap((bl.b - bl.a) / 2);
+                    if (points.some(p => p.m === splitAt)) {
+                        splitAt = -1;
+                    }
+                    if (splitAt > bl.a && splitAt < bl.b) {
+                        const b = item(ICON_SPLIT, () => {
+                            insertAt(d, splitAt);
+                        });
+                        b.appendChild(
+                            document.createTextNode(
+                                info.texts.pNeuUm.replace('{time}', hhmm(splitAt)),
+                            ),
+                        );
+                        menuEl.appendChild(document.createElement('hr'));
+                    }
+                    let first = null;
+                    for (const { type } of info.types) {
+                        const b = item(`<span class="swatch" style="background:var(--c-${type})"></span>`, () => {
+                            closeMenu();
+                            setType(d, bl, type);
+                        });
+                        b.appendChild(document.createTextNode(blockText(type) + (type === bl.type ? '  ✓' : '')));
+                        if (type === bl.type || !first) {
+                            first = b;
+                        }
+                    }
+                    const point = points.find(p => p.m === m);
+                    if (point && points.length > 1) {
+                        menuEl.appendChild(document.createElement('hr'));
+                        const del = item(
+                            ICON_DELETE,
+                            () => {
+                                // ask first, inside the menu
+                                menuEl.innerHTML = '';
+                                const qEl = document.createElement('div');
+                                qEl.className = 'question';
+                                qEl.textContent = info.texts.pLoeschenFrage.replace(
+                                    '{time}',
+                                    `${dayName(d, 'short')} ${hhmm(point.m)}`,
+                                );
+                                const row = document.createElement('div');
+                                row.className = 'row';
+                                const yes = document.createElement('button');
+                                yes.className = 'danger';
+                                yes.innerHTML = ICON_DELETE;
+                                yes.appendChild(document.createTextNode(info.texts.pLoeschen));
+                                yes.addEventListener('click', () => {
+                                    closeMenu();
+                                    removePoint(point);
+                                });
+                                const no = document.createElement('button');
+                                no.textContent = info.texts.pAbbrechen;
+                                no.addEventListener('click', () => {
+                                    closeMenu();
+                                    anchor.focus();
+                                });
+                                row.append(no, yes);
+                                menuEl.append(qEl, row);
+                                no.focus();
+                            },
+                            'danger',
+                        );
+                        del.appendChild(document.createTextNode(info.texts.pLoeschen));
+                    }
+                    placeMenu(menuEl, anchor);
+                    first.focus();
+                }
+                /** Keyboard and position of a menu next to its element (below, or above if there is no room) */
+                function placeMenu(menuEl, anchor) {
+                    menuEl.addEventListener('keydown', ev => {
+                        const items = [...menuEl.querySelectorAll('button')];
+                        const i = items.indexOf(document.activeElement);
+                        if (ev.key === 'Escape') {
+                            closeMenu();
+                            anchor.focus();
+                        } else if (ev.key === 'ArrowDown' || ev.key === 'ArrowRight') {
+                            items[(i + 1) % items.length].focus();
+                        } else if (ev.key === 'ArrowUp' || ev.key === 'ArrowLeft') {
+                            items[(i - 1 + items.length) % items.length].focus();
+                        } else {
+                            return;
+                        }
+                        ev.preventDefault();
+                    });
+                    document.body.appendChild(menuEl);
+                    const r = anchor.getBoundingClientRect();
+                    // below the element if it fits, otherwise above it, never outside the page (no scrolling)
+                    let top = r.bottom + 4;
+                    if (top + menuEl.offsetHeight > window.innerHeight - 4) {
+                        top = r.top - menuEl.offsetHeight - 4;
+                    }
+                    top = Math.min(Math.max(4, top), Math.max(4, window.innerHeight - menuEl.offsetHeight - 4));
+                    menuEl.style.top = `${top}px`;
+                    menuEl.style.left = `${Math.min(Math.max(r.left - 10, 4), window.innerWidth - menuEl.offsetWidth - 8)}px`;
+                    menu = menuEl;
+                }
+                // a click into the admin outside the grid closes the menu as well
+                window.addEventListener('blur', () => closeMenu());
+                document.addEventListener('pointerdown', ev => {
+                    if (menu && !menu.contains(ev.target)) {
+                        closeMenu();
+                    }
+                });
+
+                // ---------- start ----------
+                async function start() {
+                    applyTheme();
+                    // the admin draws the default iframe border (its style object drops border settings); the page
+                    // is same-origin and removes it itself
+                    try {
+                        if (window.frameElement) {
+                            window.frameElement.style.border = 'none';
+                        }
+                    } catch {
+                        // not embedded
+                    }
+                    const base = location.pathname.replace(/\/adapter\/.*$/, '');
+                    socket = io.connect('/', { path: `${base}/socket.io` });
+                    socket.on('connect', async () => {
+                        try {
+                            info = await send('wochenplanInfo', {});
+                            applyColors();
+                            setProgram(info.program);
+                            $('hint').textContent = info.texts.pHinweis;
+                            legend();
+                            footer();
+                            render();
+                            status(`${points.length} ${info.texts.pSchaltpunkte}`);
+                        } catch (err) {
+                            status(err.message, true);
+                        }
+                    });
+                }
+                start();
+            })();
+        </script>
+    </body>
+</html>

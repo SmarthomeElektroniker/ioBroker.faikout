@@ -167,6 +167,33 @@ The roles let the type detector find them as part of an air conditioner. Writing
 `ack=true` when the module confirms. A value outside the list is discarded with a warning in the log.
 The twins are created with the first report of a module after the update.
 
+## Climate control
+
+The tab **Climate control** of the instance settings and the device cards (admin, device manager)
+operate the built-in control. Everything starts in **dry run**: the adapter calculates and shows what
+it would do, but sends nothing until the dry run is switched off.
+
+- **Per unit** (one entry per air conditioner): who controls (the adapter, or the module's own
+  "Faikout auto"), sensor sources (automatic, sensor of the unit, BLE sensor on the module or any
+  ioBroker data point), frost protection, the demand strategy with its curve and limits, and the
+  scenes. Empty values fall back to the defaults further down; values can be taken over from
+  another unit. The heating and cooling curve are drawn live, with the current operating point of
+  the unit.
+- **Demand control** limits the power (`demand`) in 5 % steps, either by a curve over the outside
+  temperature or as "Auto" (yesterday's consumption plus a margin). With "Faikout auto" the power
+  limit is only set with the strategy "Auto".
+- **Scenes and weekly schedule**: a scene is a complete state of the unit (on/off, mode, target,
+  fan, power cap). The weekly schedule is edited on the device card (clock button): click into a
+  block to add a switching time, drag a line to move it, copy and paste whole days, load the
+  default schedule, set an absence.
+- **Humidity and dew point**, **manual override** (schedule and scenes wait after someone used the
+  remote control; "Release" on the card ends the wait) and **public holidays** are set once for all
+  units.
+- **Device card**: state and reason, power limit, current scene and next switching time, three
+  symbol buttons to switch demand control, humidity control and the weekly schedule on and off,
+  sensors with a warning when a fallback sensor is used. The chart button shows how the adapter
+  decides right now (curve with operating point, steps of the calculation, last 24 hours).
+
 ## Visualisation (vis templates)
 
 The folder [`vis-templates/`](vis-templates/) contains ready-made **vis 1** views for two units: overview,
