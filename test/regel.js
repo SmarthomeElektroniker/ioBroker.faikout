@@ -525,6 +525,26 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         expect(a.objekte.get('Daikin_V.regulation.demand.setpoint').common.write).to.equal(false);
         expect(a.gesendet).to.have.length(0);
     });
+
+    it('Bestand: Datenpunkte und Kanal mit "Fühler" im deutschen Namen heissen nach dem Start "Sensor" - eigene Namen bleiben', async () => {
+        const { a, uhr } = aufbau({});
+        const P = 'Daikin_V.regulation';
+        a.objekte.set(`${P}.sensors`, { type: 'channel', common: { name: { en: 'Sensors', de: 'Fühler' } }, native: {} });
+        a.objekte.set(`${P}.sensors.roomSource`, { type: 'state', common: { name: { en: 'Room sensor', de: 'Raumfühler' }, type: 'string', role: 'text', read: true, write: false, custom: { 'history.0': { enabled: true } } }, native: { regulation: true } });
+        a.objekte.set(`${P}.sensors.outsideSource`, { type: 'state', common: { name: 'Mein Außenwert', type: 'string', role: 'text', read: true, write: false }, native: { regulation: true } });
+        a.objekte.set(`${P}.sensors.humiditySource`, { type: 'state', common: { name: { en: 'x', de: 'Feuchte im Bad' }, type: 'string', role: 'text', read: true, write: false }, native: { regulation: true } });
+        await laufen(a, uhr, new Anlage({ name: 'Daikin V' }), 1);
+        expect(a.objekte.get(`${P}.sensors`).common.name).to.eql({ en: 'Sensors', de: 'Sensoren' });
+        const raum = a.objekte.get(`${P}.sensors.roomSource`).common;
+        expect(raum.name).to.eql({ en: 'Room sensor', de: 'Raumsensor' });
+        // alles andere am Objekt bleibt (z. B. die Aufzeichnung)
+        expect(raum.custom).to.eql({ 'history.0': { enabled: true } });
+        // selbst vergebene Namen werden nicht angefasst
+        expect(a.objekte.get(`${P}.sensors.outsideSource`).common.name).to.equal('Mein Außenwert');
+        expect(a.objekte.get(`${P}.sensors.humiditySource`).common.name).to.eql({ en: 'x', de: 'Feuchte im Bad' });
+        // neu angelegte tragen ohnehin den heutigen Namen
+        expect(a.objekte.get(`${P}.sensors.roomStatus`).common.name.de).to.equal('Zustand Raumsensor');
+    });
 });
 
 describe('Regelung: control-Nachricht (spaetere Etappe)', () => {
