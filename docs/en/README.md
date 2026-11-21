@@ -97,6 +97,10 @@ Limits of "Faikout module controls itself":
   not enabled.
 - The power limit is only set with the strategy **Auto**. With the strategy "curve", demand control
   rests; the card then says "rests (module controls itself)".
+- **Back to "ioBroker adapter controls":** switch the automatic mode in the module off again ("Auto temp"
+  to "Off"). After the change the module keeps driving the unit for up to ten minutes; if it changes
+  target or mode during that time, the card shows "manual override" – "End manual override" hands
+  control back to the weekly schedule.
 - **Every change of the target is stored in the module (flash memory).** If the schedule changes
   the target six or more times on one day, the tab and the schedule dialog warn. For schedules
   with many switching times "ioBroker adapter controls" is the better choice.

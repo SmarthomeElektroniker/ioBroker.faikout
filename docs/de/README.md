@@ -96,6 +96,10 @@ Grenzen von „Faikout-Modul regelt selbst“:
   Hinweis, dass die Automatik des Moduls nicht eingeschaltet ist.
 - Die Leistungsgrenze wird nur mit der Strategie **Auto** gesetzt. Mit der Strategie „Kennlinie“
   ruht die Bedarfsregelung; auf der Karte steht dann „ruht (Modul regelt selbst)“.
+- **Zurück zu „ioBroker-Adapter regelt“:** Die Automatik im Modul dabei wieder ausschalten („Auto temp“
+  auf „Off“). Das Modul führt die Anlage nach dem Umstellen noch bis zu zehn Minuten selbst weiter; ändert
+  es in dieser Zeit Ziel oder Betriebsart, zeigt die Karte „Handeingriff“ – mit „Handeingriff beenden“
+  übernimmt der Wochenplan wieder.
 - **Jede Zieländerung wird im Modul gespeichert (Flash-Speicher).** Ändert der Wochenplan das Ziel
   an einem Tag sechsmal oder öfter, warnen der Reiter und der Wochenplan-Dialog. Für Pläne mit
   vielen Schaltpunkten ist „ioBroker-Adapter regelt“ die bessere Wahl.
