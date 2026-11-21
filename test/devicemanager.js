@@ -1520,6 +1520,24 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                     expect((await frage(a, 'zeitplaeneListe', { formular: werkF })).stufen.vorlage).to.have.length(4);
                 });
 
+                it('eigene Stufen zurueckgesetzt, der Plan benutzt sie noch: mit der Ersatzwahl des Formulars bleibt die Vorschau lesbar', async () => {
+                    const planEigen = JSON.stringify([[{ t: 0, s: 'nacht' }, { t: 420, s: 'tag' }, { t: 1320, s: 'nacht' }], [], [], [], [], [], []]);
+                    const { a } = await mitRegelung({ 'regulation.schedule.weekJson': planEigen });
+                    a.config.regelGeraete = [{ geraet: ID, stufen: TAG_NACHT }];
+                    // ohne Ersatzwahl: der Plan passt nicht zur Vorlage - genau das soll die Rueckfrage der Seite verhindern
+                    const ohne = (await frage(a, 'zeitplaeneListe', { formular: { regelStufen: [], regelGeraete: [{ geraet: ID, stufen: [] }] } })).geraete[0];
+                    expect(ohne.planFehlt).to.equal(true);
+                    expect(ohne.planFehler).to.contain('tag');
+                    expect(ohne.planStufen).to.have.members(['tag', 'nacht']);
+                    // mit Ersatzwahl (stufenErsatz in der Zeile des Formulars): Vorschau wie nach "Speichern", Hinweis je Stufe
+                    const mit = (await frage(a, 'zeitplaeneListe', { formular: { regelStufen: [], regelGeraete: [{ geraet: ID, stufen: [], stufenErsatz: { tag: 'komfort', nacht: 'absenken' } }] } })).geraete[0];
+                    expect(mit).to.include({ stufenQuelle: 'vorlage', planFehlt: false, planFehler: '' });
+                    expect(mit.ersatz.map(e => `${e.vonName}>${e.nachName}`)).to.have.members(['Tag>Komfort', 'Nacht>Absenken']);
+                    expect([...new Set(mit.woche[0].map(x => x.stufe))]).to.have.members(['absenken', 'komfort']);
+                    // der Datenpunkt bleibt bis zum Speichern, wie er ist
+                    expect(a.gesetzt).to.eql([]);
+                });
+
                 it('fehlerhafte Stufen im Formular: der Editor oeffnet nicht mit einer anderen Liste, sondern sagt es', async () => {
                     const { a } = await mitRegelung();
                     const doppelt = { regelStufen: [{ name: 'A', soll: 20 }, { name: 'A', soll: 21 }], regelGeraete: [] };
