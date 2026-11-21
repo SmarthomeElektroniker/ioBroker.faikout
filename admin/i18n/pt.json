@@ -215,7 +215,7 @@
   "labelModTopicgroup1": "Nome de comando adicional",
   "helpModTopicgroup1": "topicgroup1 – nome MQTT sem espaços",
   "confirmModTitle": "Escrever definições no módulo?",
-  "confirmModText": "As alterações estão na pré-visualização (antigo → novo). Cada escrita desgasta a memória flash do módulo e, em algumas definições, reinicia-o (cerca de 10 s sem ligação). Depois o adaptador lê de volta e mostra o resultado por definição.",
+  "confirmModText": "As alterações estão na pré-visualização (antigo → novo). Cada escrita desgasta a memória flash do módulo e, em algumas definições, reinicia-o (cerca de 10 s sem ligação). Depois o adaptador lê de volta e mostra o resultado por definição. A confirmação pode demorar até um minuto – um módulo mostra muitas vezes um novo valor só após cerca de 30 segundos. Enquanto o adaptador espera, o símbolo no botão roda.",
   "optWieVorgabe": "Como na predefinição",
   "helpLeerVorgabe": "Vazio = predefinição",
   "textRuht": "Faikout automático com a estratégia «curva»: a regulação por necessidade fica parada neste aparelho. Com Faikout automático o limite de potência só é definido com a estratégia «Auto».",
@@ -247,5 +247,6 @@
   "textWegSollwert": "O valor alvo no aparelho difere então do seu objetivo pela correção do sensor (no máximo ±3 K). O objetivo em si consta do motivo no cartão do aparelho.",
   "labelRaumTraege": "O sensor é lento (minutos)",
   "helpRaumTraege": "0 = desligado. Mistura alterações rápidas do sensor do aparelho; só importa para o limite de potência e para «enviar para o módulo».",
-  "labelKorrAbstand": "Reajustar no mínimo a cada … minutos"
+  "labelKorrAbstand": "Reajustar no mínimo a cada … minutos",
+  "textModWait": "A confirmação pode demorar até um minuto – um módulo mostra muitas vezes um novo valor só após cerca de 30 segundos. Enquanto o adaptador espera, o símbolo no botão roda."
 }

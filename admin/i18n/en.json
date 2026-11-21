@@ -215,7 +215,7 @@
   "labelModTopicgroup1": "Additional command name",
   "helpModTopicgroup1": "topicgroup1 – MQTT name without spaces",
   "confirmModTitle": "Write settings to the module?",
-  "confirmModText": "The changes are listed in the preview (old → new). Every write wears the flash memory of the module and restarts it for some settings (about 10 s without connection). Afterwards the adapter reads back and shows the result per setting.",
+  "confirmModText": "The changes are listed in the preview (old → new). Every write wears the flash memory of the module and restarts it for some settings (about 10 s without connection). Afterwards the adapter reads back and shows the result per setting. The confirmation can take up to a minute – a module often shows a new value only after about 30 seconds. The symbol in the button spins while the adapter waits.",
   "optWieVorgabe": "As in the defaults",
   "helpLeerVorgabe": "Empty = default",
   "textRuht": "Faikout auto with the strategy “curve”: demand control rests for this unit. With Faikout auto the power limit is only set with the strategy “Auto”.",
@@ -247,5 +247,6 @@
   "textWegSollwert": "The setpoint shown at the unit then differs from your target by the sensor correction (at most ±3 K). The target itself is named in the reason on the device card.",
   "labelRaumTraege": "Sensor is slow (minutes)",
   "helpRaumTraege": "0 = off. Mixes in fast changes of the unit’s own sensor; only matters for the power limit and for “send to the module”.",
-  "labelKorrAbstand": "Readjust at the earliest every … minutes"
+  "labelKorrAbstand": "Readjust at the earliest every … minutes",
+  "textModWait": "The confirmation can take up to a minute – a module often shows a new value only after about 30 seconds. The symbol in the button spins while the adapter waits."
 }

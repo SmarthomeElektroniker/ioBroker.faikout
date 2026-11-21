@@ -215,7 +215,7 @@
   "labelModTopicgroup1": "Nome di comando aggiuntivo",
   "helpModTopicgroup1": "topicgroup1 – nome MQTT senza spazi",
   "confirmModTitle": "Scrivere le impostazioni nel modulo?",
-  "confirmModText": "Le modifiche sono elencate nell’anteprima (vecchio → nuovo). Ogni scrittura consuma la memoria flash del modulo e, per alcune impostazioni, lo riavvia (circa 10 s senza connessione). Poi l’adattatore rilegge e mostra il risultato per ogni impostazione.",
+  "confirmModText": "Le modifiche sono elencate nell’anteprima (vecchio → nuovo). Ogni scrittura consuma la memoria flash del modulo e, per alcune impostazioni, lo riavvia (circa 10 s senza connessione). Poi l’adattatore rilegge e mostra il risultato per ogni impostazione. La conferma può richiedere fino a un minuto – un modulo mostra spesso un nuovo valore solo dopo circa 30 secondi. Finché l’adattatore attende, il simbolo nel pulsante gira.",
   "optWieVorgabe": "Come predefinito",
   "helpLeerVorgabe": "Vuoto = predefinito",
   "textRuht": "Faikout auto con strategia «curva»: la regolazione in base al fabbisogno è ferma per questo apparecchio. Con Faikout auto il limite di potenza viene impostato solo con la strategia «Auto».",
@@ -247,5 +247,6 @@
   "textWegSollwert": "Il setpoint sull’apparecchio si discosta allora dall’obiettivo della correzione del sensore (al massimo ±3 K). L’obiettivo stesso è indicato nel motivo sulla scheda dell’apparecchio.",
   "labelRaumTraege": "Il sensore è lento (minuti)",
   "helpRaumTraege": "0 = disattivato. Aggiunge le variazioni rapide del sensore dell’apparecchio; conta solo per il limite di potenza e per «invia al modulo».",
-  "labelKorrAbstand": "Riadegua al più presto ogni … minuti"
+  "labelKorrAbstand": "Riadegua al più presto ogni … minuti",
+  "textModWait": "La conferma può richiedere fino a un minuto – un modulo mostra spesso un nuovo valore solo dopo circa 30 secondi. Finché l’adattatore attende, il simbolo nel pulsante gira."
 }

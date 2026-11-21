@@ -215,7 +215,7 @@
   "labelModTopicgroup1": "Extra commandonaam",
   "helpModTopicgroup1": "topicgroup1 – MQTT-naam zonder spaties",
   "confirmModTitle": "Instellingen naar de module schrijven?",
-  "confirmModText": "De wijzigingen staan in het voorbeeld (oud → nieuw). Elke schrijfactie belast het flashgeheugen van de module en herstart die bij sommige instellingen (ongeveer 10 s zonder verbinding). Daarna leest de adapter terug en toont het resultaat per instelling.",
+  "confirmModText": "De wijzigingen staan in het voorbeeld (oud → nieuw). Elke schrijfactie belast het flashgeheugen van de module en herstart die bij sommige instellingen (ongeveer 10 s zonder verbinding). Daarna leest de adapter terug en toont het resultaat per instelling. De bevestiging kan tot een minuut duren – een module toont een nieuwe waarde vaak pas na ongeveer 30 seconden. Zolang de adapter wacht, draait het symbool in de knop.",
   "optWieVorgabe": "Zoals standaard",
   "helpLeerVorgabe": "Leeg = standaard",
   "textRuht": "Faikout-auto met strategie “curve”: de vraagregeling rust voor dit toestel. Bij Faikout-auto wordt de vermogensgrens alleen met de strategie “Auto” gezet.",
@@ -247,5 +247,6 @@
   "textWegSollwert": "De instelwaarde op het toestel wijkt dan met de sensorcorrectie (hoogstens ±3 K) af van het doel. Het doel zelf staat in de reden op de toestelkaart.",
   "labelRaumTraege": "Sensor is traag (minuten)",
   "helpRaumTraege": "0 = uit. Mengt snelle wijzigingen van de toestelsensor bij; alleen van belang voor de vermogensgrens en voor “naar de module sturen”.",
-  "labelKorrAbstand": "Op zijn vroegst elke … minuten bijstellen"
+  "labelKorrAbstand": "Op zijn vroegst elke … minuten bijstellen",
+  "textModWait": "De bevestiging kan tot een minuut duren – een module toont een nieuwe waarde vaak pas na ongeveer 30 seconden. Zolang de adapter wacht, draait het symbool in de knop."
 }

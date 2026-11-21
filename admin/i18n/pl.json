@@ -215,7 +215,7 @@
   "labelModTopicgroup1": "Dodatkowa nazwa poleceń",
   "helpModTopicgroup1": "topicgroup1 – nazwa MQTT bez spacji",
   "confirmModTitle": "Zapisać ustawienia w module?",
-  "confirmModText": "Zmiany są wymienione w podglądzie (stare → nowe). Każdy zapis zużywa pamięć flash modułu, a przy niektórych ustawieniach uruchamia go ponownie (około 10 s bez połączenia). Następnie adapter odczytuje wartości ponownie i pokazuje wynik dla każdego ustawienia.",
+  "confirmModText": "Zmiany są wymienione w podglądzie (stare → nowe). Każdy zapis zużywa pamięć flash modułu, a przy niektórych ustawieniach uruchamia go ponownie (około 10 s bez połączenia). Następnie adapter odczytuje wartości ponownie i pokazuje wynik dla każdego ustawienia. Potwierdzenie może potrwać do minuty – moduł często pokazuje nową wartość dopiero po około 30 sekundach. Dopóki adapter czeka, symbol na przycisku się obraca.",
   "optWieVorgabe": "Jak domyślnie",
   "helpLeerVorgabe": "Puste = domyślnie",
   "textRuht": "Faikout auto ze strategią „krzywa”: regulacja według zapotrzebowania spoczywa dla tego urządzenia. Przy Faikout auto limit mocy jest ustawiany tylko ze strategią „Auto”.",
@@ -247,5 +247,6 @@
   "textWegSollwert": "Nastawa na urządzeniu różni się wtedy od celu o korektę czujnika (najwyżej ±3 K). Sam cel jest podany w uzasadnieniu na karcie urządzenia.",
   "labelRaumTraege": "Czujnik jest powolny (minuty)",
   "helpRaumTraege": "0 = wyłączone. Domiesza szybkie zmiany czujnika urządzenia; ma znaczenie tylko dla limitu mocy i dla „wysyłaj do modułu”.",
-  "labelKorrAbstand": "Koryguj najwcześniej co … minut"
+  "labelKorrAbstand": "Koryguj najwcześniej co … minut",
+  "textModWait": "Potwierdzenie może potrwać do minuty – moduł często pokazuje nową wartość dopiero po około 30 sekundach. Dopóki adapter czeka, symbol na przycisku się obraca."
 }

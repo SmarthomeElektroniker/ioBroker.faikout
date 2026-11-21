@@ -215,7 +215,7 @@
   "labelModTopicgroup1": "Nom de commande supplémentaire",
   "helpModTopicgroup1": "topicgroup1 – nom MQTT sans espaces",
   "confirmModTitle": "Écrire les réglages dans le module ?",
-  "confirmModText": "Les modifications figurent dans l’aperçu (ancien → nouveau). Chaque écriture use la mémoire flash du module et le redémarre pour certains réglages (environ 10 s sans connexion). L’adaptateur relit ensuite et affiche le résultat par réglage.",
+  "confirmModText": "Les modifications figurent dans l’aperçu (ancien → nouveau). Chaque écriture use la mémoire flash du module et le redémarre pour certains réglages (environ 10 s sans connexion). L’adaptateur relit ensuite et affiche le résultat par réglage. La confirmation peut prendre jusqu’à une minute – un module n’affiche souvent une nouvelle valeur qu’après environ 30 secondes. Tant que l’adaptateur attend, le symbole du bouton tourne.",
   "optWieVorgabe": "Comme par défaut",
   "helpLeerVorgabe": "Vide = valeur par défaut",
   "textRuht": "Faikout auto avec la stratégie « courbe » : la régulation selon le besoin est au repos pour cet appareil. Avec Faikout auto, la limite de puissance n’est réglée qu’avec la stratégie « Auto ».",
@@ -247,5 +247,6 @@
   "textWegSollwert": "La consigne de l’appareil s’écarte alors de la cible de la correction du capteur (au plus ±3 K). La cible elle-même figure dans la raison sur la carte de l’appareil.",
   "labelRaumTraege": "Le capteur est lent (minutes)",
   "helpRaumTraege": "0 = désactivé. Ajoute les variations rapides du capteur de l’appareil ; ne compte que pour la limite de puissance et pour « envoyer au module ».",
-  "labelKorrAbstand": "Réajuster au plus tôt toutes les … minutes"
+  "labelKorrAbstand": "Réajuster au plus tôt toutes les … minutes",
+  "textModWait": "La confirmation peut prendre jusqu’à une minute – un module n’affiche souvent une nouvelle valeur qu’après environ 30 secondes. Tant que l’adaptateur attend, le symbole du bouton tourne."
 }

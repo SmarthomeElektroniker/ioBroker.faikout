@@ -165,7 +165,8 @@ In the tab **Module settings**:
    "old → new".
 3. **Write to module** and confirm. The adapter sends one single MQTT message with only the
    changed values, waits until the module answers again, reads back and shows the result per
-   setting.
+   setting. This can take up to a minute: a module often shows a new value on its settings page
+   only after about 30 seconds. Meanwhile the symbol in the button keeps spinning.
 
 Before every write the adapter keeps the state it read (the last five per module). Under **Saved
 state** it can be loaded into the form again and written back with the same procedure.

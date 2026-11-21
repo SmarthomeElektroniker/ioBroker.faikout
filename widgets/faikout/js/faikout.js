@@ -776,7 +776,14 @@ vis.binds.faikout = {
             var ZUSTAND = { ok: 'aktiv', hand: 'Handeingriff', 'gestört': 'gestört', offline: 'keine Verbindung', aus: 'ausgeschaltet' };
             var TITEL = { bedarf: 'Bedarfsregelung', feuchte: 'Feuchteregelung', plan: 'Wochenplan' };
 
+            var kennlinieStand = null;
             var zeichnen = function () {
+                // Aendert der Adapter die Kennlinie (Datenpunkt kennlinieJson), wird sie neu geladen
+                var stand = ctx.hat('regel.bedarf.kennlinieJson') ? ctx.wert('regel.bedarf.kennlinieJson') : null;
+                if (kennlinie && stand !== kennlinieStand) {
+                    kennlinieStand = stand;
+                    return b.kennlinieLaden(ctx, function (k) { kennlinie = k; zeichnen(); });
+                }
                 b.farbe($wurzel, ctx.akzent());
                 var zustand = ctx.wert('regel.zustand') || 'aus';
                 var faehig = ctx.wert('info.demandFaehig');
@@ -845,6 +852,7 @@ vis.binds.faikout = {
                     $(this).prepend($(document.createElementNS('http://www.w3.org/2000/svg', 'title')).text(b.t(TITEL[art]) + ': ' + b.t(ein ? 'an' : 'aus')));
                 });
             };
+            kennlinieStand = ctx.hat('regel.bedarf.kennlinieJson') ? ctx.wert('regel.bedarf.kennlinieJson') : null;
             b.kennlinieLaden(ctx, function (k) { kennlinie = k; zeichnen(); });
             return zeichnen;
         });

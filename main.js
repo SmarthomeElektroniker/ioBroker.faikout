@@ -7,6 +7,7 @@
 
 const utils = require('@iobroker/adapter-core');
 const { FaikoutBroker } = require('./lib/broker');
+const brokerextern = require('./lib/brokerextern');
 const felder = require('./lib/fields');
 const namen = require('./lib/namen');
 const verbrauch = require('./lib/verbrauch');
@@ -184,23 +185,39 @@ class Faikout extends utils.Adapter {
         await this.subscribeObjectsAsync('*');
         this.regelung = new Bedarfsregelung(this);
 
-        const port = Number(this.config.port) || 1888;
-        this.broker = new FaikoutBroker({
-            port,
-            user: this.config.user,
-            pass: this.config.pass,
-            log: this.log,
-            timer: this,
-            onMessage: (topic, payload) => this.onMqtt(topic, payload),
-            onClient: (clientId, verbunden) => {
-                if (verbunden) {
-                    this.mqttClients.add(String(clientId));
-                } else {
-                    this.mqttClients.delete(String(clientId));
-                }
-                this.verbindungPruefen();
-            },
-        });
+        const ziel = this.brokerZiel();
+        const onMessage = (topic, payload) => this.onMqtt(topic, payload);
+        if (ziel.extern) {
+            // Externer Broker: der Adapter ist Client, der eigene Broker wird NICHT gestartet.
+            this.broker = new brokerextern.ExternerBroker({
+                host: this.config.externHost,
+                port: this.config.externPort,
+                tls: this.config.externTls === true,
+                user: this.config.externUser,
+                pass: this.config.externPass,
+                clientId: this.config.externClientId || `iobroker-faikout-${this.instance}`,
+                praefix: this.config.externPraefix,
+                log: this.log,
+                onMessage,
+            });
+        } else {
+            this.broker = new FaikoutBroker({
+                port: ziel.port,
+                user: this.config.user,
+                pass: this.config.pass,
+                log: this.log,
+                timer: this,
+                onMessage,
+                onClient: (clientId, verbunden) => {
+                    if (verbunden) {
+                        this.mqttClients.add(String(clientId));
+                    } else {
+                        this.mqttClients.delete(String(clientId));
+                    }
+                    this.verbindungPruefen();
+                },
+            });
+        }
 
         try {
             await this.broker.start();
@@ -209,8 +226,14 @@ class Faikout extends utils.Adapter {
             return;
         }
 
-        const adresse = String(this.config.moduleAddress || '').trim() || '<ioBroker IP>';
-        this.log.info(`Ready. Configure the faikout modules with MQTT host ${adresse}:${port}.`);
+        if (ziel.extern) {
+            this.log.info(
+                `Ready. The faikout modules must point to the external broker ${ziel.adresse}:${ziel.port} (module setting "mqtthost").`,
+            );
+        } else {
+            const adresse = ziel.adresse || '<ioBroker IP>';
+            this.log.info(`Ready. Configure the faikout modules with MQTT host ${adresse}:${ziel.port}.`);
+        }
         this.subscribeStates('*.control.*');
         // `autoe` liegt im Kanal status, ist aber beschreibbar (Review 11.10.2026: Schreibbefehle
         // darauf gingen bisher ins Leere, weil nur control.* abonniert war).
@@ -1330,19 +1353,37 @@ class Faikout extends utils.Adapter {
                             : suche.text(suche.ERGEBNIS_TEXTE.adressenErkannt, sprache, { a: liste }),
                     );
                 }
+                case 'brokerTesten': {
+                    // Knopf "Verbindung testen": Werte aus dem (ungespeicherten) Formular; ein leeres
+                    // Passwortfeld heisst "das gespeicherte nehmen".
+                    const r = await brokerextern.testen({
+                        host: feldWert(msg.host),
+                        port: Number(feldWert(msg.port)) || undefined,
+                        tls: msg.tls === true || msg.tls === 'true',
+                        user: feldWert(msg.user),
+                        pass: feldWert(msg.pass) || String(this.config.externPass || ''),
+                        clientId: feldWert(msg.clientId) || `iobroker-faikout-${this.instance}`,
+                    });
+                    return antworten(r);
+                }
                 case 'mqtthostWert': {
-                    const adresse = feldWert(msg.adresse) || String(this.config.moduleAddress || '').trim();
-                    const port = Number(feldWert(msg.port)) || Number(this.config.port) || 1888;
-                    return antworten(adresse ? `${adresse}:${port}` : '');
+                    const z = this.brokerZiel(feldWert(msg.adresse));
+                    const port = z.extern ? z.port : Number(feldWert(msg.port)) || z.port;
+                    return antworten(z.adresse ? `${z.adresse}:${port}` : '');
                 }
                 case 'anleitung': {
                     const sprache = await this.sprache();
                     return antworten(
                         htmlZeilen(
                             discovery.anleitung({
-                                adresse: feldWert(msg.adresse) || String(this.config.moduleAddress || '').trim(),
-                                port: Number(feldWert(msg.port)) || Number(this.config.port) || 1888,
-                                user: msg.user !== undefined ? feldWert(msg.user) : this.config.user,
+                                adresse: this.brokerZiel(feldWert(msg.adresse)).adresse,
+                                port: this.brokerZiel().extern
+                                    ? this.brokerZiel().port
+                                    : Number(feldWert(msg.port)) || this.brokerZiel().port,
+                                user:
+                                    !this.brokerZiel().extern && msg.user !== undefined
+                                        ? feldWert(msg.user)
+                                        : this.brokerZiel().user,
                                 sprache: sprache === 'de' ? 'de' : 'en',
                             }),
                         ),
@@ -1363,7 +1404,7 @@ class Faikout extends utils.Adapter {
                         const r = await suche.suchen({
                             ziel,
                             adressen: this.eigeneAdressen(feldWert(msg.adresse)),
-                            port: Number(this.config.port) || 1888,
+                            port: this.brokerZiel().port,
                             geraete: this.geraeteFuerSuche(),
                             sprache,
                             timer: this,
@@ -1455,7 +1496,7 @@ class Faikout extends utils.Adapter {
         if (!ip) {
             return { error: anbinden.t('keinPlan', sprache) };
         }
-        const adresse = feldWert(msg.adresse) || String(this.config.moduleAddress || '').trim();
+        const adresse = this.brokerZiel(feldWert(msg.adresse)).adresse;
         if (!adresse) {
             return { error: anbinden.t('keineAdresse', sprache) };
         }
@@ -1515,7 +1556,7 @@ class Faikout extends utils.Adapter {
             passwort: plan.geschuetzt ? passwort : undefined,
             mqtthost: plan.neu.mqtthost,
             mqttuser: benutzer ? plan.neu.mqttuser : undefined,
-            mqttpass: benutzer ? String(this.config.pass || '') : undefined,
+            mqttpass: benutzer ? this.brokerZiel().pass : undefined,
         });
         const start = Date.now();
         this.log.info(`Connect: setting MQTT host of module "${plan.titel}" (${ip}) to this adapter, module restarts`);
@@ -1622,16 +1663,58 @@ class Faikout extends utils.Adapter {
     }
 
     /**
+     * Der Broker, an dem die Module haengen sollen: der eigene (Vorgabe) oder der externe.
+     * EINE Quelle fuer Suche, Anbinden, Anleitung und Logzeile - beide Betriebsarten laufen sonst gleich.
+     *
+     * @param {string} [adresse] ungespeicherte "Adresse fuer Module" aus dem Formular (nur eigener Broker)
+     * @returns {{extern: boolean, adresse: string, port: number, user: string, pass: string}} Ziel
+     */
+    brokerZiel(adresse) {
+        if (this.config.brokerModus === 'extern') {
+            return {
+                extern: true,
+                adresse: String(this.config.externHost || '').trim(),
+                port: Number(this.config.externPort) || (this.config.externTls === true ? 8883 : 1883),
+                user: String(this.config.externUser || ''),
+                pass: String(this.config.externPass || ''),
+            };
+        }
+        return {
+            extern: false,
+            adresse: String(adresse || this.config.moduleAddress || '').trim(),
+            port: Number(this.config.port) || 1888,
+            user: String(this.config.user || ''),
+            pass: String(this.config.pass || ''),
+        };
+    }
+
+    /**
+     * Namen der Module, die gerade am Broker haengen. Eigener Broker: aus den Client-IDs
+     * ("<App>:<Hostname>[_<Ende der ID>]"). Externer Broker: dort sind die Clients nicht sichtbar -
+     * es zaehlt, wer in den letzten fuenf Minuten gemeldet hat.
+     *
+     * @returns {string[]} Namen bzw. Client-Namen
+     */
+    modulClients() {
+        if (this.config.brokerModus === 'extern') {
+            const jetzt = Date.now();
+            return [...this.gesehen].filter(([, zeit]) => jetzt - zeit < 5 * 60000).map(([name]) => name);
+        }
+        return [...this.mqttClients].map(c => c.slice(c.indexOf(':') + 1));
+    }
+
+    /**
      * Zielwerte fuer anbinden.planen().
      *
      * @param {string} adresse Adresse fuer Module
      * @returns {{adresse: string, port: number, user: string, eigeneAdressen: string[]}} Ziel
      */
     anbindenZiel(adresse) {
+        const z = this.brokerZiel(adresse);
         return {
-            adresse,
-            port: Number(this.config.port) || 1888,
-            user: String(this.config.user || ''),
+            adresse: z.adresse,
+            port: z.port,
+            user: z.user,
             eigeneAdressen: this.eigeneAdressen(adresse),
         };
     }
@@ -1645,7 +1728,7 @@ class Faikout extends utils.Adapter {
      */
     modulGemeldetSeit(hostname, seit) {
         const zuletzt = this.gesehen.get(hostname) || 0;
-        const clients = [...this.mqttClients].map(c => c.slice(c.indexOf(':') + 1));
+        const clients = this.modulClients();
         return zuletzt > seit && clients.some(c => c === hostname || c.startsWith(`${hostname}_`));
     }
 
@@ -1671,7 +1754,12 @@ class Faikout extends utils.Adapter {
      * @returns {string[]} Adressen
      */
     eigeneAdressen(formular) {
-        const liste = [formular, this.config.moduleAddress, ...discovery.adressenErmitteln().adressen]
+        // Externer Broker: "dieser Adapter" ist fuer die Module die Adresse des externen Brokers.
+        const liste = (
+            this.config.brokerModus === 'extern'
+                ? [this.config.externHost]
+                : [formular, this.config.moduleAddress, ...discovery.adressenErmitteln().adressen]
+        )
             .map(a =>
                 String(a || '')
                     .trim()
@@ -1687,7 +1775,7 @@ class Faikout extends utils.Adapter {
      * @returns {Array<{name: string, modulId: string|null, verbunden: boolean}>} Geraete
      */
     geraeteFuerSuche() {
-        const clients = [...this.mqttClients].map(c => c.slice(c.indexOf(':') + 1));
+        const clients = this.modulClients();
         return [...this.geraete.values()].map(g => ({
             name: g.name,
             modulId: g.modulId,

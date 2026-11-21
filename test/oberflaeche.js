@@ -628,6 +628,45 @@ describe('Modul-Einstellungen: Rechenbausteine (lib/moduleinstellungen.js)', () 
             expect(r.felder).to.eql([{ feld: 'reporting', soll: 90, ist: '60', ok: false }]);
         });
 
+        it('echtes Modul: Bestaetigung erst beim 8. Leseversuch (rund 30 s) ist "ok", nie "abweichung"', async () => {
+            let n = 0;
+            const r = await lauf(async () => {
+                n++;
+                // ein Leseversuch ohne Antwort dazwischen ist kein Fehler
+                if (n === 4) {
+                    return { ok: false, art: 'nichtErreicht' };
+                }
+                return { ok: true, werte: { reporting: n < 8 ? '60' : '90' } };
+            });
+            expect(n).to.equal(8);
+            expect(r).to.include({ ok: true, art: 'ok' });
+            expect(r.felder).to.eql([{ feld: 'reporting', soll: 90, ist: '90', ok: true }]);
+            // 2,5 s bis zum ersten Versuch, dann sieben Abstaende von 4 s
+            expect(r.dauer).to.equal(2500 + 7 * 4000);
+        });
+
+        it('Simulator-Testschalter: die Einstellungsseite zeigt einen neuen Wert erst nach der Verzoegerung', () => {
+            const { ModulHttp } = require('./simwelt/http');
+            let jetzt = 0;
+            const h = new ModulHttp({ jetzt: () => jetzt });
+            const modul = { name: 'sim', id: 'AABBCCDDEEFF', verbunden: true, e: { reporting: 60 } };
+            h.anmelden(modul, { port: 1 });
+            const seite = () => h.antwort({ method: 'GET', url: '/revk-settings?_page=0', host: 'x', port: 1 }).text;
+            const wert = () => /name="_reporting"[^>]*value="(\d+)"/.exec(seite())[1];
+            expect(wert()).to.equal('60');
+            expect(JSON.parse(h.antwort({ method: 'GET', url: '/__test?rueckleseMs=30000', host: 'x', port: 1 }).text)).to.eql({ rueckleseMs: 30000 });
+            modul.e.reporting = 90;
+            expect(wert()).to.equal('60');
+            jetzt = 29000;
+            expect(wert()).to.equal('60');
+            jetzt = 30000;
+            expect(wert()).to.equal('90');
+            // ohne Schalter sofort
+            h.antwort({ method: 'GET', url: '/__test?rueckleseMs=0', host: 'x', port: 1 });
+            modul.e.reporting = 120;
+            expect(wert()).to.equal('120');
+        });
+
         it('Senden scheitert oder Feld nicht in der Liste: nichts wird gelesen', async () => {
             let gelesen = 0;
             const lesen = async () => (gelesen++, { ok: true, werte: {} });

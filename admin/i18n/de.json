@@ -215,7 +215,7 @@
   "labelModTopicgroup1": "Zusätzlicher Befehlsname",
   "helpModTopicgroup1": "topicgroup1 – MQTT-Name ohne Leerzeichen",
   "confirmModTitle": "Einstellungen in das Modul schreiben?",
-  "confirmModText": "Die Änderungen stehen in der Vorschau (alt → neu). Jedes Schreiben belastet den Flash-Speicher des Moduls und startet es bei manchen Einstellungen neu (etwa 10 s ohne Verbindung). Danach liest der Adapter zurück und zeigt das Ergebnis je Einstellung.",
+  "confirmModText": "Die Änderungen stehen in der Vorschau (alt → neu). Jedes Schreiben belastet den Flash-Speicher des Moduls und startet es bei manchen Einstellungen neu (etwa 10 s ohne Verbindung). Danach liest der Adapter zurück und zeigt das Ergebnis je Einstellung. Die Bestätigung kann bis zu einer Minute dauern – ein Modul zeigt einen neuen Wert oft erst nach etwa 30 Sekunden. Solange der Adapter wartet, dreht sich das Symbol im Knopf.",
   "optWieVorgabe": "Wie Vorgabe",
   "helpLeerVorgabe": "Leer = Vorgabe",
   "textRuht": "Faikout-Auto mit Strategie „Kennlinie“: Die Bedarfsregelung ruht für dieses Gerät. Bei Faikout-Auto wird die Leistungsgrenze nur mit der Strategie „Auto“ gesetzt.",
@@ -247,5 +247,6 @@
   "textWegSollwert": "Der Sollwert an der Anlage weicht dann um die Fühlerkorrektur (höchstens ±3 K) vom Ziel ab. Das Ziel selbst steht in der Begründung auf der Gerätekarte.",
   "labelRaumTraege": "Fühler ist träge (Minuten)",
   "helpRaumTraege": "0 = aus. Mischt schnelle Änderungen des Anlagenfühlers dazu; nur für die Leistungsgrenze und den Weg „ans Modul senden“ von Belang.",
-  "labelKorrAbstand": "Frühestens alle … Minuten nachstellen"
+  "labelKorrAbstand": "Frühestens alle … Minuten nachstellen",
+  "textModWait": "Die Bestätigung kann bis zu einer Minute dauern – ein Modul zeigt einen neuen Wert oft erst nach etwa 30 Sekunden. Solange der Adapter wartet, dreht sich das Symbol im Knopf."
 }

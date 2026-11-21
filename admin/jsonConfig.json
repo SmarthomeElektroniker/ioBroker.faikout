@@ -332,6 +332,21 @@
                     "lg": 4,
                     "xl": 4
                 },
+                "_modWait": {
+                    "type": "staticText",
+                    "text": "textModWait",
+                    "doNotSave": true,
+                    "hidden": "!data._modStand || !data._modPlan",
+                    "newLine": true,
+                    "style": {
+                        "opacity": 0.75
+                    },
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
                 "_modVorschau": {
                     "type": "staticText",
                     "text": "${data._modVorschau || \"\"}",

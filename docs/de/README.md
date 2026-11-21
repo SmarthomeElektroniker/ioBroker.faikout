@@ -167,7 +167,9 @@ Im Reiter **Moduleinstellungen**:
    „alt → neu“.
 3. **In Modul schreiben** und die Rückfrage bestätigen. Der Adapter sendet eine einzige
    MQTT-Nachricht mit nur den geänderten Werten, wartet, bis das Modul wieder antwortet, liest
-   zurück und zeigt das Ergebnis je Einstellung.
+   zurück und zeigt das Ergebnis je Einstellung. Das kann bis zu einer Minute dauern: Ein Modul
+   zeigt einen neuen Wert auf seiner Einstellungsseite oft erst nach etwa 30 Sekunden. Solange
+   dreht sich das Symbol im Knopf.
 
 Vor jedem Schreiben merkt sich der Adapter den gelesenen Stand (die letzten fünf je Modul). Unter
 **Gesicherter Stand** lässt er sich wieder in das Formular laden und mit demselben Ablauf

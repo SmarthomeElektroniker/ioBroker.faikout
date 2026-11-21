@@ -170,6 +170,9 @@ class ModulHttp {
         this.eintraege = []; // {modul, hosts: Set<string>, port?: number, netz}
         this.server = new Map(); // Port -> http.Server
         this.zaehler = { anfragen: 0, verboten: 0, verbotenNach: {}, unbekannt: 0 };
+        /** Testschalter: so lange zeigt die Einstellungsseite nach einer Aenderung noch den alten Stand. */
+        this.rueckleseMs = opt.rueckleseMs || 0;
+        this.jetzt = opt.jetzt || (() => Date.now());
     }
 
     /**
@@ -181,6 +184,33 @@ class ModulHttp {
     anmelden(modul, opt = {}) {
         const hosts = new Set([modul.name, modul.id, ...(opt.hosts || [])].map(h => String(h).toLowerCase()));
         this.eintraege.push({ modul, hosts, port: opt.port, netz: { mqtthost: opt.mqtthost, mqttuser: opt.mqttuser } });
+    }
+
+    /**
+     * Das Modul, wie es die Einstellungsseite zeigt: mit Ruecklese-Verzoegerung erscheinen geaenderte
+     * Einstellungen erst `rueckleseMs` nach der ersten Abfrage, die sie haette zeigen koennen.
+     *
+     * @param {object} eintrag Eintrag aus anmelden()
+     * @returns {object} Modul bzw. Sicht darauf mit dem aelteren Stand der Einstellungen
+     */
+    sicht(eintrag) {
+        const jetzt = this.jetzt();
+        const aktuell = JSON.stringify(eintrag.modul.e);
+        if (!this.rueckleseMs || eintrag.gezeigt === undefined) {
+            eintrag.gezeigt = aktuell;
+            eintrag.neuSeit = null;
+            return eintrag.modul;
+        }
+        if (aktuell !== eintrag.gezeigt) {
+            eintrag.neuSeit = eintrag.neuSeit ?? jetzt;
+            if (jetzt - eintrag.neuSeit >= this.rueckleseMs) {
+                eintrag.gezeigt = aktuell;
+                eintrag.neuSeit = null;
+            }
+        }
+        const sicht = Object.create(eintrag.modul);
+        Object.defineProperty(sicht, 'e', { value: JSON.parse(eintrag.gezeigt) });
+        return sicht;
     }
 
     /**
@@ -227,6 +257,14 @@ class ModulHttp {
             return { status: 404, typ: 'text/plain', text: 'unknown module (Host header)\n' };
         }
         const url = new URL(a.url, 'http://x');
+        if (url.pathname === '/__test') {
+            // Testschalter (nur Simulator): Ruecklese-Verzoegerung in ms. Ein echtes Modul zeigt einen per
+            // MQTT gesetzten Wert auf seiner Einstellungsseite erst nach etwa 30 s.
+            if (url.searchParams.has('rueckleseMs')) {
+                this.rueckleseMs = Math.max(0, Number(url.searchParams.get('rueckleseMs')) || 0);
+            }
+            return { status: 200, typ: 'application/json', text: `${JSON.stringify({ rueckleseMs: this.rueckleseMs })}\n` };
+        }
         if (url.pathname === '/') {
             return { status: 200, typ: 'text/html; charset=utf-8', text: startSeite(eintrag.modul) };
         }
@@ -235,7 +273,7 @@ class ModulHttp {
             return {
                 status: 200,
                 typ: 'text/html; charset=utf-8',
-                text: einstellungsSeite(eintrag.modul, seite, eintrag.netz),
+                text: einstellungsSeite(this.sicht(eintrag), seite, eintrag.netz),
             };
         }
         return { status: 404, typ: 'text/plain', text: 'not found\n' };

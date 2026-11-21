@@ -921,7 +921,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(grenze({ a: false })).to.contain('nicht begrenzt');
         expect(muster(dm.regelGrenzeHtml(false).de, { s: 45, a: true, p: false, f: 'ja', b: 'adapter', st: 'kennlinie' })).not.to.contain('Probelauf');
 
-        const plan = muster(dm.regelPlanHtml().de, { s: 'Komfort', n: new Date(2026, 10, 20, 22, 0).getTime(), ns: 'Absenken' });
+        const plan = muster(dm.regelPlanHtml().de, { s: 'Komfort', n: new Date(new Date().setHours(22, 0, 0, 0)).getTime(), ns: 'Absenken' });
         expect(plan).to.contain('Komfort').and.to.contain('22:00 Absenken');
         expect(muster(dm.regelPlanHtml().de, { s: '', n: null, ns: '' })).to.contain('kein Wochenplan');
 
@@ -932,7 +932,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         // mit dem Datenpunkt regel.fuehler.<art>Stand zaehlt der, nicht mehr das Wort im Quellentext
         const stand = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Sensor of the unit (fallback)', as: 'rueckfall', rv: 20, rq: 'x (Rückfall: y)', rs: 'ok' });
         expect(stand).to.contain('Außen 4,5 °C · Rückfall').and.to.contain('Raum 20 °C<');
-        expect(muster(dm.regelHandHtml().de, { h: true, b: new Date(2026, 10, 20, 22, 0).getTime() })).to.contain('<b>22:00</b>');
+        expect(muster(dm.regelHandHtml().de, { h: true, b: new Date(new Date().setHours(22, 0, 0, 0)).getTime() })).to.contain('<b>22:00</b>');
     });
 
     it('jedes Muster laesst sich in jeder Sprache auswerten, auch ganz ohne Werte', () => {
