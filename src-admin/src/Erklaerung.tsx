@@ -190,7 +190,7 @@ export function ErklaerungAnsicht(props: AnsichtProps): React.JSX.Element {
         </div>
     );
 
-    const hand = kasten('hand', { seite: true, farbe: farbeHand, reiter: tabRegel });
+    const hand = kasten('hand', { seite: true, farbe: farbeHand, reiter: tabZeit });
     const feuchte = kasten('feuchte', { seite: true, farbe: farbeFeuchte, reiter: tabRegel });
     const zeitplan = kasten('zeitplan', { reiter: tabZeit });
     const stufe = kasten('stufe', {
