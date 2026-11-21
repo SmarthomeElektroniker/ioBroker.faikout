@@ -138,7 +138,12 @@ const liste = (roh: unknown): unknown[] => (Array.isArray(roh) ? roh : []);
 /** Wo eine Stufe noch benutzt wird: im Plan der Vorlage (Formularwert) und in Plaenen von Anlagen (Datenpunkte). */
 export interface Benutzung {
     vorlage: boolean;
+    /** Anlagen, deren Wochenplan ODER Abwesenheit die Stufe benutzt */
     geraete: string[];
+    /** davon: Anlagen, deren Wochenplan sie benutzt (fehlt die Angabe, gelten alle) */
+    plaene?: string[];
+    /** davon: Anlagen, deren Abwesenheit sie benutzt */
+    abwesenheiten?: string[];
 }
 
 /** Kommt die Stufe in diesem Plan (JSON-Text, sieben Tage mit {t, s}) vor? */
@@ -250,6 +255,16 @@ export function Wertfeld(props: {
                 }}
             />
             <span className="fk-wert-einheit">{props.einheit}</span>
+            {getippt !== null && getippt.trim() !== '' && !(Number.isFinite(n) && n >= min && n <= max) ? (
+                // ausserhalb des Bereichs (oder keine Zahl): nicht still verwerfen, sondern den Bereich nennen -
+                // wie bei den Grenzen der Kennlinie und der Raumkorrektur
+                <span
+                    className="fk-wert-grund"
+                    role="alert"
+                >
+                    {text(sprache, 'wertBereich', zeige(min), zeige(max), props.einheit)}
+                </span>
+            ) : null}
         </span>
     );
 }
@@ -257,7 +272,24 @@ export function Wertfeld(props: {
 /** Gestaltung von Wertfeld - fuer jede Komponente, die es benutzt (sx des umgebenden Kastens). */
 export function wertfeldStil(farben: { fokus: string; fehler: string }): Record<string, object> {
     return {
-        '& .fk-wert': { display: 'inline-flex', alignItems: 'baseline', gap: '4px', whiteSpace: 'nowrap' },
+        '& .fk-wert': { display: 'inline-flex', alignItems: 'baseline', gap: '4px', whiteSpace: 'nowrap', position: 'relative' },
+        // Begruendung einer unzulaessigen Eingabe: schwebt unter dem Feld, das Layout springt nicht
+        '& .fk-wert-grund': {
+            position: 'absolute',
+            top: '100%',
+            right: 0,
+            marginTop: '4px',
+            zIndex: 3,
+            padding: '2px 7px',
+            borderRadius: '5px',
+            fontSize: '0.75rem',
+            fontWeight: 500,
+            lineHeight: 1.4,
+            color: '#fff',
+            backgroundColor: farben.fehler,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+        },
         '& .fk-wert-feld': {
             width: '4.2em',
             font: 'inherit',
@@ -1228,14 +1260,30 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                         sx={{ m: 0, mt: 0.25, pl: 2.5 }}
                     >
                         {frage.benutzt.vorlage ? <li data-wo="vorlage">{t('benutztVorlage')}</li> : null}
-                        {frage.benutzt.geraete.map(g => (
-                            <li
-                                key={g}
-                                data-wo={g}
-                            >
-                                {t('benutztGeraet', g)}
-                            </li>
-                        ))}
+                        {frage.benutzt.geraete.flatMap(g => {
+                            // sagen, WAS die Stufe benutzt: der Wochenplan, die Abwesenheit oder beides
+                            const abw = (frage.benutzt.abwesenheiten || []).includes(g);
+                            const plan = !frage.benutzt.plaene || frage.benutzt.plaene.includes(g) || !abw;
+                            return [
+                                plan ? (
+                                    <li
+                                        key={g}
+                                        data-wo={g}
+                                    >
+                                        {t('benutztGeraet', g)}
+                                    </li>
+                                ) : null,
+                                abw ? (
+                                    <li
+                                        key={`${g}/abwesenheit`}
+                                        data-wo={g}
+                                        data-was="abwesenheit"
+                                    >
+                                        {t('benutztAbwesenheit', g)}
+                                    </li>
+                                ) : null,
+                            ];
+                        })}
                     </Box>
                     <Box
                         component="label"
@@ -1500,11 +1548,18 @@ class Stufen extends ConfigGeneric<ConfigGenericProps, ConfigGenericState> {
             const z = zeilen.find(x => x && (text(x.geraet) === g.id || text(x.geraet) === g.name));
             return !!z && Array.isArray(z.stufen) && z.stufen.length > 0;
         };
-        const geraete = (antwort.geraete as { id: string; name: string; planStufen?: string[] }[])
+        const treffer = (
+            antwort.geraete as { id: string; name: string; planStufen?: string[]; wochenStufen?: string[]; abwesenheitStufe?: string }[]
+        )
             .filter(g => Array.isArray(g.planStufen) && g.planStufen.includes(id))
-            .filter(g => (jeGeraet ? text(data.geraet) === g.id || text(data.geraet) === g.name : !eigen(g)))
-            .map(g => g.name || g.id);
-        return { vorlage, geraete };
+            .filter(g => (jeGeraet ? text(data.geraet) === g.id || text(data.geraet) === g.name : !eigen(g)));
+        const nenne = (g: { id: string; name: string }): string => g.name || g.id;
+        return {
+            vorlage,
+            geraete: treffer.map(nenne),
+            plaene: treffer.filter(g => !Array.isArray(g.wochenStufen) || g.wochenStufen.includes(id)).map(nenne),
+            abwesenheiten: treffer.filter(g => g.abwesenheitStufe === id).map(nenne),
+        };
     };
 
     letzterFehler = '';

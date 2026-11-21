@@ -58,6 +58,11 @@ export interface PlanGeraet {
     stufenQuelle?: 'vorlage' | 'eigen';
     /** IDs der Stufen, die der hinterlegte Plan (und die Abwesenheit) nennt */
     planStufen?: string[];
+    /** nur die Stufen des Wochenplans bzw. die Stufe der Abwesenheit */
+    wochenStufen?: string[];
+    abwesenheitStufe?: string;
+    /** laeuft gerade eine Abwesenheit: ihr Ende (ms) */
+    abwesendBis?: number | null;
     /** entfernte Stufen, die der Adapter beim "Speichern" der Instanz im Plan ersetzt */
     ersatz?: { von: string; nach: string; vonName?: string; nachName?: string }[];
     planAktiv: boolean;
@@ -722,6 +727,28 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
             setFehler(f => ({ ...f, [id]: tx('einfuegenUngueltig') }));
             return false;
         }
+        // Der kopierte Plan nennt Stufen, die es bei dieser Anlage nicht gibt (z. B. eigene Stufen der Quelle):
+        // gleich hier sagen, welche - mit ihrem Namen, nicht erst der Adapter mit der rohen Kennung.
+        if (week) {
+            const hier = new Set(stufenVon(id).map(st => st.id));
+            const alle = new Map<string, string>();
+            for (const l of Object.values((liste && liste.stufen) || {})) {
+                for (const st of Array.isArray(l) ? l : []) {
+                    alle.set(st.id, st.name || st.id);
+                }
+            }
+            let genannt: string[] = [];
+            try {
+                genannt = (JSON.parse(week) as { s?: string }[][]).flat().map(p => String((p && p.s) || ''));
+            } catch {
+                genannt = [];
+            }
+            const fremd = [...new Set(genannt)].filter(x => x && !hier.has(x));
+            if (fremd.length) {
+                setFehler(f => ({ ...f, [id]: tx('einfuegenFremdeStufen', fremd.map(x => alle.get(x) || x).join(', ')) }));
+                return false;
+            }
+        }
         return (await aktion(id, 'wochenplanEinfuegen', { week })) !== null;
     };
     const schalten = (g: PlanGeraet, an: boolean): void => {
@@ -884,6 +911,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                             {g.planAktiv && g.stufe ? (
                                 <Box sx={{ color: 'text.secondary' }}>
                                     {tx('jetztStufe', stufenText(nach.get(g.stufe), g.stufe, sprache, g.stufeName))}
+                                    {g.abwesendBis ? <span className="fk-zp-abwesend">{` · ${tx('abwesenheitBis', zeitText(g.abwesendBis, sprache, tx))}`}</span> : null}
                                 </Box>
                             ) : null}
                             {g.planAktiv && g.naechster ? (
@@ -1014,6 +1042,8 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                                 Promise.resolve({
                                     vorlage: false,
                                     geraete: Array.isArray(g.planStufen) && g.planStufen.includes(id) ? [name] : [],
+                                    plaene: !Array.isArray(g.wochenStufen) || g.wochenStufen.includes(id) ? [name] : [],
+                                    abwesenheiten: g.abwesenheitStufe === id ? [name] : [],
                                 })
                             }
                             onFehler={meldung => props.onStufenFehler?.(g.id, meldung)}

@@ -1607,6 +1607,25 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                     expect(a.gesetzt).to.eql([]);
                 });
 
+                it('Liste nennt getrennt, was Wochenplan und Abwesenheit benutzen, und das Ende einer laufenden Abwesenheit', async () => {
+                    const plan = JSON.stringify([[{ t: 0, s: 'komfort' }], [], [], [], [], [], []]);
+                    const jetzt = Date.now();
+                    const abw = JSON.stringify({ from: jetzt - 3600000, to: jetzt + 7200000, level: 'abwesend' });
+                    const { a } = await mitRegelung({ 'regulation.schedule.weekJson': plan, 'regulation.schedule.absenceJson': abw });
+                    const g = (await frage(a, 'zeitplaeneListe', {})).geraete[0];
+                    expect(g.planStufen).to.have.members(['komfort', 'abwesend']);
+                    expect(g.wochenStufen).to.eql(['komfort']);
+                    expect(g.abwesenheitStufe).to.equal('abwesend');
+                    expect(g.abwesendBis).to.equal(jetzt + 7200000);
+                    expect(g.stufe).to.equal('abwesend');
+                    // ohne laufende Abwesenheit kein Ende
+                    const spaeter = JSON.stringify({ from: jetzt + 3600000, to: jetzt + 7200000, level: 'abwesend' });
+                    const { a: b } = await mitRegelung({ 'regulation.schedule.weekJson': plan, 'regulation.schedule.absenceJson': spaeter });
+                    const h = (await frage(b, 'zeitplaeneListe', {})).geraete[0];
+                    expect(h.abwesendBis).to.equal(null);
+                    expect(h.abwesenheitStufe).to.equal('abwesend');
+                });
+
                 it('entfernte Stufe mit Ersatzwahl: Reiter und Editor zeigen den Plan wie nach dem Speichern, geschrieben wird dabei nichts', async () => {
                     const plan = JSON.stringify([[{ t: 0, s: 'abwesend' }, { t: 420, s: 'komfort' }], [], [], [], [], [], []]);
                     const { a } = await mitRegelung({ 'regulation.schedule.weekJson': plan });
