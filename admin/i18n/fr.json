@@ -264,7 +264,7 @@
   "helpExternUser": "Vide = connexion sans identification",
   "labelExternPass": "Mot de passe sur le broker",
   "labelExternClientId": "ID client",
-  "helpExternClientId": "Vide = iobroker-faikout-<instance>",
+  "helpExternClientId": "Vide = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Préfixe des topics",
   "helpExternPraefix": "Seulement si les modules publient sous un préfixe ; généralement vide",
   "btnBrokerTest": "Tester la connexion",

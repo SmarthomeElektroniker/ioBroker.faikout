@@ -264,7 +264,7 @@
   "helpExternUser": "Puste = połączenie bez logowania",
   "labelExternPass": "Hasło u brokera",
   "labelExternClientId": "Identyfikator klienta",
-  "helpExternClientId": "Puste = iobroker-faikout-<instancja>",
+  "helpExternClientId": "Puste = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Prefiks tematów",
   "helpExternPraefix": "Tylko jeśli moduły publikują pod prefiksem; zwykle puste",
   "btnBrokerTest": "Testuj połączenie",

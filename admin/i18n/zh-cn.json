@@ -264,7 +264,7 @@
   "helpExternUser": "留空 = 不登录直接连接",
   "labelExternPass": "代理上的密码",
   "labelExternClientId": "客户端 ID",
-  "helpExternClientId": "留空 = iobroker-faikout-<实例>",
+  "helpExternClientId": "留空 = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "主题前缀",
   "helpExternPraefix": "仅当模块在某个前缀下发布时填写；通常留空",
   "btnBrokerTest": "测试连接",

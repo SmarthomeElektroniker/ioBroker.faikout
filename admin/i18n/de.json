@@ -264,7 +264,7 @@
   "helpExternUser": "Leer = ohne Anmeldung verbinden",
   "labelExternPass": "Passwort am Broker",
   "labelExternClientId": "Client-ID",
-  "helpExternClientId": "Leer = iobroker-faikout-<Instanz>",
+  "helpExternClientId": "Leer = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Topic-Präfix",
   "helpExternPraefix": "Nur wenn die Module unter einem Präfix veröffentlichen; meist leer",
   "btnBrokerTest": "Verbindung testen",

@@ -264,7 +264,7 @@
   "helpExternUser": "Пусто = подключаться без входа",
   "labelExternPass": "Пароль на брокере",
   "labelExternClientId": "Идентификатор клиента",
-  "helpExternClientId": "Пусто = iobroker-faikout-<экземпляр>",
+  "helpExternClientId": "Пусто = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Префикс топиков",
   "helpExternPraefix": "Только если модули публикуют под префиксом; обычно пусто",
   "btnBrokerTest": "Проверить соединение",

@@ -264,7 +264,7 @@
   "helpExternUser": "Порожньо = під’єднуватися без входу",
   "labelExternPass": "Пароль на брокері",
   "labelExternClientId": "Ідентифікатор клієнта",
-  "helpExternClientId": "Порожньо = iobroker-faikout-<екземпляр>",
+  "helpExternClientId": "Порожньо = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Префікс топіків",
   "helpExternPraefix": "Лише якщо модулі публікують під префіксом; зазвичай порожньо",
   "btnBrokerTest": "Перевірити з’єднання",

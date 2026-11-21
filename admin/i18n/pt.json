@@ -264,7 +264,7 @@
   "helpExternUser": "Vazio = ligar sem autenticação",
   "labelExternPass": "Palavra-passe no broker",
   "labelExternClientId": "ID de cliente",
-  "helpExternClientId": "Vazio = iobroker-faikout-<instância>",
+  "helpExternClientId": "Vazio = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Prefixo dos tópicos",
   "helpExternPraefix": "Só se os módulos publicarem sob um prefixo; normalmente vazio",
   "btnBrokerTest": "Testar ligação",

@@ -264,7 +264,7 @@
   "helpExternUser": "Vuoto = collegamento senza accesso",
   "labelExternPass": "Password sul broker",
   "labelExternClientId": "ID client",
-  "helpExternClientId": "Vuoto = iobroker-faikout-<istanza>",
+  "helpExternClientId": "Vuoto = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Prefisso dei topic",
   "helpExternPraefix": "Solo se i moduli pubblicano sotto un prefisso; di solito vuoto",
   "btnBrokerTest": "Prova connessione",

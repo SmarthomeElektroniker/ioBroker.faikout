@@ -264,7 +264,7 @@
   "helpExternUser": "Vacío = conectar sin iniciar sesión",
   "labelExternPass": "Contraseña en el bróker",
   "labelExternClientId": "ID de cliente",
-  "helpExternClientId": "Vacío = iobroker-faikout-<instancia>",
+  "helpExternClientId": "Vacío = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Prefijo de los temas",
   "helpExternPraefix": "Solo si los módulos publican bajo un prefijo; normalmente vacío",
   "btnBrokerTest": "Probar conexión",

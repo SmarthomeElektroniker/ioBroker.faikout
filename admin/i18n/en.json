@@ -264,7 +264,7 @@
   "helpExternUser": "Empty = sign in without user name",
   "labelExternPass": "Password at the broker",
   "labelExternClientId": "Client ID",
-  "helpExternClientId": "Empty = iobroker-faikout-<instance>",
+  "helpExternClientId": "Empty = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Topic prefix",
   "helpExternPraefix": "Only if the modules publish below a prefix; usually empty",
   "btnBrokerTest": "Test connection",

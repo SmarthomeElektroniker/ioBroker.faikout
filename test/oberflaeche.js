@@ -936,7 +936,9 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
         a.brokerTestFunktion = async x => (aufrufe.push(x), { ok: false, art: 'anmeldung' });
         const r = await frage(a, 'brokerVerbindungTesten', { host: ' mosquitto ', port: '', tls: true, user: 'u', pass: '', clientId: '' });
         expect(r.antwort.native._brokerTest).to.equal('anmeldung');
-        expect(aufrufe[0]).to.eql({ host: 'mosquitto', port: 8883, tls: true, user: 'u', pass: 'gespeichert', clientId: 'iobroker-faikout-0' });
+        expect(aufrufe[0]).to.eql({ host: 'mosquitto', port: 8883, tls: true, user: 'u', pass: 'gespeichert', clientId: require('../lib/brokerextern').standardClientId(0) });
+        // nicht die ID, die ein anderer Adapter fuer dieselben Module nutzt (gegenseitiger Rauswurf am Broker)
+        expect(require('../lib/brokerextern').standardClientId(0, 'nas')).to.match(/^iobroker-faikout-adapter-0-[0-9a-f]{6}$/).and.not.to.equal('iobroker-faikout-0');
         await frage(a, 'brokerVerbindungTesten', { host: 'h', port: 1884, tls: false, user: 'u', pass: 'neu', clientId: 'mein' });
         expect(aufrufe[1]).to.include({ port: 1884, pass: 'neu', clientId: 'mein', tls: false });
     });

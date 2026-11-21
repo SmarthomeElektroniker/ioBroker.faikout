@@ -200,7 +200,7 @@ class Faikout extends utils.Adapter {
                 tls: this.config.externTls === true,
                 user: this.config.externUser,
                 pass: this.config.externPass,
-                clientId: this.config.externClientId || `iobroker-faikout-${this.instance}`,
+                clientId: this.config.externClientId || brokerextern.standardClientId(this.instance),
                 praefix: this.config.externPraefix,
                 log: this.log,
                 onMessage,
@@ -304,7 +304,7 @@ class Faikout extends utils.Adapter {
         // Verbunden heisst hier: mindestens ein faikout-Modul haengt am Broker.
         // Am externen Broker zaehlt zusaetzlich die Verbindung zum Broker selbst: faellt er weg, kommt
         // keine Meldung mehr an - "verbunden" waere dann falsch (Brokertest 21.11.2026).
-        const brokerDa = this.config.brokerModus !== 'extern' || !!(this.broker && this.broker.verbunden);
+        const brokerDa = (this.config || {}).brokerModus !== 'extern' || !!(this.broker && this.broker.verbunden);
         this.setState('info.connection', { val: this.geraete.size > 0 && brokerDa, ack: true });
     }
 
@@ -1375,7 +1375,7 @@ class Faikout extends utils.Adapter {
                         tls: msg.tls === true || msg.tls === 'true',
                         user: feldWert(msg.user),
                         pass: feldWert(msg.pass) || String(this.config.externPass || ''),
-                        clientId: feldWert(msg.clientId) || `iobroker-faikout-${this.instance}`,
+                        clientId: feldWert(msg.clientId) || brokerextern.standardClientId(this.instance),
                     });
                     return antworten(r);
                 }

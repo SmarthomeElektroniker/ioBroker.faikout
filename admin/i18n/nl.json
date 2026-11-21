@@ -264,7 +264,7 @@
   "helpExternUser": "Leeg = verbinden zonder aanmelding",
   "labelExternPass": "Wachtwoord bij de broker",
   "labelExternClientId": "Client-ID",
-  "helpExternClientId": "Leeg = iobroker-faikout-<instantie>",
+  "helpExternClientId": "Leeg = iobroker-faikout-adapter-<Nr>-<…>",
   "labelExternPraefix": "Topic-prefix",
   "helpExternPraefix": "Alleen als de modules onder een prefix publiceren; meestal leeg",
   "btnBrokerTest": "Verbinding testen",
