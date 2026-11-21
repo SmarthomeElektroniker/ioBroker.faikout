@@ -1653,6 +1653,11 @@ class Modul {
         j.text('app', 'Faikout').text('version', VERSION).text('build-suffix', HARDWARE).text('build', BUILD);
         j.ganz('flash', 4194304).ganz('rst', 1).ganz('mem', 150000);
         j.text('ssid', 'SimNetz').text('bssid', '020000000001').ganz('rssi', -55).ganz('chan', 6);
+        // Ein echtes Modul nennt seine IP (revk.c: "ipv4"). Der Simulator nennt die Adresse, unter der
+        // seine Einstellungsseite erreichbar ist - mit Port, wenn es nicht 80 ist (Dienst: httpAdresse).
+        if (this.httpAdresse) {
+            j.text('ipv4', this.httpAdresse);
+        }
         this.statusExtra(j);
         return j.ende();
     }

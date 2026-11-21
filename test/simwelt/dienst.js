@@ -162,9 +162,16 @@ class Dienst {
             this.welten.push(welt);
             for (const m of welt.module) {
                 const eigen = (w.module || []).find(x => (x.name || `${welt.praefix}${x.typ}`) === m.name) || {};
+                const eigenerPort = eigen.httpPort ?? (k.http.portAb ? k.http.portAb + nr : undefined);
+                // Das Modul meldet seine Adresse wie ein echtes ("ipv4" in state/<Name>); mit eigenem
+                // Port als "Adresse:Port", damit der Adapter die Einstellungsseite ohne Handarbeit findet.
+                if (eigenerPort) {
+                    const host = konfig.bind && konfig.bind !== '0.0.0.0' ? konfig.bind : '127.0.0.1';
+                    m.httpAdresse = eigenerPort === 80 ? host : `${host}:${eigenerPort}`;
+                }
                 this.http.anmelden(m, {
                     hosts: eigen.hosts,
-                    port: eigen.httpPort ?? (k.http.portAb ? k.http.portAb + nr : undefined),
+                    port: eigenerPort,
                     mqtthost: new URL(w.broker).host,
                     mqttuser: w.benutzer,
                 });

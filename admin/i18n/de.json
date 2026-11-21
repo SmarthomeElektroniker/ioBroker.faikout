@@ -236,7 +236,7 @@
   "confirmKopieText": "Die gewählten Werte des Zielgeräts werden ersetzt und die Geräteliste wird sofort gespeichert; der Adapter startet neu. Andere ungespeicherte Änderungen auf dieser Seite gehen verloren – vorher speichern.",
   "headerGeraetFuehler": "Fühler und Schutz",
   "labelModAdresse": "Adresse (Host oder Host:Port)",
-  "helpModAdresse": "Nur nötig, wenn in der Liste „Adresse unbekannt“ steht oder das Modul dort fehlt.",
+  "helpModAdresse": "Nur nötig, wenn das Modul seine Adresse nicht meldet („Adresse noch unbekannt“) oder in der Liste fehlt.",
   "labelModSicherung": "Gesicherter Stand (vor einem Schreiben)",
   "helpModSicherung": "Vor jedem Schreiben merkt sich der Adapter den gelesenen Stand – die letzten fünf je Modul.",
   "btnModRestore": "Diesen Stand in das Formular laden",

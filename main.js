@@ -131,6 +131,8 @@ class Faikout extends utils.Adapter {
 
         /** Client-IDs der Module, die gerade am Broker haengen ("Faikout:<Hostname>[_<ID-Ende>]"). */
         this.mqttClients = new Set();
+        /** Absenderadresse je MQTT-Client des eigenen Brokers (Client-Name -> IP) */
+        this.clientAdressen = new Map();
 
         /** Laeuft gerade eine Suche (Reiter "Module suchen")? Nur eine zur Zeit. */
         this.sucheLaeuft = false;
@@ -211,9 +213,12 @@ class Faikout extends utils.Adapter {
                 log: this.log,
                 timer: this,
                 onMessage,
-                onClient: (clientId, verbunden) => {
+                onClient: (clientId, verbunden, adresse) => {
                     if (verbunden) {
                         this.mqttClients.add(String(clientId));
+                        if (adresse) {
+                            this.clientAdressen.set(String(clientId), String(adresse));
+                        }
                     } else {
                         this.mqttClients.delete(String(clientId));
                     }
@@ -1493,6 +1498,24 @@ class Faikout extends utils.Adapter {
             this.log.warn(`${obj.command}: ${e.message}`);
             antworten({ error: e.message });
         }
+    }
+
+    /**
+     * Vermutete Adresse eines Moduls aus seiner Verbindung zum eigenen Broker. Nur ein Kandidat: hinter
+     * Docker-NAT ist es die Adresse des Gateways, und ein Simulator lauscht auf einem anderen Port -
+     * die Einstellungsseite prueft sie deshalb, bevor sie sie verwendet.
+     *
+     * @param {string} name Name des Moduls (so meldet es sich am Broker)
+     * @returns {string} IP oder ''
+     */
+    modulClientAdresse(name) {
+        for (const [client, adresse] of this.clientAdressen) {
+            const kurz = client.slice(client.indexOf(':') + 1);
+            if (this.mqttClients.has(client) && (kurz === name || kurz.startsWith(`${name}_`))) {
+                return adresse;
+            }
+        }
+        return '';
     }
 
     /**

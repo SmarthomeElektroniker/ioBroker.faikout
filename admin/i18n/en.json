@@ -236,7 +236,7 @@
   "confirmKopieText": "The chosen values of the target unit are replaced and the unit list is saved at once; the adapter restarts. Other unsaved changes on this page are lost – save them first.",
   "headerGeraetFuehler": "Sensors and protection",
   "labelModAdresse": "Address (host or host:port)",
-  "helpModAdresse": "Only needed if the list says \"address unknown\" or the module is missing there.",
+  "helpModAdresse": "Only needed if the module does not report its address (\"address not known yet\") or is missing in the list.",
   "labelModSicherung": "Saved state (before a write)",
   "helpModSicherung": "Before every write the adapter keeps the state it read – the last five per module.",
   "btnModRestore": "Load this state into the form",

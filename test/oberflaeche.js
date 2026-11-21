@@ -954,7 +954,7 @@ describe('UX-Funde 21.11.2026', () => {
         a.letzteSuche = [{ ip: '10.0.0.9', name: 'Fremdes Modul', status: 'andererBroker' }];
         const liste = (await frage(a, 'modulEinstellungenListe', {})).antwort;
         expect(liste).to.eql([
-            { label: 'Wohnzimmer AC – Adresse unbekannt – daneben eintragen', value: 'geraet:wz' },
+            { label: 'Wohnzimmer AC – Adresse noch unbekannt', value: 'geraet:wz' },
             { label: 'OG (192.168.30.70)', value: '192.168.30.70' },
             { label: 'Fremdes Modul (10.0.0.9)', value: '10.0.0.9' },
         ]);
@@ -972,7 +972,39 @@ describe('UX-Funde 21.11.2026', () => {
     it('Lesen mit einem Eintrag ohne Adresse: klare Meldung mit dem Namen statt eines Netzfehlers', async () => {
         const a = adapter();
         const r = (await frage(a, 'modulEinstellungenLesen', { ip: 'geraet:wz' })).antwort;
-        expect(r.error).to.contain('Für Wohnzimmer AC kennt der Adapter keine Adresse');
+        // verstaendlich und mit Weg - nicht "Feld neben der Liste" (Nutzerfund 21.11.2026)
+        expect(r.error).to.contain('Die Adresse von Wohnzimmer AC ist noch nicht bekannt').and.to.contain('bis zu 1 Minute').and.to.contain('Module suchen');
+    });
+
+    it('Adresse automatisch: Absenderadresse der Broker-Verbindung, geprueft am Namen des Moduls', async () => {
+        const seite = name => `<html><head><title>${name}</title></head><body><form><input name="_hostname" value="${name}"><input name="_reporting" value="60"></form></body></html>`;
+        const a = adapter();
+        a.getObjectAsync = async () => ({ native: {} });
+        a.extendObject = async (id, o) => (a.erweitert = { id, o });
+        a.modulClientAdresse = name => (name === 'Wohnzimmer AC' ? '10.0.0.5' : '');
+        // in der Liste steht das Geraet dann ohne den Zusatz "Adresse noch unbekannt"
+        expect((await frage(a, 'modulEinstellungenListe', {})).antwort[0]).to.eql({ label: 'Wohnzimmer AC', value: 'geraet:wz' });
+        const gefragt = [];
+        a.modulEinstellungenLesen = async ({ ip }) => {
+            gefragt.push(ip);
+            return { ok: true, name: 'Wohnzimmer AC', werte: { reporting: '60' } };
+        };
+        // die Probe am Kandidaten laeuft ueber HTTP - hier antwortet niemand: dann bleibt es bei der Meldung
+        const ohne = (await frage(a, 'modulEinstellungenLesen', { ip: 'geraet:wz' })).antwort;
+        expect(ohne.error).to.contain('noch nicht bekannt');
+        expect(gefragt).to.eql([]);
+        // ist die Adresse inzwischen gemeldet (info.ipv4), wird sie ohne Zutun verwendet
+        const b = adapter({ 'wz.info.ipv4': '192.168.30.71' });
+        b.getObjectAsync = async () => ({ native: {} });
+        b.extendObject = async () => {};
+        b.modulEinstellungenLesen = a.modulEinstellungenLesen;
+        const mit = (await frage(b, 'modulEinstellungenLesen', { ip: 'geraet:wz' })).antwort;
+        expect(gefragt).to.eql(['192.168.30.71']);
+        expect(JSON.parse(mit.native._modStand)).to.include({ ip: '192.168.30.71', name: 'Wohnzimmer AC' });
+        // Pruefen mit demselben Listenwert findet den gelesenen Stand wieder
+        const pruef = (await frage(b, 'modulEinstellungenPruefen', { ip: 'geraet:wz', stand: mit.native._modStand, formular: { _modReporting: 90 } })).antwort;
+        expect(pruef.native._modVorschau).to.contain('(reporting): 60 → 90');
+        expect(seite('x')).to.contain('x');
     });
 
     it('"Adresse pruefen" und "Aus Modul lesen" zerlegen host:port gleich', () => {
