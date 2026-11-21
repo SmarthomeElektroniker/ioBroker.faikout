@@ -623,7 +623,7 @@ describe('Device-Manager: Bedienen (Attrappe, keine echte Anlage)', () => {
         const { ergebnis, fragen } = await umschalten(a, true);
         expect(fragen).to.have.length(1);
         expect(fragen[0].de).to.equal('Klimaanlage „Wohnzimmer AC“ ausschalten?');
-        expect(fragen[0].en).to.equal('Switch off the air conditioner "Wohnzimmer AC"?');
+        expect(fragen[0].en).to.equal('Switch off the air conditioner “Wohnzimmer AC”?');
         expect(ergebnis).to.eql({ refresh: false });
         expect(a.gesetzt).to.eql([{ id: 'Wohnzimmer_AC.control.power', wert: { val: false, ack: false } }]);
         await zustellen(a);
@@ -1087,7 +1087,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 const token = kennung(schema);
                 const n = (program, abwesenheit) =>
                     a.deviceManagement.wochenplanNachricht('wochenplanEntwurf', { device: ID, token, program, abwesenheit });
-                expect((await n([{ day: 'Mon', time: '06:00', type: 'party' }])).error).to.contain('Temperaturstufe "party" gibt es nicht');
+                expect((await n([{ day: 'Mon', time: '06:00', type: 'party' }])).error).to.contain('Temperaturstufe „party“ gibt es nicht');
                 const falsch = { aktiv: true, von: '2026-12-27T00:00', bis: '2026-12-26T00:00', szene: 'abwesend' };
                 expect((await n([{ day: 'Mon', time: '06:00', type: 'komfort' }], falsch)).error).to.equal(oberflaeche.TEXTE.pAbwFehler.de);
                 expect(await n([])).to.eql({ ok: true, count: 0 });
@@ -1250,7 +1250,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 // unbekannte Stufe, kein JSON: Fehler im Klartext, nichts geschrieben
                 const fremd = JSON.stringify([[{ t: 0, s: 'party' }], [], [], [], [], [], []]);
                 expect((await frage(a, 'wochenplanEinfuegen', { device: ID, week: fremd })).error).to.equal(
-                    'Der Wochenplan wurde nicht gespeichert: Tag 1: Temperaturstufe "party" gibt es nicht',
+                    'Der Wochenplan wurde nicht gespeichert: Tag 1: Temperaturstufe „party“ gibt es nicht',
                 );
                 expect((await frage(a, 'wochenplanEinfuegen', { device: ID, week: '{kaputt' })).error).to.contain('nicht gespeichert');
                 expect((await frage(a, 'wochenplanEinfuegen', { device: ID })).error).to.contain('nicht gespeichert');

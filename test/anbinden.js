@@ -345,7 +345,7 @@ describe('Anbinden: Ablauf im Adapter (Pruefen, Anbinden, Erfolg, Zurueckstellen
         modul.werte.mqtthost = '192.168.30.10:8089'; // steht schon auf diesem Adapter
         // ohne Benutzer im Adapter: nichts zu tun
         const ohne = await senden('anbindenPruefen', { ip: 'm', adresse: '192.168.30.10' });
-        expect(ohne.result).to.equal('Modul "TCL_Ferienhaus" ist schon auf diesen Adapter eingestellt.');
+        expect(ohne.result).to.equal('Modul „TCL_Ferienhaus“ ist schon auf diesen Adapter eingestellt.');
         expect(ohne.native._bindPlan).to.equal('');
         // Benutzer gesetzt: Vorschau statt "schon eingestellt"
         adapter.config.user = 'iob';

@@ -357,7 +357,7 @@ describe('Oberflaeche: Wochenplan-Umrechnung', () => {
         expect(o.programmZuPlan(zeilen, sz)).to.eql({ plan, fehler: null });
     });
     it('Fehler im Klartext: unbekannte Szene, kaputte Zeit, leer', () => {
-        expect(o.programmZuPlan([{ day: 'Mon', time: '06:00', type: 'party' }], sz).fehler).to.contain('Temperaturstufe "party" gibt es nicht');
+        expect(o.programmZuPlan([{ day: 'Mon', time: '06:00', type: 'party' }], sz).fehler).to.contain('Temperaturstufe „party“ gibt es nicht');
         expect(o.programmZuPlan([{ day: 'Mon', time: '6 Uhr', type: 'komfort' }], sz).fehler).to.contain('ungültig');
         expect(o.programmZuPlan([], sz).fehler).to.equal('Wochenplan ist leer');
     });

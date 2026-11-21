@@ -21,7 +21,7 @@ const TEXTE = {
         raumkorrektur: 'Room correction: %s % compared with the curve (%s %).',
         vollHeizen: 'Full power: the room is at least %s K below the target.',
         vollKuehlen: 'Full power: the room is at least %s K above the target.',
-        probelauf: 'Trial run – nothing is sent.',
+        probelauf: 'Dry run – nothing is sent.',
         unter: 'Lower limit %s %',
         unterLang: 'Lower limit %s % – the unit does not accept less',
         ober: 'Upper limit %s %',

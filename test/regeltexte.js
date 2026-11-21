@@ -163,7 +163,7 @@ describe('Regeltexte (mehrsprachig)', () => {
         expect(q.text).to.equal('Fühler der Anlage (Rückfall: Datenpunkt veraltet (60 min))');
         expect(wochenplan.szenenLesen(null).szenen.get('absenken').name).to.equal('Absenken');
         expect(wochenplan.szenenLesen([{ name: 'A', soll: 45 }]).fehler).to.equal(
-            'Temperaturstufe "A": Zieltemperatur 45 außerhalb 10..32 °C',
+            'Temperaturstufe „A“: Zieltemperatur 45 außerhalb 10..32 °C',
         );
         expect(bedarf.konfigPruefen({ heizen: '0:50, 5:60' }).fehler).to.equal(
             'Heizkennlinie: Kennlinie nicht fallend (0 °C: 50 % → 5 °C: 60 %)',

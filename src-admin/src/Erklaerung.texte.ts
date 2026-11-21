@@ -150,7 +150,7 @@ export const TEXTE = {
         'zh-cn': '按此目标和功率上限制热或制冷',
     },
     hand: {
-        en: 'Manual intervention',
+        en: 'Manual override',
         de: 'Handeingriff',
         ru: 'Ручное вмешательство',
         pt: 'Intervenção manual',
@@ -241,7 +241,7 @@ export const TEXTE = {
         'zh-cn': '调节',
     },
     beschreibung: {
-        en: 'Diagram: the schedule selects a temperature level, the level sets the target, the control sets the power, the unit runs. Manual intervention and humidity act from the side.',
+        en: 'Diagram: the schedule selects a temperature level, the level sets the target, the control sets the power, the unit runs. Manual override and humidity act from the side.',
         de: 'Schaubild: Der Zeitplan wählt eine Temperaturstufe, die Stufe gibt das Ziel vor, die Regelung stellt die Leistung ein, die Anlage läuft. Handeingriff und Feuchte greifen von der Seite ein.',
         ru: 'Схема: расписание выбирает температурный уровень, уровень задаёт цель, регулирование задаёт мощность, устройство работает. Ручное вмешательство и влажность действуют сбоку.',
         pt: 'Esquema: o horário escolhe um nível de temperatura, o nível define o alvo, a regulação ajusta a potência, o aparelho funciona. A intervenção manual e a humidade atuam lateralmente.',
