@@ -164,11 +164,12 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.ok(/Werksvorgabe/.test(html.stufenEigen) && /Temperaturstufe hinzufügen/.test(html.stufenEigen), 'Stufen der Vorlage');
         assert.ok(griffe(html.stufenWerk) >= 6, 'leere Liste: die Werksstufen');
         // Geraet ohne eigene Stufen: die Stufen der Vorlage sind direkt anfassbar - kein Knopf, eine Zeile sagt, was gilt
-        assert.ok(/Diese Anlage benutzt die Stufen der Vorlage/.test(html.stufenGeraet) && !/Eigene Temperaturstufen anlegen|fk-st-eigene/.test(html.stufenGeraet), 'Geraet ohne eigene Stufen: Hinweis statt Knopf');
+        const sichtbar = h => (h.match(/visibility:visible"[^>]*>([^<]*)</) || ['', ''])[1];
+        assert.ok(/^Diese Anlage benutzt die Stufen der Vorlage/.test(sichtbar(html.stufenGeraet)) && !/Eigene Temperaturstufen anlegen|fk-st-eigene/.test(html.stufenGeraet), `Geraet ohne eigene Stufen: Hinweis statt Knopf (${sichtbar(html.stufenGeraet)})`);
         assert.ok(/data-quelle="vorlage"/.test(html.stufenGeraet) && /value="Wach"/.test(html.stufenGeraet) && !/<input[^>]*disabled/.test(html.stufenGeraet), 'Stufen der Vorlage sind bearbeitbar');
         assert.strictEqual(griffe(html.stufenGeraet), 2, 'Vorlage-Stufe am Geraet: Ziel und Hoechstleistung ziehbar');
         assert.ok(/<button[^>]*fk-wz-zurueck[^>]*disabled/.test(html.stufenGeraet), 'nichts Eigenes: Zuruecksetzen gesperrt');
-        assert.ok(/data-quelle="eigen"/.test(html.stufenGeraetEigen) && /Eigene Stufen dieser Anlage/.test(html.stufenGeraetEigen) && /Auf die Vorlage zurücksetzen/.test(html.stufenGeraetEigen), 'Geraet mit eigenen Stufen');
+        assert.ok(/data-quelle="eigen"/.test(html.stufenGeraetEigen) && /^Eigene Stufen dieser Anlage/.test(sichtbar(html.stufenGeraetEigen)) && /Auf die Vorlage zurücksetzen/.test(html.stufenGeraetEigen), 'Geraet mit eigenen Stufen');
         assert.ok(!/<button[^>]*fk-wz-zurueck[^>]*disabled/.test(html.stufenGeraetEigen), 'eigene Stufen: Zuruecksetzen frei');
         ok('Rendern Stufen je Geraet: Vorlage direkt anfassbar, eigen/Vorlage als Text');
         // Rechenweg: jeder Fall als Satz

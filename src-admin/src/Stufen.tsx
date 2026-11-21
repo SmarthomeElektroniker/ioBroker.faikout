@@ -907,12 +907,25 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
             {jeGeraet ? (
                 // fester Platz: der Wechsel "Vorlage" -> "eigen" aendert nur den Text, nichts am Aufbau darunter
                 <div className="fk-st-band">
+                    {/* beide Saetze liegen uebereinander, sichtbar ist der geltende: der Kasten ist immer so hoch wie der laengere */}
                     <Typography
                         variant="body2"
+                        component="div"
                         className="fk-st-gilt"
-                        sx={{ flex: '1 1 240px' }}
+                        sx={{ flex: '1 1 240px', display: 'grid' }}
                     >
-                        {folgt ? t('vorlageGilt') : t('eigenGilt')}
+                        <span
+                            style={{ gridArea: '1 / 1', visibility: folgt ? 'visible' : 'hidden' }}
+                            aria-hidden={!folgt}
+                        >
+                            {t('vorlageGilt')}
+                        </span>
+                        <span
+                            style={{ gridArea: '1 / 1', visibility: folgt ? 'hidden' : 'visible' }}
+                            aria-hidden={folgt}
+                        >
+                            {t('eigenGilt')}
+                        </span>
                     </Typography>
                 </div>
             ) : null}

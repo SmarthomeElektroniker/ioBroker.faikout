@@ -142,8 +142,8 @@ export function RechenwegZeile(props: { weg: Weg | null | undefined; sprache: st
             className="fk-weg"
             data-art={props.weg?.art || ''}
             sx={{
-                // fester Platz fuer zwei Zeilen - ein kurzer oder langer Satz verschiebt das Bild darueber und die Knoepfe darunter nicht
-                minHeight: '2.9em',
+                // fester Platz: zwei Zeilen, auf dem Handy vier - ein kurzer oder langer Satz verschiebt nichts darunter
+                minHeight: { xs: '5.8em', sm: '2.9em' },
                 mt: 0.5,
                 fontSize: '0.82rem',
                 lineHeight: 1.45,
