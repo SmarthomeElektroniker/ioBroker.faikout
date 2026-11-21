@@ -72,7 +72,7 @@ Empty fields take the default. Demand control is switched on per unit on the dev
 
 ### Scenes
 
-A scene is a complete state of the unit: on/off, mode, target temperature, fan and a **cap** that
+A scene is a complete state of the unit: on/off, mode, target temperature, fan and a **maximum power** that
 limits the power additionally. Per scene you decide whether demand and humidity control work
 during that time. Without own scenes four defaults apply: Komfort (21 °C), Absenken (19 °C),
 Abwesend (17 °C) and Aus.
@@ -119,8 +119,14 @@ other unsaved changes on the page first.
 
 The card shows the running operation and offers everyday control:
 
-- **Control:** state (active, manual override, fault, no connection, switched off) with the reason
-  in plain words.
+- **Control:** state (active, manual override, not set up, fault, no connection, switched off) with
+  the reason in plain text. "Not set up" means: the weekly schedule is switched on but none is stored
+  yet (the button "Create schedule" appears at the top), or Faikout-Auto is still off in the module.
+  Red ("fault") is shown for real faults only.
+- **Target temperature:** slider for large steps, the buttons − and + next to it for one step of the
+  unit (usually 0.5 K).
+- **Sensors:** if a chosen data point is missing, the card names it and says which sensor is used
+  instead.
 - **Power limit** as a number and step bar, with a note when the adapter only calculates (dry
   run), the control rests or the unit does not accept the value.
 - **Scene** and **next switch**.
@@ -214,3 +220,12 @@ device object, e.g. `faikout.0.Livingroom`.
 Everything the interface shows is also available as data points below `<unit>.regel.*`, among
 them `zustand`, `grund`, `bedarf.sollwert`, `plan.szene`, `plan.naechster`, `hand.gesperrt`,
 `fuehler.*` and the switches `bedarf.aktiv`, `feuchte.aktiv` and `plan.aktiv`.
+
+## 9. Consumption
+
+The tab "Consumption" shows one chart for all units: stacked bars per day, week, month or year, each
+unit in its own, permanently assigned colour; the bar height is the total. The chips above are the
+legend – a click hides a unit. The tooltip lists the value per unit and the total; you can switch
+between "All", "Heating only" and "Cooling only" and between chart and table. The data come from the
+adapter's own counters (48 hours, 62 days, 24 months); no history adapter is needed.
+

@@ -468,7 +468,7 @@ describe('Module suchen: Nachrichten an den Adapter', () => {
     it('mqtthostWert und Anleitung nehmen die ungespeicherten Formularwerte', async () => {
         const a = adapter();
         expect(await senden(a, 'mqtthostWert', { adresse: 'nas.local', port: '1999' })).to.equal('nas.local:1999');
-        expect(await senden(a, 'mqtthostWert', { adresse: '', port: '' })).to.equal('');
+        expect(await senden(a, 'mqtthostWert', { adresse: '', port: '' })).to.match(/^\(erst die „Adresse für Module“/);
         const html = await senden(a, 'anleitung', { adresse: '<b>', port: '1888', user: '' });
         expect(html).to.include('MQTT host: &lt;b&gt;:1888<br>');
     });

@@ -1003,6 +1003,41 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         expect(anlage.target).to.equal(19);
     });
 
+    it('Wochenplan eingeschaltet, aber keiner hinterlegt: "einrichten" und plan.fehlt - keine Stoerung', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const anlage = new Anlage({ name: 'Plan X', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        await a.regelung.schalter('Plan_X', 'plan.aktiv', true);
+        await laufen(a, uhr, anlage, 2);
+        expect(a.wert('Plan_X.regel.zustand')).to.equal('einrichten');
+        expect(a.wert('Plan_X.regel.plan.fehlt')).to.equal(true);
+        expect(a.wert('Plan_X.regel.grund')).to.contain('kein Wochenplan hinterlegt');
+        await a.regelung.schalter('Plan_X', 'plan.wocheJson', planText);
+        await laufen(a, uhr, anlage, 2);
+        expect(a.wert('Plan_X.regel.zustand')).to.equal('ok');
+        expect(a.wert('Plan_X.regel.plan.fehlt')).to.equal(false);
+    });
+
+    it('Knoepfe +/- auf der Karte: ein Schritt der Anlage vom jetzigen Sollwert, in den Grenzen', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const anlage = new Anlage({ name: 'Plan Y', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        // Geschrieben wird control.target OHNE ack - den Befehl ans Modul schickt danach main.js
+        // (onStateChange) wie bei jedem Schreiben im Objektbaum.
+        const druecken = async feld => {
+            expect(await a.regelung.schalter('Plan_Y', feld, true)).to.equal(true);
+            return a.werte.get('Plan_Y.control.target');
+        };
+        expect(await druecken('ziel.plus')).to.eql({ val: 21.5, ack: false });
+        expect(await druecken('ziel.minus')).to.eql({ val: 21, ack: false });
+        expect(await druecken('ziel.minus')).to.eql({ val: 20.5, ack: false });
+        // an der Grenze der Anlage bleibt der Wert stehen
+        a.geraete.get('Plan_Y').grenzen = { min: 18, max: 30, step: 1 };
+        await a.setStateAsync('Plan_Y.control.target', { val: 18, ack: true });
+        expect(await druecken('ziel.minus')).to.eql({ val: 18, ack: true });
+        expect(await druecken('ziel.plus')).to.eql({ val: 19, ack: false });
+    });
+
     it('Knopf "Automatik fortsetzen" hebt die Sperre sofort auf', async () => {
         const { a, uhr } = aufbau({ regelProbelauf: false }, START);
         const anlage = new Anlage({ name: 'Plan D', target: 21, mode: 'heat' });

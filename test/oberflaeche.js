@@ -946,3 +946,162 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
         expect(r.antwort.native._brokerTest).to.equal('eingabe');
     });
 });
+
+describe('UX-Funde 21.11.2026', () => {
+    it('Modulauswahl: ALLE Geraete stehen in der Liste - auch ohne bekannte Adresse (Nutzerfund)', async () => {
+        const a = adapter({ 'og.info.ipv4': '192.168.30.70' });
+        a.getObjectAsync = async id => (id === 'wz' ? { native: {} } : null);
+        a.letzteSuche = [{ ip: '10.0.0.9', name: 'Fremdes Modul', status: 'andererBroker' }];
+        const liste = (await frage(a, 'modulEinstellungenListe', {})).antwort;
+        expect(liste).to.eql([
+            { label: 'Wohnzimmer AC – Adresse unbekannt – daneben eintragen', value: 'geraet:wz' },
+            { label: 'OG (192.168.30.70)', value: '192.168.30.70' },
+            { label: 'Fremdes Modul (10.0.0.9)', value: '10.0.0.9' },
+        ]);
+        // "Anbinden" braucht eine Adresse: dort nur Eintraege mit Adresse
+        expect((await frage(a, 'modulAuswahlListe', {})).antwort.map(x => x.value)).to.eql(['192.168.30.70', '10.0.0.9']);
+        // ein Treffer der Suche mit dem Namen des Geraets liefert dessen Adresse - kein doppelter Eintrag
+        a.letzteSuche = [{ ip: '127.0.0.1:18101', name: 'Wohnzimmer AC', status: 'verbunden' }];
+        expect((await frage(a, 'modulEinstellungenListe', {})).antwort.map(x => x.value)).to.eql(['127.0.0.1:18101', '192.168.30.70']);
+        // die gemerkte Adresse aus dem Geraeteobjekt
+        a.letzteSuche = [];
+        a.getObjectAsync = async id => (id === 'wz' ? { native: { modulAdresse: '10.1.1.1:8080' } } : null);
+        expect((await frage(a, 'modulEinstellungenListe', {})).antwort[0]).to.eql({ label: 'Wohnzimmer AC (10.1.1.1:8080)', value: '10.1.1.1:8080' });
+    });
+
+    it('Lesen mit einem Eintrag ohne Adresse: klare Meldung mit dem Namen statt eines Netzfehlers', async () => {
+        const a = adapter();
+        const r = (await frage(a, 'modulEinstellungenLesen', { ip: 'geraet:wz' })).antwort;
+        expect(r.error).to.contain('Für Wohnzimmer AC kennt der Adapter keine Adresse');
+    });
+
+    it('"Adresse pruefen" und "Aus Modul lesen" zerlegen host:port gleich', () => {
+        const d = require('../lib/discovery');
+        expect(d.zielZerlegen('127.0.0.1:18101')).to.eql({ host: '127.0.0.1', port: 18101 });
+        expect(d.zielZerlegen(' nas.local ')).to.eql({ host: 'nas.local', port: 80 });
+        expect(d.zielZerlegen('10.0.0.1:99999')).to.eql({ host: '10.0.0.1:99999', port: 80 });
+    });
+
+    it('seiteHolen fragt den angegebenen Port (derselbe Weg fuer Suche, Einzelpruefung und Lesen)', async () => {
+        const d = require('../lib/discovery');
+        let gefragt = null;
+        const request = (opt, cb) => {
+            gefragt = opt;
+            const req = new EventEmitter();
+            req.end = () => {
+                const res = new EventEmitter();
+                res.statusCode = 200;
+                res.headers = {};
+                cb(res);
+                res.emit('end');
+            };
+            req.destroy = () => {};
+            return req;
+        };
+        await d.seiteHolen('127.0.0.1:18101', { request });
+        expect(gefragt).to.include({ host: '127.0.0.1', port: 18101, path: '/revk-settings' });
+    });
+
+    it('Fuehler-Livewert: fehlender Datenpunkt mit Namen in Rot, Wert mit Komma, alter Wert gewarnt', async () => {
+        const a = adapter();
+        const jetzt = Date.now();
+        const objekte = { 'hm.0.raum': {}, 'hm.0.alt': {}, 'hm.0.text': {} };
+        const werte = {
+            'hm.0.raum': { val: 21.46, ts: jetzt - 30000 },
+            'hm.0.alt': { val: 17, ts: jetzt - 10 * 3600000 },
+            'hm.0.text': { val: 'offen', ts: jetzt },
+        };
+        a.getForeignObjectAsync = async id => objekte[id] || null;
+        a.getForeignStateAsync = async id => werte[id] || null;
+        const html = async (id, art = 'raum') => (await frage(a, 'fuehlerWert', { id, art })).antwort;
+        expect(await html('')).to.contain('noch kein Datenpunkt gewählt');
+        expect(await html('0_userdata.0.gibtsnicht')).to.contain('Datenpunkt existiert nicht: 0_userdata.0.gibtsnicht').and.to.contain(o.AMPEL.fehler);
+        expect(await html('hm.0.raum')).to.contain('jetzt: 21,5 °C · vor 30 s').and.to.contain(o.AMPEL.gut);
+        expect(await html('hm.0.alt')).to.contain('17,0 °C').and.to.contain('Wert ist alt').and.to.contain(o.AMPEL.warn);
+        expect(await html('hm.0.text')).to.contain('Kein Zahlenwert: offen');
+        expect(await html('hm.0.raum', 'feuchte')).to.contain('21,5 %');
+        expect(o.alterText(45000)).to.equal('45 s');
+        expect(o.alterText(600000)).to.equal('10 min');
+        expect(o.alterText(7200000)).to.equal('2 h');
+    });
+
+    it('Einrichtung: Stand in drei Zeilen (Broker, Module, Regelung)', async () => {
+        const a = adapter({}, { regelGeraete: [{ geraet: 'OG' }] });
+        a.broker = {};
+        a.brokerZiel = () => ({ extern: false, port: 1888 });
+        const html = (await frage(a, 'einrichtungStand', {})).antwort;
+        expect(html).to.contain('Eigener MQTT-Broker läuft auf Port 1888');
+        expect(html).to.contain('Module, die sich gemeldet haben: 2 (Wohnzimmer AC, OG)');
+        expect(html).to.contain('Regelung für 1 von 2 Anlagen eingerichtet');
+        a.geraete = new Map();
+        a.broker = { verbunden: false };
+        a.brokerZiel = () => ({ extern: true, adresse: 'mq.lan', port: 1883 });
+        const leer = (await frage(a, 'einrichtungStand', {})).antwort;
+        expect(leer).to.contain('Keine Verbindung zum externen Broker mq.lan:1883').and.to.contain('Noch hat sich kein Modul gemeldet');
+    });
+
+    it('History-Hinweis: nur wenn kein History-Adapter installiert ist oder die Instanz fehlt', async () => {
+        const a = adapter();
+        let zeilen = [];
+        a.getObjectViewAsync = async () => ({ rows: zeilen });
+        expect((await frage(a, 'historyHinweis', { instanz: 'history.0', an: true })).antwort).to.contain('Es ist kein History-Adapter installiert');
+        expect((await frage(a, 'historyHinweis', { instanz: 'history.0', an: false })).antwort).to.equal('');
+        zeilen = [{ id: 'system.adapter.sql.0', value: { common: { getHistory: true } } }];
+        expect((await frage(a, 'historyHinweis', { instanz: 'history.0', an: true })).antwort).to.contain('Die gewählte Instanz history.0 gibt es nicht');
+        expect((await frage(a, 'historyHinweis', { instanz: 'sql.0', an: true })).antwort).to.equal('');
+    });
+
+    it('Obergrenze 95 % plus volle Freigabe: eigenes Etikett statt "100 % · roh 102,5 %"', () => {
+        const svg = o.kennlinieSvg({
+            punkte: HEIZEN,
+            richtung: 'heizen',
+            untergrenze: 40,
+            obergrenze: 95,
+            sprache: 'de',
+            punkt: { x: -2.3, wert: 100, roh: 102.5, richtung: 'heizen', probelauf: false, vollAbK: 2 },
+        });
+        expect(svg).to.contain('volle Leistung (2 K unter Ziel)').and.to.contain('sonst höchstens 95 % · außen −2,3 °C');
+        expect(svg).not.to.contain('roh');
+        // ohne Freigabe bleibt es bei Wert und Rohwert
+        const normal = o.kennlinieSvg({
+            punkte: HEIZEN,
+            richtung: 'heizen',
+            untergrenze: 40,
+            obergrenze: 95,
+            sprache: 'de',
+            punkt: { x: -2.3, wert: 80, roh: 79.6, richtung: 'heizen', probelauf: false, vollAbK: 2 },
+        });
+        expect(normal).to.contain('Leistungsgrenze 80 %').and.to.contain('roh 79,6 %');
+    });
+
+    it('Modul-Einstellungen: verstaendlicher Name, Schluessel des Moduls klein dahinter', () => {
+        expect(o.modulFeldName('livestatus', 'de')).to.equal('Statusmeldungen in Echtzeit (livestatus)');
+        expect(o.modulFeldName('ha1c', 'en')).to.match(/\(ha1c\)$/);
+        expect(o.modulFeldName('unbekannt', 'de')).to.equal('unbekannt');
+    });
+
+    it('Einstellungsseite: Vorgabe-Kennlinie als Tabelle, Live-Wert neben jedem Fuehlerfeld, kein Rohtext helpBindIp', () => {
+        const konfig = require('../admin/jsonConfig.json');
+        const v = konfig.items.tabRegelung.items._pVorgabe.items;
+        expect(v.regelKennlinieHeizen.type).to.equal('table');
+        expect(v.regelKennlinieKuehlen.type).to.equal('table');
+        const io = require('../io-package.json');
+        expect(io.native.regelKennlinieHeizen).to.eql(v.regelKennlinieHeizen.default);
+        const g = konfig.items.tabRegelung.items.regelGeraete.items;
+        for (const [dp, art] of [['aussenDp', 'aussen'], ['raumDp', 'raum'], ['feuchteDp', 'feuchte']]) {
+            const i = g.findIndex(x => x.attr === dp);
+            expect(g[i + 1]).to.include({ type: 'textSendTo', command: 'fuehlerWert' });
+            expect(g[i + 1].jsonData).to.contain(`"art":"${art}"`).and.to.contain(`data.${dp}`);
+        }
+        const s = konfig.items.tabSearch.items;
+        expect(s._bindIp.noTranslation).to.equal(undefined); // mit noTranslation erschien "helpBindIp" als Rohtext
+        expect(s._bindIp.command).to.equal('modulAuswahlListe');
+        for (const l of o.SPRACHEN) {
+            const texte = require(`../admin/i18n/${l}.json`);
+            for (const k of ['helpBindIp', 'headerSchritt1', 'headerSchritt2', 'headerSchritt3', 'textSchritt2Extern', 'textBindExtern', 'colSzDeckel']) {
+                expect(texte[k], `${l}/${k}`).to.be.a('string').and.not.equal('');
+            }
+        }
+        expect(require('../admin/i18n/de.json').colSzDeckel).to.equal('Höchstleistung %');
+    });
+});

@@ -75,7 +75,7 @@ Gerätekarte.
 ### Szenen
 
 Eine Szene ist ein kompletter Zustand der Anlage: an/aus, Betriebsart, Zieltemperatur, Lüfter und
-ein **Deckel**, der die Leistung zusätzlich begrenzt. Je Szene lässt sich festlegen, ob Bedarfs-
+eine **Höchstleistung**, die die Leistung zusätzlich begrenzt. Je Szene lässt sich festlegen, ob Bedarfs-
 und Feuchteregelung in dieser Zeit arbeiten. Ohne eigene Szenen gelten vier Vorgaben: Komfort
 (21 °C), Absenken (19 °C), Abwesend (17 °C) und Aus.
 
@@ -120,8 +120,14 @@ Adapter startet neu – andere ungespeicherte Änderungen auf der Seite vorher s
 
 Die Karte zeigt den laufenden Betrieb und bietet die Bedienung des Alltags:
 
-- **Regelung:** Zustand (aktiv, Handeingriff, gestört, keine Verbindung, ausgeschaltet) mit der
-  Begründung in Klartext.
+- **Regelung:** Zustand (aktiv, Handeingriff, nicht eingerichtet, gestört, keine Verbindung,
+  ausgeschaltet) mit der Begründung in Klartext. „Nicht eingerichtet“ heißt: Der Wochenplan ist
+  eingeschaltet, aber noch keiner hinterlegt (dann erscheint oben der Knopf „Plan anlegen“), oder
+  Faikout-Auto ist im Modul noch aus. Rot („gestört“) steht nur bei echten Störungen.
+- **Solltemperatur:** Schieber für große Schritte, die Knöpfe − und + daneben für je einen Schritt
+  der Anlage (meist 0,5 K).
+- **Fühler:** Fehlt ein gewählter Datenpunkt, nennt die Karte ihn mit Namen und sagt, welcher
+  Fühler stattdessen gilt.
 - **Leistungsgrenze** als Zahl und Stufenbalken, mit Hinweis, wenn nur gerechnet wird (Probelauf),
   die Regelung ruht oder die Anlage den Wert nicht übernimmt.
 - **Szene** und **nächste Schaltung**.
@@ -220,3 +226,13 @@ Geräteobjekt, z. B. `faikout.0.Wohnzimmer`.
 Alles, was die Oberfläche zeigt, steht auch als Datenpunkt unter `<Gerät>.regel.*` bereit, unter
 anderem `zustand`, `grund`, `bedarf.sollwert`, `plan.szene`, `plan.naechster`, `hand.gesperrt`,
 `fuehler.*` sowie die Schalter `bedarf.aktiv`, `feuchte.aktiv` und `plan.aktiv`.
+
+## 9. Verbrauch
+
+Der Reiter „Verbrauch“ zeigt ein Diagramm für alle Anlagen: gestapelte Balken je Tag, Woche, Monat
+oder Jahr, jede Anlage in ihrer eigenen, dauerhaft gleichen Farbe; die Balkenhöhe ist die Summe.
+Die Chips darüber sind die Legende – ein Klick blendet eine Anlage aus. Der Tooltip nennt den Wert
+je Anlage und die Summe; umschaltbar sind „Alles“, „Nur Heizen“ und „Nur Kühlen“ sowie Diagramm
+oder Tabelle. Die Daten kommen aus den eigenen Zählern des Adapters (48 Stunden, 62 Tage,
+24 Monate); ein History-Adapter ist dafür nicht nötig.
+

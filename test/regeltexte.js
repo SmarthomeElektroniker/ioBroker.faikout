@@ -111,6 +111,20 @@ describe('Regeltexte (mehrsprachig)', () => {
         }
     });
 
+    it('Zahlen in Platzhaltern: Dezimalzeichen und Minus der Sprache (de "−2,3", en "-2.3")', () => {
+        texte.setzeSprache('de');
+        expect(texte.zahlText(-2.3)).to.equal('−2,3');
+        expect(texte.zahlText('19.5')).to.equal('19,5');
+        expect(texte.zahlText(21)).to.equal('21');
+        expect(texte.zahlText('8:30')).to.equal('8:30');
+        expect(texte.zahlText('0_userdata.0.x')).to.equal('0_userdata.0.x');
+        expect(texte.zahlText('1.2.3')).to.equal('1.2.3');
+        expect(texte.t('bedarf.raumZiel', { raum: 19.5, ziel: 21, korr: '+3' })).to.contain('19,5 °C');
+        texte.setzeSprache('en');
+        expect(texte.zahlText(-2.3)).to.equal('-2.3');
+        texte.setzeSprache('de');
+    });
+
     it('t(): Platzhalter, fehlender Schlüssel, Sprache als Modulzustand', () => {
         expect(texte.sprache()).to.equal('de');
         expect(texte.t('fuehler.veraltet', { min: 70 })).to.equal('veraltet (70 min)');

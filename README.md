@@ -274,6 +274,11 @@ one detail page per unit with controls, energy history and a phone view. They us
   confirmation, verifies that it reports within 90 s, and can restore the previous MQTT host.
 - Optional external MQTT broker (for example Mosquitto) instead of the built-in one, with a
   connection test in the settings.
+- Settings: setup guide as the first tab in three numbered steps with a live status; module
+  selection lists all units; sensor data points are checked while typing and show their live value;
+  default curve as a table; consumption chart (stacked bars per unit, day/week/month/year).
+- Device cards: "not set up" with a "Create schedule" button instead of "fault" while no schedule
+  exists, buttons − and + for the target temperature, energy of the current month.
 
 ### 0.2.1 (2026-11-19)
 - `control.swing` / `swingNum`: new value `H+C` (`horizontalComfort`, number 6) for comfort mode with

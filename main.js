@@ -1372,7 +1372,11 @@ class Faikout extends utils.Adapter {
                 case 'mqtthostWert': {
                     const z = this.brokerZiel(feldWert(msg.adresse));
                     const port = z.extern ? z.port : Number(feldWert(msg.port)) || z.port;
-                    return antworten(z.adresse ? `${z.adresse}:${port}` : '');
+                    return antworten(
+                        z.adresse
+                            ? `${z.adresse}:${port}`
+                            : `(${require('./lib/oberflaeche').t('mqttWertFehlt', await this.sprache())})`,
+                    );
                 }
                 case 'anleitung': {
                     const sprache = await this.sprache();
