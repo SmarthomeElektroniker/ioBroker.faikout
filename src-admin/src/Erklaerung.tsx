@@ -378,7 +378,9 @@ class Erklaerung extends ConfigGeneric<ConfigGenericProps, ConfigGenericState> {
         const props = this.props;
         const sprache = I18n.getLanguage();
         const palette = props.oContext?.theme?.palette;
-        const schema = (props.schema || {}) as Record<string, unknown>;
+        // eigene Angaben stehen unter `custom` (das Schema der jsonConfig erlaubt keine freien Schluessel)
+        const roh = (props.schema || {}) as Record<string, unknown>;
+        const schema = { ...roh, ...((roh.custom as Record<string, unknown>) || {}) };
         const name = (schluessel: unknown): string =>
             typeof schluessel === 'string' && schluessel ? I18n.t(schluessel) : '';
         return (

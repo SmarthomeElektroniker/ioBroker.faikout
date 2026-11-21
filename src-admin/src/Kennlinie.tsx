@@ -1668,7 +1668,10 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
 
 /** Namen der beiden Grenz-Attribute neben der Kennlinie (im Schema ueberschreibbar). */
 function grenzAttribute(props: ConfigGenericProps): { jeGeraet: boolean; unter: string; ober: string } {
-    const schema = (props.schema || {}) as unknown as Record<string, unknown>;
+    // eigene Angaben (eingeklappt, attrUntergrenze, attrObergrenze) stehen unter `custom` - das Schema der
+    // jsonConfig erlaubt keine freien Schluessel; direkt am Eintrag werden sie weiter verstanden
+    const roh = (props.schema || {}) as unknown as Record<string, unknown>;
+    const schema = { ...roh, ...((roh.custom as Record<string, unknown>) || {}) };
     // Zeile eines Geraets (Accordion) oder die Vorlage der Instanz (Attribute "regel...")
     const jeGeraet = !!props.attr && !props.attr.startsWith('regel');
     const name = (v: unknown, sonst: string): string => (typeof v === 'string' && v ? v : sonst);
@@ -1776,7 +1779,10 @@ function KennlinieFeld(
     const f = felder(props, props.richtung);
     const punkt = useArbeitspunkt(props, f.geraet, f.obergrenze, props.richtung);
     const palette = props.oContext?.theme?.palette;
-    const schema = (props.schema || {}) as unknown as Record<string, unknown>;
+    // eigene Angaben (eingeklappt, attrUntergrenze, attrObergrenze) stehen unter `custom` - das Schema der
+    // jsonConfig erlaubt keine freien Schluessel; direkt am Eintrag werden sie weiter verstanden
+    const roh = (props.schema || {}) as unknown as Record<string, unknown>;
+    const schema = { ...roh, ...((roh.custom as Record<string, unknown>) || {}) };
     const label = schema.label;
     return (
         <KennlinieAnsicht

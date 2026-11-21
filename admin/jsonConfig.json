@@ -143,6 +143,28 @@
                     "xl": 12,
                     "hidden": "_alive"
                 },
+                "hS4": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerSchritt4",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "_alive"
+                },
+                "tS4": {
+                    "type": "staticText",
+                    "text": "textSchritt4",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "_alive"
+                },
                 "_pDocker": {
                     "type": "panel",
                     "label": "headerDocker",
@@ -192,6 +214,236 @@
                 }
             }
         },
+        "tabZeitplaene": {
+            "type": "panel",
+            "label": "tabZeitplaene",
+            "items": {
+                "_nichtAktiv": {
+                    "type": "staticText",
+                    "text": "textNichtAktiv",
+                    "hidden": "_alive",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "style": {
+                        "border": "1px solid #d98a00",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,138,0,0.12)"
+                    }
+                },
+                "_tZeitplaene": {
+                    "type": "staticText",
+                    "text": "textZeitplaene",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_erklaerung": {
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/Erklaerung",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "custom": {
+                        "reiterZeitplaene": "tabZeitplaene",
+                        "reiterRegelung": "tabRegelung"
+                    }
+                },
+                "_hStufen": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerStufenVorlage",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_tStufen": {
+                    "type": "staticText",
+                    "text": "textStufenVorlage",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "style": {
+                        "opacity": 0.8
+                    }
+                },
+                "regelStufen": {
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/Stufen",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_hPlaene": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerPlaene",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "regelPlanVorlage": {
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/Zeitplaene",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_pPlanFein": {
+                    "type": "panel",
+                    "label": "headerPlanFein",
+                    "collapsable": true,
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "color": "primary",
+                    "items": {
+                        "_hHand": {
+                            "type": "header",
+                            "size": 4,
+                            "text": "headerHand",
+                            "newLine": true,
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12
+                        },
+                        "_tHand": {
+                            "type": "staticText",
+                            "text": "textHand",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12
+                        },
+                        "regelHandModus": {
+                            "type": "select",
+                            "label": "labelHandModus",
+                            "options": [
+                                {
+                                    "label": "optHandSchaltpunkt",
+                                    "value": "schaltpunkt"
+                                },
+                                {
+                                    "label": "optHandDauer",
+                                    "value": "dauer"
+                                },
+                                {
+                                    "label": "optHandNie",
+                                    "value": "nie"
+                                }
+                            ],
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 6,
+                            "lg": 6,
+                            "xl": 6,
+                            "default": "schaltpunkt",
+                            "newLine": true
+                        },
+                        "regelHandStunden": {
+                            "type": "number",
+                            "label": "labelHandStunden",
+                            "min": 0.5,
+                            "max": 24,
+                            "xs": 12,
+                            "sm": 6,
+                            "md": 4,
+                            "lg": 4,
+                            "xl": 4,
+                            "step": 0.5,
+                            "default": 4,
+                            "hidden": "data.regelHandModus === 'nie'"
+                        },
+                        "_hFeiertage": {
+                            "type": "header",
+                            "size": 4,
+                            "text": "headerFeiertage",
+                            "newLine": true,
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12
+                        },
+                        "regelFeiertagSonntag": {
+                            "type": "checkbox",
+                            "label": "labelFeiertagSonntag",
+                            "default": false,
+                            "newLine": true,
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 6,
+                            "lg": 6,
+                            "xl": 6
+                        },
+                        "regelFeiertageDE": {
+                            "type": "checkbox",
+                            "label": "labelFeiertageDE",
+                            "default": true,
+                            "hidden": "!data.regelFeiertagSonntag",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 6,
+                            "lg": 6,
+                            "xl": 6
+                        },
+                        "regelFeiertage": {
+                            "type": "text",
+                            "label": "labelFeiertage",
+                            "help": "helpFeiertage",
+                            "default": "",
+                            "hidden": "!data.regelFeiertagSonntag",
+                            "newLine": true,
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12
+                        }
+                    }
+                }
+            }
+        },
         "tabRegelung": {
             "type": "panel",
             "label": "tabRegelung",
@@ -212,24 +464,14 @@
                         "backgroundColor": "rgba(217,138,0,0.12)"
                     }
                 },
-                "regelProbelauf": {
-                    "type": "checkbox",
-                    "label": "labelRegelProbelauf",
-                    "default": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 4,
-                    "lg": 4,
-                    "xl": 4
-                },
                 "_probeAn": {
                     "type": "staticText",
                     "text": "textProbeAn",
                     "xs": 12,
                     "sm": 12,
-                    "md": 8,
-                    "lg": 8,
-                    "xl": 8,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
                     "hidden": "data.regelProbelauf === false",
                     "style": {
                         "border": "1px solid #d98a00",
@@ -243,9 +485,9 @@
                     "text": "textProbeAus",
                     "xs": 12,
                     "sm": 12,
-                    "md": 8,
-                    "lg": 8,
-                    "xl": 8,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
                     "hidden": "data.regelProbelauf !== false",
                     "style": {
                         "border": "1px solid #3d9a50",
@@ -253,6 +495,268 @@
                         "padding": "8px 12px",
                         "backgroundColor": "rgba(61,154,80,0.12)"
                     }
+                },
+                "regelProbelauf": {
+                    "type": "checkbox",
+                    "label": "labelRegelProbelauf",
+                    "default": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_hVorlage": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerVorlage",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_tVorlage": {
+                    "type": "staticText",
+                    "text": "textVorlage",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_tBedarf": {
+                    "type": "staticText",
+                    "text": "textBedarf",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "style": {
+                        "opacity": 0.8
+                    }
+                },
+                "regelStrategie": {
+                    "type": "select",
+                    "label": "labelRegelStrategie",
+                    "options": [
+                        {
+                            "label": "optKennlinie",
+                            "value": "kennlinie"
+                        },
+                        {
+                            "label": "optVortag",
+                            "value": "vortag"
+                        }
+                    ],
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4,
+                    "default": "kennlinie",
+                    "newLine": true
+                },
+                "regelAktiv": {
+                    "type": "checkbox",
+                    "label": "labelRegelAktiv",
+                    "default": false,
+                    "newLine": false,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 8,
+                    "lg": 8,
+                    "xl": 8
+                },
+                "regelKennlinieHeizen": {
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/KennlinieHeizen",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "label": "labelTabHeizenVorgabe",
+                    "hidden": "data.regelStrategie === 'vortag'",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "default": [
+                        {
+                            "x": -10,
+                            "y": 100
+                        },
+                        {
+                            "x": 0,
+                            "y": 75
+                        },
+                        {
+                            "x": 7,
+                            "y": 55
+                        },
+                        {
+                            "x": 15,
+                            "y": 40
+                        }
+                    ]
+                },
+                "regelKennlinieKuehlen": {
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/KennlinieKuehlen",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "label": "labelTabKuehlenVorgabe",
+                    "hidden": "data.regelStrategie === 'vortag'",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "default": [
+                        {
+                            "x": 25,
+                            "y": 40
+                        },
+                        {
+                            "x": 30,
+                            "y": 65
+                        },
+                        {
+                            "x": 35,
+                            "y": 95
+                        }
+                    ],
+                    "custom": {
+                        "eingeklappt": true
+                    }
+                },
+                "_tVortag": {
+                    "type": "staticText",
+                    "text": "textVortag",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "newLine": true,
+                    "hidden": "data.regelStrategie !== 'vortag'",
+                    "style": {
+                        "opacity": 0.8
+                    }
+                },
+                "regelVortagBezug": {
+                    "type": "select",
+                    "label": "labelVortagBezug",
+                    "options": [
+                        {
+                            "label": "optSpitze",
+                            "value": "spitze"
+                        },
+                        {
+                            "label": "optMittel",
+                            "value": "mittel"
+                        }
+                    ],
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4,
+                    "default": "spitze",
+                    "hidden": "data.regelStrategie !== 'vortag'",
+                    "newLine": true
+                },
+                "regelVortagZuschlag": {
+                    "type": "number",
+                    "label": "labelVortagZuschlag",
+                    "min": 0,
+                    "max": 60,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4,
+                    "default": 10,
+                    "hidden": "data.regelStrategie !== 'vortag'"
+                },
+                "regelVortagReferenzW": {
+                    "type": "number",
+                    "label": "labelVortagReferenz",
+                    "min": 100,
+                    "max": 10000,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4,
+                    "default": 1000,
+                    "hidden": "data.regelStrategie !== 'vortag'"
+                },
+                "_hFeuchte": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerFeuchte",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_tFeuchte": {
+                    "type": "staticText",
+                    "text": "textFeuchte",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_feuchteGrafik": {
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/Feuchte",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "regelFeuchteMassnahme": {
+                    "type": "select",
+                    "label": "labelFeuchteMassnahme",
+                    "options": [
+                        {
+                            "label": "optMassEntfeuchten",
+                            "value": "entfeuchten"
+                        },
+                        {
+                            "label": "optMassZielSenken",
+                            "value": "zielSenken"
+                        },
+                        {
+                            "label": "optMassMelden",
+                            "value": "melden"
+                        }
+                    ],
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6,
+                    "default": "entfeuchten",
+                    "newLine": true
                 },
                 "_hGeraete": {
                     "type": "header",
@@ -362,6 +866,52 @@
                             }
                         },
                         {
+                            "type": "checkbox",
+                            "label": "labelIndividuell",
+                            "default": false,
+                            "newLine": true,
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
+                            "attr": "individuell"
+                        },
+                        {
+                            "type": "staticText",
+                            "text": "textFolgtVorlage",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
+                            "hidden": "data.individuell === true",
+                            "style": {
+                                "border": "1px solid #3d9a50",
+                                "borderRadius": 6,
+                                "padding": "8px 12px",
+                                "backgroundColor": "rgba(61,154,80,0.12)"
+                            },
+                            "attr": "_tFolgt"
+                        },
+                        {
+                            "type": "staticText",
+                            "text": "textIstIndividuell",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
+                            "hidden": "data.individuell !== true",
+                            "style": {
+                                "border": "1px solid #3399cc",
+                                "borderRadius": 6,
+                                "padding": "8px 12px",
+                                "backgroundColor": "rgba(51,153,204,0.12)"
+                            },
+                            "attr": "_tIndividuell"
+                        },
+                        {
                             "attr": "_tRuht",
                             "type": "staticText",
                             "text": "textRuht",
@@ -370,41 +920,13 @@
                             "md": 12,
                             "lg": 12,
                             "xl": 12,
-                            "hidden": "data.betrieb !== 'faikout' || (data.strategie || globalData.regelStrategie) === 'vortag'",
+                            "hidden": "data.betrieb !== 'faikout' || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
                             "style": {
                                 "border": "1px solid #d98a00",
                                 "borderRadius": 6,
                                 "padding": "8px 12px",
                                 "backgroundColor": "rgba(217,138,0,0.12)"
                             }
-                        },
-                        {
-                            "attr": "_hKann",
-                            "type": "header",
-                            "size": 4,
-                            "text": "headerKann",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        {
-                            "attr": "_kann",
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "regelKann",
-                            "jsonData": "{\"geraet\":${JSON.stringify(data.geraet ?? \"\")},\"betrieb\":${JSON.stringify(data.betrieb ?? \"adapter\")}}",
-                            "alsoDependsOn": [
-                                "geraet",
-                                "betrieb"
-                            ],
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
                         },
                         {
                             "attr": "_hBedarf",
@@ -416,7 +938,8 @@
                             "sm": 12,
                             "md": 12,
                             "lg": 12,
-                            "xl": 12
+                            "xl": 12,
+                            "hidden": "!data.individuell"
                         },
                         {
                             "attr": "strategie",
@@ -441,35 +964,9 @@
                             "md": 4,
                             "lg": 4,
                             "xl": 4,
-                            "default": ""
-                        },
-                        {
-                            "attr": "untergrenze",
-                            "type": "number",
-                            "label": "labelUntergrenze",
-                            "min": 30,
-                            "max": 100,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "step": 5,
-                            "help": "helpLeerVorgabe"
-                        },
-                        {
-                            "attr": "obergrenze",
-                            "type": "number",
-                            "label": "labelObergrenze",
-                            "min": 30,
-                            "max": 100,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "step": 5,
-                            "help": "helpLeerVorgabe"
+                            "default": "",
+                            "hidden": "!data.individuell",
+                            "newLine": true
                         },
                         {
                             "attr": "kennlinieHeizen",
@@ -480,7 +977,7 @@
                             "guiApi": 2,
                             "bundlerType": "module",
                             "label": "labelTabHeizenGeraet",
-                            "hidden": "(data.strategie || globalData.regelStrategie) === 'vortag'",
+                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
                             "newLine": true,
                             "xs": 12,
                             "sm": 12,
@@ -497,13 +994,16 @@
                             "guiApi": 2,
                             "bundlerType": "module",
                             "label": "labelTabKuehlenGeraet",
-                            "hidden": "(data.strategie || globalData.regelStrategie) === 'vortag'",
+                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
                             "newLine": true,
                             "xs": 12,
                             "sm": 12,
                             "md": 12,
                             "lg": 12,
-                            "xl": 12
+                            "xl": 12,
+                            "custom": {
+                                "eingeklappt": true
+                            }
                         },
                         {
                             "attr": "_tVortag",
@@ -515,7 +1015,7 @@
                             "lg": 12,
                             "xl": 12,
                             "newLine": true,
-                            "hidden": "(data.strategie || globalData.regelStrategie) !== 'vortag'",
+                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
                             "style": {
                                 "opacity": 0.8
                             }
@@ -544,7 +1044,7 @@
                             "lg": 4,
                             "xl": 4,
                             "default": "",
-                            "hidden": "(data.strategie || globalData.regelStrategie) !== 'vortag'"
+                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'"
                         },
                         {
                             "attr": "vortagZuschlag",
@@ -557,7 +1057,7 @@
                             "md": 4,
                             "lg": 4,
                             "xl": 4,
-                            "hidden": "(data.strategie || globalData.regelStrategie) !== 'vortag'",
+                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
                             "help": "helpLeerVorgabe"
                         },
                         {
@@ -571,160 +1071,82 @@
                             "md": 4,
                             "lg": 4,
                             "xl": 4,
-                            "hidden": "(data.strategie || globalData.regelStrategie) !== 'vortag'",
+                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
                             "help": "helpLeerVorgabe"
                         },
                         {
-                            "attr": "_hSzenen",
+                            "attr": "feuchteMassnahme",
+                            "type": "select",
+                            "label": "labelFeuchteMassnahmeGeraet",
+                            "options": [
+                                {
+                                    "label": "optWieVorgabe",
+                                    "value": ""
+                                },
+                                {
+                                    "label": "optMassEntfeuchten",
+                                    "value": "entfeuchten"
+                                },
+                                {
+                                    "label": "optMassZielSenken",
+                                    "value": "zielSenken"
+                                },
+                                {
+                                    "label": "optMassMelden",
+                                    "value": "melden"
+                                }
+                            ],
+                            "xs": 12,
+                            "sm": 6,
+                            "md": 4,
+                            "lg": 4,
+                            "xl": 4,
+                            "default": "",
+                            "newLine": true,
+                            "hidden": "!data.individuell"
+                        },
+                        {
                             "type": "header",
                             "size": 4,
-                            "text": "headerSzenen",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        {
-                            "attr": "szenen",
-                            "type": "table",
-                            "label": "labelSzenenGeraet",
+                            "text": "headerStufenGeraet",
                             "newLine": true,
                             "xs": 12,
                             "sm": 12,
                             "md": 12,
                             "lg": 12,
                             "xl": 12,
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "attr": "name",
-                                    "title": "colSzName",
-                                    "default": "",
-                                    "width": "18%"
-                                },
-                                {
-                                    "type": "checkbox",
-                                    "attr": "power",
-                                    "title": "colSzPower",
-                                    "default": true,
-                                    "width": "8%"
-                                },
-                                {
-                                    "type": "select",
-                                    "attr": "mode",
-                                    "title": "colSzMode",
-                                    "options": [
-                                        {
-                                            "label": "optModeHeat",
-                                            "value": "heat"
-                                        },
-                                        {
-                                            "label": "optModeCool",
-                                            "value": "cool"
-                                        },
-                                        {
-                                            "label": "optModeAuto",
-                                            "value": "heat_cool"
-                                        },
-                                        {
-                                            "label": "optModeDry",
-                                            "value": "dry"
-                                        },
-                                        {
-                                            "label": "optModeFan",
-                                            "value": "fan_only"
-                                        }
-                                    ],
-                                    "default": "heat",
-                                    "width": "18%"
-                                },
-                                {
-                                    "type": "number",
-                                    "attr": "soll",
-                                    "title": "colSzSoll",
-                                    "min": 10,
-                                    "max": 32,
-                                    "step": 0.5,
-                                    "default": 21,
-                                    "width": "10%"
-                                },
-                                {
-                                    "type": "select",
-                                    "attr": "fan",
-                                    "title": "colSzFan",
-                                    "options": [
-                                        {
-                                            "label": "optQuelleAuto",
-                                            "value": "auto"
-                                        },
-                                        {
-                                            "label": "optFanNight",
-                                            "value": "night"
-                                        },
-                                        {
-                                            "label": "optFanLow",
-                                            "value": "low"
-                                        },
-                                        {
-                                            "label": "optFan2",
-                                            "value": "lowMedium"
-                                        },
-                                        {
-                                            "label": "optFan3",
-                                            "value": "medium"
-                                        },
-                                        {
-                                            "label": "optFan4",
-                                            "value": "mediumHigh"
-                                        },
-                                        {
-                                            "label": "optFan5",
-                                            "value": "high"
-                                        }
-                                    ],
-                                    "default": "auto",
-                                    "width": "16%"
-                                },
-                                {
-                                    "type": "number",
-                                    "attr": "deckel",
-                                    "title": "colSzDeckel",
-                                    "min": 30,
-                                    "max": 100,
-                                    "step": 5,
-                                    "default": 95,
-                                    "width": "10%"
-                                },
-                                {
-                                    "type": "checkbox",
-                                    "attr": "bedarf",
-                                    "title": "colSzBedarf",
-                                    "default": true,
-                                    "width": "10%"
-                                },
-                                {
-                                    "type": "checkbox",
-                                    "attr": "feuchte",
-                                    "title": "colSzFeuchte",
-                                    "default": true,
-                                    "width": "10%"
-                                }
-                            ]
+                            "hidden": "!data.individuell",
+                            "attr": "_hStufen"
                         },
                         {
-                            "attr": "_tSzenenSpalten",
                             "type": "staticText",
-                            "text": "textSzenenSpalten",
+                            "text": "textStufenGeraet",
                             "xs": 12,
                             "sm": 12,
                             "md": 12,
                             "lg": 12,
                             "xl": 12,
+                            "hidden": "!data.individuell",
                             "style": {
                                 "opacity": 0.8
-                            }
+                            },
+                            "attr": "_tStufen"
+                        },
+                        {
+                            "type": "custom",
+                            "url": "custom/customComponents.js",
+                            "name": "ConfigCustomFaikoutSet/Components/Stufen",
+                            "i18n": true,
+                            "guiApi": 2,
+                            "bundlerType": "module",
+                            "newLine": true,
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
+                            "hidden": "!data.individuell",
+                            "attr": "stufen"
                         },
                         {
                             "attr": "_hFuehler",
@@ -1001,36 +1423,6 @@
                             "xl": 3
                         },
                         {
-                            "attr": "feuchteMassnahme",
-                            "type": "select",
-                            "label": "labelFeuchteMassnahmeGeraet",
-                            "options": [
-                                {
-                                    "label": "optWieVorgabe",
-                                    "value": ""
-                                },
-                                {
-                                    "label": "optMassEntfeuchten",
-                                    "value": "entfeuchten"
-                                },
-                                {
-                                    "label": "optMassZielSenken",
-                                    "value": "zielSenken"
-                                },
-                                {
-                                    "label": "optMassMelden",
-                                    "value": "melden"
-                                }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": "",
-                            "newLine": true
-                        },
-                        {
                             "attr": "frostAb",
                             "type": "number",
                             "label": "labelFrostAb",
@@ -1042,711 +1434,38 @@
                             "lg": 4,
                             "xl": 4,
                             "default": 0,
-                            "help": "helpFrostAb"
+                            "help": "helpFrostAb",
+                            "newLine": true
+                        },
+                        {
+                            "attr": "_hKann",
+                            "type": "header",
+                            "size": 4,
+                            "text": "headerKann",
+                            "newLine": true,
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12
+                        },
+                        {
+                            "attr": "_kann",
+                            "type": "textSendTo",
+                            "container": "html",
+                            "command": "regelKann",
+                            "jsonData": "{\"geraet\":${JSON.stringify(data.geraet ?? \"\")},\"betrieb\":${JSON.stringify(data.betrieb ?? \"adapter\")}}",
+                            "alsoDependsOn": [
+                                "geraet",
+                                "betrieb"
+                            ],
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12
                         }
                     ]
-                },
-                "_pKopie": {
-                    "type": "panel",
-                    "label": "headerKopie",
-                    "collapsable": true,
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12,
-                    "hidden": "!(data.regelGeraete && data.regelGeraete.length > 1)",
-                    "items": {
-                        "_tKopie": {
-                            "type": "staticText",
-                            "text": "textKopie",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        "_kopieVon": {
-                            "type": "selectSendTo",
-                            "command": "regelZeilenListe",
-                            "jsonData": "{\"zeilen\":${JSON.stringify((data.regelGeraete || []).map(z => z.geraet))}}",
-                            "alsoDependsOn": [
-                                "regelGeraete"
-                            ],
-                            "label": "labelKopieVon",
-                            "noTranslation": true,
-                            "doNotSave": true,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 3,
-                            "lg": 3,
-                            "xl": 3
-                        },
-                        "_kopieNach": {
-                            "type": "selectSendTo",
-                            "command": "regelZeilenListe",
-                            "jsonData": "{\"zeilen\":${JSON.stringify((data.regelGeraete || []).map(z => z.geraet))}}",
-                            "alsoDependsOn": [
-                                "regelGeraete"
-                            ],
-                            "label": "labelKopieNach",
-                            "noTranslation": true,
-                            "doNotSave": true,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 3,
-                            "lg": 3,
-                            "xl": 3
-                        },
-                        "_kopieWas": {
-                            "type": "select",
-                            "label": "labelKopieWas",
-                            "options": [
-                                {
-                                    "label": "optKopieSzenen",
-                                    "value": "szenen"
-                                },
-                                {
-                                    "label": "optKopieKennlinie",
-                                    "value": "kennlinie"
-                                },
-                                {
-                                    "label": "optKopieBeides",
-                                    "value": "beides"
-                                }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 3,
-                            "lg": 3,
-                            "xl": 3,
-                            "doNotSave": true
-                        },
-                        "_kopie": {
-                            "type": "sendTo",
-                            "command": "regelUebernehmen",
-                            "label": "btnKopie",
-                            "variant": "outlined",
-                            "reloadBrowser": true,
-                            "showProcess": true,
-                            "jsonData": "{\"von\":${JSON.stringify(data._kopieVon ?? \"\")},\"nach\":${JSON.stringify(data._kopieNach ?? \"\")},\"was\":${JSON.stringify(data._kopieWas ?? \"szenen\")},\"zeilen\":${JSON.stringify(data.regelGeraete || [])}}",
-                            "disabled": "!data._kopieVon || !data._kopieNach || !data._kopieWas || data._kopieVon === data._kopieNach",
-                            "confirm": {
-                                "title": "confirmKopieTitle",
-                                "text": "confirmKopieText",
-                                "ok": "btnKopie",
-                                "cancel": "btnCancel",
-                                "type": "warning"
-                            },
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 3,
-                            "lg": 3,
-                            "xl": 3
-                        }
-                    },
-                    "color": "primary"
-                },
-                "_pVorgabe": {
-                    "type": "panel",
-                    "label": "headerVorgabe",
-                    "collapsable": true,
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12,
-                    "items": {
-                        "_tVorgabe": {
-                            "type": "staticText",
-                            "text": "textVorgabe",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        "_tBedarf": {
-                            "type": "staticText",
-                            "text": "textBedarf",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "style": {
-                                "opacity": 0.8
-                            }
-                        },
-                        "regelAktiv": {
-                            "type": "checkbox",
-                            "label": "labelRegelAktiv",
-                            "default": false,
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        "regelStrategie": {
-                            "type": "select",
-                            "label": "labelRegelStrategie",
-                            "options": [
-                                {
-                                    "label": "optKennlinie",
-                                    "value": "kennlinie"
-                                },
-                                {
-                                    "label": "optVortag",
-                                    "value": "vortag"
-                                }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": "kennlinie",
-                            "newLine": true
-                        },
-                        "regelUntergrenze": {
-                            "type": "number",
-                            "label": "labelUntergrenze",
-                            "min": 30,
-                            "max": 100,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "step": 5,
-                            "default": 40
-                        },
-                        "regelObergrenze": {
-                            "type": "number",
-                            "label": "labelObergrenze",
-                            "min": 30,
-                            "max": 100,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "step": 5,
-                            "default": 95
-                        },
-                        "regelKennlinieHeizen": {
-                            "type": "custom",
-                            "url": "custom/customComponents.js",
-                            "name": "ConfigCustomFaikoutSet/Components/KennlinieHeizen",
-                            "i18n": true,
-                            "guiApi": 2,
-                            "bundlerType": "module",
-                            "label": "labelTabHeizenVorgabe",
-                            "hidden": "data.regelStrategie === 'vortag'",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "default": [
-                                {
-                                    "x": -10,
-                                    "y": 95
-                                },
-                                {
-                                    "x": 0,
-                                    "y": 75
-                                },
-                                {
-                                    "x": 7,
-                                    "y": 55
-                                },
-                                {
-                                    "x": 15,
-                                    "y": 40
-                                }
-                            ]
-                        },
-                        "regelKennlinieKuehlen": {
-                            "type": "custom",
-                            "url": "custom/customComponents.js",
-                            "name": "ConfigCustomFaikoutSet/Components/KennlinieKuehlen",
-                            "i18n": true,
-                            "guiApi": 2,
-                            "bundlerType": "module",
-                            "label": "labelTabKuehlenVorgabe",
-                            "hidden": "data.regelStrategie === 'vortag'",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "default": [
-                                {
-                                    "x": 25,
-                                    "y": 40
-                                },
-                                {
-                                    "x": 30,
-                                    "y": 65
-                                },
-                                {
-                                    "x": 35,
-                                    "y": 95
-                                }
-                            ]
-                        },
-                        "_tVortag": {
-                            "type": "staticText",
-                            "text": "textVortag",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "newLine": true,
-                            "hidden": "data.regelStrategie !== 'vortag'",
-                            "style": {
-                                "opacity": 0.8
-                            }
-                        },
-                        "regelVortagBezug": {
-                            "type": "select",
-                            "label": "labelVortagBezug",
-                            "options": [
-                                {
-                                    "label": "optSpitze",
-                                    "value": "spitze"
-                                },
-                                {
-                                    "label": "optMittel",
-                                    "value": "mittel"
-                                }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": "spitze",
-                            "hidden": "data.regelStrategie !== 'vortag'",
-                            "newLine": true
-                        },
-                        "regelVortagZuschlag": {
-                            "type": "number",
-                            "label": "labelVortagZuschlag",
-                            "min": 0,
-                            "max": 60,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": 10,
-                            "hidden": "data.regelStrategie !== 'vortag'"
-                        },
-                        "regelVortagReferenzW": {
-                            "type": "number",
-                            "label": "labelVortagReferenz",
-                            "min": 100,
-                            "max": 10000,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": 1000,
-                            "hidden": "data.regelStrategie !== 'vortag'"
-                        },
-                        "regelVortagMin": {
-                            "type": "number",
-                            "label": "labelVortagMin",
-                            "min": 30,
-                            "max": 100,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "step": 5,
-                            "default": 40,
-                            "hidden": "data.regelStrategie !== 'vortag'",
-                            "newLine": true
-                        },
-                        "regelVortagMax": {
-                            "type": "number",
-                            "label": "labelVortagMax",
-                            "min": 30,
-                            "max": 100,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "step": 5,
-                            "default": 95,
-                            "hidden": "data.regelStrategie !== 'vortag'"
-                        },
-                        "_tSzenen": {
-                            "type": "staticText",
-                            "text": "textSzenen",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "newLine": true,
-                            "style": {
-                                "opacity": 0.8
-                            }
-                        },
-                        "regelSzenen": {
-                            "type": "table",
-                            "label": "labelSzenenVorgabe",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "attr": "name",
-                                    "title": "colSzName",
-                                    "default": "",
-                                    "width": "18%"
-                                },
-                                {
-                                    "type": "checkbox",
-                                    "attr": "power",
-                                    "title": "colSzPower",
-                                    "default": true,
-                                    "width": "8%"
-                                },
-                                {
-                                    "type": "select",
-                                    "attr": "mode",
-                                    "title": "colSzMode",
-                                    "options": [
-                                        {
-                                            "label": "optModeHeat",
-                                            "value": "heat"
-                                        },
-                                        {
-                                            "label": "optModeCool",
-                                            "value": "cool"
-                                        },
-                                        {
-                                            "label": "optModeAuto",
-                                            "value": "heat_cool"
-                                        },
-                                        {
-                                            "label": "optModeDry",
-                                            "value": "dry"
-                                        },
-                                        {
-                                            "label": "optModeFan",
-                                            "value": "fan_only"
-                                        }
-                                    ],
-                                    "default": "heat",
-                                    "width": "18%"
-                                },
-                                {
-                                    "type": "number",
-                                    "attr": "soll",
-                                    "title": "colSzSoll",
-                                    "min": 10,
-                                    "max": 32,
-                                    "step": 0.5,
-                                    "default": 21,
-                                    "width": "10%"
-                                },
-                                {
-                                    "type": "select",
-                                    "attr": "fan",
-                                    "title": "colSzFan",
-                                    "options": [
-                                        {
-                                            "label": "optQuelleAuto",
-                                            "value": "auto"
-                                        },
-                                        {
-                                            "label": "optFanNight",
-                                            "value": "night"
-                                        },
-                                        {
-                                            "label": "optFanLow",
-                                            "value": "low"
-                                        },
-                                        {
-                                            "label": "optFan2",
-                                            "value": "lowMedium"
-                                        },
-                                        {
-                                            "label": "optFan3",
-                                            "value": "medium"
-                                        },
-                                        {
-                                            "label": "optFan4",
-                                            "value": "mediumHigh"
-                                        },
-                                        {
-                                            "label": "optFan5",
-                                            "value": "high"
-                                        }
-                                    ],
-                                    "default": "auto",
-                                    "width": "16%"
-                                },
-                                {
-                                    "type": "number",
-                                    "attr": "deckel",
-                                    "title": "colSzDeckel",
-                                    "min": 30,
-                                    "max": 100,
-                                    "step": 5,
-                                    "default": 95,
-                                    "width": "10%"
-                                },
-                                {
-                                    "type": "checkbox",
-                                    "attr": "bedarf",
-                                    "title": "colSzBedarf",
-                                    "default": true,
-                                    "width": "10%"
-                                },
-                                {
-                                    "type": "checkbox",
-                                    "attr": "feuchte",
-                                    "title": "colSzFeuchte",
-                                    "default": true,
-                                    "width": "10%"
-                                }
-                            ]
-                        },
-                        "_tSzenenSpalten": {
-                            "type": "staticText",
-                            "text": "textSzenenSpalten",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "style": {
-                                "opacity": 0.8
-                            }
-                        }
-                    },
-                    "color": "primary"
-                },
-                "_hHand": {
-                    "type": "header",
-                    "size": 4,
-                    "text": "headerHand",
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "_tHand": {
-                    "type": "staticText",
-                    "text": "textHand",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "regelHandModus": {
-                    "type": "select",
-                    "label": "labelHandModus",
-                    "options": [
-                        {
-                            "label": "optHandSchaltpunkt",
-                            "value": "schaltpunkt"
-                        },
-                        {
-                            "label": "optHandDauer",
-                            "value": "dauer"
-                        },
-                        {
-                            "label": "optHandNie",
-                            "value": "nie"
-                        }
-                    ],
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 6,
-                    "lg": 6,
-                    "xl": 6,
-                    "default": "schaltpunkt",
-                    "newLine": true
-                },
-                "regelHandStunden": {
-                    "type": "number",
-                    "label": "labelHandStunden",
-                    "min": 0.5,
-                    "max": 24,
-                    "xs": 12,
-                    "sm": 6,
-                    "md": 4,
-                    "lg": 4,
-                    "xl": 4,
-                    "step": 0.5,
-                    "default": 4,
-                    "hidden": "data.regelHandModus === 'nie'"
-                },
-                "_hFeuchte": {
-                    "type": "header",
-                    "size": 4,
-                    "text": "headerFeuchte",
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "_tFeuchte": {
-                    "type": "staticText",
-                    "text": "textFeuchte",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "regelFeuchteDtpEin": {
-                    "type": "number",
-                    "label": "labelFeuchteDtpEin",
-                    "min": 0,
-                    "max": 15,
-                    "xs": 12,
-                    "sm": 6,
-                    "md": 3,
-                    "lg": 3,
-                    "xl": 3,
-                    "step": 0.5,
-                    "default": 4,
-                    "newLine": true
-                },
-                "regelFeuchteDtpAus": {
-                    "type": "number",
-                    "label": "labelFeuchteDtpAus",
-                    "min": 0,
-                    "max": 20,
-                    "xs": 12,
-                    "sm": 6,
-                    "md": 3,
-                    "lg": 3,
-                    "xl": 3,
-                    "step": 0.5,
-                    "default": 6
-                },
-                "regelFeuchteRhEin": {
-                    "type": "number",
-                    "label": "labelFeuchteRhEin",
-                    "min": 30,
-                    "max": 100,
-                    "xs": 12,
-                    "sm": 6,
-                    "md": 3,
-                    "lg": 3,
-                    "xl": 3,
-                    "default": 65
-                },
-                "regelFeuchteRhAus": {
-                    "type": "number",
-                    "label": "labelFeuchteRhAus",
-                    "min": 20,
-                    "max": 100,
-                    "xs": 12,
-                    "sm": 6,
-                    "md": 3,
-                    "lg": 3,
-                    "xl": 3,
-                    "default": 58
-                },
-                "regelFeuchteMassnahme": {
-                    "type": "select",
-                    "label": "labelFeuchteMassnahme",
-                    "options": [
-                        {
-                            "label": "optMassEntfeuchten",
-                            "value": "entfeuchten"
-                        },
-                        {
-                            "label": "optMassZielSenken",
-                            "value": "zielSenken"
-                        },
-                        {
-                            "label": "optMassMelden",
-                            "value": "melden"
-                        }
-                    ],
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 6,
-                    "lg": 6,
-                    "xl": 6,
-                    "default": "entfeuchten",
-                    "newLine": true
-                },
-                "_hFeiertage": {
-                    "type": "header",
-                    "size": 4,
-                    "text": "headerFeiertage",
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "regelFeiertagSonntag": {
-                    "type": "checkbox",
-                    "label": "labelFeiertagSonntag",
-                    "default": false,
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 6,
-                    "lg": 6,
-                    "xl": 6
-                },
-                "regelFeiertageDE": {
-                    "type": "checkbox",
-                    "label": "labelFeiertageDE",
-                    "default": true,
-                    "hidden": "!data.regelFeiertagSonntag",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 6,
-                    "lg": 6,
-                    "xl": 6
-                },
-                "regelFeiertage": {
-                    "type": "text",
-                    "label": "labelFeiertage",
-                    "help": "helpFeiertage",
-                    "default": "",
-                    "hidden": "!data.regelFeiertagSonntag",
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
                 },
                 "_pFein": {
                     "type": "panel",
@@ -1799,6 +1518,35 @@
                             "step": 0.1,
                             "default": 0.5,
                             "help": "helpBand"
+                        },
+                        "regelVortagMin": {
+                            "type": "number",
+                            "label": "labelVortagMin",
+                            "min": 30,
+                            "max": 100,
+                            "xs": 12,
+                            "sm": 6,
+                            "md": 4,
+                            "lg": 4,
+                            "xl": 4,
+                            "step": 5,
+                            "default": 40,
+                            "hidden": "data.regelStrategie !== 'vortag'",
+                            "newLine": true
+                        },
+                        "regelVortagMax": {
+                            "type": "number",
+                            "label": "labelVortagMax",
+                            "min": 30,
+                            "max": 100,
+                            "xs": 12,
+                            "sm": 6,
+                            "md": 4,
+                            "lg": 4,
+                            "xl": 4,
+                            "step": 5,
+                            "default": 95,
+                            "hidden": "data.regelStrategie !== 'vortag'"
                         },
                         "regelFeuchteMinLauf": {
                             "type": "number",
@@ -2507,12 +2255,13 @@
                     "type": "password",
                     "label": "labelPass",
                     "help": "helpPass",
-                    "hidden": "data.brokerModus === 'extern' || !data.user",
+                    "hidden": "data.brokerModus === 'extern'",
                     "xs": 12,
                     "sm": 12,
                     "md": 6,
                     "lg": 4,
-                    "xl": 4
+                    "xl": 4,
+                    "disabled": "!data.user"
                 },
                 "externHost": {
                     "type": "text",
@@ -2568,12 +2317,14 @@
                     "type": "password",
                     "label": "labelExternPass",
                     "default": "",
-                    "hidden": "data.brokerModus !== 'extern' || !data.externUser",
+                    "hidden": "data.brokerModus !== 'extern'",
                     "xs": 12,
                     "sm": 6,
                     "md": 4,
                     "lg": 4,
-                    "xl": 4
+                    "xl": 4,
+                    "disabled": "!data.externUser",
+                    "help": "helpExternPass"
                 },
                 "_brokerTesten": {
                     "type": "sendTo",
@@ -2583,7 +2334,7 @@
                     "useNative": true,
                     "showProcess": true,
                     "timeout": 20000,
-                    "jsonData": "{\"host\":${JSON.stringify(data.externHost ?? \"\")},\"port\":${JSON.stringify(data.externPort ?? \"\")},\"tls\":${!!data.externTls},\"user\":${JSON.stringify(data.externUser ?? \"\")},\"pass\":${JSON.stringify(data.externPass ?? \"\")},\"clientId\":${JSON.stringify(data.externClientId ?? \"\")}}",
+                    "jsonData": "{\"host\":${JSON.stringify(data.externHost ?? \"\")},\"port\":${JSON.stringify(data.externPort ?? \"\")},\"tls\":${!!data.externTls},\"user\":${JSON.stringify(data.externUser ?? \"\")},\"pass\":${JSON.stringify(data.externPass ?? \"\")},\"clientId\":${JSON.stringify(data.externClientId ?? \"\")},\"passUnveraendert\":${(data.externPass ?? \"\") === ((originalData || {}).externPass ?? \"\")}}",
                     "hidden": "data.brokerModus !== 'extern'",
                     "newLine": true,
                     "xs": 12,
