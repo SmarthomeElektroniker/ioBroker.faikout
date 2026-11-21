@@ -118,6 +118,38 @@ describe('Regelung: Rechenkern', () => {
         expect(mit(19).grund).to.match(/volle Leistung/);
     });
 
+    it('Rechenweg als Daten (`weg`): dieselben Zahlen wie der Begruendungstext - Grundwert, Raumkorrektur, Grenze, Sonderfaelle', () => {
+        const mit = (raum, mehr = {}, k = K) => bedarf.berechnen(eingang({ raum: raum === null ? null : { wert: raum, zeit: T0 }, ...mehr }), k, null, T0).ergebnis;
+        // im Totband: keine Korrektur
+        expect(mit(20.8).weg).to.include({ art: 'normal', strategie: 'kennlinie', richtung: 'heizen', basis: 75, aussen: 0, raum: 20.8, ziel: 21, abweichung: 0.2, korrektur: 0, grenze: null, sollwert: 75, totband: 0.3, prozentProK: 10 });
+        // 1 K zu kalt: +7 Punkte (0,3 K Totband), 1 K zu warm: -7
+        expect(mit(20).weg).to.include({ abweichung: 1, korrektur: 7, sollwert: 80 });
+        expect(mit(22).weg).to.include({ abweichung: -1, korrektur: -7, sollwert: 70 });
+        // die Zahlen stehen genauso im Text
+        expect(mit(22).grund).to.contain('→ 75 %').and.to.contain('Korrektur -7 Pkt.');
+        // volle Leistung und Ueberheizschutz mit ihrer Schwelle
+        expect(mit(19).weg).to.include({ art: 'voll', schwelle: 2, sollwert: 100, abweichung: 2 });
+        expect(mit(22.6).weg).to.include({ art: 'ueber', schwelle: 1.5, sollwert: 30, abweichung: -1.6 });
+        // Grenzen: unten (warm draussen, Raum drueber) und oben (Obergrenze 80)
+        expect(mit(21.9, { aussen: { wert: 15, zeit: T0 } }).weg).to.include({ basis: 40, korrektur: -6, grenze: 'unter', sollwert: 40 });
+        const eng = bedarf.konfigPruefen({ obergrenze: 80 }).konfig;
+        expect(mit(20, { aussen: { wert: -10, zeit: T0 } }, eng).weg).to.include({ basis: 100, korrektur: 7, grenze: 'ober', sollwert: 80 });
+        // ohne Raumsensor: keine Abweichung, keine Korrektur
+        expect(mit(null).weg).to.include({ raum: null, abweichung: null, korrektur: 0, sollwert: 75 });
+        // Kuehlen: > 0 heisst "Raum zu warm"
+        const kuehl = mit(25, { mode: 'cool', aussen: { wert: 30, zeit: T0 }, ziel: 24 });
+        expect(kuehl.weg).to.include({ richtung: 'kuehlen', basis: 65, abweichung: 1, korrektur: 7, sollwert: 70 });
+        // eigene Einstellungen der Raumkorrektur stehen im Weg
+        const stark = bedarf.konfigPruefen({ prozentProK: 20, totband: 0.5 }).konfig;
+        expect(mit(20, {}, stark).weg).to.include({ korrektur: 10, prozentProK: 20, totband: 0.5, sollwert: 85 });
+        // neutral: kein Weg; Rueckfall und Abtauen: eigene Art
+        expect(mit(21, { power: false }).weg).to.equal(null);
+        expect(mit(21, { aussen: null }).weg).to.eql({ art: 'rueckfall', strategie: 'kennlinie', richtung: 'heizen', sollwert: 100 });
+        const vorher = bedarf.berechnen(eingang(), K, null, T0);
+        const taut = bedarf.berechnen(eingang({ abtauen: true }), K, vorher.zustand, T0 + 60000).ergebnis;
+        expect(taut.weg).to.eql({ art: 'abtauen', richtung: 'heizen', sollwert: 75 });
+    });
+
     it('ist neutral bei Geraet aus, Entfeuchten, Umluft - und kuehlt nach der Kuehlkennlinie', () => {
         expect(bedarf.berechnen(eingang({ power: false }), K, null, T0).ergebnis.zustand).to.equal('neutral');
         expect(bedarf.berechnen(eingang({ mode: 'dry' }), K, null, T0).ergebnis.sollwert).to.equal(null);
@@ -178,6 +210,17 @@ describe('Regelung: Strategie Vortag + Zuschlag', () => {
         expect(bedarf.berechnen(eingang({ vortag: klein }), k, null, T0).ergebnis.sollwert).to.equal(40);
         const gross = { spitzeW: 2000, mittelW: 2000, stunden: 2 };
         expect(bedarf.berechnen(eingang({ vortag: gross }), k, null, T0).ergebnis.sollwert).to.equal(95);
+    });
+
+    it('Rechenweg Vortag: Prozent des Vortags + Zuschlag, dann die Raumkorrektur', () => {
+        const k = bedarf.konfigPruefen({ strategie: 'vortag', vortag: { referenzW: 1000, zuschlag: 10 } }).konfig;
+        const v = { spitzeW: 480, mittelW: 300, stunden: 5 };
+        const r = bedarf.berechnen(eingang({ vortag: v, raum: { wert: 22, zeit: T0 } }), k, null, T0).ergebnis;
+        expect(r.weg).to.include({ art: 'normal', strategie: 'vortag', basis: 58, aussen: null, korrektur: -7, sollwert: 55 });
+        expect(r.weg.vortag).to.eql({ prozent: 48, zuschlag: 10 });
+        expect(r.grund).to.contain('48 %').and.to.contain('10');
+        const ohne = bedarf.berechnen(eingang({ vortag: { spitzeW: 0, mittelW: 0, stunden: 0 } }), k, null, T0).ergebnis;
+        expect(ohne.weg).to.eql({ art: 'rueckfall', strategie: 'vortag', richtung: 'heizen', sollwert: 100 });
     });
 
     it('faellt ohne Vortagsdaten auf 100 % zurueck', () => {
