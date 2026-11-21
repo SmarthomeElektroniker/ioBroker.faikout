@@ -1,0 +1,17 @@
+{
+    "fk_hinweis": "Sleep de punten of wijzig de waarden in de tabel. De pijltoetsen verschuiven het gekozen punt.",
+    "fk_vorgabeGilt": "Geen eigen punten – de standaard geldt. Slepen of ‘+’ neemt die over als startwaarde.",
+    "fk_punkt": "Punt %s",
+    "fk_punktDazu": "Punt toevoegen",
+    "fk_punktWeg": "Punt verwijderen",
+    "fk_zurVorgabe": "Weer de standaard gebruiken (eigen punten verwijderen)",
+    "fk_fZuWenig": "Er zijn minstens twee punten nodig.",
+    "fk_fZahl": "Punt %s is geen getal.",
+    "fk_fBereich": "Punt %s: het vermogen moet tussen 0 en 100 % liggen.",
+    "fk_fAufsteigend": "De temperaturen moeten van rij tot rij stijgen.",
+    "fk_fFallend": "De stooklijn moet dalen: hoe kouder buiten, hoe meer vermogen.",
+    "fk_fSteigend": "De koellijn moet stijgen: hoe warmer buiten, hoe meer vermogen.",
+    "fk_fGrenzen": "De ondergrens moet minstens 30 % zijn en niet boven de bovengrens liggen; de bovengrens hoogstens 100 %.",
+    "fk_untergrenze": "Ondergrens",
+    "fk_obergrenze": "Bovengrens"
+}

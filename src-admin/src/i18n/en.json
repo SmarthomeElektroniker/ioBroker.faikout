@@ -1,0 +1,17 @@
+{
+    "fk_hinweis": "Drag the points or change the values in the table. Arrow keys move the selected point.",
+    "fk_vorgabeGilt": "No own points – the default applies. Dragging a point or “+” takes it over as a starting value.",
+    "fk_punkt": "Point %s",
+    "fk_punktDazu": "Add point",
+    "fk_punktWeg": "Delete point",
+    "fk_zurVorgabe": "Use the default again (delete own points)",
+    "fk_fZuWenig": "At least two points are needed.",
+    "fk_fZahl": "Point %s is not a number.",
+    "fk_fBereich": "Point %s: the power must be between 0 and 100 %.",
+    "fk_fAufsteigend": "The temperatures must rise from row to row.",
+    "fk_fFallend": "The heating curve must fall: the colder outside, the more power.",
+    "fk_fSteigend": "The cooling curve must rise: the warmer outside, the more power.",
+    "fk_fGrenzen": "The lower limit must be at least 30 % and not above the upper limit; the upper limit at most 100 %.",
+    "fk_untergrenze": "Lower limit",
+    "fk_obergrenze": "Upper limit"
+}

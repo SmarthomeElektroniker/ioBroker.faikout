@@ -16,6 +16,7 @@ export default [
             'test/**',
             'coverage/**',
             'lokal/**',
+            'src-admin/**',
             '*.config.mjs',
         ],
     },

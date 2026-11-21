@@ -1,0 +1,17 @@
+{
+    "fk_hinweis": "Faites glisser les points ou modifiez les valeurs dans le tableau. Les touches fléchées déplacent le point choisi.",
+    "fk_vorgabeGilt": "Aucun point propre – la valeur par défaut s’applique. Faire glisser ou « + » la reprend comme point de départ.",
+    "fk_punkt": "Point %s",
+    "fk_punktDazu": "Ajouter un point",
+    "fk_punktWeg": "Supprimer le point",
+    "fk_zurVorgabe": "Reprendre la valeur par défaut (supprimer les points propres)",
+    "fk_fZuWenig": "Il faut au moins deux points.",
+    "fk_fZahl": "Le point %s n’est pas un nombre.",
+    "fk_fBereich": "Point %s : la puissance doit être comprise entre 0 et 100 %.",
+    "fk_fAufsteigend": "Les températures doivent augmenter d’une ligne à l’autre.",
+    "fk_fFallend": "La courbe de chauffe doit descendre : plus il fait froid dehors, plus de puissance.",
+    "fk_fSteigend": "La courbe de refroidissement doit monter : plus il fait chaud dehors, plus de puissance.",
+    "fk_fGrenzen": "La limite basse doit être d’au moins 30 % sans dépasser la limite haute ; celle-ci au plus 100 %.",
+    "fk_untergrenze": "Limite basse",
+    "fk_obergrenze": "Limite haute"
+}

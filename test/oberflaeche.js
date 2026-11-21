@@ -144,6 +144,60 @@ describe('Oberflaeche: Kennlinie pruefen und Bild fuer die Einstellungsseite', (
     });
 });
 
+describe('Oberflaeche: Arbeitspunkt fuer die ziehbare Kennlinie (regelArbeitspunkt)', () => {
+    const werte = {
+        'wz.regel.bedarf.aussenMittel': 9,
+        'wz.regel.bedarf.aktiv': true,
+        'wz.regel.bedarf.sollwert': 45,
+        'wz.regel.bedarf.rohwert': 44.3,
+        'wz.control.power': true,
+        'wz.control.mode': 'heat',
+    };
+
+    it('ist als Befehl eingetragen', () => {
+        expect(o.BEFEHLE.has('regelArbeitspunkt')).to.equal(true);
+    });
+
+    it('liefert die Daten von arbeitspunkt() und die fertigen Etiketten je Richtung', async () => {
+        const a = adapter(werte);
+        const { erledigt, antwort } = await frage(a, 'regelArbeitspunkt', { geraet: 'wz', obergrenze: 95 });
+        expect(erledigt).to.equal(true);
+        expect(antwort).to.include({ geraet: 'wz', x: 9, wert: 45, roh: 44.3, richtung: 'heizen', probelauf: true, aktiv: true });
+        expect(antwort).to.deep.include(await o.arbeitspunkt(a, 'wz'));
+        expect(antwort.etikett.heizen).to.eql({ x: 9, wert: 45, text: 'würde senden 45 %', unterzeile: 'roh 44,3 % · außen 9,0 °C' });
+        // im Bild der anderen Richtung steht nur die Aussentemperatur, kein Wert
+        expect(antwort.etikett.kuehlen).to.eql({ x: 9, wert: null, text: 'außen 9,0 °C' });
+        // dieselben Texte wie im bisherigen Bild
+        const svg = (await frage(a, 'regelKennlinieBild', { richtung: 'heizen', punkte: '-10:95, 0:75, 7:55, 15:40', untergrenze: 40, obergrenze: 95, geraet: 'wz' })).antwort;
+        expect(svg).to.contain(antwort.etikett.heizen.text).and.to.contain(antwort.etikett.heizen.unterzeile);
+    });
+
+    it('volle Freigabe ueber der Obergrenze: Etikett "volle Leistung (2 K unter Ziel)", Obergrenze aus dem Formular', async () => {
+        const a = adapter({ ...werte, 'wz.regel.bedarf.sollwert': 100, 'wz.regel.bedarf.rohwert': 102.5, 'wz.regel.bedarf.probelauf': false }, { regelProbelauf: false, regelObergrenze: 100 });
+        const voll = (await frage(a, 'regelArbeitspunkt', { geraet: 'Wohnzimmer AC', obergrenze: 95 })).antwort;
+        expect(voll.geraet).to.equal('wz');
+        expect(voll.vollAbK).to.equal(require('../lib/regel/bedarf').VORGABEN.vollAbK);
+        expect(voll.etikett.heizen.text).to.equal(o.TEXTE.volleLeistungK.de.replace('{k}', String(voll.vollAbK).replace('.', ',')));
+        expect(voll.etikett.heizen.text).to.contain('volle Leistung').and.to.contain('K unter Ziel');
+        expect(voll.etikett.heizen.unterzeile).to.contain('95').and.to.contain('9,0');
+        // ohne Angabe gilt die gespeicherte Obergrenze der Instanz (hier 100 %): normales Etikett
+        const normal = (await frage(a, 'regelArbeitspunkt', { geraet: 'wz' })).antwort;
+        expect(normal.etikett.heizen.text).to.equal(o.TEXTE.sendet.de.replace('{p}', '100'));
+    });
+
+    it('ohne oder mit unbekanntem Geraet: kein Arbeitspunkt, kein Absturz', async () => {
+        for (const geraet of ['', undefined, 'gibtsnicht']) {
+            const { erledigt, antwort } = await frage(adapter(werte), 'regelArbeitspunkt', { geraet });
+            expect(erledigt).to.equal(true);
+            expect(antwort).to.eql({ geraet: null, etikett: { heizen: null, kuehlen: null } });
+        }
+        // Geraet ohne Aussentemperatur: Daten ja, Etikett nein
+        const leer = (await frage(adapter({}), 'regelArbeitspunkt', { geraet: 'og' })).antwort;
+        expect(leer).to.include({ geraet: 'og', x: null });
+        expect(leer.etikett).to.eql({ heizen: null, kuehlen: null });
+    });
+});
+
 describe('Oberflaeche: Nachrichten der Einstellungsseite', () => {
     it('fremde Befehle bleiben unberuehrt', async () => {
         const a = adapter();
@@ -772,6 +826,22 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(JSON.stringify(konfig)).not.to.contain('regelQuellen');
         expect(Object.keys(r)[0]).to.equal('regelProbelauf');
     });
+
+    it('jsonConfig: Kennlinien je Geraet sind die ziehbare Komponente am Tabellen-Attribut, das reine Bild ist weg', () => {
+        const g = konfig.items.tabRegelung.items.regelGeraete.items;
+        const zeile = Object.fromEntries(g.map(i => [i.attr, i]));
+        for (const [attr, name] of [['kennlinieHeizen', 'KennlinieHeizen'], ['kennlinieKuehlen', 'KennlinieKuehlen']]) {
+            expect(zeile[attr]).to.include({ type: 'custom', url: 'custom/customComponents.js', name: `ConfigCustomFaikoutSet/Components/${name}`, i18n: true, guiApi: 2 });
+            // wie bisher: bei Strategie "Vortag" ausgeblendet, eigene Zeile, volle Breite
+            expect(zeile[attr].hidden).to.contain("=== 'vortag'");
+            expect(zeile[attr]).to.include({ newLine: true, xs: 12, xl: 12 });
+        }
+        expect(zeile._bildHeizen).to.equal(undefined);
+        expect(zeile._bildKuehlen).to.equal(undefined);
+        // kein Element fragt mehr das fertige Bild ab - der Befehl bleibt fuer aeltere Seiten erhalten
+        expect(JSON.stringify(konfig)).not.to.contain('regelKennlinieBild');
+        expect(o.BEFEHLE.has('regelKennlinieBild')).to.equal(true);
+    });
 });
 
 describe('VIS-Baustein "Regelung" und gemeinsame Zeichenfunktion', () => {
@@ -1117,8 +1187,11 @@ describe('UX-Funde 21.11.2026', () => {
     it('Einstellungsseite: Vorgabe-Kennlinie als Tabelle, Live-Wert neben jedem Fuehlerfeld, kein Rohtext helpBindIp', () => {
         const konfig = require('../admin/jsonConfig.json');
         const v = konfig.items.tabRegelung.items._pVorgabe.items;
-        expect(v.regelKennlinieHeizen.type).to.equal('table');
-        expect(v.regelKennlinieKuehlen.type).to.equal('table');
+        // seit 21.11.2026 Tabelle UND ziehbares Bild in einer Komponente (derselbe Wert: Zeilen {x, y})
+        expect(v.regelKennlinieHeizen).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/KennlinieHeizen' });
+        expect(v.regelKennlinieKuehlen).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/KennlinieKuehlen' });
+        expect(v._bildH).to.equal(undefined);
+        expect(v._bildK).to.equal(undefined);
         const io = require('../io-package.json');
         expect(io.native.regelKennlinieHeizen).to.eql(v.regelKennlinieHeizen.default);
         const g = konfig.items.tabRegelung.items.regelGeraete.items;

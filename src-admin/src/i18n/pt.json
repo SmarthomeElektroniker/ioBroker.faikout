@@ -1,0 +1,17 @@
+{
+    "fk_hinweis": "Arraste os pontos ou altere os valores na tabela. As teclas de seta deslocam o ponto selecionado.",
+    "fk_vorgabeGilt": "Sem pontos próprios – aplica-se a predefinição. Arrastar ou «+» adota-a como valor inicial.",
+    "fk_punkt": "Ponto %s",
+    "fk_punktDazu": "Adicionar ponto",
+    "fk_punktWeg": "Eliminar ponto",
+    "fk_zurVorgabe": "Voltar a usar a predefinição (eliminar pontos próprios)",
+    "fk_fZuWenig": "São necessários pelo menos dois pontos.",
+    "fk_fZahl": "O ponto %s não é um número.",
+    "fk_fBereich": "Ponto %s: a potência tem de estar entre 0 e 100 %.",
+    "fk_fAufsteigend": "As temperaturas têm de subir de linha para linha.",
+    "fk_fFallend": "A curva de aquecimento tem de descer: quanto mais frio lá fora, mais potência.",
+    "fk_fSteigend": "A curva de arrefecimento tem de subir: quanto mais calor lá fora, mais potência.",
+    "fk_fGrenzen": "O limite inferior tem de ser pelo menos 30 % e não superior ao limite superior; este no máximo 100 %.",
+    "fk_untergrenze": "Limite inferior",
+    "fk_obergrenze": "Limite superior"
+}

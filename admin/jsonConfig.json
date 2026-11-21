@@ -2138,107 +2138,37 @@
                         },
                         {
                             "attr": "kennlinieHeizen",
-                            "type": "table",
+                            "type": "custom",
+                            "url": "custom/customComponents.js",
+                            "name": "ConfigCustomFaikoutSet/Components/KennlinieHeizen",
+                            "i18n": true,
+                            "guiApi": 2,
+                            "bundlerType": "module",
                             "label": "labelTabHeizenGeraet",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "newLine": true,
                             "hidden": "(data.strategie || globalData.regelStrategie) === 'vortag'",
-                            "items": [
-                                {
-                                    "type": "number",
-                                    "attr": "x",
-                                    "title": "colX",
-                                    "min": -40,
-                                    "max": 50,
-                                    "default": 0,
-                                    "width": "50%"
-                                },
-                                {
-                                    "type": "number",
-                                    "attr": "y",
-                                    "title": "colY",
-                                    "min": 0,
-                                    "max": 100,
-                                    "step": 5,
-                                    "default": 50,
-                                    "width": "50%"
-                                }
-                            ]
-                        },
-                        {
-                            "attr": "_bildHeizen",
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "regelKennlinieBild",
-                            "jsonData": "{\"richtung\":\"heizen\",\"punkte\":${JSON.stringify((data.kennlinieHeizen && data.kennlinieHeizen.length) ? data.kennlinieHeizen : (globalData.regelKennlinieHeizen ?? ''))},\"untergrenze\":${JSON.stringify(data.untergrenze ?? globalData.regelUntergrenze ?? '')},\"obergrenze\":${JSON.stringify(data.obergrenze ?? globalData.regelObergrenze ?? '')},\"geraet\":${JSON.stringify(data.geraet ?? \"\")}}",
-                            "alsoDependsOn": [
-                                "kennlinieHeizen",
-                                "untergrenze",
-                                "obergrenze",
-                                "geraet"
-                            ],
+                            "newLine": true,
                             "xs": 12,
                             "sm": 12,
                             "md": 12,
                             "lg": 12,
-                            "xl": 12,
-                            "hidden": "(data.strategie || globalData.regelStrategie) === 'vortag'"
+                            "xl": 12
                         },
                         {
                             "attr": "kennlinieKuehlen",
-                            "type": "table",
+                            "type": "custom",
+                            "url": "custom/customComponents.js",
+                            "name": "ConfigCustomFaikoutSet/Components/KennlinieKuehlen",
+                            "i18n": true,
+                            "guiApi": 2,
+                            "bundlerType": "module",
                             "label": "labelTabKuehlenGeraet",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "newLine": true,
                             "hidden": "(data.strategie || globalData.regelStrategie) === 'vortag'",
-                            "items": [
-                                {
-                                    "type": "number",
-                                    "attr": "x",
-                                    "title": "colX",
-                                    "min": -40,
-                                    "max": 50,
-                                    "default": 0,
-                                    "width": "50%"
-                                },
-                                {
-                                    "type": "number",
-                                    "attr": "y",
-                                    "title": "colY",
-                                    "min": 0,
-                                    "max": 100,
-                                    "step": 5,
-                                    "default": 50,
-                                    "width": "50%"
-                                }
-                            ]
-                        },
-                        {
-                            "attr": "_bildKuehlen",
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "regelKennlinieBild",
-                            "jsonData": "{\"richtung\":\"kuehlen\",\"punkte\":${JSON.stringify((data.kennlinieKuehlen && data.kennlinieKuehlen.length) ? data.kennlinieKuehlen : (globalData.regelKennlinieKuehlen ?? ''))},\"untergrenze\":${JSON.stringify(data.untergrenze ?? globalData.regelUntergrenze ?? '')},\"obergrenze\":${JSON.stringify(data.obergrenze ?? globalData.regelObergrenze ?? '')},\"geraet\":${JSON.stringify(data.geraet ?? \"\")}}",
-                            "alsoDependsOn": [
-                                "kennlinieKuehlen",
-                                "untergrenze",
-                                "obergrenze",
-                                "geraet"
-                            ],
+                            "newLine": true,
                             "xs": 12,
                             "sm": 12,
                             "md": 12,
                             "lg": 12,
-                            "xl": 12,
-                            "hidden": "(data.strategie || globalData.regelStrategie) === 'vortag'"
+                            "xl": 12
                         },
                         {
                             "attr": "_tVortag",
@@ -2952,7 +2882,12 @@
                             "default": 95
                         },
                         "regelKennlinieHeizen": {
-                            "type": "table",
+                            "type": "custom",
+                            "url": "custom/customComponents.js",
+                            "name": "ConfigCustomFaikoutSet/Components/KennlinieHeizen",
+                            "i18n": true,
+                            "guiApi": 2,
+                            "bundlerType": "module",
                             "label": "labelTabHeizenVorgabe",
                             "hidden": "data.regelStrategie === 'vortag'",
                             "newLine": true,
@@ -2961,27 +2896,6 @@
                             "md": 12,
                             "lg": 12,
                             "xl": 12,
-                            "items": [
-                                {
-                                    "type": "number",
-                                    "attr": "x",
-                                    "title": "colX",
-                                    "min": -40,
-                                    "max": 50,
-                                    "default": 0,
-                                    "width": "50%"
-                                },
-                                {
-                                    "type": "number",
-                                    "attr": "y",
-                                    "title": "colY",
-                                    "min": 0,
-                                    "max": 100,
-                                    "step": 5,
-                                    "default": 50,
-                                    "width": "50%"
-                                }
-                            ],
                             "default": [
                                 {
                                     "x": -10,
@@ -3001,26 +2915,13 @@
                                 }
                             ]
                         },
-                        "_bildH": {
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "regelKennlinieBild",
-                            "jsonData": "{\"richtung\":\"heizen\",\"punkte\":${JSON.stringify(data.regelKennlinieHeizen ?? '')},\"untergrenze\":${JSON.stringify(data.regelUntergrenze ?? '')},\"obergrenze\":${JSON.stringify(data.regelObergrenze ?? '')},\"geraet\":${JSON.stringify(\"\")}}",
-                            "alsoDependsOn": [
-                                "regelKennlinieHeizen",
-                                "regelUntergrenze",
-                                "regelObergrenze"
-                            ],
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "data.regelStrategie === 'vortag'",
-                            "newLine": true
-                        },
                         "regelKennlinieKuehlen": {
-                            "type": "table",
+                            "type": "custom",
+                            "url": "custom/customComponents.js",
+                            "name": "ConfigCustomFaikoutSet/Components/KennlinieKuehlen",
+                            "i18n": true,
+                            "guiApi": 2,
+                            "bundlerType": "module",
                             "label": "labelTabKuehlenVorgabe",
                             "hidden": "data.regelStrategie === 'vortag'",
                             "newLine": true,
@@ -3029,27 +2930,6 @@
                             "md": 12,
                             "lg": 12,
                             "xl": 12,
-                            "items": [
-                                {
-                                    "type": "number",
-                                    "attr": "x",
-                                    "title": "colX",
-                                    "min": -40,
-                                    "max": 50,
-                                    "default": 0,
-                                    "width": "50%"
-                                },
-                                {
-                                    "type": "number",
-                                    "attr": "y",
-                                    "title": "colY",
-                                    "min": 0,
-                                    "max": 100,
-                                    "step": 5,
-                                    "default": 50,
-                                    "width": "50%"
-                                }
-                            ],
                             "default": [
                                 {
                                     "x": 25,
@@ -3064,24 +2944,6 @@
                                     "y": 95
                                 }
                             ]
-                        },
-                        "_bildK": {
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "regelKennlinieBild",
-                            "jsonData": "{\"richtung\":\"kuehlen\",\"punkte\":${JSON.stringify(data.regelKennlinieKuehlen ?? '')},\"untergrenze\":${JSON.stringify(data.regelUntergrenze ?? '')},\"obergrenze\":${JSON.stringify(data.regelObergrenze ?? '')},\"geraet\":${JSON.stringify(\"\")}}",
-                            "alsoDependsOn": [
-                                "regelKennlinieKuehlen",
-                                "regelUntergrenze",
-                                "regelObergrenze"
-                            ],
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "data.regelStrategie === 'vortag'",
-                            "newLine": true
                         },
                         "_tVortag": {
                             "type": "staticText",

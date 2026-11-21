@@ -1,0 +1,17 @@
+{
+    "fk_hinweis": "Punkte ziehen oder Werte in der Tabelle ändern. Pfeiltasten verschieben den gewählten Punkt.",
+    "fk_vorgabeGilt": "Keine eigenen Punkte – es gilt die Vorgabe. Ziehen oder „+“ übernimmt sie als Startwert.",
+    "fk_punkt": "Punkt %s",
+    "fk_punktDazu": "Punkt hinzufügen",
+    "fk_punktWeg": "Punkt löschen",
+    "fk_zurVorgabe": "Wieder die Vorgabe verwenden (eigene Punkte löschen)",
+    "fk_fZuWenig": "Es braucht mindestens zwei Stützpunkte.",
+    "fk_fZahl": "Stützpunkt %s ist keine Zahl.",
+    "fk_fBereich": "Stützpunkt %s: Die Leistung muss zwischen 0 und 100 % liegen.",
+    "fk_fAufsteigend": "Die Temperaturen müssen von Zeile zu Zeile steigen.",
+    "fk_fFallend": "Die Heizkennlinie muss fallen: je kälter draußen, desto mehr Leistung.",
+    "fk_fSteigend": "Die Kühlkennlinie muss steigen: je wärmer draußen, desto mehr Leistung.",
+    "fk_fGrenzen": "Die Untergrenze muss mindestens 30 % betragen und darf nicht über der Obergrenze liegen; die Obergrenze höchstens 100 %.",
+    "fk_untergrenze": "Untergrenze",
+    "fk_obergrenze": "Obergrenze"
+}

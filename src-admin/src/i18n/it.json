@@ -1,0 +1,17 @@
+{
+    "fk_hinweis": "Trascina i punti o modifica i valori nella tabella. I tasti freccia spostano il punto selezionato.",
+    "fk_vorgabeGilt": "Nessun punto proprio – vale il valore predefinito. Trascinando o con «+» lo si adotta come punto di partenza.",
+    "fk_punkt": "Punto %s",
+    "fk_punktDazu": "Aggiungi punto",
+    "fk_punktWeg": "Elimina punto",
+    "fk_zurVorgabe": "Usa di nuovo il valore predefinito (elimina i punti propri)",
+    "fk_fZuWenig": "Servono almeno due punti.",
+    "fk_fZahl": "Il punto %s non è un numero.",
+    "fk_fBereich": "Punto %s: la potenza deve essere compresa tra 0 e 100 %.",
+    "fk_fAufsteigend": "Le temperature devono crescere di riga in riga.",
+    "fk_fFallend": "La curva di riscaldamento deve scendere: più freddo fuori, più potenza.",
+    "fk_fSteigend": "La curva di raffreddamento deve salire: più caldo fuori, più potenza.",
+    "fk_fGrenzen": "Il limite inferiore deve essere almeno 30 % e non superare quello superiore; quest’ultimo al massimo 100 %.",
+    "fk_untergrenze": "Limite inferiore",
+    "fk_obergrenze": "Limite superiore"
+}
