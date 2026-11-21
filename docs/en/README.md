@@ -8,7 +8,7 @@ This guide describes the built-in climate control of the adapter: the settings i
 
 After installation the control is in **dry run**. The adapter calculates everything and shows what
 it would send – but it does not send a single command to the units. That leaves time to check
-whether curve, scenes and schedule fit.
+whether curve, temperature levels and schedule fit.
 
 Going live takes two steps: the checkbox **Dry run** at the top of the tab *Climate control* (for
 all units) and, per unit, the data point `<unit>.regulation.demand.dryRun`. Commands are only sent
@@ -16,17 +16,34 @@ when both are off. Until then the device card carries the label "Dry run".
 
 ![Tab Climate control](../img/einstellungen_regelung.png)
 
-## 2. Settings per unit
+## 2. Template and settings per unit
 
-Under **Units** there is one entry per air conditioner. A unit without an entry uses the defaults
-(the adapter controls, sensors on automatic, curve and scenes from "Defaults for units without own
-values").
+The control knows exactly two levels:
+
+- the **global template** – strategy, lower and upper limit, heating and cooling curve, previous
+  day, temperature levels, humidity action and the weekly schedule of the template. It applies to
+  all units.
+- **per unit** an entry under **Units** with the checkbox **"Individual instead of the global
+  template"**.
+
+| Checkbox "Individual" | What applies to the unit |
+|---|---|
+| off (default for new entries) | **all** values of the template. Own curves, limits or temperature levels in the entry stay stored but are not used. |
+| on | the values of the unit. A single empty field still takes the template (and the template the factory default). |
+
+Always per unit – with and without the checkbox – are: who controls, the sensor sources and frost
+protection. A unit without any entry uses the template, the adapter controls and the sensors are
+on automatic.
+
+The factory defaults of the template: lower limit **40 %**, upper limit **100 %**, heating curve
+−10 °C → 100 %, 0 °C → 75 %, 7 °C → 55 %, 15 °C → 40 %, cooling curve 25 °C → 40 %, 30 °C → 65 %,
+35 °C → 95 %.
 
 ### Who controls?
 
 | Mode | What happens | Suited for |
 | --- | --- | --- |
-| **Adapter controls** | The adapter switches by weekly schedule and scenes, limits the power by demand and steps in on humidity. Nothing is stored in the module. | the normal case |
+| **Adapter controls** | The adapter switches by weekly schedule and temperature levels, limits the power by demand and steps in on humidity. Nothing is stored in the module. | the normal case |
 | **Faikout auto** | The module itself controls to the target temperature (automatic mode of the firmware). The adapter supplies target, sensor value and schedule. | when the module should keep controlling without ioBroker |
 
 Limits of Faikout auto:
@@ -59,23 +76,37 @@ yet".
 ### Demand control (power limit)
 
 Demand control limits the power of the unit in 5 % steps so that it runs evenly instead of
-cycling. If the room is 2 K or more below the target, the adapter always releases 100 %.
+cycling. If the room is 2 K or more below the target, the adapter always releases 100 % – even
+above a lower upper limit and above the maximum power of the temperature level. If the curve itself
+reaches 100 % (factory default at −10 °C), that is an ordinary value: the maximum power of the
+temperature level still limits it.
 
-- **Curve by outside temperature:** points "outside °C → power %" as a table. The picture next to
-  it redraws the curve at once, with lower and upper limit and – as soon as the unit reports
-  values – the current operating point. The heating curve must fall (the colder, the more), the
+- **Curve by outside temperature:** points "outside °C → power %", dragged with the mouse in the
+  picture (the table is collapsed). The picture shows lower and upper limit and – as soon as the
+  unit reports values – the current operating point. The heating curve must fall (the colder, the more), the
   cooling curve must rise.
 - **Auto (previous day + margin):** yesterday's power plus a reserve; this is how "Auto" in the
   Daikin app works as well. Without data from yesterday the adapter releases 100 %.
 
 Empty fields take the default. Demand control is switched on per unit on the device card.
 
-### Scenes
+### Temperature levels
 
-A scene is a complete state of the unit: on/off, mode, target temperature, fan and a **maximum power** that
-limits the power additionally. Per scene you decide whether demand and humidity control work
-during that time. Without own scenes four defaults apply: Komfort (21 °C), Absenken (19 °C),
-Abwesend (17 °C) and Aus.
+Temperature levels (formerly "scenes") are in the tab **Schedules** – where they are needed: the
+weekly schedule switches between them. A temperature level is a complete state of the unit: on/off,
+mode, target temperature, fan and a **maximum power** that additionally limits the power coming from
+the control. Per level you decide whether demand and humidity control work during that time.
+Without own levels four factory levels apply:
+
+| Level | Target | Fan | Maximum power |
+|---|---|---|---|
+| Comfort (`komfort`) | 21 °C | auto | 100 % |
+| Setback (`absenken`) | 19 °C | night | 60 % |
+| Away (`abwesend`) | 17 °C | auto | 50 % |
+| Off (`aus`) | unit off | – | – |
+
+The levels of the template apply to all units; a unit with the checkbox "Individual" can have its
+own.
 
 ### Sensor sources and frost protection
 
@@ -95,7 +126,7 @@ the schedule says off. 0 switches frost protection off.
 
 ### Take over values from another unit
 
-With several units, scenes, strategy with curve and limits, or both can be copied from one unit to
+With several units, temperature levels, strategy with curve and limits, or both can be copied from one unit to
 another. After the confirmation the unit list is saved at once and the adapter restarts – save
 other unsaved changes on the page first.
 
@@ -104,7 +135,7 @@ other unsaved changes on the page first.
 ## 3. For all units
 
 - **Manual override:** if someone operates the unit at the device or in an app, schedule and
-  scenes wait – until the next switching time, for a fixed time, or not at all. Demand and
+  temperature levels wait – until the next switching time, for a fixed time, or not at all. Demand and
   humidity control keep working. "End manual override" on the card ends the wait at once.
 - **Humidity and dew point:** ΔDP (dew-point spread) is the distance between room temperature and
   dew point. If it becomes too small or the humidity too high, the adapter switches to dry mode,
@@ -129,28 +160,40 @@ The card shows the running operation and offers everyday control:
   instead.
 - **Power limit** as a number and step bar, with a note when the adapter only calculates (dry
   run), the control rests or the unit does not accept the value.
-- **Scene** and **next switch**.
+- **Temperature level** and **next switch**, below them the pointer to the button "Weekly schedule".
 - **Automation:** three symbol buttons switch demand control, humidity control and the weekly
   schedule on and off (filled = on).
 - **Manual override:** note with the time and the button "End manual override".
 - **Sensors:** green = the chosen sensor delivers, yellow = fallback or no value; the source is in
   the tooltip.
 
-At the bottom of the card two buttons open the **weekly schedule** and the **details**.
+At the bottom of the card the labelled button **Weekly schedule** (with the calendar symbol) opens
+the weekly schedule of this unit, the button next to it the **details**.
 
 ### Weekly schedule
 
+The weekly schedule is available in two places – it is the same editor and the same schedule:
+
+- in the tab **Schedules** of the settings: one row per unit with a preview of the week, the switch
+  "active" and "Edit weekly schedule"; schedules can be copied and pasted between units,
+- on the **device card**: button "Weekly schedule".
+
+The weekly schedule is stored per unit in the data point `regulation.schedule.weekJson` and **takes
+effect at once** – it does not need "Save" on the settings page. The **schedule of the template**,
+however, is a value of the settings: "Load default schedule" in the editor inserts it (without a
+template schedule the factory schedule).
+
 ![Weekly schedule](../img/wochenplan.png)
 
-- Click into a block: new switching time there, then choose the scene.
+- Click into a block: new switching time there, then choose the temperature level.
 - Drag a line: move the switching time (15-minute steps).
-- Click a line: choose another scene or delete the switching time.
+- Click a line: choose another level or delete the switching time.
 - On the right per day: "+ switching time", copy day, paste day.
-- **Load default schedule** creates a simple schedule (mornings and evenings on weekdays, daytime
-  at the weekend).
-- **Absence:** from/until and the scene that applies during that time.
+- **Load default schedule** inserts the schedule of the template; without one the factory schedule
+  (comfort in the mornings and evenings on weekdays, daytime at the weekend).
+- **Absence:** from/until and the temperature level that applies during that time.
 
-Nothing is saved before "OK". If the weekly schedule of the unit is switched off, the adapter then
+Nothing is saved before "Apply schedule". If the weekly schedule of the unit is switched off, the adapter then
 asks whether to switch it on.
 
 ### Details
@@ -210,7 +253,7 @@ client ID and a topic prefix.
 
 ![vis widget](../img/vis_regelung.png)
 
-The widget "Climate control (display)" shows state, scene and next switch, the curve with
+The widget "Climate control (display)" shows state, temperature level and next switch, the curve with
 operating point, the power limit and which controls are running for one unit. It is display only;
 operation happens through the other widgets or the device card. The only attribute needed is the
 device object, e.g. `faikout.0.Livingroom`.
@@ -236,7 +279,7 @@ limit is shown in `<unit>.info.demandCapable` (`unknown`, `yes`, `no`).
 | `demand.wouldSend` · `commandsPerHour` |  | last demand command, commands in the last hour |
 | `demand.curveJson` · `capableReason` · `stateJson` |  | curve of the unit, reason of the capability, internal state (restart-safe) |
 | `schedule.active` · `weekJson` · `absenceJson` |  | switch, weekly schedule and absence |
-| `schedule.scene` · `next` · `nextScene` · `missing` |  | current scene, next switching time, "no schedule stored yet" |
+| `schedule.level` · `next` · `nextLevel` · `missing` |  | current temperature level, next switching time with its level, "no schedule stored yet" |
 | `humidity.active` · `dewPoint` · `margin` · `intervention` · `reason` |  | humidity control: switch, dew point, spread, intervention, reason |
 | `manual.locked` · `until` · `resume` |  | manual override: automation waits, until when, button "resume" |
 | `target.up` · `target.down` |  | buttons: target temperature one step warmer/cooler |
@@ -248,6 +291,29 @@ Pre-release builds of 1.0.0 kept these data points below `<unit>.regel.*`. The a
 once at start (switches, weekly schedule, absence, history and your own history settings are kept)
 and removes the old objects.
 
+With the renaming of "scenes" to "temperature levels" two data points have new names. The adapter
+moves them at start as well (value and history settings are kept):
+
+| old | new |
+|---|---|
+| `regulation.schedule.scene` (pre-release: `regel.plan.szene`) | `regulation.schedule.level` |
+| `regulation.schedule.nextScene` (pre-release: `regel.plan.naechsteSzene`) | `regulation.schedule.nextLevel` |
+
+### Settings: old → new
+
+At the first start with 1.0.0 the adapter migrates the instance settings once and then restarts.
+Your own values are never overwritten.
+
+| old | new | migration |
+|---|---|---|
+| `regelSzenen` | `regelStufen` | list is taken over |
+| per unit `szenen` | per unit `stufen` | list is taken over |
+| – | per unit `individuell` | existing entries get the checkbox – they behave as before |
+| – | `regelPlanVorlage` | new, empty = factory schedule |
+| `regelObergrenze` 95 | 100 | only if the old factory default 95 is still set |
+| heating curve −10 °C → 95 % | −10 °C → 100 % | only if the curve is exactly the old factory default |
+| `User` (pre-release 0.5.0) | `user` | user name of the built-in broker is taken over – the modules stay logged in |
+
 ### JSON data points
 
 The keys inside the JSON data points are English. Pre-release builds of 1.0.0 wrote German keys: the
@@ -256,19 +322,20 @@ only, and rewrites stored old values once at start.
 
 | Data point | old | new | Example (new) |
 |---|---|---|---|
-| `demand.curveJson` | `heizen` · `kuehlen` · `untergrenze` · `obergrenze` | `heating` · `cooling` · `lowerLimit` · `upperLimit` | `{"heating":[[-10,95],[0,75],[7,55],[15,40]],"cooling":[[25,40],[30,65],[35,95]],"lowerLimit":40,"upperLimit":95}` |
+| `demand.curveJson` | `heizen` · `kuehlen` · `untergrenze` · `obergrenze` | `heating` · `cooling` · `lowerLimit` · `upperLimit` | `{"heating":[[-10,100],[0,75],[7,55],[15,40]],"cooling":[[25,40],[30,65],[35,95]],"lowerLimit":40,"upperLimit":100}` |
 | `lastCommand` | `felder` · `zeit` · `aktion` (`senden`/`wuerde`) | `fields` · `time` · `action` (`send`/`would`) | `{"fields":{"target":22,"fan":"auto"},"time":"2026-11-21T11:38:19.361Z","action":"send"}` |
 | `demand.wouldSend` | `wert` · `zeit` · `aktion` (`senden`/`wuerde`) · `ist` | `value` · `time` · `action` (`send`/`would`) · `current` | `{"value":85,"time":"2026-11-21T12:14:38.489Z","action":"would","current":100}` |
-| `schedule.absenceJson` | `von` · `bis` · `szene` | `from` · `to` · `scene` | `{"from":1798326000000,"to":1798930800000,"scene":"abwesend"}` (time in ms or as ISO text; empty = no absence) |
+| `schedule.absenceJson` | `von` · `bis` · `szene` (for a while `scene`) | `from` · `to` · `level` | `{"from":1798326000000,"to":1798930800000,"level":"abwesend"}` (time in ms or as ISO text; empty = no absence) |
 
 Unchanged, because they never had German keys: `schedule.weekJson` (seven days starting on Monday,
-each switching time `{"t": minutes since midnight, "s": scene ID}`), `historyJson` (pairs
+each switching time `{"t": minutes since midnight, "s": ID of the temperature level}`), `historyJson` (pairs
 `[time in ms, percent]`) and `consumption.*Json` (`hour`/`day`/`month`, `kwh`). `demand.stateJson` is
 the adapter's memory across a restart – not an interface, its structure may change at any time.
 
-The scene IDs (`komfort`, `absenken`, `abwesend`, `aus`, or derived from your own scene name) are
-language-independent and stay as they are: the weekly schedule refers to them. Only the displayed
-name of the four default scenes follows the system language; your own scenes keep their names.
+The IDs of the temperature levels (`komfort`, `absenken`, `abwesend`, `aus`, or derived from your
+own name) are language-independent and stay as they are: the weekly schedule refers to them –
+existing schedules remain valid. Only the displayed name of the four factory levels follows the
+system language; your own levels keep their names.
 
 ## 9. Consumption
 

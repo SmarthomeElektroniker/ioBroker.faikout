@@ -192,11 +192,12 @@ Everything starts in **dry run**: the adapter calculates and shows what it would
 nothing until the dry run is switched off – in the settings and, per unit, in the data point
 `regulation.demand.dryRun`.
 
-- **Per unit** (one entry per air conditioner, shown with its name): who controls, the demand
-  strategy with curve and limits, the scenes, sensor sources and frost protection. Empty values
-  fall back to the defaults further down. "Take over values from another unit" copies scenes
-  and/or curve from one unit to another (saved at once).
-- **Who controls**: *Adapter controls* (schedule, scenes, power limit, humidity – nothing is stored
+- **Global template and per unit**: the template holds strategy, curves, limits (factory default
+  40 % to 100 %), temperature levels and a template schedule and applies to all units. Each unit
+  has an entry with who controls, sensor sources and frost protection – and the checkbox
+  "Individual instead of the global template": without it all template values apply, with it the
+  values of the unit (a single empty field still takes the template).
+- **Who controls**: *Adapter controls* (schedule, temperature levels, power limit, humidity – nothing is stored
   in the module) or *Faikout auto* (the module controls to the target itself; the adapter supplies
   target, sensor value and schedule). With Faikout auto the power limit is only set with the
   strategy "Auto", and every change of the target is stored in the module's flash memory – the
@@ -204,17 +205,18 @@ nothing until the dry run is switched off – in the settings and, per unit, in 
 - **Demand control** limits the power (`demand`) in 5 % steps, either by a curve over the outside
   temperature (drawn live, with the current operating point) or as "Auto" (yesterday's consumption
   plus a margin).
-- **Scenes and weekly schedule**: a scene is a complete state of the unit (on/off, mode, target,
-  fan, power cap). The schedule is edited on the device card (calendar button): click into a block to
+- **Temperature levels and weekly schedule** (tab "Schedules"): a temperature level is a complete
+  state of the unit (on/off, mode, target, fan, maximum power). The weekly schedule is edited in the
+  tab "Schedules" or on the device card (button "Weekly schedule") and takes effect at once: click into a block to
   add a switching time, drag a line to move it, click a line to change or delete it, copy and paste
   whole days, load the default schedule, set an absence.
 - **Sensor sources**: automatic, sensor of the unit, BLE sensor on the module or any ioBroker data
   point. A room data point either adjusts the setpoint of the unit (recommended) or is sent to the
   module.
-- **Humidity and dew point**, **manual override** (schedule and scenes wait after someone used the
+- **Humidity and dew point**, **manual override** (schedule and temperature levels wait after someone used the
   remote control; "End manual override" on the card ends the wait) and **public holidays** are set
   once for all units.
-- **Device card**: state and reason, power limit, scene and next switching time, three symbol
+- **Device card**: state and reason, power limit, temperature level and next switching time, three symbol
   buttons for demand control, humidity control and weekly schedule, sensors with a warning when a
   fallback sensor is used. The chart button explains the current decision (curve with operating
   point, steps of the calculation, last 24 hours).
@@ -259,8 +261,17 @@ one detail page per unit with controls, energy history and a phone view. They us
 -->
 ### 1.0.0 (2026-11-21)
 - Climate control per unit: demand limit by outdoor curve or "Auto" (previous day plus margin),
-  weekly schedule with scenes, public holidays and absence, humidity and dew point control, manual
+  weekly schedule with temperature levels, public holidays and absence, humidity and dew point control, manual
   override, frost protection, dry run as default. Every decision is shown with its reason.
+- Two levels only: a global template and, per unit, the checkbox "Individual instead of the global
+  template". "Scenes" are now called temperature levels and live in the tab "Schedules" together
+  with the weekly schedules (also reachable from the device card, button "Weekly schedule").
+  Factory defaults: lower limit 40 %, upper limit 100 % (was 95 %), top point of the heating curve
+  −10 °C → 100 % (was 95 %); "2 K below the target → 100 %" stays.
+- Settings of pre-release builds are migrated once at start: existing unit entries become
+  "individual" (same behaviour as before), `regelSzenen`/`szenen` → `regelStufen`/`stufen`, the old
+  factory defaults 95 % → 100 % (own values are never overwritten), broker user name `User` → `user`.
+  Data points `regulation.schedule.scene`/`nextScene` → `level`/`nextLevel`, JSON key `scene` → `level`.
 - Sensor sources with fallback (BLE sensor at the module, any data point, sensor of the unit);
   external or slow room sensors are handled by a slow correction of the unit's setpoint.
 - Device cards with control state, weekly schedule dialog and details dialog; new VIS widget.
