@@ -1,6 +1,6 @@
 /*
  * Geraeteliste der Regelung als Karten: je Anlage eine eigene, abgesetzte Karte mit kraeftiger Kopfzeile
- * (Symbol, Name, "Individuell" oder "Folgt der Vorlage") - die Standardliste des Admins (accordion) zeichnet
+ * (Symbol, Name, "alles aus der Vorlage" oder "eigen: ...") - die Standardliste des Admins (accordion) zeichnet
  * alle Eintraege als einen zusammenhaengenden Block und laesst sich ueber das Schema nicht gestalten.
  *
  * Die Felder einer Zeile zeichnet weiter der Admin selbst (ConfigPanel aus @iobroker/json-config, genau wie
@@ -16,7 +16,14 @@ import { Box, Button, Collapse, IconButton, Tooltip, Typography } from '@mui/mat
 import { I18n } from '@iobroker/gui-components';
 import { ConfigGeneric, ConfigPanel, type ConfigGenericProps, type ConfigGenericState } from '@iobroker/json-config';
 
+import vorlageLib from '../../lib/regel/vorlage.js';
 import { t as text, type Schluessel } from './Geraete.texte';
+
+/** Vorlage oder eigener Wert je Teil - dieselbe Regel wie im Adapter (lib/regel/vorlage.js) */
+const vorlage = vorlageLib as {
+    eigeneTeile(zeile: unknown): string[];
+    zeileUmziehen(zeile: unknown, opt?: { nurMitHaken?: boolean }): { zeile: Record<string, unknown>; geaendert: boolean; verworfen: string[] };
+};
 
 type Zeile = Record<string, unknown>;
 interface Feld {
@@ -38,7 +45,7 @@ interface Zustand extends ConfigGenericState {
     frage: number;
     uebersicht: Uebersicht[] | null;
     /** eingelesene Datei, die auf die Entscheidung "ersetzen / hinzufuegen" wartet - oder ihr Fehler */
-    einfuhr: { datei: string; zeilen?: Zeile[]; ignoriert?: number; fehler?: boolean } | null;
+    einfuhr: { datei: string; zeilen?: Zeile[]; ignoriert?: number; fehler?: boolean; altHaken?: boolean } | null;
 }
 
 const kopie = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -104,11 +111,13 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
     datei = React.createRef<HTMLInputElement>();
 
     /** Angaben unter `custom` des Schemas (direkt am Eintrag werden sie ebenfalls verstanden) */
-    angaben(): { items: Feld[]; titleAttr: string } {
+    angaben(): { items: Feld[]; titleAttr: string; zusatzFelder: string[] } {
         const roh = (this.props.schema || {}) as unknown as Record<string, unknown>;
         const a = { ...roh, ...((roh.custom as Record<string, unknown>) || {}) };
         return {
             items: Array.isArray(a.items) ? (a.items as Feld[]) : [],
+            // Felder der Zeile ohne Feld in der Karte (z. B. `stufen`: bearbeitet im Reiter "Zeitplaene")
+            zusatzFelder: Array.isArray(a.zusatzFelder) ? (a.zusatzFelder as unknown[]).map(String) : [],
             titleAttr: typeof a.titleAttr === 'string' && a.titleAttr ? a.titleAttr : 'geraet',
         };
     }
@@ -320,6 +329,9 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                 .items.map(f => f.attr || '')
                 .filter(a => a && !a.startsWith('_')),
         );
+        for (const feld of this.angaben().zusatzFelder) {
+            namen.add(feld);
+        }
         // die Grenzen schreibt die Kennlinie in eigene Felder NEBEN ihrem Attribut (siehe Kennlinie.tsx)
         for (const feld of this.angaben().items) {
             if (typeof feld.name === 'string' && feld.name.includes('/Kennlinie')) {
@@ -372,10 +384,16 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                     throw new Error('keine Liste');
                 }
                 let ignoriert = 0;
-                const zeilen = roh.map(eintrag => {
-                    if (!eintrag || typeof eintrag !== 'object' || Array.isArray(eintrag)) {
+                let altHaken = false;
+                const zeilen = roh.map(roheZeile => {
+                    if (!roheZeile || typeof roheZeile !== 'object' || Array.isArray(roheZeile)) {
                         throw new Error('kein Eintrag');
                     }
+                    // Datei aus einer aelteren Version (Haken `individuell`): wie der Umzug beim Start des
+                    // Adapters - mit Haken bleiben die Werte, ohne Haken werden die ignorierten nicht wirksam
+                    const um = vorlage.zeileUmziehen(roheZeile, { nurMitHaken: true });
+                    altHaken = altHaken || um.verworfen.length > 0;
+                    const eintrag = um.zeile;
                     const zeile: Zeile = {};
                     for (const [feld, wert] of Object.entries(eintrag as Zeile)) {
                         if (bekannt.has(feld)) {
@@ -391,7 +409,7 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                     return zeile;
                 });
                 if (this.lebt) {
-                    this.setState({ einfuhr: { datei: datei.name, zeilen, ignoriert }, frage: -1 });
+                    this.setState({ einfuhr: { datei: datei.name, zeilen, ignoriert, altHaken }, frage: -1 });
                 }
             })
             .catch(fehler);
@@ -464,7 +482,7 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
         // Probelauf aller Anlagen (Instanz) - nur ein ausdrueckliches false schaltet ihn ab, wie im Adapter
         const probeAlle = (this.props.data as Record<string, unknown> | undefined)?.regelProbelauf !== false;
         const AKZENT = {
-            individuell: dunkel ? '#6cb6e6' : '#1f78b4',
+            eigen: dunkel ? '#6cb6e6' : '#1f78b4',
             vorlage: dunkel ? '#6fca83' : '#2e8540',
             leer: dunkel ? '#9a9a9a' : '#8a8a8a',
         };
@@ -522,7 +540,8 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                         border: '1.5px solid',
                         whiteSpace: 'nowrap',
                     },
-                    '& .fk-g-marke-art': { color: 'var(--fk-g-akzent)' },
+                    // die Liste der eigenen Teile kann lang werden: sie darf umbrechen
+                    '& .fk-g-marke-art': { color: 'var(--fk-g-akzent)', whiteSpace: 'normal', overflowWrap: 'anywhere' },
                     '& .fk-g-marke-neben': { color: 'text.secondary', fontWeight: 500 },
                     '& .fk-g-marke-fehler': { color: 'error.main' },
                     '& .fk-g-marke-probe': { color: dunkel ? '#f0b04a' : '#a86a00' },
@@ -576,17 +595,19 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                         const kennung = String(zeile[titleAttr] ?? '').trim();
                         const live = uebersicht?.find(u => u.id === kennung || u.name === kennung) || null;
                         const name = live?.name || kennung;
-                        const individuell = zeile.individuell === true;
+                        // was diese Anlage selbst festlegt (leer = alles aus der Vorlage)
+                        const eigen = kennung ? vorlage.eigeneTeile(zeile) : [];
                         const istOffen = offen === nr;
                         const hatFehler = Object.keys(this.state.fehler[nr] || {}).length > 0;
-                        const akzent = !kennung ? AKZENT.leer : individuell ? AKZENT.individuell : AKZENT.vorlage;
+                        const akzent = !kennung ? AKZENT.leer : eigen.length ? AKZENT.eigen : AKZENT.vorlage;
                         const inhaltId = `fk-g-inhalt-${nr}`;
                         return (
                             <div
                                 key={`${nr}_${this.state.lauf}`}
                                 className={`fk-g-karte${istOffen ? ' fk-offen' : ''}`}
                                 data-geraet={kennung}
-                                data-art={individuell ? 'individuell' : 'vorlage'}
+                                data-art={eigen.length ? 'eigen' : 'vorlage'}
+                                data-eigen={eigen.join(' ')}
                                 style={{ '--fk-g-akzent': akzent } as React.CSSProperties}
                             >
                                 <button
@@ -605,7 +626,9 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                                         <span className="fk-g-marken">
                                             {kennung ? (
                                                 <span className="fk-g-marke fk-g-marke-art">
-                                                    {individuell ? t('individuell') : t('vorlage')}
+                                                    {eigen.length
+                                                        ? t('eigen', eigen.map(teil => t(`teil_${teil}` as Schluessel)).join(', '))
+                                                        : t('vorlage')}
                                                 </span>
                                             ) : null}
                                             {kennung && (probeAlle || zeile.probelauf === true) ? (
@@ -783,9 +806,9 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                             <>
                                 <div>
                                     {t(
-                                        'importFrage',
-                                        einfuhr.datei,
-                                        einfuhr.zeilen.length,
+                                        ...((einfuhr.zeilen.length === 1
+                                            ? ['importFrageEine', einfuhr.datei]
+                                            : ['importFrage', einfuhr.datei, einfuhr.zeilen.length]) as [Schluessel, ...(string | number)[]]),
                                         einfuhr.zeilen
                                             .map(z => {
                                                 const k = String(z[titleAttr] ?? '').trim();
@@ -793,7 +816,10 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                                             })
                                             .join(', '),
                                     )}{' '}
-                                    {einfuhr.ignoriert ? `${t('importIgnoriert', einfuhr.ignoriert)} ` : ''}
+                                    {einfuhr.ignoriert
+                                        ? `${einfuhr.ignoriert === 1 ? t('importIgnoriertEin') : t('importIgnoriert', einfuhr.ignoriert)} `
+                                        : ''}
+                                    {einfuhr.altHaken ? `${t('importAltHaken')} ` : ''}
                                     {t('importHinweis')}
                                 </div>
                                 <div className="fk-g-einfuhr-knoepfe">
@@ -804,7 +830,11 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                                         className="fk-g-einfuhr-ersetzen"
                                         onClick={() => this.einfuegen(true)}
                                     >
-                                        {t('importErsetzen', zeilen.length)}
+                                        {zeilen.length === 0
+                                            ? t('importErsetzenLeer')
+                                            : zeilen.length === 1
+                                              ? t('importErsetzenEine')
+                                              : t('importErsetzen', zeilen.length)}
                                     </Button>
                                     <Button
                                         size="small"

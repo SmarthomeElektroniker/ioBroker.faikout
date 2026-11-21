@@ -538,6 +538,22 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         expect(ab.gruende.join(' ')).to.match(/Höchstleistung/);
     });
 
+    it('Rechenweg (`weg`): der Koordinator ergaenzt Hoechstleistung der Stufe, Stufe ohne Bedarfsregelung, "ruht" und "nicht faehig"', () => {
+        const frei = koordinator.koordinieren(eingang(), k, null, T);
+        expect(frei.weg).to.include({ art: 'normal', strategie: 'kennlinie', sollwert: 60 });
+        expect(frei.weg.deckel).to.equal(undefined);
+        const ab = koordinator.koordinieren(eingang({ szene: { ...szenen.get('absenken'), deckel: 40 }, fuehler: { aussen: m(5), raum: m(20.2), feuchte: m(50) } }), k, null, T);
+        expect(ab.weg.deckel).to.eql({ stufe: szenen.get('absenken').name, wert: 40 });
+        expect(ab.weg.sollwert).to.be.above(40); // der Wert der Regelung; gesendet wird der Deckel
+        const ohne = koordinator.koordinieren(eingang({ szene: { ...szenen.get('komfort'), bedarf: false } }), k, null, T);
+        expect(ohne.weg).to.eql({ art: 'stufeOhne', stufe: szenen.get('komfort').name, sollwert: 100 });
+        expect(koordinator.koordinieren(eingang({ faehig: 'no' }), k, null, T).weg).to.eql({ art: 'nichtFaehig' });
+        const auto = koordinator.koordinieren(eingang(), { ...k, betrieb: 'faikout' }, null, T);
+        expect(auto.weg).to.eql({ art: 'ruhtAuto' });
+        const aus = koordinator.koordinieren(eingang({ status: { power: false, mode: 'heat', target: 21, fan: 'auto', demand: 100 }, szene: null }), k, null, T);
+        expect(aus.weg).to.eql({ art: 'neutral' });
+    });
+
     it('Szene Aus: Geraet aus, Leistungsgrenze frei', () => {
         const r = koordinator.koordinieren(eingang({ szene: szenen.get('aus') }), k, null, T);
         expect(r.wunsch).to.eql({ power: false });
@@ -924,7 +940,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
 describe('Regelung: Einstellungen je Geraet', () => {
     const { konfigAusInstanz } = require('../lib/regel');
 
-    it('individuell: Kennlinie, Grenzen und Temperaturstufen je Geraet; leer faellt auf Vorlage und Werksvorgabe zurueck', () => {
+    it('eigene Werte je Teil: Kennlinie, Grenzen und Temperaturstufen je Geraet; leer faellt auf Vorlage und Werksvorgabe zurueck', () => {
         const e = konfigAusInstanz({
             regelUntergrenze: 45,
             regelKennlinieHeizen: '-10:90, 15:45',
@@ -939,8 +955,10 @@ describe('Regelung: Einstellungen je Geraet', () => {
                 { geraet: 'B', individuell: true, strategie: 'vortag', vortagZuschlag: 15 },
             ],
         });
-        expect(e.fuer('A', 'A').konfig.individuell).to.equal(true);
-        expect(e.fuer('C', 'C').konfig.individuell).to.equal(false);
+        // was eigen ist, sagt die Konfiguration je Teil - ohne Haken
+        expect(e.fuer('A', 'A').konfig.eigen).to.eql(['kennlinieHeizen', 'grenzen', 'stufen']);
+        expect(e.fuer('B', 'B').konfig.eigen).to.eql(['strategie']);
+        expect(e.fuer('C', 'C').konfig.eigen).to.eql([]);
         const a = e.fuer('A', 'A').konfig;
         expect(a.bedarf.heizen).to.eql([
             [-5, 80],
@@ -959,7 +977,7 @@ describe('Regelung: Einstellungen je Geraet', () => {
         expect(e.fuer('C', 'C').konfig.bedarf.obergrenze).to.equal(100);
     });
 
-    it('ohne Haken "individuell" gelten ALLE Vorlagenwerte; die Geraetefelder bleiben stehen, zaehlen aber nicht', () => {
+    it('kein Haken mehr: je Teil gilt der eigene Wert der Zeile, sonst die Vorlage; ein altes Feld `individuell` zaehlt nicht', () => {
         const zeile = {
             geraet: 'A',
             betrieb: 'faikout',
@@ -983,9 +1001,22 @@ describe('Regelung: Einstellungen je Geraet', () => {
             regelStufen: [{ name: 'Wach', soll: 20 }],
             regelFeuchteMassnahme: 'entfeuchten',
         };
-        for (const individuell of [false, undefined, 'true', 1]) {
-            const k = konfigAusInstanz({ ...c, regelGeraete: [{ ...zeile, individuell }] }).fuer('A', 'A').konfig;
-            expect(k.individuell, String(individuell)).to.equal(false);
+        // alle Teile eigen - gleich, was in einem uebrig gebliebenen `individuell` steht
+        for (const individuell of [true, false, undefined, 'true', 1]) {
+            const mit = konfigAusInstanz({ ...c, regelGeraete: [{ ...zeile, individuell }] }).fuer('A', 'A').konfig;
+            expect(mit.eigen, String(individuell)).to.eql(['kennlinieHeizen', 'kennlinieKuehlen', 'grenzen', 'stufen', 'strategie', 'feuchte']);
+            expect(mit.bedarf.strategie).to.equal('vortag');
+            expect([mit.bedarf.untergrenze, mit.bedarf.obergrenze]).to.eql([50, 85]);
+            expect(mit.bedarf.vortag).to.include({ bezug: 'mittel', zuschlag: 25, referenzW: 700 });
+            expect([...mit.szenen.keys()]).to.eql(['tag']);
+            expect(mit.feuchte.massnahme).to.equal('melden');
+            expect('individuell' in mit).to.equal(false);
+        }
+        // nur geraetebezogene Felder: alles aus der Vorlage
+        const nur = { geraet: 'A', betrieb: 'faikout', frostAb: 8, raumQuelle: 'dp', raumDp: 'x.0.raum' };
+        for (const leer of [{}, { strategie: '', kennlinieHeizen: [], kennlinieKuehlen: [], untergrenze: '', obergrenze: null, vortagBezug: '', stufen: [], feuchteMassnahme: ' ' }]) {
+            const k = konfigAusInstanz({ ...c, regelGeraete: [{ ...nur, ...leer }] }).fuer('A', 'A').konfig;
+            expect(k.eigen).to.eql([]);
             expect(k.bedarf.strategie).to.equal('kennlinie');
             expect(k.bedarf.heizen).to.eql([
                 [-10, 90],
@@ -1001,16 +1032,31 @@ describe('Regelung: Einstellungen je Geraet', () => {
             expect(k.frostAb).to.equal(8);
             expect(k.quellen.raum).to.eql({ wahl: 'dp', dp: 'x.0.raum' });
         }
-        const mit = konfigAusInstanz({ ...c, regelGeraete: [{ ...zeile, individuell: true }] }).fuer('A', 'A').konfig;
-        expect(mit.bedarf.strategie).to.equal('vortag');
-        expect([mit.bedarf.untergrenze, mit.bedarf.obergrenze]).to.eql([50, 85]);
-        expect(mit.bedarf.vortag).to.include({ bezug: 'mittel', zuschlag: 25, referenzW: 700 });
-        expect([...mit.szenen.keys()]).to.eql(['tag']);
-        expect(mit.feuchte.massnahme).to.equal('melden');
+        // je Teil einzeln: genau dieser Teil ist eigen, alles andere kommt aus der Vorlage
+        for (const [teil, felder, pruefe] of [
+            ['kennlinieHeizen', { kennlinieHeizen: zeile.kennlinieHeizen }, k => expect(k.bedarf.heizen[0]).to.eql([-5, 80])],
+            ['kennlinieKuehlen', { kennlinieKuehlen: zeile.kennlinieKuehlen }, k => expect(k.bedarf.kuehlen[0]).to.eql([20, 50])],
+            ['grenzen', { untergrenze: 50 }, k => expect([k.bedarf.untergrenze, k.bedarf.obergrenze]).to.eql([50, 100])],
+            ['grenzen', { obergrenze: 85 }, k => expect([k.bedarf.untergrenze, k.bedarf.obergrenze]).to.eql([45, 85])],
+            ['stufen', { stufen: zeile.stufen }, k => expect([...k.szenen.keys()]).to.eql(['tag'])],
+            ['strategie', { strategie: 'vortag' }, k => expect(k.bedarf.strategie).to.equal('vortag')],
+            ['strategie', { vortagZuschlag: 25 }, k => expect(k.bedarf.vortag.zuschlag).to.equal(25)],
+            ['feuchte', { feuchteMassnahme: 'melden' }, k => expect(k.feuchte.massnahme).to.equal('melden')],
+        ]) {
+            const k = konfigAusInstanz({ ...c, regelGeraete: [{ ...nur, ...felder }] }).fuer('A', 'A').konfig;
+            expect(k.eigen, JSON.stringify(felder)).to.eql([teil]);
+            pruefe(k);
+            if (teil !== 'stufen') {
+                expect([...k.szenen.keys()]).to.eql(['wach']);
+            }
+            if (teil !== 'kennlinieHeizen') {
+                expect(k.bedarf.heizen[0]).to.eql([-10, 90]);
+            }
+        }
         // die Zeile selbst wird nie veraendert (nichts geloescht)
         expect(zeile.stufen).to.eql([{ name: 'Tag', soll: 22 }]);
         // alte Feldnamen (szenen, regelSzenen) liest die Regelung nicht mehr - der Umzug beim Start setzt sie um
-        const alt = konfigAusInstanz({ regelSzenen: [{ name: 'Alt', soll: 20 }], regelGeraete: [{ geraet: 'A', individuell: true, szenen: [{ name: 'Alt2', soll: 20 }] }] });
+        const alt = konfigAusInstanz({ regelSzenen: [{ name: 'Alt', soll: 20 }], regelGeraete: [{ geraet: 'A', szenen: [{ name: 'Alt2', soll: 20 }] }] });
         expect([...alt.fuer('A', 'A').konfig.szenen.keys()]).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
     });
 

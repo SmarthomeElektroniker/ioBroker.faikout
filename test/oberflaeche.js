@@ -204,6 +204,22 @@ describe('Oberflaeche: Arbeitspunkt fuer die ziehbare Kennlinie (regelArbeitspun
         expect(normal.etikett.heizen.text).to.equal(o.TEXTE.sendet.de.replace('{p}', '100'));
     });
 
+    it('Rechenweg und Einstellungen der Raumkorrektur: aus dem letzten Durchlauf der Regelung bzw. der gespeicherten Konfiguration', async () => {
+        const a = adapter(werte, { regelProzentProK: 15, regelTotband: 0.5 });
+        // solange die Regelung fuer das Geraet nicht gerechnet hat: kein Weg, aber die Einstellungen
+        const ohne = (await frage(a, 'regelArbeitspunkt', { geraet: 'wz' })).antwort;
+        expect(ohne.weg).to.equal(null);
+        expect(ohne.raumkorrektur).to.eql({ prozentProK: 15, totband: 0.5 });
+        const weg = { art: 'normal', strategie: 'kennlinie', basis: 52, korrektur: -7, abweichung: -1, sollwert: 45, aus: false, probelauf: true, zeit: 1 };
+        a.regelung = { geraete: new Map([['wz', { weg }]]) };
+        const mit = (await frage(a, 'regelArbeitspunkt', { geraet: 'wz' })).antwort;
+        expect(mit.weg).to.eql(weg);
+        expect(mit.weg).to.not.equal(weg); // Kopie - die Seite kann den Stand der Regelung nicht veraendern
+        // ohne gespeicherte Werte: die Vorgaben der Regelung
+        const vorgabe = (await frage(adapter(werte), 'regelArbeitspunkt', { geraet: 'wz' })).antwort.raumkorrektur;
+        expect(vorgabe).to.eql({ prozentProK: 10, totband: 0.3 });
+    });
+
     it('ohne oder mit unbekanntem Geraet: kein Arbeitspunkt, kein Absturz', async () => {
         for (const geraet of ['', undefined, 'gibtsnicht']) {
             const { erledigt, antwort } = await frage(adapter(werte), 'regelArbeitspunkt', { geraet });
@@ -286,12 +302,15 @@ describe('Oberflaeche: Nachrichten der Einstellungsseite', () => {
         expect(gleich.error).to.equal(o.TEXTE.kopieFehlt.de);
     });
 
-    it('Temperaturstufen je Geraet: mit Haken "individuell" die der Zeile, sonst die Vorlage; szenenVon der Regelung hat Vorrang', () => {
+    it('Temperaturstufen je Geraet: die eigenen der Zeile, wenn sie welche hat, sonst die Vorlage; szenenVon der Regelung hat Vorrang', () => {
         const stufen = [{ name: 'Tag', soll: 22 }];
-        const ohne = adapter({}, { regelStufen: [{ name: 'Wach', soll: 20 }], regelGeraete: [{ geraet: 'Wohnzimmer AC', stufen }] });
+        const ohne = adapter({}, { regelStufen: [{ name: 'Wach', soll: 20 }], regelGeraete: [{ geraet: 'Wohnzimmer AC', stufen: [] }] });
         expect([...o.szenen(ohne, 'wz').keys()]).to.eql(['wach']);
         expect([...o.szenen(ohne, '').keys()]).to.eql(['wach']);
-        const a = adapter({}, { regelGeraete: [{ geraet: 'Wohnzimmer AC', individuell: true, stufen }] });
+        // ein stehengebliebenes `individuell: false` zaehlt nicht mehr - eigene Stufen gelten
+        const alt = adapter({}, { regelStufen: [{ name: 'Wach', soll: 20 }], regelGeraete: [{ geraet: 'Wohnzimmer AC', individuell: false, stufen }] });
+        expect([...o.szenen(alt, 'wz').keys()]).to.eql(['tag']);
+        const a = adapter({}, { regelGeraete: [{ geraet: 'Wohnzimmer AC', stufen }] });
         expect([...o.szenen(a, 'wz').keys()]).to.eql(['tag']);
         expect([...o.szenen(a, 'og').keys()]).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
         a.regelung = { szenenVon: id => new Map(id === 'og' ? [['x', { id: 'x' }]] : []) };
@@ -935,23 +954,46 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(r.regelGeraete).to.include({ type: 'custom', url: 'custom/customComponents.js', name: 'ConfigCustomFaikoutSet/Components/Geraete', i18n: true, guiApi: 2, label: 'labelRegelGeraete' });
         expect(r.regelGeraete.items).to.equal(undefined);
         const attrs = r.regelGeraete.custom.items.map(i => i.attr);
-        expect(attrs).to.include.members(['geraet', 'betrieb', 'individuell', 'strategie', 'kennlinieHeizen', 'kennlinieKuehlen', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'stufen', 'aussenQuelle', 'aussenDp', 'raumQuelle', 'raumDp', 'feuchteQuelle', 'feuchteDp', 'feuchteMassnahme', 'frostAb']);
+        expect(attrs).to.include.members(['geraet', 'betrieb', 'strategie', 'kennlinieHeizen', 'kennlinieKuehlen', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'aussenQuelle', 'aussenDp', 'raumQuelle', 'raumDp', 'feuchteQuelle', 'feuchteDp', 'feuchteMassnahme', 'frostAb']);
         expect(attrs).not.to.include('eigeneKennlinie');
         // die Grenzen zieht man in der Kennlinie, die Temperaturstufen sind eine Komponente - keine Zahlenfelder, keine Tabelle
         expect(attrs).not.to.include.members(['untergrenze', 'obergrenze', 'szenen']);
         const z = Object.fromEntries(r.regelGeraete.custom.items.map(i => [i.attr, i]));
-        expect(z.individuell).to.include({ type: 'checkbox', label: 'labelIndividuell', default: false });
-        // nur mit dem Haken sichtbar: alles, was sonst aus der Vorlage kommt; immer sichtbar: Fuehler und Frostschutz
-        for (const a of ['strategie', 'kennlinieHeizen', 'kennlinieKuehlen', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'feuchteMassnahme', 'stufen', '_hStufen']) {
-            expect(z[a].hidden, a).to.match(/^!data\.individuell/);
+        // Runde 2 (21.11.2026): kein Haken "individuell" mehr - eigen entsteht beim Aendern, je Teil. Nichts in der
+        // Karte haengt noch an dem Feld; Hinweiskaesten und der Block "Eigene Temperaturstufen" sind weg.
+        expect(attrs).not.to.include.members(['individuell', '_tFolgt', '_tFolgtStufen', '_tIndividuell', 'stufen', '_hStufen', '_tStufen']);
+        expect(JSON.stringify(konfig)).to.not.contain('individuell');
+        // die Reihenfolge der Karte: wer regelt - Kennlinie - Sensoren - Feuchte - Fuer Fortgeschrittene
+        const kopf = attrs.filter(a => /^_h/.test(a) || ['geraet', 'kennlinieHeizen', 'aussenQuelle', 'feuchteMassnahme', 'strategie', 'frostAb', 'probelauf'].includes(a));
+        expect(kopf).to.eql(['geraet', '_hKann', '_hBedarf', 'kennlinieHeizen', '_hFuehler', 'aussenQuelle', '_hFeuchte', 'feuchteMassnahme', '_hFort', 'strategie', 'frostAb', 'probelauf']);
+        expect([z._hFuehler.text, z._hFeuchte.text, z._hFort.text]).to.eql(['headerGeraetFuehler', 'headerGeraetFeuchte', 'headerGeraetFort']);
+        // immer sichtbar: Strategie und Feuchte-Massnahme mit "Wie Vorlage" als Vorgabe (leer = es gilt die Vorlage)
+        for (const a of ['strategie', 'feuchteMassnahme', 'vortagBezug']) {
+            expect(z[a], a).to.include({ type: 'select', default: '' });
+            expect(z[a].options[0], a).to.eql({ label: 'optWieVorgabe', value: '' });
         }
+        expect(z.strategie.hidden).to.equal(undefined);
+        expect(z.feuchteMassnahme.hidden).to.equal(undefined);
+        // Kennlinien bzw. Vortag-Werte folgen der GELTENDEN Strategie: der eigenen, sonst der der Vorlage
+        const VORTAG = "(data.strategie || globalData.regelStrategie) === 'vortag'";
+        for (const a of ['kennlinieHeizen', 'kennlinieKuehlen']) {
+            expect(z[a].hidden, a).to.equal(VORTAG);
+        }
+        for (const a of ['_tVortag', '_rechenweg', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW']) {
+            expect(z[a].hidden, a).to.equal("(data.strategie || globalData.regelStrategie) !== 'vortag'");
+        }
+        expect(z._tRuht.hidden).to.equal(`data.betrieb !== 'faikout' || ${VORTAG}`);
         for (const a of ['aussenQuelle', 'raumQuelle', 'feuchteQuelle', 'frostAb', 'betrieb']) {
-            expect(String(z[a].hidden || ''), a).to.not.contain('individuell');
+            expect(z[a].hidden, a).to.equal(undefined);
         }
-        // was gilt, steht da
-        expect(z._tFolgt).to.include({ text: 'textFolgtVorlage', hidden: 'data.individuell === true' });
-        expect(z._tIndividuell).to.include({ text: 'textIstIndividuell', hidden: 'data.individuell !== true' });
-        expect(z.stufen).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Stufen' });
+        // die Temperaturstufen der Anlage stehen im Reiter Zeitplaene; Export/Import der Geraeteliste kennt das Feld trotzdem
+        expect(r.regelGeraete.custom.zusatzFelder).to.eql(['stufen']);
+        // "So entsteht der Wert gerade" bei Strategie Vortag (bei Kennlinie steht es am Bild) und der Satz bei der Strategie
+        expect(z._rechenweg).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Rechenweg' });
+        expect(z._rechenweg.custom).to.eql({ art: 'weg' });
+        expect(Object.keys(r).slice(Object.keys(r).indexOf('regelStrategie'), Object.keys(r).indexOf('regelStrategie') + 3)).to.eql(['regelStrategie', 'regelAktiv', '_raumSatz']);
+        expect(r._raumSatz).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Rechenweg' });
+        expect(r._raumSatz.custom).to.eql({ art: 'satz' });
         expect(JSON.stringify(konfig)).not.to.contain('regelQuellen');
         // ganz oben nur der Hinweis "Adapter laeuft nicht" (sichtbar bei gestoppter Instanz), dann - NUR bei
         // eingeschaltetem Probelauf - der farbige Kasten, die Erklaergrafik, die globale Vorlage, dann die Geraete
@@ -974,7 +1016,9 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(admin('de').textSchritt3).to.not.contain('Probelauf');
         // EIN Schalter: der Probelauf der Instanz. Je Anlage nur ein bewusster Haken in der Geraetekarte, ganz unten
         const zeile = r.regelGeraete.custom.items;
-        expect(zeile.slice(-3).map(i => i.attr)).to.eql(['_hFort', 'probelauf', '_tProbeInstanz']);
+        expect(zeile.slice(-2).map(i => i.attr)).to.eql(['probelauf', '_tProbeInstanz']);
+        // unter "Fuer Fortgeschrittene" stehen davor die eigene Strategie der Anlage (mit Vortag-Werten) und der Frostschutz
+        expect(zeile.slice(zeile.findIndex(i => i.attr === '_hFort')).map(i => i.attr)).to.eql(['_hFort', 'strategie', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'frostAb', 'probelauf', '_tProbeInstanz']);
         expect(zeile.find(i => i.attr === 'probelauf')).to.include({ type: 'checkbox', label: 'labelGeraetProbelauf', help: 'helpGeraetProbelauf' }).and.to.not.have.property('default');
         expect(zeile.find(i => i.attr === '_tProbeInstanz')).to.include({ type: 'staticText', hidden: 'globalData.regelProbelauf === false' });
         expect(admin('de').labelGeraetProbelauf).to.equal('Nur diese Anlage im Probelauf: rechnen und anzeigen, nichts senden');
@@ -1021,8 +1065,11 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
             }
         }
         // Feinabstimmung und "Fruehestens alle ... Minuten" erklaeren sich
-        expect(r._pFein.custom.items.regelTotband.help).to.equal('helpTotband');
-        expect(r._pFein.custom.items.regelProzentProK.help).to.equal('helpProzentProK');
+        // Korrekturstaerke und Totband sind EIN Bild zum Ziehen (Komponente Raumkorrektur) statt zweier Zahlenfelder
+        expect(r._pFein.custom.items.regelTotband).to.equal(undefined);
+        expect(r._pFein.custom.items.regelProzentProK).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Raumkorrektur', default: 10 });
+        expect(r._pFein.custom.items.regelProzentProK.custom).to.eql({ attrTotband: 'regelTotband' });
+        expect(Object.keys(r._pFein.custom.items).slice(0, 3)).to.eql(['regelProbelauf', 'regelProzentProK', 'regelBand']);
         expect(r._pFein.custom.items.regelBand.help).to.equal('helpBand');
         expect(g.find(i => i.attr === 'korrAbstandMin').help).to.equal('helpKorrAbstand');
         // "Pruefen" grau ohne Adresse: der Grund steht daneben
@@ -1051,12 +1098,17 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         // die Erklaergrafik "So arbeitet die Regelung" steht im Reiter Regelung (Nutzerwunsch 21.11.2026); hier bleibt, was den Plan betrifft
         expect(namen).to.eql(['_nichtAktiv', '_tZeitplaene', '_hPlaene', 'regelPlanVorlage', '_hStufen', '_tStufen', 'regelStufen', '_pPlanFein']);
         expect(admin('de').textZeitplaene).to.contain('Reiter „Regelung“');
-        // Geraet ohne Haken "Individuell", aber mit eigenen Stufen: Warnung, dass sein Wochenplan sie nicht mehr findet
-        const zeile = Object.fromEntries(konfig.items.tabRegelung.items.regelGeraete.custom.items.map(x => [x.attr, x]));
-        expect(zeile._tFolgtStufen).to.include({ type: 'staticText', text: 'textFolgtEigeneStufen' });
-        expect(zeile._tFolgtStufen.hidden).to.equal('data.individuell === true || !(Array.isArray(data.stufen) && data.stufen.length)');
+        // die Stufen je Anlage bearbeitet der Reiter Zeitplaene selbst (Komponente Zeitplaene). Hat die Anlage noch
+        // keine Zeile in der Geraeteliste, entsteht eine mit GENAU den Vorgaben, die "Anlage hinzufuegen" eintraegt -
+        // sonst waere nach dem Speichern "Speichern" schon beim Oeffnen der Geraetekarte wieder aktiv
+        const karte = konfig.items.tabRegelung.items.regelGeraete.custom.items;
+        const vorgaben = Object.fromEntries(karte.filter(x => 'default' in x).map(x => [x.attr, x.default]));
+        expect(zp.items.regelPlanVorlage.custom).to.eql({ neueZeile: vorgaben });
+        expect(vorgaben).to.include({ betrieb: 'adapter', fuehlerWeg: 'sollwert', strategie: '', feuchteMassnahme: '', frostAb: 0 });
+        expect(Object.keys(vorgaben).some(k => k.startsWith('_'))).to.equal(false);
         for (const l of o.SPRACHEN) {
-            expect(admin(l).textFolgtEigeneStufen, l).to.be.a('string').and.to.have.length.above(40);
+            expect(admin(l).textStufenVorlage, l).to.be.a('string').and.to.have.length.above(20);
+            expect('textFolgtEigeneStufen' in admin(l), l).to.equal(false);
         }
         const k = name => ({ type: 'custom', url: 'custom/customComponents.js', name: `ConfigCustomFaikoutSet/Components/${name}`, i18n: true, xs: 12, xl: 12 });
         expect(konfig.items.tabRegelung.items._erklaerung).to.include(k('Erklaerung'));
@@ -1094,6 +1146,7 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
             regelUntergrenze: 'Kennlinie', regelObergrenze: 'Kennlinie',
             regelFeuchteDtpEin: 'Feuchte', regelFeuchteDtpAus: 'Feuchte', regelFeuchteRhEin: 'Feuchte', regelFeuchteRhAus: 'Feuchte',
             regelUmzugStand: 'Adapter', externClientIdStandard: 'Adapter', regelQuellen: 'Altbestand',
+            regelTotband: 'Raumkorrektur',
         };
         expect(Object.keys(io.native).filter(k => !felder.has(k) && !OHNE_FELD[k])).to.eql([]);
         expect(Object.keys(OHNE_FELD).filter(k => felder.has(k))).to.eql([]);

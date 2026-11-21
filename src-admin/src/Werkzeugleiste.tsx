@@ -40,6 +40,8 @@ export interface WerkzeugleisteProps {
     zurueckMeldung?: string;
     /** true: die Leiste gehoert zur globalen Vorlage (Zuruecksetzen = Werksvorgabe, mit Abfrage) */
     istVorlage: boolean;
+    /** Geraet: es gibt nichts Eigenes - "Auf die Vorlage zuruecksetzen" ist dann ausgegraut */
+    nichtsEigen?: boolean;
     /** Herkunft fuer die Kopie, z. B. der Name des Geraets */
     quelle: string;
     sprache: string;
@@ -179,7 +181,10 @@ export function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
         : anderes
           ? t('tipAndere', t(`art_${anderes.art}`))
           : t('tipLeer');
-    const tipZurueck = props.zuruecksetzenText || t(props.istVorlage ? 'tipWerk' : 'tipVorlage');
+    const tipZurueck =
+        !props.istVorlage && props.nichtsEigen === true
+            ? t('tipNichtsEigen')
+            : props.zuruecksetzenText || t(props.istVorlage ? 'tipWerk' : 'tipVorlage');
 
     return (
         <Box
@@ -240,24 +245,29 @@ export function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
             <Tooltip
                 disableInteractive
                 title={tipZurueck}>
-                <Button
-                    className="fk-wz-knopf fk-wz-zurueck"
-                    size="small"
-                    color="inherit"
-                    startIcon={<ZurueckIcon />}
-                    aria-expanded={props.istVorlage ? frage : undefined}
-                    onClick={() => {
-                        if (props.istVorlage) {
-                            zeigen(null);
-                            setFrage(f => !f);
-                        } else {
-                            setzeZurueck();
-                        }
-                    }}
-                >
-                    {/* Verb + Objekt: "Auf die Werksvorgabe zuruecksetzen" statt nur "Werksvorgabe" */}
-                    {t(props.istVorlage ? 'tipWerk' : 'vorlage')}
-                </Button>
+                {/* ein gesperrter Knopf meldet keine Mausereignisse - der Hinweis haengt deshalb an der Huelle */}
+                <span>
+                    <Button
+                        className="fk-wz-knopf fk-wz-zurueck"
+                        size="small"
+                        color="inherit"
+                        startIcon={<ZurueckIcon />}
+                        disabled={!props.istVorlage && props.nichtsEigen === true}
+                        aria-expanded={props.istVorlage ? frage : undefined}
+                        onClick={() => {
+                            if (props.istVorlage) {
+                                zeigen(null);
+                                setFrage(f => !f);
+                            } else {
+                                setzeZurueck();
+                            }
+                        }}
+                    >
+                        {/* Verb + Objekt: "Auf die Werksvorgabe zuruecksetzen" statt nur "Werksvorgabe" */}
+                        {/* Geraet: Kennlinie und Stufen fallen auf die Vorlage zurueck; ein Wochenplan wird kopiert */}
+                        {t(props.istVorlage ? 'tipWerk' : props.art === 'wochenplan' ? 'vorlage' : 'zurVorlage')}
+                    </Button>
+                </span>
             </Tooltip>
             {frage ? (
                 <div

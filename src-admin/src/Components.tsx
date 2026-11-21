@@ -5,5 +5,7 @@ import Erklaerung from './Erklaerung';
 import Zeitplaene from './Zeitplaene';
 import Geraete from './Geraete';
 import Abschnitt from './Abschnitt';
+import Rechenweg from './Rechenweg';
+import Raumkorrektur from './Raumkorrektur';
 
-export default { KennlinieHeizen, KennlinieKuehlen, Stufen, Feuchte, Erklaerung, Zeitplaene, Geraete, Abschnitt };
+export default { KennlinieHeizen, KennlinieKuehlen, Stufen, Feuchte, Erklaerung, Zeitplaene, Geraete, Abschnitt, Rechenweg, Raumkorrektur };

@@ -1310,7 +1310,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             it('zeitplaeneListe: Stufen (Vorlage und je Geraet) mit Farben, je Geraet Stand und Wochenbalken', async () => {
                 const montagMittag = new Date(2026, 10, 23, 12, 0).getTime();
                 const { a } = await mitRegelung({ 'regulation.schedule.weekJson': werk });
-                a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', individuell: true, stufen: [] }];
+                a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', stufen: [] }];
                 const r = await zeitplaene.liste(a, { jetzt: montagMittag });
                 expect(Object.keys(r)).to.eql(['sprache', 'stufen', 'geraete', 'werksplan']);
                 expect(r.sprache).to.equal('de');
@@ -1330,7 +1330,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 expect(g).to.include({
                     id: ID,
                     name: 'Wohnzimmer AC',
-                    individuell: true,
+                    stufenQuelle: 'vorlage',
                     planAktiv: true,
                     planFehlt: false,
                     planFehler: '',
@@ -1359,7 +1359,9 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 // ohne Plan: planFehlt, leere Tage (immer Arrays), kein Stand
                 const { a: ohne } = await mitRegelung();
                 const o1 = (await frage(ohne, 'zeitplaeneListe', {})).geraete[0];
-                expect(o1).to.include({ planFehlt: true, naechster: null, naechsteStufe: '', stufe: '', individuell: false });
+                expect(o1).to.include({ planFehlt: true, naechster: null, naechsteStufe: '', stufe: '', stufenQuelle: 'vorlage' });
+                // den frueheren Haken gibt es in keiner Antwort mehr
+                expect('individuell' in o1).to.equal(false);
                 expect(o1.woche).to.eql([[], [], [], [], [], [], []]);
                 // ohne Geraete: leere Liste, keine Ausnahme
                 ohne.geraete = new Map();
@@ -1377,7 +1379,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
 
             it('regelUebersicht: Kurzstand und Live-Werte je Geraet', async () => {
                 const { a } = await mitRegelung({ 'regulation.humidity.dewPoint': 10.4 });
-                a.config.regelGeraete = [{ geraet: ID, individuell: true, betrieb: 'faikout' }];
+                a.config.regelGeraete = [{ geraet: ID, betrieb: 'faikout', untergrenze: 45, stufen: [{ name: 'Tag', soll: 22 }], strategie: '' }];
                 const r = await frage(a, 'regelUebersicht', {});
                 expect(Object.keys(r)).to.eql(['sprache', 'geraete']);
                 expect(r.geraete).to.eql([
@@ -1386,7 +1388,8 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                         name: 'Wohnzimmer AC',
                         online: true,
                         eintrag: true,
-                        individuell: true,
+                        // was die Anlage selbst festlegt (fuer die Marken der Geraetekarte)
+                        eigen: ['grenzen', 'stufen'],
                         betrieb: 'faikout',
                         kuehlt: false,
                         heizt: true,
@@ -1399,7 +1402,8 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 a.config.regelGeraete = [];
                 a.werte.delete(`${ID}.regulation.sensors.room`);
                 const ohne = (await frage(a, 'regelUebersicht', {})).geraete[0];
-                expect(ohne).to.include({ eintrag: false, individuell: false, betrieb: 'adapter', raum: null });
+                expect(ohne).to.include({ eintrag: false, betrieb: 'adapter', raum: null });
+                expect(ohne.eigen).to.eql([]);
             });
 
             describe('Temperaturstufen: EINE Quelle fuer Reiter, Editor und Geraetekarte', () => {
@@ -1427,7 +1431,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 it('Geraet folgt der Vorlage: Editor und Reiter zeigen genau die Stufen der Vorlage (IDs, Namen, Farben, Reihenfolge)', async () => {
                     const { a } = await mitRegelung({ 'regulation.schedule.weekJson': werk });
                     a.config.regelStufen = FUENF;
-                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', individuell: false, stufen: TAG_NACHT }]; // ohne Haken zaehlen sie nicht
+                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', stufen: [] }]; // keine eigene Liste
                     const liste = await frage(a, 'zeitplaeneListe', {});
                     const { info } = await editor(a, ID);
                     expect(info.types.map(t => t.label)).to.eql(['Komfort', 'Absenken', 'Abwesend', 'Aus', 'Party']);
@@ -1435,27 +1439,30 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                     expect(ausEditor(info)).to.eql(ausListe(liste.stufen.vorlage));
                     expect(info.stufenQuelle).to.equal('vorlage');
                     expect(info.stufenAus).to.equal('Temperaturstufen aus: globale Vorlage');
-                    expect(liste.geraete[0]).to.include({ stufenQuelle: 'vorlage', individuell: false });
+                    expect(liste.geraete[0]).to.include({ stufenQuelle: 'vorlage' });
                     expect(info.stufenNeu).to.equal('');
                     expect(info.types.some(t => t.neu)).to.equal(false);
                     // die Vorlage selbst: dieselbe Liste
                     expect(ausEditor((await editor(a, 'vorlage')).info)).to.eql(ausListe(liste.stufen.vorlage));
                 });
 
-                it('individuelles Geraet: Editor und Reiter zeigen seine eigenen Stufen und sagen das', async () => {
+                it('Geraet mit eigenen Stufen: Editor und Reiter zeigen sie und sagen das - ohne Haken, die eigene Liste genuegt', async () => {
                     const { a } = await mitRegelung();
                     a.config.regelStufen = FUENF;
-                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', individuell: true, stufen: TAG_NACHT }];
+                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', stufen: TAG_NACHT }];
                     const liste = await frage(a, 'zeitplaeneListe', {});
                     const { info } = await editor(a, ID);
                     expect(info.types.map(t => t.label)).to.eql(['Tag', 'Nacht']);
                     expect(ausEditor(info)).to.eql(ausListe(liste.stufen[ID]));
                     expect(info.stufenQuelle).to.equal('eigen');
-                    expect(info.stufenAus).to.equal('Temperaturstufen aus: eigene Stufen dieser Anlage (individuell)');
-                    expect(liste.geraete[0]).to.include({ stufenQuelle: 'eigen', individuell: true });
+                    expect(info.stufenAus).to.equal('Temperaturstufen aus: eigene Stufen dieser Anlage');
+                    expect(liste.geraete[0]).to.include({ stufenQuelle: 'eigen' });
+                    // ein stehengebliebenes `individuell: false` aendert daran nichts mehr
+                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', individuell: false, stufen: TAG_NACHT }];
+                    expect((await editor(a, ID)).info.stufenQuelle).to.equal('eigen');
                     expect(liste.stufen.vorlage.map(e => e.name)).to.eql(['Komfort', 'Absenken', 'Abwesend', 'Aus', 'Party']);
-                    // Haken gesetzt, aber keine eigene Liste: es gelten die Stufen der Vorlage - und so steht es da
-                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', individuell: true, stufen: [] }];
+                    // keine eigene Liste (z. B. nach "Auf die Vorlage zuruecksetzen"): es gelten die Stufen der Vorlage - und so steht es da
+                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', stufen: [] }];
                     const leer = await editor(a, ID);
                     expect(leer.info.types.map(t => t.type)).to.eql(['komfort', 'absenken', 'abwesend', 'aus', 'stufe_5']);
                     expect(leer.info.stufenQuelle).to.equal('vorlage');
@@ -1489,14 +1496,22 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                     expect(liste.geraete[0]).to.include({ planFehlt: false, stufeName: liste.geraete[0].stufe === 'komfort' ? 'Wohlfühlen' : 'Sparen' });
                     // ohne Formular (Geraetekarte): der gespeicherte Stand
                     expect((await editor(a, ID)).info.types.map(t => t.label)).to.eql(['Komfort', 'Absenken', 'Abwesend', 'Aus']);
-                    // Formular: Geraet eben erst auf "individuell" gestellt, eigene Stufen noch ungespeichert
-                    const eigen = { regelStufen: [], regelGeraete: [{ geraet: ID, individuell: true, stufen: TAG_NACHT }] };
+                    // Formular: im Reiter Zeitplaene eben eine Stufe der Anlage geaendert - eigene Stufen, noch ungespeichert
+                    const eigen = { regelStufen: [], regelGeraete: [{ geraet: ID, stufen: TAG_NACHT }] };
                     const e = await editor(a, ID, eigen);
                     expect(e.info.types.map(t => t.label)).to.eql(['Tag', 'Nacht']);
                     expect(e.info.stufenQuelle).to.equal('eigen');
                     expect(e.info.types.every(t => t.neu)).to.equal(true);
                     expect(e.info.stufenNeu).to.contain('Tag, Nacht');
-                    expect((await frage(a, 'zeitplaeneListe', { formular: eigen })).geraete[0]).to.include({ stufenQuelle: 'eigen', individuell: true });
+                    expect((await frage(a, 'zeitplaeneListe', { formular: eigen })).geraete[0]).to.include({ stufenQuelle: 'eigen' });
+                    // ... und "Auf die Vorlage zuruecksetzen" (leere Liste im Formular) fuehrt sofort zurueck, auch wenn eigene gespeichert sind
+                    a.config.regelGeraete = [{ geraet: ID, stufen: TAG_NACHT }];
+                    const zurueck = { regelStufen: [], regelGeraete: [{ geraet: ID, stufen: [] }] };
+                    const z = await frage(a, 'zeitplaeneListe', { formular: zurueck });
+                    expect(z.geraete[0]).to.include({ stufenQuelle: 'vorlage' });
+                    expect(z.stufen[ID].map(e => e.id)).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
+                    expect((await editor(a, ID, zurueck)).info.stufenQuelle).to.equal('vorlage');
+                    a.config.regelGeraete = [];
                     // leere Liste im Formular = Werksstufen, auch wenn andere gespeichert sind
                     a.config.regelStufen = FUENF;
                     const werkF = { regelStufen: [], regelGeraete: [] };

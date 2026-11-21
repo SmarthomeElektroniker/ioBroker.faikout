@@ -129,12 +129,12 @@ function alleTexte() {
 describe('Sprachen: Komponententexte src-admin/src/*.texte.ts', () => {
     const dateien = fs.readdirSync(path.join(WURZEL, 'src-admin', 'src')).filter(d => d.endsWith('.texte.ts'));
 
-    it('alle acht Komponenten werden gefunden', () => {
-        expect(dateien.sort()).to.eql(['Abschnitt.texte.ts', 'Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Geraete.texte.ts', 'Kennlinie.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
+    it('alle neun Texttabellen der Komponenten werden gefunden', () => {
+        expect(dateien.sort()).to.eql(['Abschnitt.texte.ts', 'Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Geraete.texte.ts', 'Kennlinie.texte.ts', 'Rechenweg.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
     });
 
     // Woerter, die in einer Sprache wirklich wie im Englischen heissen ("Datei:schluessel:sprache")
-    const GLEICH = new Set(['Stufen.texte.ts:komfort:nl', 'Stufen.texte.ts:komfort:it', 'Stufen.texte.ts:betriebsart:fr', 'Geraete.texte.ts:individuell:pt', 'Geraete.texte.ts:individuell:es']);
+    const GLEICH = new Set(['Stufen.texte.ts:komfort:nl', 'Stufen.texte.ts:komfort:it', 'Stufen.texte.ts:betriebsart:fr']);
 
     for (const datei of dateien) {
         it(`${datei}: jeder Schluessel in elf Sprachen, nicht leer, gleiche Platzhalter, uebersetzt`, () => {
@@ -368,12 +368,12 @@ describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englisch
         const TECHNIK = /^((ha|no)\.\w+|livestatus|reporting|Faikout|Firmware \/ hardware|IP|max\.|h|\d+|%s: %s|⌀ 30 min)$/;
         // Woerter, die in der Sprache wirklich so heissen ("sprache:Text")
         const GLEICH = new Set([
-            ...['Auto', 'Individual', 'Total', 'Turbo'].map(w => `es:${w}`),
+            ...['Auto', 'Total', 'Turbo'].map(w => `es:${w}`),
             ...['Absence', 'Auto', 'Faikout auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'Turbo', 'active'].map(w => `fr:${w}`),
             ...['Auto', 'Comfort', 'Faikout auto', 'Turbo'].map(w => `it:${w}`),
             ...['ioBroker-Adapter regelt', 'Sensoren', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
             ...['Auto', 'Faikout-Auto', 'Komfort', 'Port', 'Punkt %s', 'Status', 'Turbo'].map(w => `pl:${w}`),
-            ...['Auto', 'Compressor', 'Individual', 'Total', 'Turbo'].map(w => `pt:${w}`),
+            ...['Auto', 'Compressor', 'Total', 'Turbo'].map(w => `pt:${w}`),
         ]);
         const texte = alleTexte();
         const fehler = [];

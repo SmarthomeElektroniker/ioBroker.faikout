@@ -1784,12 +1784,18 @@ class Faikout extends utils.Adapter {
      *   - `regelSzenen` -> `regelStufen`, je Geraet `szenen` -> `stufen` ("Szenen" heissen Temperaturstufen).
      *   - fehlendes `regelProbelauf` -> true: neue Instanzen starten seit 1.0.0 mit Probelauf AUS (io-package);
      *     ein gespeicherter Wert wird nie geaendert, ein fehlender (Bestand) galt als AN und bleibt es.
-     *   - je Geraet fehlendes `fuehlerWeg` -> 'sollwert' (die Vorgabe, mit der die Regelung ohnehin rechnet).
+     *   - je Geraet fehlendes `fuehlerWeg` -> 'sollwert' (die Vorgabe, mit der die Regelung ohnehin rechnet);
+     *     ebenso jedes andere fehlende Feld mit Vorgabe (lib/regel/vorlage.js ZEILEN_VORGABEN) - sonst traegt
+     *     die Einstellungsseite es beim Oeffnen der Geraetekarte ein und "Speichern" ist ohne Aenderung aktiv.
      *   - einmalig (Merker `regelUmzugStand`): vorhandene Geraeteeintraege bekommen `individuell: true`
      *     (ihr Verhalten bleibt gleich); die Obergrenze 95 und die Heizkennlinie der alten Werksvorgabe
      *     werden auf die neue Werksvorgabe (100 bzw. -10 °C: 100 %) gehoben - nur bei exakter
      *     Uebereinstimmung, eigene Werte bleiben. Der Merker verhindert, dass ein spaeter ohne Haken
      *     angelegter Eintrag oder eine bewusst wieder auf 95 gestellte Obergrenze erneut angefasst wird.
+     *   - einmalig (Merker-Stand 3): der Haken `individuell` entfaellt. Je Teil (Kennlinien, Grenzen,
+     *     Temperaturstufen, Strategie, Feuchte-Massnahme) gilt der eigene Wert der Geraetezeile, sonst die
+     *     Vorlage. Zeilen mit Haken behalten ihre Werte; Zeilen ohne Haken verlieren die bisher ignorierten
+     *     Werte (sonst wuerden sie wirksam) - das Regelverhalten bleibt in beiden Faellen gleich.
      *   - einmalig (Merker-Stand 2): die Probelauf-Datenpunkte der Geraete folgen der Instanz-Einstellung
      *     (siehe probelaufUmziehen); die Geraetezeilen bekommen dabei KEIN `probelauf` - wer ein Geraet
      *     einzeln im Probelauf halten will, setzt den Schalter in der Geraetekarte bewusst selbst.
@@ -1798,6 +1804,7 @@ class Faikout extends utils.Adapter {
      */
     regelKonfigUmziehen() {
         const kennlinie = require('./lib/regel/kennlinie');
+        const regelVorlage = require('./lib/regel/vorlage');
         const c = this.config;
         const neu = {};
         const leer = v => v === undefined || v === null || String(v).trim() === '';
@@ -1826,12 +1833,14 @@ class Faikout extends utils.Adapter {
             delete c.regelSzenen;
         }
         const erster = !(Number(c.regelUmzugStand) >= 1);
+        const dritter = !(Number(c.regelUmzugStand) >= 3);
+        const verworfen = [];
         let geraeteNeu = false;
         const geraete = (Array.isArray(c.regelGeraete) ? c.regelGeraete : []).map(g => {
             if (!g || typeof g !== 'object') {
                 return g;
             }
-            const z = { ...g };
+            let z = { ...g };
             if (gefuellt(z.szenen)) {
                 if (!gefuellt(z.stufen)) {
                     z.stufen = z.szenen;
@@ -1843,10 +1852,30 @@ class Faikout extends utils.Adapter {
                 z.individuell = true;
                 geraeteNeu = true;
             }
+            if (dritter) {
+                // Stand 3: kein Haken mehr - je Teil gilt der eigene Wert der Zeile, sonst die Vorlage.
+                // Mit Haken bleiben die Werte (sie galten schon), ohne Haken werden die bisher
+                // ignorierten Werte geleert, damit sie nicht ploetzlich wirksam werden.
+                const um = regelVorlage.zeileUmziehen(z);
+                if (um.geaendert) {
+                    geraeteNeu = true;
+                }
+                if (um.verworfen.length) {
+                    verworfen.push(`${String(z.geraet || '?')}: ${um.verworfen.join(', ')}`);
+                }
+                z = um.zeile;
+            }
             if (z.fuehlerWeg !== 'sollwert' && z.fuehlerWeg !== 'modul') {
                 // Eintraege aus dem Vorabstand kennen das Feld nicht. Die Einstellungsseite traegt die Vorgabe
                 // beim Oeffnen selbst ein - dann waere "Speichern" aktiv, ohne dass jemand etwas geaendert hat.
                 z.fuehlerWeg = 'sollwert';
+                geraeteNeu = true;
+            }
+            // dasselbe fuer jedes andere Feld mit Vorgabe (z. B. `vortagBezug`, seit die Strategie der Anlage
+            // immer in der Karte steht): fehlende Felder bekommen den Wert, mit dem ohnehin gerechnet wird
+            const voll = regelVorlage.zeileErgaenzen(z);
+            if (voll.geaendert) {
+                z = voll.zeile;
                 geraeteNeu = true;
             }
             return z;
@@ -1870,10 +1899,16 @@ class Faikout extends utils.Adapter {
                 c.regelKennlinieHeizen = neu.regelKennlinieHeizen;
             }
         }
-        if (!(Number(c.regelUmzugStand) >= 2)) {
+        if (verworfen.length) {
+            this.log.info(
+                `Settings migration: these units followed the template; their unused own values were cleared (${verworfen.join('; ')}).`,
+            );
+        }
+        if (!(Number(c.regelUmzugStand) >= 3)) {
             // Stand 2: Probelauf-Datenpunkte der Geraete an die Instanz angeglichen (probelaufUmziehen)
-            neu.regelUmzugStand = 2;
-            c.regelUmzugStand = 2;
+            // Stand 3: Haken `individuell` entfernt (eigen = die Zeile hat fuer den Teil einen Wert)
+            neu.regelUmzugStand = 3;
+            c.regelUmzugStand = 3;
         }
         return neu;
     }

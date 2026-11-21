@@ -288,7 +288,20 @@
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12
+                    "xl": 12,
+                    "custom": {
+                        "neueZeile": {
+                            "betrieb": "adapter",
+                            "aussenQuelle": "auto",
+                            "raumQuelle": "auto",
+                            "fuehlerWeg": "sollwert",
+                            "feuchteQuelle": "auto",
+                            "feuchteMassnahme": "",
+                            "strategie": "",
+                            "vortagBezug": "",
+                            "frostAb": 0
+                        }
+                    }
                 },
                 "_hStufen": {
                     "type": "header",
@@ -601,6 +614,23 @@
                     "lg": 8,
                     "xl": 8
                 },
+                "_raumSatz": {
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/Rechenweg",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "custom": {
+                        "art": "satz"
+                    }
+                },
                 "regelKennlinieHeizen": {
                     "type": "custom",
                     "url": "custom/customComponents.js",
@@ -899,69 +929,6 @@
                                 }
                             },
                             {
-                                "type": "checkbox",
-                                "label": "labelIndividuell",
-                                "default": false,
-                                "newLine": true,
-                                "xs": 12,
-                                "sm": 12,
-                                "md": 12,
-                                "lg": 12,
-                                "xl": 12,
-                                "attr": "individuell"
-                            },
-                            {
-                                "type": "staticText",
-                                "text": "textFolgtVorlage",
-                                "xs": 12,
-                                "sm": 12,
-                                "md": 12,
-                                "lg": 12,
-                                "xl": 12,
-                                "hidden": "data.individuell === true",
-                                "style": {
-                                    "border": "1px solid #3d9a50",
-                                    "borderRadius": 6,
-                                    "padding": "8px 12px",
-                                    "backgroundColor": "rgba(61,154,80,0.12)"
-                                },
-                                "attr": "_tFolgt"
-                            },
-                            {
-                                "attr": "_tFolgtStufen",
-                                "type": "staticText",
-                                "text": "textFolgtEigeneStufen",
-                                "xs": 12,
-                                "sm": 12,
-                                "md": 12,
-                                "lg": 12,
-                                "xl": 12,
-                                "hidden": "data.individuell === true || !(Array.isArray(data.stufen) && data.stufen.length)",
-                                "style": {
-                                    "border": "1px solid #d98a00",
-                                    "borderRadius": 6,
-                                    "padding": "8px 12px",
-                                    "backgroundColor": "rgba(217,138,0,0.12)"
-                                }
-                            },
-                            {
-                                "type": "staticText",
-                                "text": "textIstIndividuell",
-                                "xs": 12,
-                                "sm": 12,
-                                "md": 12,
-                                "lg": 12,
-                                "xl": 12,
-                                "hidden": "data.individuell !== true",
-                                "style": {
-                                    "border": "1px solid #3399cc",
-                                    "borderRadius": 6,
-                                    "padding": "8px 12px",
-                                    "backgroundColor": "rgba(51,153,204,0.12)"
-                                },
-                                "attr": "_tIndividuell"
-                            },
-                            {
                                 "attr": "_tRuht",
                                 "type": "staticText",
                                 "text": "textRuht",
@@ -970,7 +937,7 @@
                                 "md": 12,
                                 "lg": 12,
                                 "xl": 12,
-                                "hidden": "data.betrieb !== 'faikout' || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
+                                "hidden": "data.betrieb !== 'faikout' || (data.strategie || globalData.regelStrategie) === 'vortag'",
                                 "style": {
                                     "border": "1px solid #d98a00",
                                     "borderRadius": 6,
@@ -1016,35 +983,7 @@
                                 "sm": 12,
                                 "md": 12,
                                 "lg": 12,
-                                "xl": 12,
-                                "hidden": "!data.individuell"
-                            },
-                            {
-                                "attr": "strategie",
-                                "type": "select",
-                                "label": "labelRegelStrategie",
-                                "options": [
-                                    {
-                                        "label": "optWieVorgabe",
-                                        "value": ""
-                                    },
-                                    {
-                                        "label": "optKennlinie",
-                                        "value": "kennlinie"
-                                    },
-                                    {
-                                        "label": "optVortag",
-                                        "value": "vortag"
-                                    }
-                                ],
-                                "xs": 12,
-                                "sm": 6,
-                                "md": 4,
-                                "lg": 4,
-                                "xl": 4,
-                                "default": "",
-                                "hidden": "!data.individuell",
-                                "newLine": true
+                                "xl": 12
                             },
                             {
                                 "attr": "kennlinieHeizen",
@@ -1055,7 +994,7 @@
                                 "guiApi": 2,
                                 "bundlerType": "module",
                                 "label": "labelTabHeizenGeraet",
-                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
+                                "hidden": "(data.strategie || globalData.regelStrategie) === 'vortag'",
                                 "newLine": true,
                                 "xs": 12,
                                 "sm": 12,
@@ -1072,7 +1011,7 @@
                                 "guiApi": 2,
                                 "bundlerType": "module",
                                 "label": "labelTabKuehlenGeraet",
-                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
+                                "hidden": "(data.strategie || globalData.regelStrategie) === 'vortag'",
                                 "newLine": false,
                                 "xs": 12,
                                 "sm": 12,
@@ -1090,127 +1029,16 @@
                                 "lg": 12,
                                 "xl": 12,
                                 "newLine": true,
-                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
+                                "hidden": "(data.strategie || globalData.regelStrategie) !== 'vortag'",
                                 "style": {
                                     "opacity": 0.8
                                 }
                             },
                             {
-                                "attr": "vortagBezug",
-                                "type": "select",
-                                "label": "labelVortagBezug",
-                                "options": [
-                                    {
-                                        "label": "optWieVorgabe",
-                                        "value": ""
-                                    },
-                                    {
-                                        "label": "optSpitze",
-                                        "value": "spitze"
-                                    },
-                                    {
-                                        "label": "optMittel",
-                                        "value": "mittel"
-                                    }
-                                ],
-                                "xs": 12,
-                                "sm": 6,
-                                "md": 4,
-                                "lg": 4,
-                                "xl": 4,
-                                "default": "",
-                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'"
-                            },
-                            {
-                                "attr": "vortagZuschlag",
-                                "type": "number",
-                                "label": "labelVortagZuschlag",
-                                "min": 0,
-                                "max": 60,
-                                "xs": 12,
-                                "sm": 6,
-                                "md": 4,
-                                "lg": 4,
-                                "xl": 4,
-                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
-                                "help": "helpLeerVorgabe"
-                            },
-                            {
-                                "attr": "vortagReferenzW",
-                                "type": "number",
-                                "label": "labelVortagReferenz",
-                                "min": 100,
-                                "max": 10000,
-                                "xs": 12,
-                                "sm": 6,
-                                "md": 4,
-                                "lg": 4,
-                                "xl": 4,
-                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
-                                "help": "helpLeerVorgabe"
-                            },
-                            {
-                                "attr": "feuchteMassnahme",
-                                "type": "select",
-                                "label": "labelFeuchteMassnahmeGeraet",
-                                "options": [
-                                    {
-                                        "label": "optWieVorgabe",
-                                        "value": ""
-                                    },
-                                    {
-                                        "label": "optMassEntfeuchten",
-                                        "value": "entfeuchten"
-                                    },
-                                    {
-                                        "label": "optMassZielSenken",
-                                        "value": "zielSenken"
-                                    },
-                                    {
-                                        "label": "optMassMelden",
-                                        "value": "melden"
-                                    }
-                                ],
-                                "xs": 12,
-                                "sm": 6,
-                                "md": 4,
-                                "lg": 4,
-                                "xl": 4,
-                                "default": "",
-                                "newLine": true,
-                                "hidden": "!data.individuell"
-                            },
-                            {
-                                "type": "header",
-                                "size": 4,
-                                "text": "headerStufenGeraet",
-                                "newLine": true,
-                                "xs": 12,
-                                "sm": 12,
-                                "md": 12,
-                                "lg": 12,
-                                "xl": 12,
-                                "hidden": "!data.individuell",
-                                "attr": "_hStufen"
-                            },
-                            {
-                                "type": "staticText",
-                                "text": "textStufenGeraet",
-                                "xs": 12,
-                                "sm": 12,
-                                "md": 12,
-                                "lg": 12,
-                                "xl": 12,
-                                "hidden": "!data.individuell",
-                                "style": {
-                                    "opacity": 0.8
-                                },
-                                "attr": "_tStufen"
-                            },
-                            {
+                                "attr": "_rechenweg",
                                 "type": "custom",
                                 "url": "custom/customComponents.js",
-                                "name": "ConfigCustomFaikoutSet/Components/Stufen",
+                                "name": "ConfigCustomFaikoutSet/Components/Rechenweg",
                                 "i18n": true,
                                 "guiApi": 2,
                                 "bundlerType": "module",
@@ -1220,8 +1048,10 @@
                                 "md": 12,
                                 "lg": 12,
                                 "xl": 12,
-                                "hidden": "!data.individuell",
-                                "attr": "stufen"
+                                "custom": {
+                                    "art": "weg"
+                                },
+                                "hidden": "(data.strategie || globalData.regelStrategie) !== 'vortag'"
                             },
                             {
                                 "attr": "_hFuehler",
@@ -1496,18 +1326,45 @@
                                 "xl": 3
                             },
                             {
-                                "attr": "frostAb",
-                                "type": "number",
-                                "label": "labelFrostAb",
-                                "min": 0,
-                                "max": 15,
+                                "attr": "_hFeuchte",
+                                "type": "header",
+                                "size": 4,
+                                "text": "headerGeraetFeuchte",
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12
+                            },
+                            {
+                                "attr": "feuchteMassnahme",
+                                "type": "select",
+                                "label": "labelFeuchteMassnahmeGeraet",
+                                "options": [
+                                    {
+                                        "label": "optWieVorgabe",
+                                        "value": ""
+                                    },
+                                    {
+                                        "label": "optMassEntfeuchten",
+                                        "value": "entfeuchten"
+                                    },
+                                    {
+                                        "label": "optMassZielSenken",
+                                        "value": "zielSenken"
+                                    },
+                                    {
+                                        "label": "optMassMelden",
+                                        "value": "melden"
+                                    }
+                                ],
                                 "xs": 12,
                                 "sm": 6,
                                 "md": 4,
                                 "lg": 4,
                                 "xl": 4,
-                                "default": 0,
-                                "help": "helpFrostAb",
+                                "default": "",
                                 "newLine": true
                             },
                             {
@@ -1521,6 +1378,102 @@
                                 "md": 12,
                                 "lg": 12,
                                 "xl": 12
+                            },
+                            {
+                                "attr": "strategie",
+                                "type": "select",
+                                "label": "labelRegelStrategie",
+                                "options": [
+                                    {
+                                        "label": "optWieVorgabe",
+                                        "value": ""
+                                    },
+                                    {
+                                        "label": "optKennlinie",
+                                        "value": "kennlinie"
+                                    },
+                                    {
+                                        "label": "optVortag",
+                                        "value": "vortag"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": "",
+                                "newLine": true
+                            },
+                            {
+                                "attr": "vortagBezug",
+                                "type": "select",
+                                "label": "labelVortagBezug",
+                                "options": [
+                                    {
+                                        "label": "optWieVorgabe",
+                                        "value": ""
+                                    },
+                                    {
+                                        "label": "optSpitze",
+                                        "value": "spitze"
+                                    },
+                                    {
+                                        "label": "optMittel",
+                                        "value": "mittel"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": "",
+                                "hidden": "(data.strategie || globalData.regelStrategie) !== 'vortag'",
+                                "newLine": true
+                            },
+                            {
+                                "attr": "vortagZuschlag",
+                                "type": "number",
+                                "label": "labelVortagZuschlag",
+                                "min": 0,
+                                "max": 60,
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "hidden": "(data.strategie || globalData.regelStrategie) !== 'vortag'",
+                                "help": "helpLeerVorgabe"
+                            },
+                            {
+                                "attr": "vortagReferenzW",
+                                "type": "number",
+                                "label": "labelVortagReferenz",
+                                "min": 100,
+                                "max": 10000,
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "hidden": "(data.strategie || globalData.regelStrategie) !== 'vortag'",
+                                "help": "helpLeerVorgabe"
+                            },
+                            {
+                                "attr": "frostAb",
+                                "type": "number",
+                                "label": "labelFrostAb",
+                                "min": 0,
+                                "max": 15,
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": 0,
+                                "help": "helpFrostAb",
+                                "newLine": true
                             },
                             {
                                 "attr": "probelauf",
@@ -1551,6 +1504,9 @@
                                 "lg": 12,
                                 "xl": 12
                             }
+                        ],
+                        "zusatzFelder": [
+                            "stufen"
                         ]
                     }
                 },
@@ -1599,33 +1555,23 @@
                                 "xl": 12,
                                 "help": "helpRegelProbelauf"
                             },
-                            "regelTotband": {
-                                "type": "number",
-                                "label": "labelTotband",
-                                "min": 0,
-                                "max": 2,
-                                "xs": 12,
-                                "sm": 6,
-                                "md": 4,
-                                "lg": 4,
-                                "xl": 4,
-                                "step": 0.1,
-                                "default": 0.3,
-                                "help": "helpTotband",
-                                "newLine": true
-                            },
                             "regelProzentProK": {
-                                "type": "number",
-                                "label": "labelProzentProK",
-                                "min": 0,
-                                "max": 50,
+                                "type": "custom",
+                                "url": "custom/customComponents.js",
+                                "name": "ConfigCustomFaikoutSet/Components/Raumkorrektur",
+                                "i18n": true,
+                                "guiApi": 2,
+                                "bundlerType": "module",
+                                "newLine": true,
                                 "xs": 12,
-                                "sm": 6,
-                                "md": 4,
-                                "lg": 4,
-                                "xl": 4,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
                                 "default": 10,
-                                "help": "helpProzentProK"
+                                "custom": {
+                                    "attrTotband": "regelTotband"
+                                }
                             },
                             "regelBand": {
                                 "type": "number",
@@ -1639,7 +1585,8 @@
                                 "xl": 4,
                                 "step": 0.1,
                                 "default": 0.5,
-                                "help": "helpBand"
+                                "help": "helpBand",
+                                "newLine": true
                             },
                             "regelVortagMin": {
                                 "type": "number",

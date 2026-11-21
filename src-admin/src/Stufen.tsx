@@ -5,7 +5,8 @@
  * "Speichern" der Instanz uebernimmt, "Schliessen" verwirft.
  *
  * Formularwert: Liste {id, name, power, mode, soll, fan, deckel, bedarf, feuchte} in `regelStufen`
- * (Vorlage; leer = vier Werksstufen) bzw. `stufen` (Geraetezeile; leer = es gilt die Vorlage).
+ * (Vorlage; leer = vier Werksstufen) bzw. `stufen` (Geraetezeile; leer = es gilt die Vorlage - die Stufen
+ * der Vorlage sind dann direkt anfassbar und werden mit der ersten Aenderung zu eigenen Stufen der Anlage).
  * Die `id` wird immer mitgeschrieben: an ihr haengt der Wochenplan - so bleibt ein Plan gueltig,
  * wenn eine Stufe umbenannt wird oder die Werksstufen in einer anderen Sprache angelegt wurden.
  *
@@ -473,6 +474,8 @@ interface AnsichtProps {
     benutzung?: (id: string) => Promise<Benutzung | null>;
     /** meldet dem Formular eine ungueltige Liste ('' = in Ordnung) - der Admin sperrt dann "Speichern" */
     onFehler?: (meldung: string) => void;
+    /** ohne den einleitenden Absatz (Stufen einer Anlage im Reiter "Zeitplaene": der Absatz steht dort einmal) */
+    ohneEinleitung?: boolean;
 }
 
 /** Die Karten - ohne jsonConfig, damit es sich einzeln rendern und pruefen laesst. */
@@ -490,7 +493,9 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
     const werk = useMemo(() => werksStufen(sprache), [sprache]);
     // gezeigt wird, was gilt: die eigenen Stufen, sonst die Vorlage, sonst die Werksstufen
     const roh: unknown[] = eigene ? eigeneRoh : jeGeraet && vorlageRoh.length ? vorlageRoh : werk;
-    const nurLesen = jeGeraet && !eigene;
+    // Geraet ohne eigene Stufen: die Stufen der Vorlage sind die Arbeitsgrundlage - direkt anfassbar; die
+    // erste Aenderung schreibt Vorlage + Aenderung in EINEM Zug als eigene Stufen (wie bei der Kennlinie).
+    const folgt = jeGeraet && !eigene;
     const stufen = roh.map(lesen);
     const farbe = stufenFarben(
         stufen.map(s => s.id),
@@ -669,7 +674,8 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
 
     return (
         <Box
-            className={`fk-stufen${nurLesen ? ' fk-vorlage' : ''}`}
+            className={`fk-stufen${folgt ? ' fk-vorlage' : ''}`}
+            data-quelle={jeGeraet ? (folgt ? 'vorlage' : 'eigen') : undefined}
             sx={{
                 width: '100%',
                 color: 'text.primary',
@@ -699,7 +705,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                     border: '1.5px dashed',
                     borderColor: 'text.secondary',
                     borderLeft: '6px solid var(--fk-farbe)',
-                    opacity: 0.62,
                 },
                 '& .fk-st-kopf': { display: 'flex', alignItems: 'center', gap: '6px', minHeight: 34 },
                 '& .fk-st-farbe': {
@@ -889,31 +894,26 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                 '@media (prefers-reduced-motion: reduce)': { '& .fk-s-griff': { transition: 'none' } },
             }}
         >
-            <Typography
-                variant="body2"
-                color="text.secondary"
-                className="fk-st-einleitung"
-                sx={{ mb: 1.25, maxWidth: 760 }}
-            >
-                {t('einleitung')}
-            </Typography>
-            {nurLesen ? (
+            {props.ohneEinleitung ? null : (
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    className="fk-st-einleitung"
+                    sx={{ mb: 1.25, maxWidth: 760 }}
+                >
+                    {t('einleitung')}
+                </Typography>
+            )}
+            {jeGeraet ? (
+                // fester Platz: der Wechsel "Vorlage" -> "eigen" aendert nur den Text, nichts am Aufbau darunter
                 <div className="fk-st-band">
                     <Typography
                         variant="body2"
+                        className="fk-st-gilt"
                         sx={{ flex: '1 1 240px' }}
                     >
-                        {t('vorlageGilt')}
+                        {folgt ? t('vorlageGilt') : t('eigenGilt')}
                     </Typography>
-                    <Button
-                        className="fk-st-eigene"
-                        variant="contained"
-                        size="small"
-                        sx={{ textTransform: 'none' }}
-                        onClick={() => schreiben(zeilen())}
-                    >
-                        {t('eigene')}
-                    </Button>
                 </div>
             ) : null}
             <div className="fk-st-raster">
@@ -931,7 +931,7 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                             <div className="fk-st-kopf">
                                 <span className="fk-st-farbe" />
                                 <Tooltip
-                                    title={nurLesen ? '' : t('umbenennen')}
+                                    title={t('umbenennen')}
                                     enterDelay={600}
                                 >
                                     <span className="fk-st-name">
@@ -939,34 +939,29 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                             type="text"
                                             aria-label={t('name')}
                                             aria-invalid={nameFehler || undefined}
-                                            disabled={nurLesen}
                                             value={s.name}
                                             maxLength={40}
                                             onChange={e => aendern(i, { name: e.target.value })}
                                             onKeyDown={e => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                                         />
-                                        {nurLesen ? null : (
-                                            <span className="fk-st-stift">
-                                                <EditIcon klein />
-                                            </span>
-                                        )}
+                                        <span className="fk-st-stift">
+                                            <EditIcon klein />
+                                        </span>
                                     </span>
                                 </Tooltip>
-                                {nurLesen ? null : (
-                                    <Tooltip title={stufen.length > 1 ? t('entfernen') : t('entfernenLetzte')}>
-                                        <span>
-                                            <IconButton
-                                                size="small"
-                                                className="fk-st-weg"
-                                                aria-label={`${t('entfernen')}: ${s.name}`}
-                                                disabled={stufen.length <= 1 || !!prueft}
-                                                onClick={() => void weg(i)}
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </span>
-                                    </Tooltip>
-                                )}
+                                <Tooltip title={stufen.length > 1 ? t('entfernen') : t('entfernenLetzte')}>
+                                    <span>
+                                        <IconButton
+                                            size="small"
+                                            className="fk-st-weg"
+                                            aria-label={`${t('entfernen')}: ${s.name}`}
+                                            disabled={stufen.length <= 1 || !!prueft}
+                                            onClick={() => void weg(i)}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </span>
+                                </Tooltip>
                             </div>
                             <FormControlLabel
                                 className="fk-st-schalter"
@@ -975,7 +970,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                     <Switch
                                         size="small"
                                         checked={an}
-                                        disabled={nurLesen}
                                         onChange={e => aendern(i, { power: e.target.checked })}
                                     />
                                 }
@@ -995,7 +989,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                                 einheit="°C"
                                                 name={`${t('ziel')}: ${s.name}`}
                                                 sprache={sprache}
-                                                gesperrt={nurLesen}
                                                 fehler={!(s.soll >= ZIEL.min && s.soll <= ZIEL.max)}
                                                 onWert={n => aendern(i, { soll: n })}
                                             />
@@ -1011,7 +1004,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                             striche={[10, 15, 20, 25, 30]}
                                             einheit="°C"
                                             sprache={sprache}
-                                            gesperrt={nurLesen}
                                             onWert={n => aendern(i, { soll: n })}
                                         />
                                     </div>
@@ -1021,7 +1013,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                             <select
                                                 className="fk-st-mode"
                                                 value={s.mode}
-                                                disabled={nurLesen}
                                                 onChange={e => aendern(i, { mode: e.target.value })}
                                             >
                                                 {MODI.map(m => (
@@ -1039,7 +1030,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                             <select
                                                 className="fk-st-fan"
                                                 value={s.fan}
-                                                disabled={nurLesen}
                                                 onChange={e => aendern(i, { fan: e.target.value })}
                                             >
                                                 {LUEFTER.map(f => (
@@ -1065,7 +1055,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                                     <Checkbox
                                                         size="small"
                                                         checked={s.bedarf}
-                                                        disabled={nurLesen}
                                                         onChange={e => aendern(i, { bedarf: e.target.checked })}
                                                     />
                                                 }
@@ -1085,7 +1074,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                                         einheit="%"
                                                         name={`${t('deckel')}: ${s.name}`}
                                                         sprache={sprache}
-                                                        gesperrt={nurLesen}
                                                         fehler={!(s.deckel >= DECKEL.min && s.deckel <= DECKEL.max)}
                                                         onWert={n => aendern(i, { deckel: n })}
                                                     />
@@ -1102,7 +1090,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                                     striche={[30, 50, 75, 100]}
                                                     einheit="%"
                                                     sprache={sprache}
-                                                    gesperrt={nurLesen}
                                                     onWert={n => aendern(i, { deckel: n })}
                                                 />
                                                 <div className="fk-st-hinweis fk-st-deckelhinweis">
@@ -1124,7 +1111,6 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                                 <Checkbox
                                                     size="small"
                                                     checked={s.feuchte}
-                                                    disabled={nurLesen}
                                                     onChange={e => aendern(i, { feuchte: e.target.checked })}
                                                 />
                                             }
@@ -1138,15 +1124,13 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                         </div>
                     );
                 })}
-                {nurLesen ? null : (
-                    <Button
-                        className="fk-st-dazu"
-                        onClick={dazu}
-                    >
-                        <AddIcon />
-                        {t('hinzu')}
-                    </Button>
-                )}
+                <Button
+                    className="fk-st-dazu"
+                    onClick={dazu}
+                >
+                    <AddIcon />
+                    {t('hinzu')}
+                </Button>
             </div>
             {fehlerText ? (
                 <Box
@@ -1166,7 +1150,7 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                     {fehlerText}
                 </Box>
             ) : null}
-            {frage && !nurLesen ? (
+            {frage ? (
                 <Box
                     className="fk-st-benutzt"
                     role="alertdialog"
@@ -1266,7 +1250,7 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                     </Box>
                 </Box>
             ) : null}
-            {entfernt && !nurLesen ? (
+            {entfernt ? (
                 <Box
                     className="fk-st-entfernt"
                     role="status"
@@ -1301,17 +1285,15 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                     </Button>
                 </Box>
             ) : null}
-            {nurLesen ? null : (
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    className="fk-st-fuss"
-                    sx={{ display: 'block', mt: 1 }}
-                >
-                    {!eigene && !jeGeraet ? `${t('werk')} ` : ''}
-                    {t('ziehHinweis')} {t('planHinweis')}
-                </Typography>
-            )}
+            <Typography
+                variant="caption"
+                color="text.secondary"
+                className="fk-st-fuss"
+                sx={{ display: 'block', mt: 1 }}
+            >
+                {!eigene && !jeGeraet ? `${t('werk')} ` : ''}
+                {t('ziehHinweis')} {t('planHinweis')}
+            </Typography>
             <Werkzeugleiste
                 art="stufen"
                 inhalt={zeilen()}
@@ -1325,6 +1307,7 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                 stand={eigeneRoh}
                 onRueckgaengig={vorher => schreiben((Array.isArray(vorher) ? vorher : []) as Record<string, unknown>[])}
                 zuruecksetzenText={jeGeraet ? t('zuruecksetzenGeraet') : undefined}
+                nichtsEigen={folgt}
                 istVorlage={!jeGeraet}
                 quelle={props.quelle}
                 sprache={sprache}
@@ -1377,7 +1360,7 @@ class Stufen extends ConfigGeneric<ConfigGenericProps, ConfigGenericState> {
         const zeilen = (Array.isArray(global.regelGeraete) ? global.regelGeraete : []) as Record<string, unknown>[];
         const eigen = (g: { id: string; name: string }): boolean => {
             const z = zeilen.find(x => x && (text(x.geraet) === g.id || text(x.geraet) === g.name));
-            return !!z && z.individuell === true && Array.isArray(z.stufen) && z.stufen.length > 0;
+            return !!z && Array.isArray(z.stufen) && z.stufen.length > 0;
         };
         const geraete = (antwort.geraete as { id: string; name: string; planStufen?: string[] }[])
             .filter(g => Array.isArray(g.planStufen) && g.planStufen.includes(id))

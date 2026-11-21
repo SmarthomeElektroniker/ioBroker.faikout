@@ -40,6 +40,7 @@ import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from 
 import zugLib from '../../lib/kennlinienzug.js';
 import bildLib from '../../lib/kennlinienbild.js';
 import Werkzeugleiste from './Werkzeugleiste';
+import { RechenwegZeile, type Weg } from './Rechenweg';
 import { kt, type Schluessel } from './Kennlinie.texte';
 
 /** Geraet ohne Maus (grober Zeiger): dort gibt es weder Doppel- noch Rechtsklick */
@@ -62,6 +63,8 @@ interface Etikett {
     /** Schwelle der vollen Freigabe in K */
     vollAbK?: number;
     probelauf?: boolean;
+    /** Rechenweg des letzten Durchlaufs der Regelung (fuer "So entsteht der Wert gerade") */
+    weg?: Weg | null;
 }
 interface Fehler {
     schluessel: string;
@@ -222,8 +225,6 @@ interface AnsichtProps {
     quelle?: string;
     /** zunaechst nur eine Zeile mit Aufklapp-Pfeil (Kuehlkurve, solange die Anlage nicht kuehlt) */
     eingeklappt?: boolean;
-    /** gespeicherte Kennlinie, mit der der Adapter gerade rechnet (fuer den Text zur Raumkorrektur) */
-    gespeichert?: Punkt[];
 }
 
 /** Bild, Legende und (eingeklappt) Tabelle - ohne jsonConfig, damit es sich einzeln rendern und pruefen laesst. */
@@ -780,7 +781,6 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
 
     // Jetzt-Marker: duenn, blass, ohne Mausereignisse - und waehrend des Ziehens gar nicht
     let jetztBild: React.JSX.Element | null = null;
-    let jetztText = '';
     if (ap && sauber.length >= 2) {
         const x = Math.min(a.max, Math.max(a.min, Number(ap.x)));
         const aufLinie = bild.wertAuf(sauber, x);
@@ -832,22 +832,6 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                 </g>
             );
         }
-        // Raumkorrektur als Satz unter dem Bild statt als Balken im Bild
-        const teile: string[] = [];
-        if (wert !== null && wert >= 100 && props.obergrenze < 100) {
-            teile.push(k(kuehlen ? 'vollKuehlen' : 'vollHeizen', zahl(vollAbK)));
-        } else if (wert !== null) {
-            const basis = props.gespeichert && !zug.pruefen(props.gespeichert, richtung) ? paare(props.gespeichert) : sauber;
-            const linie = Math.round(bild.wertAuf(basis, Number(ap.x)));
-            const korrektur = Math.round(wert) - linie;
-            if (korrektur) {
-                teile.push(k('raumkorrektur', `${korrektur > 0 ? '+' : ''}${zahl(korrektur)}`, zahl(linie)));
-            }
-        }
-        if (ap.probelauf && wert !== null) {
-            teile.push(k('probelauf'));
-        }
-        jetztText = teile.join(' ');
     }
 
     let etikett: React.JSX.Element | null = null;
@@ -887,11 +871,16 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
         );
     }
 
+    // eigene Grenze des Geraets (gezogen oder im Formular) - auch ohne eigene Punkte ist die Kennlinie dann "eigen"
+    const grenzeEigen =
+        !istVorlage &&
+        (!!grenzZug || (!!props.grenzenEigen && (!istLeer(grenzenEigen.untergrenze) || !istLeer(grenzenEigen.obergrenze))));
     // Etikett an der gestrichelten Linie, solange es keine eigene Kennlinie gibt
     let leerEtikett: React.JSX.Element | null = null;
     if (blass && sauber.length >= 2) {
         const mitteX = (sauber[0][0] + sauber[sauber.length - 1][0]) / 2;
-        const text = k(istVorlage ? 'etikettWerk' : 'etikettVorlage');
+        // eigene Grenze, aber die Punkte der Vorlage: "nicht angepasst" waere dann falsch
+        const text = k(istVorlage ? 'etikettWerk' : grenzeEigen ? 'etikettVorlageKurve' : 'etikettVorlage');
         const passtRechts = X(mitteX) + 10 + textBreite(text) * 1.1 <= B - RAND.r;
         const nachLinks = kuehlen || !passtRechts;
         leerEtikett = (
@@ -929,13 +918,10 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
     const linien: Grenze[] = ['unter', 'ober'];
     // Am Geraet sagt die Ueberschrift, was gilt: die globale Kennlinie oder eine eigene (eigene Punkte ODER eine
     // eigene Grenze) - der Wechsel aendert nur den Text in der Klammer, nichts am Aufbau darunter.
-    const eigenStand =
-        eigene ||
-        (!istVorlage && !!grenzZug) ||
-        (!!props.grenzenEigen && (!istLeer(grenzenEigen.untergrenze) || !istLeer(grenzenEigen.obergrenze)));
+    const eigenStand = eigene || grenzeEigen;
     const titelText = istVorlage ? props.titel : `${props.titel} (${k(eigenStand ? 'klammerEigen' : 'klammerGlobal')})`;
     const kopfZeile = !eigene
-        ? k(istVorlage ? 'etikettWerk' : 'etikettVorlage')
+        ? k(istVorlage ? 'etikettWerk' : grenzeEigen ? 'etikettVorlageKurve' : 'etikettVorlage')
         : fehler
           ? ''
           : k('punkteN', zeilen.length);
@@ -1567,6 +1553,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                             onZuruecksetzen={zuruecksetzen}
                             zuruecksetzenText={istVorlage ? undefined : k('tipVorlage')}
                             frageText={istVorlage ? k('frageWerk') : undefined}
+                            nichtsEigen={!istVorlage && !eigenStand}
                             istVorlage={istVorlage}
                             quelle={props.quelle || (istVorlage ? k('quelleVorlage') : '')}
                             sprache={sprache}
@@ -1641,7 +1628,17 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                             ) : null}
                         </div>
                     </div>
-                    {jetztText ? <div className="fk-jetzt-text">{jetztText}</div> : null}
+                    {/*
+                      * "So entsteht der Wert gerade": Kennlinie -> Raumkorrektur -> Ergebnis, mit den Zahlen der Regelung.
+                      * Nur am Geraet, immer an derselben Stelle und gleich hoch - auch wenn gerade kein Wert da ist.
+                      */}
+                    {istVorlage ? null : (
+                        <RechenwegZeile
+                            weg={props.arbeitspunkt ? props.arbeitspunkt.weg : undefined}
+                            sprache={sprache}
+                            richtung={richtung}
+                        />
+                    )}
                     <div
                         className="fk-notiz"
                         role="status"
@@ -1828,7 +1825,6 @@ function felder(
     grenzenEigen: { untergrenze: number | ''; obergrenze: number | '' };
     geraet: string;
     mitVorgabe: boolean;
-    gespeichert: Punkt[] | undefined;
 } {
     const data = (props.data || {}) as Record<string, unknown>;
     const global = (props.globalData || {}) as Record<string, unknown>;
@@ -1845,19 +1841,7 @@ function felder(
     const grundUnter = zahlOder(grund.regelUntergrenze, zug.VORGABE_GRENZEN.untergrenze);
     const grundOber = zahlOder(grund.regelObergrenze, zug.VORGABE_GRENZEN.obergrenze);
     const eigen = (v: unknown): number | '' => (istLeer(v) || !Number.isFinite(Number(v)) ? '' : Number(v));
-    // womit der Adapter gerade rechnet: der gespeicherte Stand (nicht der ungespeicherte des Formulars)
-    const alt = (props.originalData || {}) as Record<string, unknown>;
     const geraet = g.jeGeraet && typeof data.geraet === 'string' ? data.geraet : '';
-    let gespeichert: Punkt[] | undefined;
-    if (g.jeGeraet && props.attr) {
-        const eintrag = (Array.isArray(alt.regelGeraete) ? alt.regelGeraete : []).find(
-            (e: unknown) => !!e && !!geraet && (e as Record<string, unknown>).geraet === geraet,
-        ) as Record<string, unknown> | undefined;
-        gespeichert =
-            (eintrag && eintrag.individuell !== false && gute(eintrag[props.attr])) ||
-            gute(alt[vorgabeAttr]) ||
-            zug.VORGABE[richtung];
-    }
     return {
         vorgabe,
         untergrenze: g.jeGeraet ? zahlOder(data[g.unter], grundUnter) : grundUnter,
@@ -1867,7 +1851,6 @@ function felder(
             : { untergrenze: grundUnter, obergrenze: grundOber },
         geraet,
         mitVorgabe: g.jeGeraet,
-        gespeichert,
     };
 }
 
@@ -1887,7 +1870,15 @@ function useArbeitspunkt(props: ConfigGenericProps, geraet: string, obergrenze: 
                 .then((antwort: any) => {
                     if (lebt) {
                         const e = antwort && antwort.etikett && antwort.etikett[richtung];
-                        setPunkt(e ? { ...e, vollAbK: antwort.vollAbK, probelauf: !!antwort.probelauf } : null);
+                        const weg = antwort && antwort.geraet ? ((antwort.weg as Weg) ?? null) : undefined;
+                        // ohne Aussentemperatur gibt es kein Etikett (x fehlt) - den Rechenweg trotzdem zeigen
+                        setPunkt(
+                            e
+                                ? { ...e, vollAbK: antwort.vollAbK, probelauf: !!antwort.probelauf, weg }
+                                : weg !== undefined
+                                  ? { x: NaN, wert: null, weg }
+                                  : null,
+                        );
                     }
                 })
                 .catch(() => lebt && setPunkt(null));
@@ -1929,7 +1920,6 @@ function KennlinieFeld(
             obergrenze={f.obergrenze}
             grenzenEigen={f.grenzenEigen}
             arbeitspunkt={punkt}
-            gespeichert={f.gespeichert}
             sprache={I18n.getLanguage()}
             farben={{
                 flaeche: palette?.background?.paper || '#fff',

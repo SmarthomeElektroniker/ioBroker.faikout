@@ -29,6 +29,7 @@ import { I18n } from '@iobroker/gui-components';
 import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from '@iobroker/json-config';
 
 import Werkzeugleiste from './Werkzeugleiste';
+import { StufenAnsicht } from './Stufen';
 import { text as uebersetzt, TEXTE, type Schluessel } from './Zeitplaene.texte';
 
 export interface Stufe {
@@ -53,9 +54,10 @@ export interface Balken {
 export interface PlanGeraet {
     id: string;
     name: string;
-    individuell?: boolean;
-    /** woher die Temperaturstufen dieser Anlage stammen: eigene (individuell) oder die der Vorlage */
+    /** woher die Temperaturstufen dieser Anlage stammen: eigene oder die der Vorlage */
     stufenQuelle?: 'vorlage' | 'eigen';
+    /** IDs der Stufen, die der hinterlegte Plan (und die Abwesenheit) nennt */
+    planStufen?: string[];
     /** entfernte Stufen, die der Adapter beim "Speichern" der Instanz im Plan ersetzt */
     ersatz?: { von: string; nach: string; vonName?: string; nachName?: string }[];
     planAktiv: boolean;
@@ -490,8 +492,17 @@ export interface AnsichtProps {
     onVorlage: (text: string) => void;
     /** Temperaturstufen der Vorlage, wie sie im Formular stehen (regelStufen) - auch ungespeichert */
     stufenFormular?: unknown;
-    /** Geraetezeilen des Formulars (regelGeraete): Haken "individuell" und eigene Stufen - auch ungespeichert */
+    /** Geraetezeilen des Formulars (regelGeraete): eigene Stufen der Anlagen - auch ungespeichert */
     geraeteFormular?: unknown;
+    /**
+     * Schreibt die eigenen Stufen einer Anlage ins Formular (gilt mit "Speichern" der Instanz); leere Liste =
+     * es gilt wieder die Vorlage. Ohne diese Funktion sind die Stufen je Anlage nur Anzeige.
+     */
+    onGeraetStufen?: (geraet: { id: string; name: string }, stufen: Record<string, unknown>[]) => void;
+    /** meldet eine ungueltige Stufenliste einer Anlage ('' = in Ordnung) */
+    onStufenFehler?: (id: string, meldung: string) => void;
+    /** Farben des Admin-Themas fuer die Stufenkarten */
+    farben?: { flaeche: string; fokus: string; fehler: string };
     /** Instanz laeuft */
     alive: boolean;
     senden: Senden | null;
@@ -508,6 +519,8 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
     const [arbeitet, setArbeitet] = useState<Record<string, boolean>>({});
     const [kopien, setKopien] = useState<Record<string, { stand: string; week: string }>>({});
     const [dialog, setDialog] = useState<DialogStand | null>(null);
+    // aufgeklappte Stufen je Anlage
+    const [stufenOffen, setStufenOffen] = useState<Record<string, boolean>>({});
     const [jetzt, setJetzt] = useState(() => new Date());
     // schmal anfangen: ein zu breiter erster Aufbau weitet auf dem Handy die Seite, und die Messung bliebe breit
     const [breite, setBreite] = useState(0);
@@ -554,7 +567,6 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                     .filter(z => z && typeof z === 'object')
                     .map((z: Record<string, unknown>) => ({
                         geraet: z.geraet,
-                        individuell: z.individuell === true,
                         stufen: Array.isArray(z.stufen) ? z.stufen : [],
                     })),
             }),
@@ -597,7 +609,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
         const takt = setInterval(() => void ladenRef.current(), ABFRAGE_MS);
         return () => clearInterval(takt);
     }, [alive, senden]);
-    // Stufe angelegt, umbenannt, entfernt oder Haken "individuell" geaendert: gleich neu fragen (kurz
+    // Stufe angelegt, umbenannt, entfernt oder eigene Stufen einer Anlage entstanden/verworfen: gleich neu fragen (kurz
     // warten, solange gezogen oder getippt wird)
     const ersterStand = useRef(formularText);
     useEffect(() => {
@@ -809,7 +821,18 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
         const stand = g.planFehlt ? '' : JSON.stringify(g.woche);
         const inhalt = g.planFehlt ? null : kopie && kopie.stand === stand ? kopie.week : wocheZuText(g.woche);
         const beschaeftigt = !!arbeitet[g.id];
-        const eigen = g.stufenQuelle ? g.stufenQuelle === 'eigen' : !!g.individuell;
+        // Zeile der Anlage im Formular (auch ungespeichert): sie sagt sofort, ob die Anlage eigene Stufen hat
+        const gleich = (v: unknown): boolean => {
+            const t = String(v ?? '').trim();
+            return !!t && (t === g.id || t === g.name);
+        };
+        const formZeile = (Array.isArray(props.geraeteFormular) ? props.geraeteFormular : []).find(
+            (z: unknown) => !!z && typeof z === 'object' && gleich((z as Record<string, unknown>).geraet),
+        ) as Record<string, unknown> | undefined;
+        const formStufen = formZeile && Array.isArray(formZeile.stufen) ? (formZeile.stufen as unknown[]) : [];
+        const eigen = props.onGeraetStufen ? formStufen.length > 0 : g.stufenQuelle === 'eigen';
+        const offen = !!stufenOffen[g.id];
+        const stufenId = `fk-zp-stufen-${g.id.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
         return (
             <Box
                 key={g.id}
@@ -879,7 +902,21 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                         sx={{ mt: 0.5, fontSize: '0.9em', lineHeight: 1.4, color: 'text.secondary' }}
                     >
                         {eigen ? tx('stufenEigen') : tx('stufenVorlage')}
-                        {eigen ? <Box sx={{ fontSize: '0.95em' }}>{tx('stufenEigenWo', name)}</Box> : null}
+                        {props.onGeraetStufen ? (
+                            <Box>
+                                <Button
+                                    className="fk-zp-stufen-knopf"
+                                    size="small"
+                                    color="primary"
+                                    aria-expanded={offen}
+                                    aria-controls={stufenId}
+                                    onClick={() => setStufenOffen(alt => ({ ...alt, [g.id]: !offen }))}
+                                    sx={{ textTransform: 'none', ml: '-5px', minHeight: 28, py: 0 }}
+                                >
+                                    {offen ? tx('stufenZuklappen') : tx('stufenAnpassen')}
+                                </Button>
+                            </Box>
+                        ) : null}
                     </Box>
                 </Box>
                 <Wochenvorschau
@@ -945,6 +982,46 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                         sprache={sprache}
                     />
                 </Box>
+                {offen && props.onGeraetStufen ? (
+                    <Box
+                        id={stufenId}
+                        className="fk-zp-stufen"
+                        data-quelle={eigen ? 'eigen' : 'vorlage'}
+                        sx={{ gridColumn: '1 / -1', minWidth: 0, borderTop: '1px solid', borderColor: 'divider', pt: 1.25 }}
+                    >
+                        <Box
+                            className="fk-zp-stufen-titel"
+                            sx={{ fontWeight: 600, mb: 0.75 }}
+                        >
+                            {tx('stufenTitel', name, tx(eigen ? 'klammerEigen' : 'klammerGlobal'))}
+                        </Box>
+                        <StufenAnsicht
+                            wert={formStufen}
+                            vorlage={props.stufenFormular}
+                            jeGeraet
+                            ohneEinleitung
+                            quelle={name}
+                            sprache={sprache}
+                            dunkel={dunkel}
+                            farben={props.farben || { flaeche: dunkel ? '#1e1e1e' : '#fff', fokus: '#3399cc', fehler: '#d9534f' }}
+                            onWert={stufen => props.onGeraetStufen?.({ id: g.id, name }, stufen)}
+                            // wird die Stufe im Plan DIESER Anlage noch benutzt? (der Adapter nennt die IDs des Plans)
+                            benutzung={id =>
+                                Promise.resolve({
+                                    vorlage: false,
+                                    geraete: Array.isArray(g.planStufen) && g.planStufen.includes(id) ? [name] : [],
+                                })
+                            }
+                            onFehler={meldung => props.onStufenFehler?.(g.id, meldung)}
+                        />
+                        <Box
+                            className="fk-zp-stufen-hinweis"
+                            sx={{ mt: 0.75, fontSize: '0.85em', color: 'text.secondary' }}
+                        >
+                            {tx('stufenSpeichern')}
+                        </Box>
+                    </Box>
+                ) : null}
                 {Array.isArray(g.ersatz) && g.ersatz.length ? (
                     <Box sx={{ gridColumn: '1 / -1' }}>
                         <Meldung
@@ -1268,17 +1345,31 @@ function useSenden(props: ConfigGenericProps, sprache: string): Senden | null {
     }, [socket, ziel, sprache]);
 }
 
-function ZeitplaeneFeld(props: ConfigGenericProps & { onVorlage: (text: string) => void }): React.JSX.Element {
+function ZeitplaeneFeld(
+    props: ConfigGenericProps & {
+        onVorlage: (text: string) => void;
+        onGeraetStufen: (geraet: { id: string; name: string }, stufen: Record<string, unknown>[]) => void;
+        onStufenFehler: (id: string, meldung: string) => void;
+    },
+): React.JSX.Element {
     const roh = I18n.getLanguage();
     const sprache = TEXTE[roh] ? roh : 'en';
     const senden = useSenden(props, sprache);
     const thema = props.oContext?.theme?.palette?.mode || props.oContext?.themeType;
+    const palette = props.oContext?.theme?.palette;
     return (
         <ZeitplaeneAnsicht
             vorlage={ConfigGeneric.getValue(props.data, props.attr as string)}
             stufenFormular={(props.data as Record<string, unknown>)?.regelStufen}
             geraeteFormular={(props.data as Record<string, unknown>)?.regelGeraete}
             onVorlage={props.onVorlage}
+            onGeraetStufen={props.onGeraetStufen}
+            onStufenFehler={props.onStufenFehler}
+            farben={{
+                flaeche: palette?.background?.paper || '#fff',
+                fokus: palette?.primary?.main || '#3399cc',
+                fehler: palette?.error?.main || '#d9534f',
+            }}
             alive={!!props.alive}
             senden={senden}
             dunkel={thema === 'dark'}
@@ -1296,11 +1387,76 @@ export class Zeitplaene extends ConfigGeneric<ConfigGenericProps, ConfigGenericS
         }
     };
 
+    /**
+     * Schreibt die eigenen Temperaturstufen einer Anlage in ihre Zeile der Geraeteliste (`regelGeraete`, gilt
+     * mit "Speichern" der Instanz). Hat die Anlage noch keine Zeile, entsteht eine mit den Vorgaben der
+     * Gerätekarte (`custom.neueZeile` im Schema) - eine Anlage ohne Zeile verhaelt sich genau so. Eine leere
+     * Liste heisst "es gilt wieder die Vorlage"; die Zeile bleibt stehen.
+     */
+    onGeraetStufen = (geraet: { id: string; name: string }, stufen: Record<string, unknown>[]): void => {
+        const data = (this.props.data || {}) as Record<string, unknown>;
+        const zeilen = (
+            Array.isArray(data.regelGeraete) ? (JSON.parse(JSON.stringify(data.regelGeraete)) as unknown[]) : []
+        ) as (Record<string, unknown> | null)[];
+        const text = (v: unknown): string => String(v ?? '').trim();
+        const nr = zeilen.findIndex(z => !!z && !!text(z.geraet) && (text(z.geraet) === geraet.id || text(z.geraet) === geraet.name));
+        const roh = (this.props.schema || {}) as unknown as Record<string, unknown>;
+        const eigen = (roh.custom || {}) as Record<string, unknown>;
+        const neu = eigen.neueZeile && typeof eigen.neueZeile === 'object' ? (eigen.neueZeile as Record<string, unknown>) : {};
+        if (nr >= 0) {
+            const zeile: Record<string, unknown> = { ...(zeilen[nr] as Record<string, unknown>), stufen };
+            // Zeile, die erst hier (ungespeichert) fuer die Stufen entstanden ist und sonst nur die Vorgaben traegt:
+            // mit "Auf die Vorlage zuruecksetzen" verschwindet sie wieder - das Formular ist dann wie vorher
+            const gespeichert = (this.props.originalData || {}) as Record<string, unknown>;
+            const warDa = (Array.isArray(gespeichert.regelGeraete) ? (gespeichert.regelGeraete as unknown[]) : []).some(
+                z => !!z && text((z as Record<string, unknown>).geraet) === text(zeile.geraet),
+            );
+            const rest = Object.fromEntries(Object.entries(zeile).filter(([feld]) => feld !== 'stufen'));
+            const nurVorgaben = JSON.stringify(Object.entries(rest).sort()) === JSON.stringify(Object.entries({ ...neu, geraet: zeile.geraet }).sort());
+            if (!stufen.length && !warDa && nurVorgaben) {
+                zeilen.splice(nr, 1);
+            } else {
+                zeilen[nr] = zeile;
+            }
+        } else if (stufen.length) {
+            zeilen.push({ ...JSON.parse(JSON.stringify(neu)), geraet: geraet.name || geraet.id, stufen });
+        } else {
+            return;
+        }
+        void this.onChange('regelGeraete', zeilen);
+    };
+
+    /** ungueltige Stufenliste einer Anlage: ein gemeinsamer Fehler am Formular - der Admin sperrt dann "Speichern" */
+    stufenFehler: Record<string, string> = {};
+    gemeldet = '';
+    onStufenFehler = (id: string, meldung: string): void => {
+        if (meldung) {
+            this.stufenFehler[id] = meldung;
+        } else {
+            delete this.stufenFehler[id];
+        }
+        const erste = Object.values(this.stufenFehler)[0] || '';
+        if (erste !== this.gemeldet) {
+            this.gemeldet = erste;
+            this.onError('_stufenJeAnlage', erste || undefined);
+        }
+    };
+
+    componentWillUnmount(): void {
+        if (this.gemeldet) {
+            this.gemeldet = '';
+            this.onError('_stufenJeAnlage', undefined);
+        }
+        super.componentWillUnmount?.();
+    }
+
     renderItem(): React.JSX.Element {
         return (
             <ZeitplaeneFeld
                 {...this.props}
                 onVorlage={this.onVorlage}
+                onGeraetStufen={this.onGeraetStufen}
+                onStufenFehler={this.onStufenFehler}
             />
         );
     }

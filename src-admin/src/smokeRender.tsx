@@ -8,7 +8,38 @@ import { StufenAnsicht } from './Stufen';
 import { FeuchteAnsicht } from './Feuchte';
 import { ErklaerungAnsicht } from './Erklaerung';
 import { ZeitplaeneAnsicht } from './Zeitplaene';
+import { RechenwegZeile, satzText, wegText, type Weg } from './Rechenweg';
+import { RaumkorrekturAnsicht } from './Raumkorrektur';
 import de from './i18n/de.json';
+
+/** Rechenwege, wie sie der Adapter liefert (lib/regel/bedarf.js, koordinator.js) - [Weg, Richtung des Bildes] */
+const basis = { art: 'normal', strategie: 'kennlinie', richtung: 'heizen', basis: 52, totband: 0.3, grenze: null } as const;
+const WEGE: Record<string, [Weg | null | undefined, ('heizen' | 'kuehlen')?]> = {
+    warm: [{ ...basis, abweichung: -1, korrektur: -7, sollwert: 45 }, 'heizen'],
+    kalt: [{ ...basis, abweichung: 1.7, korrektur: 14, sollwert: 65 }],
+    imZiel: [{ ...basis, abweichung: 0.2, korrektur: 0, sollwert: 50 }],
+    ohneRaum: [{ ...basis, abweichung: null, korrektur: 0, sollwert: 50 }],
+    unten: [{ ...basis, basis: 42, abweichung: -0.9, korrektur: -6, grenze: 'unter', sollwert: 40 }],
+    oben: [{ ...basis, basis: 100, abweichung: 1, korrektur: 7, grenze: 'ober', sollwert: 95 }],
+    voll: [{ ...basis, art: 'voll', abweichung: 2.3, korrektur: 20, schwelle: 2, sollwert: 100 }],
+    ueber: [{ ...basis, art: 'ueber', abweichung: -1.6, korrektur: -13, schwelle: 1.5, sollwert: 30 }],
+    deckel: [{ ...basis, basis: 86, abweichung: 1.7, korrektur: 14, sollwert: 100, deckel: { stufe: 'Tag', wert: 90 } }],
+    vortag: [{ ...basis, strategie: 'vortag', basis: 58, vortag: { prozent: 48, zuschlag: 10 }, abweichung: -1, korrektur: -7, sollwert: 55 }],
+    kuehlenWarm: [{ ...basis, richtung: 'kuehlen', basis: 65, abweichung: 1, korrektur: 7, sollwert: 70 }, 'kuehlen'],
+    andereRichtung: [{ ...basis, richtung: 'kuehlen', basis: 65, abweichung: 1, korrektur: 7, sollwert: 70 }, 'heizen'],
+    probelauf: [{ ...basis, abweichung: -1, korrektur: -7, sollwert: 45, probelauf: true }],
+    aus: [{ ...basis, abweichung: -1, korrektur: -7, sollwert: 45, aus: true, probelauf: true }],
+    rueckfall: [{ art: 'rueckfall', strategie: 'kennlinie', richtung: 'heizen', sollwert: 100 }],
+    rueckfallVortag: [{ art: 'rueckfall', strategie: 'vortag', richtung: 'heizen', sollwert: 100 }],
+    abtauen: [{ art: 'abtauen', richtung: 'heizen', sollwert: 75 }],
+    stufeOhne: [{ art: 'stufeOhne', stufe: 'Tag', sollwert: 100 }],
+    ruhtAuto: [{ art: 'ruhtAuto' }],
+    nichtFaehig: [{ art: 'nichtFaehig' }],
+    neutral: [{ art: 'neutral' }],
+    neutralHeizen: [{ art: 'neutral' }, 'heizen'],
+    wartet: [undefined],
+    nochNicht: [null, 'kuehlen'],
+};
 
 export function renderAll(): Record<string, string> {
     I18n.extendTranslations(de as any, 'de');
@@ -34,11 +65,11 @@ export function renderAll(): Record<string, string> {
                 {...mehr}
             />,
         );
-    const stufen = (wert: unknown, jeGeraet: boolean): string =>
+    const stufen = (wert: unknown, jeGeraet: boolean, vorlage: unknown[] = []): string =>
         mit(
             <StufenAnsicht
                 wert={wert}
-                vorlage={jeGeraet ? [] : undefined}
+                vorlage={jeGeraet ? vorlage : undefined}
                 jeGeraet={jeGeraet}
                 quelle="Test"
                 sprache="de"
@@ -49,8 +80,16 @@ export function renderAll(): Record<string, string> {
         );
     return {
         eigene: bild('heizen', [{ x: -10, y: 95 }, { x: 0, y: 80 }, { x: 8, y: 60 }, { x: 15, y: 40 }], {
-            arbeitspunkt: { x: -4.9, wert: 95, text: 'Jetzt: außen −4,9 °C → 95 %', unterzeile: 'roh 99,4 %' },
+            arbeitspunkt: {
+                x: -4.9,
+                wert: 95,
+                text: 'Jetzt: außen −4,9 °C → 95 %',
+                unterzeile: 'roh 99,4 %',
+                weg: { art: 'normal', strategie: 'kennlinie', richtung: 'heizen', basis: 87, abweichung: 1, korrektur: 7, totband: 0.3, grenze: null, sollwert: 95 },
+            },
         }),
+        // eigene Grenze, aber die Punkte der Vorlage
+        grenzeEigen: bild('heizen', [], { grenzenEigen: { untergrenze: 45, obergrenze: '' } }),
         leer: bild('kuehlen', []),
         werk: bild('kuehlen', [], { mitVorgabe: false }),
         eingeklappt: bild('kuehlen', [], { eingeklappt: true }),
@@ -63,7 +102,49 @@ export function renderAll(): Record<string, string> {
             ],
             false,
         ),
-        stufenGeraet: stufen([], true),
+        stufenGeraet: stufen([], true, [{ id: 'wach', name: 'Wach', power: true, mode: 'heat', soll: 20, fan: 'auto', deckel: 100, bedarf: true, feuchte: true }]),
+        stufenGeraetEigen: stufen([{ id: 'tag', name: 'Tag', power: true, mode: 'heat', soll: 22, fan: 'auto', deckel: 90, bedarf: true, feuchte: true }], true),
+        // Rechenweg: alle Arten als Satz (Schluessel = Fall)
+        ...Object.fromEntries(
+            Object.entries(WEGE).map(([name, [weg, richtung]]) => [`weg_${name}`, wegText(weg, 'de', richtung)]),
+        ),
+        wegZeile: mit(
+            <RechenwegZeile
+                weg={WEGE.warm[0]}
+                sprache="de"
+                richtung="heizen"
+            />,
+        ),
+        wegZeileLeer: mit(
+            <RechenwegZeile
+                weg={undefined}
+                sprache="de"
+            />,
+        ),
+        satz: satzText(10, 0.3, 'de'),
+        satzEigen: satzText('15', 0.5, 'de'),
+        satzEn: satzText(undefined, '', 'en'),
+        satzNull: satzText(0, 0.3, 'de'),
+        raumkorrektur: mit(
+            <RaumkorrekturAnsicht
+                staerke={10}
+                totband={0.3}
+                sprache="de"
+                farben={farben}
+                onWert={() => {}}
+                onBeide={() => {}}
+            />,
+        ),
+        raumkorrekturEigen: mit(
+            <RaumkorrekturAnsicht
+                staerke={25}
+                totband={0.5}
+                sprache="de"
+                farben={farben}
+                onWert={() => {}}
+                onBeide={() => {}}
+            />,
+        ),
         feuchte: mit(
             <FeuchteAnsicht
                 werte={{ dtpEin: 4, dtpAus: 6, rhEin: 65, rhAus: 58 }}
