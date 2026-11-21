@@ -929,6 +929,34 @@
                             }
                         },
                         {
+                            "attr": "_hKann",
+                            "type": "header",
+                            "size": 4,
+                            "text": "headerKann",
+                            "newLine": true,
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12
+                        },
+                        {
+                            "attr": "_kann",
+                            "type": "textSendTo",
+                            "container": "html",
+                            "command": "regelKann",
+                            "jsonData": "{\"geraet\":${JSON.stringify(data.geraet ?? \"\")},\"betrieb\":${JSON.stringify(data.betrieb ?? \"adapter\")}}",
+                            "alsoDependsOn": [
+                                "geraet",
+                                "betrieb"
+                            ],
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12
+                        },
+                        {
                             "attr": "_hBedarf",
                             "type": "header",
                             "size": 4,
@@ -1434,34 +1462,6 @@
                             "default": 0,
                             "help": "helpFrostAb",
                             "newLine": true
-                        },
-                        {
-                            "attr": "_hKann",
-                            "type": "header",
-                            "size": 4,
-                            "text": "headerKann",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        {
-                            "attr": "_kann",
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "regelKann",
-                            "jsonData": "{\"geraet\":${JSON.stringify(data.geraet ?? \"\")},\"betrieb\":${JSON.stringify(data.betrieb ?? \"adapter\")}}",
-                            "alsoDependsOn": [
-                                "geraet",
-                                "betrieb"
-                            ],
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
                         }
                     ]
                 },
