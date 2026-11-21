@@ -187,7 +187,26 @@ Wichtig:
   neu (etwa 10 Sekunden ohne Verbindung). Bitte gezielt ändern, nicht zum Ausprobieren im
   Minutentakt.
 
-## 6. VIS-Baustein „Regelung“
+## 6. Eigener oder externer Broker
+
+Ab Werk läuft der **eigene MQTT-Broker** des Adapters – es muss nichts weiter installiert werden,
+die Module zeigen einfach darauf. Im Reiter **MQTT-Broker** lässt sich stattdessen ein **externer
+Broker** wählen (zum Beispiel Mosquitto oder der MQTT-Adapter von ioBroker). Der Adapter verbindet
+sich dann als Client; einzutragen sind Adresse, Port (1883, mit TLS meist 8883), bei Bedarf TLS,
+Benutzername, Passwort, Client-ID und ein Topic-Präfix.
+
+- **Verbindung testen** prüft die Werte aus dem Formular schon vor dem Speichern und sagt, ob der
+  Broker erreichbar ist, die Anmeldung ablehnt oder nicht antwortet.
+- Mit externem Broker läuft der eigene Broker nicht, sein Port wird frei.
+- Die Module müssen selbst auf den externen Broker zeigen (Modul-Einstellung `mqtthost`). Der
+  Adapter stellt das nicht automatisch um; der Reiter „Module suchen“ zeigt, welche Module noch
+  auf einen anderen Broker zeigen, und kann ein Modul umstellen.
+- Beim Wechsel gehen keine Daten verloren: Datenpunkte, Wochenpläne und Sicherungen bleiben. Nach
+  dem Speichern startet der Adapter neu.
+
+![Externer Broker](../img/broker_extern.png)
+
+## 7. VIS-Baustein „Regelung“
 
 ![VIS-Baustein](../img/vis_regelung.png)
 
@@ -196,7 +215,7 @@ die Kennlinie mit Arbeitspunkt, die Leistungsgrenze und welche Regelungen laufen
 Anzeige; bedient wird über die übrigen Bausteine oder die Gerätekarte. Als Attribut genügt das
 Geräteobjekt, z. B. `faikout.0.Wohnzimmer`.
 
-## 7. Datenpunkte
+## 8. Datenpunkte
 
 Alles, was die Oberfläche zeigt, steht auch als Datenpunkt unter `<Gerät>.regel.*` bereit, unter
 anderem `zustand`, `grund`, `bedarf.sollwert`, `plan.szene`, `plan.naechster`, `hand.gesperrt`,

@@ -61,6 +61,21 @@ Objects are grouped per device:
    **MQTT host** to `<ioBroker IP>:<port>`. The module reconnects on its own.
    The tab **Find modules** shows the exact value to copy (see below).
 
+### Internal or external broker
+
+By default the adapter runs its **own MQTT broker** – nothing else has to be installed, the
+modules only point to it. In the tab **MQTT broker** you can choose an **external broker** instead
+(for example Mosquitto or the ioBroker MQTT adapter): the adapter then connects as a client with
+address, port, optional TLS, user name, password, client ID and an optional topic prefix. "Test
+connection" checks the values of the form before saving and says whether the broker is reachable,
+rejects the sign-in or does not answer.
+
+With an external broker the adapter's own broker does not run and its port becomes free. The
+modules must point to the external broker themselves (module setting `mqtthost`); the adapter does
+not change that automatically – the tab "Find modules" shows which modules still point elsewhere
+and can switch one over. Switching between the two modes loses no data; the adapter restarts after
+saving.
+
 ### Find modules
 
 The tab **Find modules** in the instance settings helps with step 3:
@@ -257,6 +272,8 @@ one detail page per unit with controls, energy history and a phone view. They us
   the ready-to-copy MQTT host value.
 - "Connect a module": sets the MQTT host of one module to this adapter after a check and a
   confirmation, verifies that it reports within 90 s, and can restore the previous MQTT host.
+- Optional external MQTT broker (for example Mosquitto) instead of the built-in one, with a
+  connection test in the settings.
 
 ### 0.2.1 (2026-11-19)
 - `control.swing` / `swingNum`: new value `H+C` (`horizontalComfort`, number 6) for comfort mode with

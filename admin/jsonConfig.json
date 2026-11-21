@@ -10,20 +10,71 @@
                     "type": "header",
                     "size": 4,
                     "text": "headerBroker",
+                    "newLine": true,
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
                     "xl": 12
                 },
-                "brokerText": {
+                "brokerModus": {
+                    "type": "select",
+                    "label": "labelBrokerModus",
+                    "options": [
+                        {
+                            "label": "optBrokerIntern",
+                            "value": "intern"
+                        },
+                        {
+                            "label": "optBrokerExtern",
+                            "value": "extern"
+                        }
+                    ],
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6,
+                    "default": "intern",
+                    "newLine": true
+                },
+                "_tBrokerIntern": {
                     "type": "staticText",
-                    "text": "textBroker",
+                    "text": "textBrokerIntern",
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12
+                    "xl": 12,
+                    "hidden": "data.brokerModus === 'extern'",
+                    "style": {
+                        "opacity": 0.8
+                    }
+                },
+                "_tBrokerExtern": {
+                    "type": "staticText",
+                    "text": "textBrokerExtern",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "style": {
+                        "opacity": 0.8
+                    }
+                },
+                "_tBrokerWechsel": {
+                    "type": "staticText",
+                    "text": "textBrokerWechsel",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "style": {
+                        "opacity": 0.8
+                    }
                 },
                 "port": {
                     "type": "number",
@@ -36,16 +87,9 @@
                     "sm": 12,
                     "md": 6,
                     "lg": 4,
-                    "xl": 4
-                },
-                "_spacer": {
-                    "type": "staticText",
-                    "text": "",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 6,
-                    "lg": 6,
-                    "xl": 6
+                    "xl": 4,
+                    "hidden": "data.brokerModus === 'extern'",
+                    "newLine": true
                 },
                 "user": {
                     "type": "text",
@@ -55,18 +99,249 @@
                     "sm": 12,
                     "md": 6,
                     "lg": 4,
-                    "xl": 4
+                    "xl": 4,
+                    "hidden": "data.brokerModus === 'extern'",
+                    "newLine": true
                 },
                 "pass": {
                     "type": "password",
                     "label": "labelPass",
                     "help": "helpPass",
-                    "hidden": "!data.user",
+                    "hidden": "data.brokerModus === 'extern' || !data.user",
                     "xs": 12,
                     "sm": 12,
                     "md": 6,
                     "lg": 4,
                     "xl": 4
+                },
+                "externHost": {
+                    "type": "text",
+                    "label": "labelExternHost",
+                    "default": "",
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "externPort": {
+                    "type": "number",
+                    "label": "labelExternPort",
+                    "min": 1,
+                    "max": 65535,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3,
+                    "default": 1883,
+                    "help": "helpExternPort",
+                    "hidden": "data.brokerModus !== 'extern'"
+                },
+                "externTls": {
+                    "type": "checkbox",
+                    "label": "labelExternTls",
+                    "default": false,
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "externUser": {
+                    "type": "text",
+                    "label": "labelExternUser",
+                    "help": "helpExternUser",
+                    "default": "",
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "externPass": {
+                    "type": "password",
+                    "label": "labelExternPass",
+                    "default": "",
+                    "hidden": "data.brokerModus !== 'extern' || !data.externUser",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "externClientId": {
+                    "type": "text",
+                    "label": "labelExternClientId",
+                    "help": "helpExternClientId",
+                    "default": "",
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "externPraefix": {
+                    "type": "text",
+                    "label": "labelExternPraefix",
+                    "help": "helpExternPraefix",
+                    "default": "",
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_brokerTesten": {
+                    "type": "sendTo",
+                    "command": "brokerVerbindungTesten",
+                    "label": "btnBrokerTest",
+                    "variant": "outlined",
+                    "useNative": true,
+                    "showProcess": true,
+                    "timeout": 20000,
+                    "jsonData": "{\"host\":${JSON.stringify(data.externHost ?? \"\")},\"port\":${JSON.stringify(data.externPort ?? \"\")},\"tls\":${!!data.externTls},\"user\":${JSON.stringify(data.externUser ?? \"\")},\"pass\":${JSON.stringify(data.externPass ?? \"\")},\"clientId\":${JSON.stringify(data.externClientId ?? \"\")}}",
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_tTestOk": {
+                    "type": "staticText",
+                    "text": "testOk",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'ok'",
+                    "style": {
+                        "border": "1px solid #3d9a50",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(61,154,80,0.12)"
+                    },
+                    "doNotSave": true,
+                    "newLine": true
+                },
+                "_tTestAnmeldung": {
+                    "type": "staticText",
+                    "text": "testAnmeldung",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'anmeldung'",
+                    "style": {
+                        "border": "1px solid #d9534f",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,83,79,0.10)"
+                    },
+                    "doNotSave": true,
+                    "newLine": true
+                },
+                "_tTestNicht": {
+                    "type": "staticText",
+                    "text": "testNichtErreichbar",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'nichtErreichbar'",
+                    "style": {
+                        "border": "1px solid #d9534f",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,83,79,0.10)"
+                    },
+                    "doNotSave": true,
+                    "newLine": true
+                },
+                "_tTestZeit": {
+                    "type": "staticText",
+                    "text": "testZeit",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'zeit'",
+                    "style": {
+                        "border": "1px solid #d9534f",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,83,79,0.10)"
+                    },
+                    "doNotSave": true,
+                    "newLine": true
+                },
+                "_tTestEingabe": {
+                    "type": "staticText",
+                    "text": "testEingabe",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'eingabe'",
+                    "style": {
+                        "border": "1px solid #d9534f",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,83,79,0.10)"
+                    },
+                    "doNotSave": true,
+                    "newLine": true
+                },
+                "_tTestFehler": {
+                    "type": "staticText",
+                    "text": "${data._brokerTestText || \"\"}",
+                    "noTranslation": true,
+                    "doNotSave": true,
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'fehler'",
+                    "newLine": true,
+                    "style": {
+                        "border": "1px solid #d9534f",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,83,79,0.10)"
+                    },
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_tExternModule": {
+                    "type": "staticText",
+                    "text": "textExternModule",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "newLine": true,
+                    "style": {
+                        "border": "1px solid #d98a00",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,138,0,0.12)"
+                    }
                 }
             }
         },
@@ -1019,6 +1294,22 @@
             "type": "panel",
             "label": "tabSearch",
             "items": {
+                "_externZiel": {
+                    "type": "staticText",
+                    "text": "textExternZiel",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "style": {
+                        "border": "1px solid #d98a00",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,138,0,0.12)"
+                    }
+                },
                 "searchHeaderAddress": {
                     "type": "header",
                     "size": 4,
@@ -2926,6 +3217,22 @@
             "type": "panel",
             "label": "tabHelp",
             "items": {
+                "_externZiel": {
+                    "type": "staticText",
+                    "text": "textExternZiel",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "style": {
+                        "border": "1px solid #d98a00",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,138,0,0.12)"
+                    }
+                },
                 "h1": {
                     "type": "header",
                     "size": 4,

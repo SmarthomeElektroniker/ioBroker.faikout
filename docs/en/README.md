@@ -181,7 +181,26 @@ Important:
 - Every write wears the flash memory of the module and restarts it for some settings (about
   10 seconds without connection). Change deliberately, not for trying things out every minute.
 
-## 6. vis widget "Climate control"
+## 6. Internal or external broker
+
+By default the adapter runs its **own MQTT broker** – nothing else has to be installed, the
+modules simply point to it. In the tab **MQTT broker** an **external broker** can be chosen
+instead (for example Mosquitto or the ioBroker MQTT adapter). The adapter then connects as a
+client; you enter address, port (1883, with TLS usually 8883), TLS if needed, user name, password,
+client ID and a topic prefix.
+
+- **Test connection** checks the values of the form before saving and says whether the broker is
+  reachable, rejects the sign-in or does not answer.
+- With an external broker the adapter's own broker does not run and its port becomes free.
+- The modules must point to the external broker themselves (module setting `mqtthost`). The
+  adapter does not change that automatically; the tab "Find modules" shows which modules still
+  point to another broker and can switch a module over.
+- Switching loses no data: data points, weekly schedules and saved states stay. After saving, the
+  adapter restarts.
+
+![External broker](../img/broker_extern.png)
+
+## 7. vis widget "Climate control"
 
 ![vis widget](../img/vis_regelung.png)
 
@@ -190,7 +209,7 @@ operating point, the power limit and which controls are running for one unit. It
 operation happens through the other widgets or the device card. The only attribute needed is the
 device object, e.g. `faikout.0.Livingroom`.
 
-## 7. Data points
+## 8. Data points
 
 Everything the interface shows is also available as data points below `<unit>.regel.*`, among
 them `zustand`, `grund`, `bedarf.sollwert`, `plan.szene`, `plan.naechster`, `hand.gesperrt`,

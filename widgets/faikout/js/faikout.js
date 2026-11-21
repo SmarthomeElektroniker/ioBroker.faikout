@@ -69,6 +69,7 @@ vis.binds.faikout = {
         'Jahr': 'Year',
         'Gesamt': 'Total',
         'Leistungsgrenze': 'Power limit',
+        'außen, Mittel 30 min': 'outside, 30 min mean',
         'aktiv': 'active',
         'Handeingriff': 'manual override',
         'gestört': 'fault',
@@ -839,8 +840,11 @@ vis.binds.faikout = {
                 }
                 // Fusszeile: aussen, Leistung, welche Regelungen laufen
                 var werte = [];
-                var aussen = b.zahl(ctx.wert('regel.fuehler.aussen') !== null ? ctx.wert('regel.fuehler.aussen') : ctx.wert('status.outside'), 1);
-                if (aussen !== null) werte.push(b.t('Außen').toLowerCase() + ' ' + aussen + ' °C');
+                // Aussentemperatur wie beim Arbeitspunkt: das 30-Minuten-Mittel der Regelung; ohne Mittel
+                // (Regelung rechnet noch nicht) der aktuelle Wert, dann ohne den Zusatz.
+                var mittel = b.zahl(ctx.wert('regel.bedarf.aussenMittel'), 1);
+                var aussen = mittel !== null ? mittel : b.zahl(ctx.wert('regel.fuehler.aussen') !== null ? ctx.wert('regel.fuehler.aussen') : ctx.wert('status.outside'), 1);
+                if (aussen !== null) werte.push((mittel !== null ? b.t('außen, Mittel 30 min') : b.t('Außen').toLowerCase()) + ' ' + aussen + ' °C');
                 var watt = b.zahl(ctx.wert('status.consumption'), 0);
                 if (watt !== null) werte.push(watt + ' W');
                 $wurzel.find('.fk-regel-werte').text(werte.join(' · '));

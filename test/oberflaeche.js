@@ -854,3 +854,80 @@ describe('Einstellungsseite: neue Felder je Geraet und Modul-Reiter', () => {
         expect(kopie.confirm.text).to.equal('confirmKopieText');
     });
 });
+
+describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
+    const konfig = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'admin', 'jsonConfig.json'), 'utf8'));
+    const b = konfig.items.tabBroker.items;
+
+    it('Wahl intern/extern; je Betriebsart nur die eigenen Felder sichtbar', () => {
+        expect(b.brokerModus.options.map(x => x.value)).to.eql(['intern', 'extern']);
+        expect(b.brokerModus.default).to.equal('intern');
+        for (const k of ['port', 'user', 'pass', '_tBrokerIntern']) {
+            expect(b[k].hidden, k).to.contain("data.brokerModus === 'extern'");
+        }
+        for (const k of ['externHost', 'externPort', 'externTls', 'externUser', 'externPass', 'externClientId', 'externPraefix', '_brokerTesten', '_tExternModule', '_tBrokerExtern']) {
+            expect(b[k].hidden, k).to.contain("data.brokerModus !== 'extern'");
+        }
+        expect(b.externPass.type).to.equal('password');
+        expect(b.externPort).to.include({ default: 1883, help: 'helpExternPort' });
+        // Hinweis auf das Ziel der Module auch in "Module suchen" und "Einrichtung"
+        for (const tab of ['tabSearch', 'tabHelp']) {
+            expect(konfig.items[tab].items._externZiel.hidden).to.equal("data.brokerModus !== 'extern'");
+        }
+    });
+
+    it('jede Einstellung des Formulars hat eine Vorgabe in io-package (native), das Passwort ist geschuetzt', () => {
+        const io = require('../io-package.json');
+        for (const k of ['brokerModus', 'externHost', 'externPort', 'externTls', 'externUser', 'externPass', 'externClientId', 'externPraefix']) {
+            expect(k in io.native, k).to.equal(true);
+            expect(b[k], k).to.be.an('object');
+        }
+        expect(io.encryptedNative).to.include('externPass');
+        expect(io.protectedNative).to.include('externPass');
+        expect(io.common.news['1.0.0'].de).to.contain('externer MQTT-Broker');
+    });
+
+    it('Knopf "Verbindung testen": Werte aus dem Formular, fuer jede Art des Ergebnisses ein Text', () => {
+        expect(b._brokerTesten).to.include({ command: 'brokerVerbindungTesten', useNative: true });
+        for (const feld of ['externHost', 'externPort', 'externTls', 'externUser', 'externPass', 'externClientId']) {
+            expect(b._brokerTesten.jsonData).to.contain(`data.${feld}`);
+        }
+        const arten = Object.values(b)
+            .map(x => /data\._brokerTest !== '(\w+)'/.exec(x.hidden || ''))
+            .filter(Boolean)
+            .map(m => m[1]);
+        expect(arten.sort()).to.eql(['anmeldung', 'eingabe', 'fehler', 'nichtErreichbar', 'ok', 'zeit']);
+    });
+
+    it('Antwortumwandlung: Art des Tests -> Formularwerte', () => {
+        expect(o.brokerTestAntwort({ ok: true, art: 'ok' }, 'de')).to.eql({ native: { _brokerTest: 'ok', _brokerTestText: '' } });
+        for (const art of ['anmeldung', 'nichtErreichbar', 'zeit', 'eingabe']) {
+            expect(o.brokerTestAntwort({ ok: false, art }, 'de').native).to.eql({ _brokerTest: art, _brokerTestText: '' });
+        }
+        expect(o.brokerTestAntwort({ ok: false, art: 'fehler', fehler: 'self signed certificate' }, 'de').native).to.eql({
+            _brokerTest: 'fehler',
+            _brokerTestText: 'Verbindung fehlgeschlagen: self signed certificate',
+        });
+        // Unbekanntes oder Widerspruechliches wird nie als Erfolg gezeigt
+        expect(o.brokerTestAntwort({ ok: false, art: 'ok' }, 'de').native._brokerTest).to.equal('fehler');
+        expect(o.brokerTestAntwort({ ok: false, art: 'seltsam' }, 'de').native._brokerTest).to.equal('fehler');
+        expect(o.brokerTestAntwort(null, 'en').native._brokerTestText).to.equal('Connection failed: ?');
+    });
+
+    it('Nachricht brokerVerbindungTesten: Formularwerte gehen an den Test, leeres Passwort = das gespeicherte', async () => {
+        const a = adapter({}, { externPass: 'gespeichert' });
+        a.instance = 0;
+        const aufrufe = [];
+        a.brokerTestFunktion = async x => (aufrufe.push(x), { ok: false, art: 'anmeldung' });
+        const r = await frage(a, 'brokerVerbindungTesten', { host: ' mosquitto ', port: '', tls: true, user: 'u', pass: '', clientId: '' });
+        expect(r.antwort.native._brokerTest).to.equal('anmeldung');
+        expect(aufrufe[0]).to.eql({ host: 'mosquitto', port: 8883, tls: true, user: 'u', pass: 'gespeichert', clientId: 'iobroker-faikout-0' });
+        await frage(a, 'brokerVerbindungTesten', { host: 'h', port: 1884, tls: false, user: 'u', pass: 'neu', clientId: 'mein' });
+        expect(aufrufe[1]).to.include({ port: 1884, pass: 'neu', clientId: 'mein', tls: false });
+    });
+
+    it('echter Test ohne Adresse: "eingabe", ohne Netzzugriff', async () => {
+        const r = await frage(adapter(), 'brokerVerbindungTesten', { host: '' });
+        expect(r.antwort.native._brokerTest).to.equal('eingabe');
+    });
+});
