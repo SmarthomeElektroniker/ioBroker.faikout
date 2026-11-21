@@ -16,6 +16,20 @@ aus sind. Auf der Gerätekarte steht solange das Etikett „Probelauf“.
 
 ![Reiter Regelung](../img/einstellungen_regelung.png)
 
+### Die Reiter der Einstellungsseite
+
+| Reiter | Was dort steht |
+|---|---|
+| **Einrichtung** | Schrittliste mit Haken: Broker, Modul verbinden, Regelung, Zeitplan |
+| **Zeitpläne** | WANN welche Temperatur gilt: Schaubild der Regelung, Temperaturstufen der Vorlage (Regler zum Ziehen), Wochenplan der Vorlage und je Gerät Vorschau, Schalter und „Wochenplan bearbeiten“. Eingeklappt: Handeingriff und Feiertage |
+| **Regelung** | WIE die Anlage gefahren wird: Probelauf, die globale Vorlage (Strategie, Kennlinien und Grenzen im Bild, Feuchte-Grenzen im Bild), darunter die Geräte. Eingeklappt: Feinabstimmung |
+| **Verbrauch** | Diagramm und Aufzeichnung |
+| **Module suchen**, **MQTT-Broker (Technik)**, **Moduleinstellungen (Technik)** | Anbinden und Technik |
+
+Je Gerät sind im Reiter *Regelung* immer sichtbar: wer regelt, Fühler (mit Live-Wert) und Frostschutz.
+Strategie, Kennlinien und die eigenen Temperaturstufen des Geräts erscheinen erst mit dem Haken
+**„Individuell statt globaler Vorlage“**; ein farbiger Kasten sagt, was gerade gilt.
+
 ## 2. Vorlage und Einstellungen je Gerät
 
 Die Regelung kennt genau zwei Ebenen:
@@ -123,13 +137,13 @@ an der Anlage weicht dann um höchstens ±3 K vom Ziel ab), oder der Fühlerwert
 **Frostschutz:** Unter der eingestellten Raumtemperatur heizt der Adapter auf 10 °C – auch wenn
 der Plan „Aus“ vorsieht. 0 schaltet den Frostschutz ab.
 
-### Werte eines anderen Geräts übernehmen
+### Kopieren, Einfügen, Zurücksetzen
 
-Bei mehreren Geräten lassen sich Temperaturstufen, Strategie mit Kennlinie und Grenzen oder beides von einem
-Gerät auf ein anderes kopieren. Nach der Rückfrage wird die Geräteliste sofort gespeichert und der
-Adapter startet neu – andere ungespeicherte Änderungen auf der Seite vorher speichern.
-
-![Werte übernehmen](../img/uebernehmen.png)
+Unter jeder Grafik (Kennlinie, Temperaturstufen, Feuchte, Wochenplan) stehen drei Knöpfe:
+**Kopieren** merkt den Inhalt, **Einfügen** setzt ihn bei einem anderen Gerät oder in der Vorlage ein
+(grau, solange nichts Passendes kopiert ist), **Vorlage übernehmen** bzw. **Werksvorgabe** setzt
+zurück. Nach dem Einfügen oder Zurücksetzen erscheint kurz **Rückgängig**. Kennlinien, Stufen und
+Feuchte-Grenzen gelten erst mit „Speichern“; ein Wochenplan am Gerät wirkt sofort.
 
 ## 3. Für alle Geräte
 

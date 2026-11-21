@@ -16,6 +16,20 @@ when both are off. Until then the device card carries the label "Dry run".
 
 ![Tab Climate control](../img/einstellungen_regelung.png)
 
+### The tabs of the settings page
+
+| Tab | What it holds |
+|---|---|
+| **Setup** | step list with ticks: broker, connect module, climate control, schedule |
+| **Schedules** | WHEN which temperature applies: diagram of the control, temperature levels of the template (sliders to drag), weekly schedule of the template and per unit preview, switch and “Edit weekly schedule”. Collapsed: manual override and public holidays |
+| **Climate control** | HOW the unit is run: dry run, the global template (strategy, curves and limits in the chart, humidity limits in the chart), below it the units. Collapsed: fine tuning |
+| **Consumption** | chart and recording |
+| **Find modules**, **MQTT broker (advanced)**, **Module settings (advanced)** | connecting and technical settings |
+
+Per unit the tab *Climate control* always shows: who controls, sensors (with live value) and frost
+protection. Strategy, curves and the unit’s own temperature levels only appear with the tick
+**“Individual instead of global template”**; a coloured box says what currently applies.
+
 ## 2. Template and settings per unit
 
 The control knows exactly two levels:
@@ -124,13 +138,13 @@ unit then differs from the target by at most ±3 K), or the sensor value is sent
 **Frost protection:** below the configured room temperature the adapter heats to 10 °C – even if
 the schedule says off. 0 switches frost protection off.
 
-### Take over values from another unit
+### Copy, paste, reset
 
-With several units, temperature levels, strategy with curve and limits, or both can be copied from one unit to
-another. After the confirmation the unit list is saved at once and the adapter restarts – save
-other unsaved changes on the page first.
-
-![Take over values](../img/uebernehmen.png)
+Below every chart (curve, temperature levels, humidity, weekly schedule) there are three buttons:
+**Copy** remembers the content, **Paste** inserts it at another unit or in the template (grey as
+long as nothing suitable has been copied), **Apply template** or **Factory default** resets. After
+pasting or resetting, **Undo** is offered for a short time. Curves, levels and humidity limits only
+apply with “Save”; a weekly schedule at a unit takes effect at once.
 
 ## 3. For all units
 
