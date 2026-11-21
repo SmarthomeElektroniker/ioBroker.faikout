@@ -190,8 +190,12 @@ describe('Client-ID am externen Broker: einstellbar, Standard einmal erzeugt', (
     });
     it('Einstellungsseite: Feld und Knopf nur beim externen Broker, Vorgabe in io-package', () => {
         const B = require('../admin/jsonConfig.json').items.tabBroker.items;
-        expect(B.externClientId.hidden).to.equal("data.brokerModus !== 'extern'");
-        expect(B._clientIdStandard).to.include({ type: 'sendTo', command: 'clientIdStandard', hidden: "data.brokerModus !== 'extern'" });
+        // Client-ID und Knopf stehen im eingeklappten Abschnitt "Fuer Fortgeschrittene", den es nur
+        // beim externen Broker gibt
+        const P = B._pFortgeschritten;
+        expect(P).to.include({ type: 'panel', collapsable: true, hidden: "data.brokerModus !== 'extern'" });
+        expect(P.items.externClientId.type).to.equal('text');
+        expect(P.items._clientIdStandard).to.include({ type: 'sendTo', command: 'clientIdStandard' });
         expect(require('../io-package.json').native).to.have.property('externClientIdStandard', '');
     });
 });

@@ -267,6 +267,9 @@ one detail page per unit with controls, energy history and a phone view. They us
 - The control data points live below `<unit>.regulation.*` with English IDs, state values and JSON
   keys; data points and JSON values of pre-release builds (`regel.*`, German keys) are moved or
   rewritten once at start.
+- Instance settings ordered by importance: Setup, Climate control, Consumption, Find modules,
+  then the technical tabs (MQTT broker, Module settings); details for advanced users are collapsed.
+  The setup tab lists the steps as a checklist that ticks off what is already done.
 - Module settings can be read and written (with preview, backup and read-back).
 - The reason why a unit does not accept the power limit is explained (Daikin Wi-Fi module and app).
 - New tab "Find modules" in the instance settings: one-off mDNS search or check of a single

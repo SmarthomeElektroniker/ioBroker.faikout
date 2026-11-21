@@ -1081,7 +1081,13 @@ describe('Einstellungsseite: neue Felder je Geraet und Modul-Reiter', () => {
 
 describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
     const konfig = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'admin', 'jsonConfig.json'), 'utf8'));
-    const b = konfig.items.tabBroker.items;
+    // Client-ID und Topic-Praefix liegen im eingeklappten Abschnitt "Fuer Fortgeschrittene", der nur
+    // beim externen Broker erscheint - fuer die Pruefungen zaehlt die Sichtbarkeit des Abschnitts
+    const abschnitt = konfig.items.tabBroker.items._pFortgeschritten;
+    const b = {
+        ...konfig.items.tabBroker.items,
+        ...Object.fromEntries(Object.entries(abschnitt.items).map(([k, v]) => [k, { ...v, hidden: abschnitt.hidden }])),
+    };
 
     it('Wahl intern/extern; je Betriebsart nur die eigenen Felder sichtbar', () => {
         expect(b.brokerModus.options.map(x => x.value)).to.eql(['intern', 'extern']);
@@ -1099,14 +1105,33 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
         // "Einrichtung" und "Modul anbinden" haben fuer den Extern-Betrieb einen EIGENEN Text statt
         // eines Warnkastens ueber dem Text fuer den eigenen Broker
         const hilfe = konfig.items.tabHelp.items;
-        expect(hilfe.tS2.hidden).to.equal("data.brokerModus === 'extern'");
-        expect(hilfe.tS2e).to.include({ text: 'textSchritt2Extern', hidden: "data.brokerModus !== 'extern'" });
+        // (die festen Schritt-Texte stehen nur bei gestopptem Adapter - sonst liefert der Adapter die
+        // Schrittliste mit dem Stand in jeder Zeile)
+        expect(hilfe.tS2.hidden).to.equal("_alive || data.brokerModus === 'extern'");
+        expect(hilfe.tS2e).to.include({ text: 'textSchritt2Extern', hidden: "_alive || data.brokerModus !== 'extern'" });
+        expect(hilfe._stand).to.include({ type: 'textSendTo', command: 'einrichtungStand', hidden: '!_alive' });
+        for (const k of ['hS1', 'tS1', 'hS2', 'hS3', 'tS3']) {
+            expect(hilfe[k].hidden, k).to.equal('_alive');
+        }
         const such = konfig.items.tabSearch.items;
         expect(such.bindText.hidden).to.equal("data.brokerModus === 'extern'");
         expect(such.bindTextExtern).to.include({ text: 'textBindExtern', hidden: "data.brokerModus !== 'extern'" });
         expect(such.moduleAddress.hidden).to.equal("data.brokerModus === 'extern'");
-        // Anleitung ist der erste Reiter
-        expect(Object.keys(konfig.items)[0]).to.equal('tabHelp');
+        // Reiter: Wichtiges zuerst (Einrichtung, Regelung, Verbrauch), dahinter Module suchen und die
+        // technischen Reiter, die im Namen als solche erkennbar sind
+        expect(Object.keys(konfig.items)).to.eql(['tabHelp', 'tabRegelung', 'tabConsumption', 'tabSearch', 'tabBroker', 'tabModule']);
+        const de = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'admin', 'i18n', 'de.json'), 'utf8'));
+        expect([de.tabBroker, de.tabModule]).to.eql(['MQTT-Broker (Technik)', 'Moduleinstellungen (Technik)']);
+        // Fortgeschrittenes ist eingeklappt und so benannt
+        expect(abschnitt).to.include({ type: 'panel', collapsable: true, label: 'headerBrokerFortgeschritten' });
+        expect(de.headerBrokerFortgeschritten).to.match(/^Für Fortgeschrittene: /);
+        const fein = konfig.items.tabRegelung.items._pFein;
+        expect(fein).to.include({ type: 'panel', collapsable: true });
+        expect(de.headerFein).to.match(/^Für Fortgeschrittene: /);
+        expect(Object.keys(fein.items)).to.include('regelFeuchteMinLauf').and.to.include('regelFeuchtePause');
+        expect(Object.keys(konfig.items.tabRegelung.items).pop()).to.equal('_pFein'); // ganz unten
+        expect(konfig.items.tabModule.items._pTabelle).to.include({ type: 'panel', collapsable: true, label: 'headerModule' });
+        expect(konfig.items.tabSearch.items._pHand.items._mqtthostValue.type).to.equal('textSendTo');
         // ein altes Testergebnis verschwindet, sobald Adresse/Port/TLS/Benutzer geaendert werden
         for (const k of ['_tTestOk', '_tTestAnmeldung', '_tTestNicht', '_tTestZeit', '_tTestEingabe', '_tTestFehler']) {
             expect(b[k].hidden, k).to.contain('data._brokerTestZiel !== ');
@@ -1283,19 +1308,46 @@ describe('UX-Funde 21.11.2026', () => {
         expect(o.alterText(7200000)).to.equal('2 h');
     });
 
-    it('Einrichtung: Stand in drei Zeilen (Broker, Module, Regelung)', async () => {
+    it('Einrichtung: Schrittliste mit dem Stand IN der Zeile - erledigt gruen abgehakt, offen mit Anweisung und Reiter', async () => {
         const a = adapter({}, { regelGeraete: [{ geraet: 'OG' }] });
         a.broker = {};
         a.brokerZiel = () => ({ extern: false, port: 1888 });
         const html = (await frage(a, 'einrichtungStand', {})).antwort;
-        expect(html).to.contain('Eigener MQTT-Broker läuft auf Port 1888');
-        expect(html).to.contain('Module, die sich gemeldet haben: 2 (Wohnzimmer AC, OG)');
-        expect(html).to.contain('Regelung für 1 von 2 Anlagen eingerichtet');
+        const zeilen = h => h.split('<div data-schritt="').slice(1);
+        const klar = h => h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+        const z = zeilen(html);
+        expect(z).to.have.length(3);
+        // alle drei erledigt: Haken in der Ampelfarbe "gut", Ueberschrift und Stand in derselben Zeile
+        for (const [i, titel, stand] of [
+            [0, '1 · MQTT-Broker', 'Eigener MQTT-Broker läuft auf Port 1888'],
+            [1, '2 · Modul verbinden', 'Module, die sich gemeldet haben: 2 (Wohnzimmer AC, OG)'],
+            [2, '3 · Regelung einrichten (freiwillig)', 'Regelung für 1 von 2 Anlagen eingerichtet'],
+        ]) {
+            expect(z[i].startsWith('erledigt"'), titel).to.equal(true);
+            expect(z[i], titel).to.contain('✓').and.to.contain(o.AMPEL.gut).and.to.not.contain('○');
+            expect(klar(z[i]), titel).to.contain(titel).and.to.contain(stand);
+        }
+        // erledigte Schritte nennen keinen Reiter mehr, keine getrennte Aufzaehlung "So weit bist du"
+        expect(html).to.not.contain('→').and.to.not.contain('So weit bist du');
+        // offen: neutraler Kreis, Handlungsanweisung und der Reiter, in dem es weitergeht
         a.geraete = new Map();
         a.broker = { verbunden: false };
         a.brokerZiel = () => ({ extern: true, adresse: 'mq.lan', port: 1883 });
         const leer = (await frage(a, 'einrichtungStand', {})).antwort;
-        expect(leer).to.contain('Keine Verbindung zum externen Broker mq.lan:1883').and.to.contain('Noch hat sich kein Modul gemeldet');
+        const l = zeilen(leer);
+        expect(l.every(x => x.startsWith('offen"') && x.includes('○') && !x.includes('✓'))).to.equal(true);
+        expect(klar(l[0])).to.contain('Keine Verbindung zum externen Broker mq.lan:1883').and.to.contain('MQTT-Broker (Technik)');
+        expect(klar(l[1])).to.contain('Noch hat sich kein Modul gemeldet').and.to.contain('Extern-Betrieb: Die Module müssen auf deinen externen Broker zeigen').and.to.contain('Module suchen');
+        expect(klar(l[2])).to.contain('Noch keine Anlage eingerichtet').and.to.contain('Knopf mit dem Kalender').and.to.contain('Regelung');
+        expect(leer).to.contain('→');
+        // kein Skript, keine fremden Adressen
+        expect(html + leer).to.not.match(/<script|https?:/);
+        // jede Sprache hat Ueberschriften und Texte
+        for (const s of o.SPRACHEN) {
+            a.sprache = async () => s;
+            const h = klar((await frage(a, 'einrichtungStand', {})).antwort);
+            expect(h, s).to.match(/1 · .*2 · .*3 · /).and.to.not.contain('headerSchritt').and.to.not.contain('textSchritt').and.to.not.contain('tabSearch');
+        }
     });
 
     it('Einrichtung: kurz nach dem Start wartet der Stand auf das erste Modul statt sofort "kein Modul" zu melden', async () => {
