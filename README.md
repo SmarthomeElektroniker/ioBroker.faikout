@@ -195,9 +195,12 @@ it would do, but sends nothing. Instances from older versions keep their dry run
 
 - **Global template and per unit**: the template holds strategy, curves, limits (factory default
   40 % to 100 %), temperature levels and a template schedule and applies to all units. Each unit
-  has an entry with who controls, sensor sources and frost protection – and the checkbox
-  "Individual instead of global template": without it all template values apply, with it the
-  values of the unit (a single empty field still takes the template).
+  has an entry with who controls, sensor sources and frost protection. A unit follows the template
+  until you change something for it: a curve, limit, strategy or temperature level you adjust becomes
+  the unit's own value, "Reset to the template" takes it back (each part separately).
+- **Visible calculation**: below each unit curve the line "How the value comes about right now" shows
+  curve (or previous day) → room correction → result with the numbers of the control; the strength of
+  the room correction and its dead band are dragged in a chart under "For advanced users".
 - **Who controls**: *ioBroker adapter controls* (schedule, temperature levels, power limit, humidity – nothing is stored
   in the module) or *Faikout auto* (the module controls to the target itself; the adapter supplies
   target, sensor value and schedule). With Faikout auto the power limit is only set with the
@@ -277,13 +280,13 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 - Climate control per unit: power limit by outdoor curve or "Auto" (previous day plus margin),
   weekly schedule with temperature levels, public holidays and absence, humidity and dew point control, manual
   override, frost protection, optional dry run. Every decision is shown with its reason.
-- Two levels only: a global template and, per unit, the checkbox "Individual instead of global
-  template". "Scenes" are now called temperature levels and live in the tab "Schedules" together
+- Two levels only: a global template and own values per unit, which arise when you change something
+  for a unit ("Reset to the template" takes them back). "Scenes" are now called temperature levels and live in the tab "Schedules" together
   with the weekly schedules (also reachable from the device card, button "Weekly schedule").
   Factory defaults: lower limit 40 %, upper limit 100 % (was 95 %), top point of the heating curve
   −10 °C → 100 % (was 95 %); "2 K below the target → 100 %" stays.
-- Settings of pre-release builds are migrated once at start: existing unit entries become
-  "individual" (same behaviour as before), `regelSzenen`/`szenen` → `regelStufen`/`stufen`, the old
+- Settings of pre-release builds are migrated once at start: existing unit entries keep their own
+  values (same behaviour as before), `regelSzenen`/`szenen` → `regelStufen`/`stufen`, the old
   factory defaults 95 % → 100 % (own values are never overwritten), broker user name `User` → `user`.
   Data points `regulation.schedule.scene`/`nextScene` → `level`/`nextLevel`, JSON key `scene` → `level`.
 - Sensor sources with fallback (BLE sensor at the module, any data point, sensor of the unit);

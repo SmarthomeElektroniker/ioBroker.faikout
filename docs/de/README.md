@@ -41,9 +41,16 @@ Die Geräteliste lässt sich unter den Karten als JSON-Datei **exportieren** und
 | **Verbrauch** | Diagramm und Aufzeichnung |
 | **Module suchen**, **MQTT-Broker (Technik)**, **Moduleinstellungen (Technik)** | Anbinden und Technik |
 
-Je Gerät sind im Reiter *Regelung* immer sichtbar: wer regelt, Sensoren (mit Live-Wert) und Frostschutz.
-Strategie, Kennlinien und die eigenen Temperaturstufen des Geräts erscheinen erst mit dem Haken
-**„Individuell statt globaler Vorlage“**; ein farbiger Kasten sagt, was gerade gilt.
+Je Gerät steht im Reiter *Regelung*: wer regelt, die Kennlinien (Heizen/Kühlen), die Sensoren (mit
+Live-Wert) und die Feuchte; unter **Für Fortgeschrittene** Strategie, Frostschutz und Probelauf. Die
+Temperaturstufen eines Geräts stehen im Reiter *Zeitpläne* bei seinem Wochenplan. Die Marken im Kopf
+der Gerätekarte sagen, was gilt: „alles aus der Vorlage“ oder z. B. „eigen: Heizkennlinie, Stufen“.
+
+Unter jeder Kennlinie eines Geräts steht **„So entsteht der Wert gerade“** – der Rechenweg mit den
+Zahlen der Regelung, z. B. „Kennlinie 52 % → Raum 1,0 K zu warm: −7 → 45 %“ (bei der Strategie Vortag
+„Vortag 48 % + 10 → …“), samt Untergrenze, Obergrenze, voller Leistung, Überheizschutz und der
+Höchstleistung der Temperaturstufe, wenn sie greifen. Wie stark die Raumtemperatur korrigiert, stellst
+du unter **Für Fortgeschrittene** im Bild **Raumkorrektur** ein (Korrekturstärke und Totband ziehen).
 
 ## 2. Vorlage und Einstellungen je Gerät
 
@@ -51,14 +58,20 @@ Die Regelung kennt genau zwei Ebenen:
 
 - die **globale Vorlage** – Strategie, Unter- und Obergrenze, Heiz- und Kühlkennlinie, Vortag,
   Temperaturstufen, Feuchte-Maßnahme und der Wochenplan der Vorlage. Sie gilt für alle Anlagen.
-- **je Gerät** ein Eintrag unter **Geräte** mit dem Haken **„Individuell statt globaler Vorlage“**.
+- **je Gerät** ein Eintrag unter **Geräte**. Einen Haken „individuell“ gibt es nicht mehr: Ein Gerät
+  folgt der Vorlage, bis du bei ihm etwas änderst – **eigen entsteht beim Ändern**, **„Auf die Vorlage
+  zurücksetzen“** führt zurück. Das gilt je Teil einzeln:
 
-| Haken „Individuell“ | Was für das Gerät gilt |
-|---|---|
-| aus (Vorgabe für neue Einträge) | **alle** Werte der Vorlage. Was im Eintrag an eigenen Kennlinien, Grenzen oder Temperaturstufen steht, bleibt gespeichert, wird aber nicht benutzt. |
-| an | die Werte des Geräts. Ein einzelnes leeres Feld übernimmt weiter die Vorlage (und diese die Werksvorgabe). |
+| Teil | eigen, sobald … | wo |
+|---|---|---|
+| Heizkennlinie, Kühlkennlinie | du einen Punkt ziehst – Überschrift „(eigene Kennlinie)“ statt „(globale Kennlinie)“ | Regelung → Gerätekarte |
+| Grenzen (Unter-/Obergrenze) | du eine Grenzlinie verschiebst | Regelung → Gerätekarte, im Kennlinienbild |
+| Temperaturstufen | du eine Stufe des Geräts änderst – „(eigene Stufen)“ statt „(globale Stufen)“ | Zeitpläne → beim Gerät „Stufen anpassen“ |
+| Strategie (mit Vortag-Werten) | du etwas anderes als „Wie Vorlage“ wählst | Regelung → Gerätekarte → Für Fortgeschrittene |
+| Feuchte-Maßnahme | du etwas anderes als „Wie Vorlage“ wählst | Regelung → Gerätekarte → Feuchte |
 
-Immer gerätebezogen – mit und ohne Haken – sind: wer regelt, die Sensorquellen und der Frostschutz.
+Für jeden Teil ohne eigenen Wert gilt die Vorlage (und für diese die Werksvorgabe).
+Immer gerätebezogen sind: wer regelt, die Sensorquellen und der Frostschutz.
 Eine Anlage ganz ohne Eintrag nimmt die Vorlage, der ioBroker-Adapter regelt und die Sensoren stehen auf
 Automatik.
 
@@ -133,8 +146,9 @@ dieser Zeit arbeiten. Ohne eigene Stufen gelten vier Werksstufen:
 | Abwesend | 17 °C | Auto | 50 % |
 | Aus | Anlage aus | – | – |
 
-Die Stufen der Vorlage gelten für alle Geräte; ein Gerät mit dem Haken „Individuell“ kann eigene
-haben.
+Die Stufen der Vorlage gelten für alle Geräte ohne eigene Stufen. Eigene Stufen eines Geräts stellst
+du im Reiter *Zeitpläne* bei seinem Wochenplan ein („Stufen anpassen“): Sie entstehen, sobald du dort
+eine Stufe änderst, und gelten wie die Vorlage erst mit „Speichern“ der Instanz.
 
 ### Sensorquellen und Frostschutz
 
@@ -340,7 +354,7 @@ neu. Eigene Werte werden dabei nie überschrieben.
 |---|---|---|
 | `regelSzenen` | `regelStufen` | Liste wird übernommen |
 | je Gerät `szenen` | je Gerät `stufen` | Liste wird übernommen |
-| – | je Gerät `individuell` | vorhandene Einträge bekommen den Haken – ihr Verhalten bleibt, wie es war |
+| je Gerät `individuell` (Zwischenstand) | entfällt | Einträge mit Haken behalten ihre eigenen Werte; bei Einträgen ohne Haken werden die bisher ungenutzten eigenen Werte geleert – das Regelverhalten bleibt in beiden Fällen, wie es war |
 | – | `regelPlanVorlage` | neu, leer = Werksplan |
 | `regelObergrenze` 95 | 100 | nur, wenn noch die alte Werksvorgabe 95 eingestellt ist |
 | Heizkennlinie −10 °C → 95 % | −10 °C → 100 % | nur, wenn die Kennlinie exakt die alte Werksvorgabe ist |

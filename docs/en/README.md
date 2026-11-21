@@ -41,9 +41,17 @@ add, with a confirmation; nothing is saved until you press "Save").
 | **Consumption** | chart and recording |
 | **Find modules**, **MQTT broker (advanced)**, **Module settings (advanced)** | connecting and technical settings |
 
-Per unit the tab *Climate control* always shows: who controls, sensors (with live value) and frost
-protection. Strategy, curves and the unit’s own temperature levels only appear with the tick
-**“Individual instead of global template”**; a coloured box says what currently applies.
+Per unit the tab *Climate control* shows: who controls, the curves (heating/cooling), the sensors
+(with live value) and humidity; under **For advanced users** strategy, frost protection and dry run.
+A unit’s temperature levels are in the tab *Schedules* next to its weekly schedule. The badges in the
+header of the unit card say what applies: “all from the template” or e.g. “own: heating curve, levels”.
+
+Below every curve of a unit you find **“How the value comes about right now”** – the calculation with
+the numbers of the control, e.g. “curve 52 % → room 1.0 K too warm: −7 → 45 %” (with the strategy
+previous day “previous day 48 % + 10 → …”), including lower limit, upper limit, full power,
+overheating protection and the maximum power of the temperature level when they take effect. How
+strongly the room temperature corrects is set under **For advanced users** in the chart **Room
+correction** (drag correction strength and dead band).
 
 ## 2. Template and settings per unit
 
@@ -52,16 +60,20 @@ The control knows exactly two levels:
 - the **global template** – strategy, lower and upper limit, heating and cooling curve, previous
   day, temperature levels, humidity action and the weekly schedule of the template. It applies to
   all units.
-- **per unit** an entry under **Units** with the checkbox **"Individual instead of global
-  template"**.
+- **per unit** an entry under **Units**. There is no checkbox “individual” any more: a unit follows
+  the template until you change something for it – **own values arise by changing**, **“Reset to the
+  template”** takes it back. This applies to each part separately:
 
-| Checkbox "Individual" | What applies to the unit |
-|---|---|
-| off (default for new entries) | **all** values of the template. Own curves, limits or temperature levels in the entry stay stored but are not used. |
-| on | the values of the unit. A single empty field still takes the template (and the template the factory default). |
+| Part | own as soon as … | where |
+|---|---|---|
+| Heating curve, cooling curve | you drag a point – heading “(own curve)” instead of “(global curve)” | Climate control → unit card |
+| Limits (lower/upper) | you move a limit line | Climate control → unit card, in the curve chart |
+| Temperature levels | you change a level of the unit – “(own levels)” instead of “(global levels)” | Schedules → “Adjust levels” at the unit |
+| Strategy (with previous-day values) | you choose something other than “As in the template” | Climate control → unit card → For advanced users |
+| Humidity measure | you choose something other than “As in the template” | Climate control → unit card → Humidity |
 
-Always per unit – with and without the checkbox – are: who controls, the sensor sources and frost
-protection. A unit without any entry uses the template, the ioBroker adapter controls and the sensors are
+Every part without an own value takes the template (and the template the factory default).
+Always per unit are: who controls, the sensor sources and frost protection. A unit without any entry uses the template, the ioBroker adapter controls and the sensors are
 on automatic.
 
 The factory defaults of the template: lower limit **40 %**, upper limit **100 %**, heating curve
@@ -134,8 +146,9 @@ Without own levels four factory levels apply:
 | Away (`abwesend`) | 17 °C | auto | 50 % |
 | Off (`aus`) | unit off | – | – |
 
-The levels of the template apply to all units; a unit with the checkbox "Individual" can have its
-own.
+The levels of the template apply to all units without levels of their own. A unit’s own levels are
+set in the tab *Schedules* next to its weekly schedule (“Adjust levels”): they arise as soon as you
+change a level there and, like the template, only apply after “Save” of the instance.
 
 ### Sensor sources and frost protection
 
@@ -339,7 +352,7 @@ Your own values are never overwritten.
 |---|---|---|
 | `regelSzenen` | `regelStufen` | list is taken over |
 | per unit `szenen` | per unit `stufen` | list is taken over |
-| – | per unit `individuell` | existing entries get the checkbox – they behave as before |
+| per unit `individuell` (interim state) | removed | entries with the checkbox keep their own values; for entries without it the previously unused own values are cleared – in both cases the unit behaves as before |
 | – | `regelPlanVorlage` | new, empty = factory schedule |
 | `regelObergrenze` 95 | 100 | only if the old factory default 95 is still set |
 | heating curve −10 °C → 95 % | −10 °C → 100 % | only if the curve is exactly the old factory default |
