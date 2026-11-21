@@ -134,7 +134,8 @@ describe('Sprachen: Komponententexte src-admin/src/*.texte.ts', () => {
     });
 
     // Woerter, die in einer Sprache wirklich wie im Englischen heissen ("Datei:schluessel:sprache")
-    const GLEICH = new Set(['Stufen.texte.ts:komfort:nl', 'Stufen.texte.ts:komfort:it', 'Stufen.texte.ts:betriebsart:fr']);
+    // (nl "curve": niederlaendisches Fachwort, im ganzen Bestand benutzt - die Zeile des Rechenwegs gilt fuer Heizen und Kuehlen)
+    const GLEICH = new Set(['Stufen.texte.ts:komfort:nl', 'Stufen.texte.ts:komfort:it', 'Stufen.texte.ts:betriebsart:fr', 'Rechenweg.texte.ts:kennlinie:nl']);
 
     for (const datei of dateien) {
         it(`${datei}: jeder Schluessel in elf Sprachen, nicht leer, gleiche Platzhalter, uebersetzt`, () => {
@@ -436,7 +437,7 @@ describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englisch
             ...['Auto', 'Total', 'Turbo'].map(w => `es:${w}`),
             ...['Absence', 'Auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'Turbo', 'active'].map(w => `fr:${w}`),
             ...['Auto', 'Comfort', 'Turbo'].map(w => `it:${w}`),
-            ...['Sensoren', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
+            ...['curve %s %', 'eigen: %s', 'Sensoren', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
             ...['Auto', 'Komfort', 'Port', 'Punkt %s', 'Status', 'Turbo'].map(w => `pl:${w}`),
             ...['Auto', 'Compressor', 'Total', 'Turbo'].map(w => `pt:${w}`),
         ]);

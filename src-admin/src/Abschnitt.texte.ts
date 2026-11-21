@@ -48,15 +48,15 @@ export const TEXTE = {
     geaendertTipp: {
         en: 'Something in this section differs from the factory default',
         de: 'In diesem Abschnitt weicht etwas von der Werksvorgabe ab',
-        ru: 'В этом разделе что-то отличается от заводской настройки',
+        ru: 'В этом разделе что-то отличается от заводских значений',
         pt: 'Nesta secção, algo difere da predefinição de fábrica',
         nl: 'In dit gedeelte wijkt iets af van de fabrieksinstelling',
         fr: 'Dans cette section, quelque chose diffère du réglage d’usine',
         it: 'In questa sezione qualcosa differisce dall’impostazione di fabbrica',
         es: 'En esta sección algo difiere del ajuste de fábrica',
         pl: 'W tej sekcji coś różni się od ustawienia fabrycznego',
-        uk: 'У цьому розділі щось відрізняється від заводського налаштування',
-        'zh-cn': '此部分有内容与出厂默认值不同',
+        uk: 'У цьому розділі щось відрізняється від заводських значень',
+        'zh-cn': '此部分有内容与出厂设置不同',
     },
 } satisfies Record<string, Eintrag>;
 

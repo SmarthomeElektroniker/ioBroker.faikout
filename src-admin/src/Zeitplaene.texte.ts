@@ -380,7 +380,7 @@ const fr: Satz = {
     klammerGlobal: 'niveaux globaux',
     klammerEigen: 'niveaux propres',
     stufenSpeichern:
-        'Les modifications des niveaux ne s’appliquent qu’après « Enregistrer » de l’instance – contrairement au programme hebdomadaire, qui agit immédiatement.',
+        'Les modifications des niveaux ne s’appliquent qu’une fois l’instance enregistrée (« Enregistrer ») – contrairement au programme hebdomadaire, qui agit immédiatement.',
     ersatzOffen:
         'Le niveau supprimé « %s » est remplacé par « %s » dans ce programme dès que vous enregistrez les réglages.',
     jetzt: 'maintenant',

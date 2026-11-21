@@ -1,10 +1,10 @@
 {
     "fk_hinweis": "拖动各点或在表格中修改数值。方向键可移动选中的点。",
-    "fk_vorgabeGilt": "没有自定义的点——采用默认值。拖动或点击“+”会将其作为起始值。",
+    "fk_vorgabeGilt": "没有自有的点——采用默认值。拖动或点击“+”会将其作为起始值。",
     "fk_punkt": "第 %s 个点",
     "fk_punktDazu": "添加点",
     "fk_punktWeg": "删除点",
-    "fk_zurVorgabe": "重新使用默认值（删除自定义的点）",
+    "fk_zurVorgabe": "重新使用默认值（删除自有的点）",
     "fk_fZuWenig": "至少需要两个点。",
     "fk_fZahl": "第 %s 个点不是数字。",
     "fk_fBereich": "第 %s 个点：功率必须在 0 到 100 % 之间。",
