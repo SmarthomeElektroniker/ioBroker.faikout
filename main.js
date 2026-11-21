@@ -1380,13 +1380,10 @@ class Faikout extends utils.Adapter {
                     return antworten(r);
                 }
                 case 'mqtthostWert': {
+                    // Ohne Adresse nur ein Strich: das Feld ist schmal und laesst sich kopieren - der Weg
+                    // zur fehlenden Adresse steht im Text daneben bzw. in der Anleitung darunter.
                     const z = this.zielAusFormular(msg);
-                    const o = require('./lib/oberflaeche');
-                    return antworten(
-                        z.adresse
-                            ? `${z.adresse}:${z.port}`
-                            : `(${o.t(z.extern ? 'mqttWertFehltExtern' : 'mqttWertFehlt', await this.sprache())})`,
-                    );
+                    return antworten(z.adresse ? `${z.adresse}:${z.port}` : '–');
                 }
                 case 'anleitung': {
                     const sprache = await this.sprache();
