@@ -12,10 +12,22 @@ the **dry run**: the adapter then calculates everything and shows what it would 
 send a single command to the units.
 
 The checkbox is at the bottom of the tab *Climate control* under **For advanced users** (for all
-units). While it is on, a coloured note appears at the top of the tab and the device card carries the
-label "Dry run". Per unit there is also the data point `<unit>.regulation.demand.dryRun`; commands are
-only sent when both are off. Instances from older versions keep their state: there the dry run is on,
-and so is the data point of the units already known, until you switch both off.
+units). While it is on, a coloured note appears at the top of the tab and the device cards carry the
+label "Dry run". This is the **one** switch: when it is off, all units send.
+
+To deliberately keep only a single unit in dry run, tick "Only this unit in dry run" in its card (tab
+*Climate control*, section *Devices*) under **For advanced users**. So commands are sent to a unit only
+when the dry run for all units is off and its own checkbox is not set.
+
+The data point `<unit>.regulation.demand.dryRun` shows per unit whether the dry run is in effect. It is
+**not a switch** (read-only); an attempt to write it is rejected with a note in the log. In pre-release
+versions it was a second switch per unit: on update, existing values are aligned once with the instance
+setting. Instances from older versions keep their dry run – it stays on until you switch it off; if it
+is already off, units whose old per-unit switch was still on send from then on (the log names them with
+a warning at the first start).
+
+The device list can be **exported** as a JSON file below the cards and **imported** again (replace or
+add, with a confirmation; nothing is saved until you press "Save").
 
 ![Tab Climate control](../img/einstellungen_regelung.png)
 
@@ -49,7 +61,7 @@ The control knows exactly two levels:
 | on | the values of the unit. A single empty field still takes the template (and the template the factory default). |
 
 Always per unit – with and without the checkbox – are: who controls, the sensor sources and frost
-protection. A unit without any entry uses the template, the adapter controls and the sensors are
+protection. A unit without any entry uses the template, the ioBroker adapter controls and the sensors are
 on automatic.
 
 The factory defaults of the template: lower limit **40 %**, upper limit **100 %**, heating curve
@@ -60,7 +72,7 @@ The factory defaults of the template: lower limit **40 %**, upper limit **100 %*
 
 | Mode | What happens | Suited for |
 | --- | --- | --- |
-| **Adapter controls** | The adapter switches by weekly schedule and temperature levels, limits the power by demand and steps in on humidity. Nothing is stored in the module. | the normal case |
+| **ioBroker adapter controls** | The adapter switches by weekly schedule and temperature levels, limits the power by demand and steps in on humidity. Nothing is stored in the module. | the normal case |
 | **Faikout auto** | The module itself controls to the target temperature (automatic mode of the firmware). The adapter supplies target, sensor value and schedule. | when the module should keep controlling without ioBroker |
 
 Limits of Faikout auto:
@@ -69,7 +81,7 @@ Limits of Faikout auto:
   rests; the card then says "rests (Faikout auto)".
 - **Every change of the target is stored in the module (flash memory).** If the schedule changes
   the target six or more times on one day, the tab and the schedule dialog warn. For schedules
-  with many switching times "Adapter controls" is the better choice.
+  with many switching times "ioBroker adapter controls" is the better choice.
 
 ### What this unit supports
 
@@ -290,7 +302,8 @@ limit is shown in `<unit>.info.demandCapable` (`unknown`, `yes`, `no`).
 | `mode` | adapter · faikout | who controls |
 | `lastCommand` |  | last command (JSON; in dry run: would send) |
 | `historyJson` |  | power limit of the last 24 hours |
-| `demand.active` · `demand.dryRun` |  | switches: power limit, dry run per unit |
+| `demand.active` |  | switch: power limit |
+| `demand.dryRun` |  | indicator: dry run is in effect for this unit (not a switch) |
 | `demand.setpoint` · `rawValue` · `outsideMean` |  | calculated limit, raw value, outside mean (30 min) |
 | `demand.state` · `demand.reason` | ok · fault · notCapable · neutral · off | state and reason of the power limit |
 | `demand.strategy` | curve · previousDay | strategy |

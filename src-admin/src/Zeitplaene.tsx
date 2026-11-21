@@ -516,7 +516,9 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
     const gefragt = useRef<Record<string, string>>({});
     const handy = useMediaQuery('(max-width:600px)');
 
-    const sprache = (liste && liste.sprache) || props.sprache || 'en';
+    // Texte der Komponente folgen der Sprache des Admins (wie alle anderen Komponenten der Seite); die
+    // Systemsprache aus der Antwort des Adapters ist nur der Rueckfall. Namen der Stufen kommen vom Adapter.
+    const sprache = props.sprache || (liste && liste.sprache) || 'en';
     const tx = useCallback((s: Schluessel, ...w: (string | number)[]): string => uebersetzt(sprache, s, ...w), [sprache]);
 
     useEffect(() => {

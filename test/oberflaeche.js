@@ -329,7 +329,7 @@ describe('Oberflaeche: Geraetename statt ID, Hinweise', () => {
         }
     });
 
-    it('Faikout-Auto: Hinweis ab sechs Zielaenderungen an einem Tag, nicht bei "Adapter regelt"', async () => {
+    it('Faikout-Auto: Hinweis ab sechs Zielaenderungen an einem Tag, nicht bei "ioBroker-Adapter regelt"', async () => {
         const sz = wochenplan.szenenLesen([]).szenen;
         const tag = n => Array.from({ length: n }, (_, i) => ({ t: i * 60, s: i % 2 ? 'komfort' : 'absenken' }));
         const plan = n => [tag(n), [], [], [], [], [], []];
@@ -972,6 +972,15 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(admin('de').textProbeAn).to.match(/^Probelauf ist an – der Adapter sendet nichts an die Anlagen\./).and.to.contain('Für Fortgeschrittene');
         expect(admin('de').labelRegelProbelauf).to.contain('nur rechnen und anzeigen, nichts an die Anlagen senden');
         expect(admin('de').textSchritt3).to.not.contain('Probelauf');
+        // EIN Schalter: der Probelauf der Instanz. Je Anlage nur ein bewusster Haken in der Geraetekarte, ganz unten
+        const zeile = r.regelGeraete.custom.items;
+        expect(zeile.slice(-3).map(i => i.attr)).to.eql(['_hFort', 'probelauf', '_tProbeInstanz']);
+        expect(zeile.find(i => i.attr === 'probelauf')).to.include({ type: 'checkbox', label: 'labelGeraetProbelauf', help: 'helpGeraetProbelauf' }).and.to.not.have.property('default');
+        expect(zeile.find(i => i.attr === '_tProbeInstanz')).to.include({ type: 'staticText', hidden: 'globalData.regelProbelauf === false' });
+        expect(admin('de').labelGeraetProbelauf).to.equal('Nur diese Anlage im Probelauf: rechnen und anzeigen, nichts senden');
+        for (const l of o.SPRACHEN) {
+            expect(admin(l).helpRegelProbelauf, l).to.not.match(/both|beide/);
+        }
         const namen = Object.keys(r);
         expect(namen.indexOf('regelKennlinieHeizen')).to.be.below(namen.indexOf('regelGeraete'));
         expect(namen.indexOf('_feuchteGrafik')).to.be.below(namen.indexOf('regelGeraete'));

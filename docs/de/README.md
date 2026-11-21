@@ -12,10 +12,22 @@ schaltet den **Probelauf** ein: Der Adapter rechnet dann alles mit und zeigt, wa
 sendet aber keinen einzigen Befehl an die Anlagen.
 
 Der Haken steht im Reiter *Regelung* ganz unten unter **Für Fortgeschrittene** (für alle Geräte). Ist
-er an, steht oben im Reiter ein farbiger Hinweis und auf der Gerätekarte das Etikett „Probelauf“. Je
-Gerät gibt es zusätzlich den Datenpunkt `<Gerät>.regulation.demand.dryRun`; gesendet wird nur, wenn
-beide aus sind. Instanzen aus älteren Versionen behalten ihren Stand: Dort ist der Probelauf an und der
-Datenpunkt der schon bekannten Geräte ebenfalls, bis du beides ausschaltest.
+er an, steht oben im Reiter ein farbiger Hinweis und auf den Gerätekarten das Etikett „Probelauf“. Das
+ist der **eine** Schalter: Ist er aus, senden alle Anlagen.
+
+Soll bewusst nur eine einzelne Anlage im Probelauf bleiben, setzt du in ihrer Karte (Reiter *Regelung*,
+Abschnitt *Geräte*) unter **Für Fortgeschrittene** den Haken „Nur diese Anlage im Probelauf“. Gesendet
+wird an eine Anlage also nur, wenn der Probelauf für alle aus ist und ihr eigener Haken nicht gesetzt ist.
+
+Der Datenpunkt `<Gerät>.regulation.demand.dryRun` zeigt je Anlage an, ob der Probelauf gerade wirkt. Er
+ist **kein Schalter** (nicht beschreibbar); ein Schreibversuch wird mit einem Hinweis im Log abgelehnt.
+In Vorabständen war er ein zweiter Schalter je Gerät: Beim Update werden vorhandene Werte einmal an die
+Einstellung der Instanz angeglichen. Instanzen aus älteren Versionen behalten dabei ihren Probelauf – dort
+bleibt er an, bis du ihn ausschaltest; steht er schon auf aus, senden danach auch Geräte, deren alter
+Geräteschalter noch auf an stand (das Log nennt sie beim ersten Start mit einer Warnung).
+
+Die Geräteliste lässt sich unter den Karten als JSON-Datei **exportieren** und wieder **importieren**
+(ersetzen oder hinzufügen, mit Rückfrage; gespeichert wird erst mit „Speichern“).
 
 ![Reiter Regelung](../img/einstellungen_regelung.png)
 
@@ -47,7 +59,7 @@ Die Regelung kennt genau zwei Ebenen:
 | an | die Werte des Geräts. Ein einzelnes leeres Feld übernimmt weiter die Vorlage (und diese die Werksvorgabe). |
 
 Immer gerätebezogen – mit und ohne Haken – sind: wer regelt, die Fühlerquellen und der Frostschutz.
-Eine Anlage ganz ohne Eintrag nimmt die Vorlage, der Adapter regelt und die Fühler stehen auf
+Eine Anlage ganz ohne Eintrag nimmt die Vorlage, der ioBroker-Adapter regelt und die Fühler stehen auf
 Automatik.
 
 Die Werksvorgaben der Vorlage: Untergrenze **40 %**, Obergrenze **100 %**, Heizkennlinie
@@ -58,7 +70,7 @@ Die Werksvorgaben der Vorlage: Untergrenze **40 %**, Obergrenze **100 %**, Heizk
 
 | Betriebsart | Was passiert | Geeignet für |
 | --- | --- | --- |
-| **Adapter regelt** | Der Adapter schaltet nach Wochenplan und Temperaturstufen, begrenzt die Leistung nach Bedarf und greift bei Feuchte ein. Im Modul wird dabei nichts gespeichert. | den Normalfall |
+| **ioBroker-Adapter regelt** | Der Adapter schaltet nach Wochenplan und Temperaturstufen, begrenzt die Leistung nach Bedarf und greift bei Feuchte ein. Im Modul wird dabei nichts gespeichert. | den Normalfall |
 | **Faikout-Auto** | Das Modul regelt selbst auf die Zieltemperatur (Automatik der Firmware). Der Adapter liefert Ziel, Fühlerwert und Wochenplan. | wenn das Modul auch ohne ioBroker weiterregeln soll |
 
 Grenzen von Faikout-Auto:
@@ -67,7 +79,7 @@ Grenzen von Faikout-Auto:
   ruht die Bedarfsregelung; auf der Karte steht dann „ruht (Faikout-Auto)“.
 - **Jede Zieländerung wird im Modul gespeichert (Flash-Speicher).** Ändert der Wochenplan das Ziel
   an einem Tag sechsmal oder öfter, warnen der Reiter und der Wochenplan-Dialog. Für Pläne mit
-  vielen Schaltpunkten ist „Adapter regelt“ die bessere Wahl.
+  vielen Schaltpunkten ist „ioBroker-Adapter regelt“ die bessere Wahl.
 
 ### Was diese Anlage kann
 
@@ -291,7 +303,8 @@ Leistungsgrenze annimmt, steht in `<Gerät>.info.demandCapable` (`unknown`, `yes
 | `mode` | adapter · faikout | wer regelt |
 | `lastCommand` |  | letzter Befehl (JSON; im Probelauf: würde senden) |
 | `historyJson` |  | Leistungsgrenze der letzten 24 Stunden |
-| `demand.active` · `demand.dryRun` |  | Schalter Leistungsgrenze, Probelauf je Anlage |
+| `demand.active` |  | Schalter Leistungsgrenze |
+| `demand.dryRun` |  | Anzeige: Probelauf wirkt für diese Anlage (kein Schalter) |
 | `demand.setpoint` · `rawValue` · `outsideMean` |  | berechnete Grenze, Rohwert, Außenmittel (30 min) |
 | `demand.state` · `demand.reason` | ok · fault · notCapable · neutral · off | Zustand und Begründung der Leistungsgrenze |
 | `demand.strategy` | curve · previousDay | Strategie |

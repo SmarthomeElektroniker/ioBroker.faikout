@@ -1032,7 +1032,6 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
     const planText = JSON.stringify(plan);
     const START = ort(2026, 11, 20, 21, 30); // Freitag, Komfort bis 22:00
     const scharf = async (a, id) => {
-        await a.regelung.schalter(id, 'dryRun', false);
         await a.regelung.schalter(id, 'schedule.weekJson', planText);
         await a.regelung.schalter(id, 'schedule.active', true);
     };
@@ -1107,7 +1106,6 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
             const { a, uhr } = aufbau({ regelProbelauf: false }, START);
             const anlage = new Anlage({ name: id.replace('_', ' '), target: 21, mode: 'heat' });
             await laufen(a, uhr, anlage, 2);
-            await a.regelung.schalter(id, 'dryRun', false);
             await einrichten(a, id);
             await laufen(a, uhr, anlage, 3);
             anlage.target = 24; // jemand dreht an der Fernbedienung
@@ -1345,7 +1343,6 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         const { a, uhr } = aufbau(konfig, sommer);
         const anlage = new Anlage({ name: 'Plan H', target: 24, mode: 'cool', outside: 30, temp: 25, hum: 75 });
         await laufen(a, uhr, anlage, 2);
-        await a.regelung.schalter('Plan_H', 'dryRun', false);
         await a.regelung.schalter('Plan_H', 'schedule.weekJson', woche);
         await a.regelung.schalter('Plan_H', 'schedule.active', true);
         await a.regelung.schalter('Plan_H', 'humidity.active', true);

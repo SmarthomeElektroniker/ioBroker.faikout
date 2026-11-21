@@ -1452,6 +1452,47 @@
                                 "default": 0,
                                 "help": "helpFrostAb",
                                 "newLine": true
+                            },
+                            {
+                                "attr": "_hFort",
+                                "type": "header",
+                                "size": 4,
+                                "text": "headerGeraetFort",
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12
+                            },
+                            {
+                                "attr": "probelauf",
+                                "type": "checkbox",
+                                "label": "labelGeraetProbelauf",
+                                "help": "helpGeraetProbelauf",
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12
+                            },
+                            {
+                                "attr": "_tProbeInstanz",
+                                "type": "staticText",
+                                "text": "textGeraetProbeInstanz",
+                                "hidden": "globalData.regelProbelauf === false",
+                                "style": {
+                                    "border": "1px solid #d98a00",
+                                    "borderRadius": 6,
+                                    "padding": "8px 12px",
+                                    "backgroundColor": "rgba(217,138,0,0.12)"
+                                },
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12
                             }
                         ]
                     }

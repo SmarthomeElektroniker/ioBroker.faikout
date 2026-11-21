@@ -1681,7 +1681,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             expect(html).to.contain('Probelauf.').and.to.contain('würde senden 60 %');
             expect(html).to.contain('<li style="margin:2px 0">Szene Komfort</li>');
             expect(html).to.contain('Kennlinie Heizen bei 5 °C → 61 %</li>');
-            expect(html).to.contain('Leistungsgrenze, letzte 24 Stunden').and.to.contain('Adapter regelt');
+            expect(html).to.contain('Leistungsgrenze, letzte 24 Stunden').and.to.contain('ioBroker-Adapter regelt');
             expect(html).to.contain('21,5 °C').and.to.contain('Fühler der Anlage');
             // nichts, was der Admin als Muster auswerten wuerde
             expect(html).not.to.match(/[`\\]|\$\{/);

@@ -1707,7 +1707,14 @@ class Faikout extends utils.Adapter {
             neu.externClientId = this.config.externClientIdStandard;
             this.config.externClientId = neu.externClientId;
         }
+        const probelaufAngleichen = !(Number(this.config.regelUmzugStand) >= 2);
         Object.assign(neu, this.regelKonfigUmziehen());
+        if (probelaufAngleichen) {
+            // Stand 2: der Probelauf-Datenpunkt je Geraet ist kein Schalter mehr. Vorhandene Werte werden
+            // EINMAL an die (eben ggf. festgeschriebene) Instanz-Einstellung angeglichen - auch fuer Geraete,
+            // die gerade nicht erreichbar sind. Danach haelt die Regelung die Anzeige selbst aktuell.
+            await this.probelaufUmziehen();
+        }
         if (!Object.keys(neu).length || typeof this.extendForeignObjectAsync !== 'function') {
             return false;
         }
@@ -1736,6 +1743,40 @@ class Faikout extends utils.Adapter {
     }
 
     /**
+     * Einmaliger Umzug (regelUmzugStand 2): `<Geraet>.regulation.demand.dryRun` war bis zum Vorabstand ein
+     * eigener Schalter je Geraet (Bestand meist `true`). Jetzt gilt EIN Schalter - die Instanz-Einstellung
+     * `regelProbelauf` (dazu bewusst je Geraetezeile `probelauf`). Alle vorhandenen Datenpunkte werden auf
+     * "nur Anzeige" gestellt und auf den wirksamen Wert gesetzt. Fehler halten den Start nicht auf: die
+     * Regelung gleicht jedes Geraet bei seiner ersten Meldung ohnehin noch einmal ab.
+     *
+     * @returns {Promise<number>} Zahl der angeglichenen Datenpunkte
+     */
+    async probelaufUmziehen() {
+        const regel = require('./lib/regel');
+        let anzahl = 0;
+        try {
+            const einstellung = regel.konfigAusInstanz(this.config);
+            for (const geraet of (await this.getDevicesAsync()) || []) {
+                const id = geraet._id.slice(this.namespace.length + 1);
+                const n = geraet.common && geraet.common.name;
+                const name = (n && typeof n === 'object' ? n.en || n.de : n) || id;
+                const erg = await regel.probelaufAnzeigen(
+                    this,
+                    id,
+                    regel.probelaufWirksam(einstellung, id, name),
+                    name,
+                );
+                if (erg && (erg.umgestellt || erg.vorher !== null)) {
+                    anzahl++;
+                }
+            }
+        } catch (e) {
+            this.log.debug(`Dry-run indicator migration skipped: ${e.message}`);
+        }
+        return anzahl;
+    }
+
+    /**
      * Umzug der Einstellungen auf den Stand von 1.0.0 (Teil von konfigUmziehen; aendert this.config und
      * nennt, was in die Instanzkonfiguration zu schreiben ist):
      *   - `User` -> `user`: der Vorabstand 0.5.0-alpha fuehrte den Benutzernamen des eigenen Brokers als
@@ -1749,6 +1790,9 @@ class Faikout extends utils.Adapter {
      *     werden auf die neue Werksvorgabe (100 bzw. -10 °C: 100 %) gehoben - nur bei exakter
      *     Uebereinstimmung, eigene Werte bleiben. Der Merker verhindert, dass ein spaeter ohne Haken
      *     angelegter Eintrag oder eine bewusst wieder auf 95 gestellte Obergrenze erneut angefasst wird.
+     *   - einmalig (Merker-Stand 2): die Probelauf-Datenpunkte der Geraete folgen der Instanz-Einstellung
+     *     (siehe probelaufUmziehen); die Geraetezeilen bekommen dabei KEIN `probelauf` - wer ein Geraet
+     *     einzeln im Probelauf halten will, setzt den Schalter in der Geraetekarte bewusst selbst.
      *
      * @returns {Record<string, unknown>} geaenderte Felder der Instanzkonfiguration (leer = nichts zu tun)
      */
@@ -1825,8 +1869,11 @@ class Faikout extends utils.Adapter {
                 neu.regelKennlinieHeizen = kennlinie.VORGABE_HEIZEN.map(([x, y]) => ({ x, y }));
                 c.regelKennlinieHeizen = neu.regelKennlinieHeizen;
             }
-            neu.regelUmzugStand = 1;
-            c.regelUmzugStand = 1;
+        }
+        if (!(Number(c.regelUmzugStand) >= 2)) {
+            // Stand 2: Probelauf-Datenpunkte der Geraete an die Instanz angeglichen (probelaufUmziehen)
+            neu.regelUmzugStand = 2;
+            c.regelUmzugStand = 2;
         }
         return neu;
     }

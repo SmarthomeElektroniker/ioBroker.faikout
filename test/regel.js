@@ -288,19 +288,24 @@ describe('Regelung: Zustand und Einstellungen', () => {
 
 describe('Regelung: Simulator (main.js + Anlage)', function () {
     this.timeout(20000);
-    it('Probelauf sendet NIE - Instanz-Probelauf an (auch ohne Schluessel) oder Geraeteschalter an (Bestand)', async () => {
+    it('Probelauf sendet NIE - Instanz-Probelauf an (auch ohne Schluessel) oder Schalter der Geraetezeile; der Datenpunkt zeigt nur an', async () => {
         const SCHALTER = 'Daikin_Wohnzimmer.regulation.demand.dryRun';
-        // bestand: was vor dem ersten Lauf schon da ist - der Schalter als Objekt, ggf. mit Wert
-        for (const [config, bestand, schalter] of [
-            [{}, null, false], // Schluessel fehlt = Bestand: Instanz-Probelauf gilt als AN
-            [{ regelProbelauf: true }, null, false],
-            [{ regelProbelauf: true }, true, true],
-            [{ regelProbelauf: false }, true, true], // Geraet aus einer aelteren Version: Schalter steht auf an
-            [{ regelProbelauf: false }, undefined, true], // Schalter da, Wert nicht lesbar: vorsichtig an
+        const zeile = probelauf => ({ regelGeraete: [{ geraet: 'Daikin_Wohnzimmer', probelauf }] });
+        // bestand: was vor dem ersten Lauf schon da ist - der alte Schalter als Objekt (schreibbar), ggf. mit Wert
+        for (const [config, bestand] of [
+            [{}, null], // Schluessel fehlt = Bestand: Instanz-Probelauf gilt als AN
+            [{ regelProbelauf: true }, null],
+            [{ regelProbelauf: true }, true],
+            [{ regelProbelauf: true }, false], // alter Geraeteschalter aus, Instanz an: bleibt Probelauf
+            [{ regelProbelauf: true, ...zeile(false) }, false],
+            [{ regelProbelauf: true, ...zeile(true) }, undefined],
+            [{ regelProbelauf: false, ...zeile(true) }, null], // nur diese Anlage im Probelauf
+            [{ regelProbelauf: false, ...zeile(true) }, false],
+            [{ regelProbelauf: false, regelGeraete: [{ geraet: 'Daikin Wohnzimmer', probelauf: true }] }, null], // Zeile ueber den Namen
         ]) {
             const { a, uhr } = aufbau({ ...config, regelAktiv: true });
             if (bestand !== null) {
-                a.objekte.set(SCHALTER, { type: 'state', common: { type: 'boolean', def: true }, native: {} });
+                a.objekte.set(SCHALTER, { type: 'state', common: { type: 'boolean', role: 'switch', write: true, def: true }, native: {} });
                 if (bestand !== undefined) {
                     a.werte.set(SCHALTER, { val: bestand, ack: true });
                 }
@@ -315,10 +320,64 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
             expect(a.gesendet, fall).to.have.length(0);
             const w = JSON.parse(a.wert('Daikin_Wohnzimmer.regulation.demand.wouldSend'));
             expect(w.action, fall).to.equal('would');
-            expect(a.wert(SCHALTER), fall).to.equal(schalter);
+            // der Datenpunkt zeigt den wirksamen Probelauf und ist kein Schalter mehr
+            expect(a.wert(SCHALTER), fall).to.equal(true);
+            expect(a.objekte.get(SCHALTER).common, fall).to.include({ write: false, role: 'indicator' });
             expect(a.wert('Daikin_Wohnzimmer.regulation.demand.setpoint')).to.be.within(30, 100);
             expect(a.zeilen.filter(z => /would send/.test(z.text)).length).to.be.at.least(1);
         }
+    });
+
+    it('EIN Schalter: Instanz-Probelauf aus sendet - auch wenn der alte Geraeteschalter noch auf an stand (wird angeglichen, mit Warnung)', async () => {
+        const SCHALTER = 'Daikin_Wohnzimmer.regulation.demand.dryRun';
+        for (const [bestand, zeilen] of [
+            [null, undefined],
+            [true, undefined], // Geraet aus einer aelteren Version: Schalter stand auf an
+            [false, undefined],
+            [undefined, undefined], // Schalter da, Wert nicht lesbar
+            [true, [{ geraet: 'Daikin_Wohnzimmer', probelauf: false }]],
+            [true, [{ geraet: 'Andere_Anlage', probelauf: true }]], // der Probelauf einer ANDEREN Anlage wirkt hier nicht
+        ]) {
+            const { a, uhr } = aufbau({ regelProbelauf: false, regelAktiv: true, ...(zeilen ? { regelGeraete: zeilen } : {}) });
+            if (bestand !== null) {
+                a.objekte.set(SCHALTER, { type: 'state', common: { type: 'boolean', role: 'switch', write: true, def: true }, native: {} });
+                if (bestand !== undefined) {
+                    a.werte.set(SCHALTER, { val: bestand, ack: true });
+                }
+            }
+            const anlage = new Anlage({ name: 'Daikin Wohnzimmer', outside: 5 });
+            await laufen(a, uhr, anlage, 20);
+            const fall = JSON.stringify([bestand, zeilen]);
+            expect(a.gesendet.map(g => g.topic), fall).to.eql(['command/Daikin Wohnzimmer/demand']);
+            expect(a.wert(SCHALTER), fall).to.equal(false);
+            expect(a.objekte.get(SCHALTER).common, fall).to.include({ write: false, role: 'indicator' });
+            // nur wer vorher im Geraete-Probelauf hing, bekommt die Warnung "jetzt scharf"
+            expect(a.zeilen.filter(z => z.stufe === 'warn' && /now LIVE/.test(z.text)).length, fall).to.equal(bestand === true ? 1 : 0);
+        }
+    });
+
+    it('Schreiben auf regulation.demand.dryRun schaltet nichts: abgelehnt, zurueckgestellt, Hinweis im Log', async () => {
+        const SCHALTER = 'Daikin_Wohnzimmer.regulation.demand.dryRun';
+        // Instanz im Probelauf: ein "false" von aussen schaltet NICHT scharf
+        const probe = aufbau({ regelProbelauf: true, regelAktiv: true });
+        const anlage = new Anlage({ name: 'Daikin Wohnzimmer', outside: 5 });
+        await laufen(probe.a, probe.uhr, anlage, 2);
+        await probe.a.onStateChange(`faikout.0.${SCHALTER}`, { val: false, ack: false });
+        expect(await probe.a.regelung.schalter('Daikin_Wohnzimmer', 'dryRun', false)).to.equal(false);
+        await laufen(probe.a, probe.uhr, anlage, 20);
+        expect(probe.a.gesendet).to.have.length(0);
+        expect(probe.a.wert(SCHALTER)).to.equal(true);
+        expect(probe.a.werte.get(SCHALTER).ack).to.equal(true);
+        expect(probe.a.zeilen.filter(z => z.stufe === 'warn' && /dryRun is read-only/.test(z.text))).to.have.length(2);
+        // Instanz scharf: ein "true" von aussen haelt die Anlage nicht an (dafuer ist der Schalter der Geraetekarte da)
+        const scharf = aufbau({ regelProbelauf: false, regelAktiv: true });
+        const zweite = new Anlage({ name: 'Daikin Wohnzimmer', outside: 5 });
+        await laufen(scharf.a, scharf.uhr, zweite, 1);
+        await scharf.a.onStateChange(`faikout.0.${SCHALTER}`, { val: true, ack: false });
+        await laufen(scharf.a, scharf.uhr, zweite, 20);
+        expect(scharf.a.wert(SCHALTER)).to.equal(false);
+        expect(scharf.a.gesendet.map(g => g.topic)).to.eql(['command/Daikin Wohnzimmer/demand']);
+        expect(require('../lib/regel').SCHALTER).to.not.have.property('demand.dryRun');
     });
 
     it('neue Instanz (Vorgaben der io-package): Probelauf aus - ein neu erkanntes Geraet haengt nicht im Probelauf', async () => {
@@ -339,11 +398,10 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         expect(still.a.wert('Daikin_Neu.regulation.demand.active')).to.equal(false);
     });
 
-    it('scharf (beide Probelauf-Schalter aus) sendet ueber command/<Name>/demand, Anlage uebernimmt -> faehig "ja"', async () => {
+    it('scharf (Probelauf der Instanz aus) sendet ueber command/<Name>/demand, Anlage uebernimmt -> faehig "ja"', async () => {
         const { a, uhr } = aufbau({ regelProbelauf: false, regelAktiv: true });
         const anlage = new Anlage({ name: 'Daikin Wohnzimmer', outside: 5 });
         await laufen(a, uhr, anlage, 1);
-        await a.onStateChange('faikout.0.Daikin_Wohnzimmer.regulation.demand.dryRun', { val: false, ack: false });
         await laufen(a, uhr, anlage, 20);
         expect(a.gesendet.map(g => g.topic)).to.eql(['command/Daikin Wohnzimmer/demand']);
         expect(a.gesendet[0].nutzlast).to.equal('60');
@@ -357,7 +415,6 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         const { a, uhr } = aufbau({ regelProbelauf: false, regelAktiv: true });
         const anlage = new Anlage({ name: 'Daikin 1OG', outside: 5, nimmtDemand: 'nie' });
         await laufen(a, uhr, anlage, 1);
-        await a.onStateChange('faikout.0.Daikin_1OG.regulation.demand.dryRun', { val: false, ack: false });
         await laufen(a, uhr, anlage, 60);
         expect(a.gesendet).to.have.length(1);
         expect(a.wert('Daikin_1OG.info.demandCapable')).to.equal('no');
@@ -413,10 +470,12 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         expect(geschrieben).to.eql([]);
     });
 
-    it('legt die Datenpunkte mit Vorgaben an (Probelauf des Geraets aus, aktiv aus der Einstellung)', async () => {
+    it('legt die Datenpunkte mit Vorgaben an (Probelauf-Anzeige = wirksamer Zustand und nicht schreibbar, aktiv aus der Einstellung)', async () => {
         const { a, uhr } = aufbau({});
         await laufen(a, uhr, new Anlage({ name: 'Daikin V' }), 1);
-        expect(a.wert('Daikin_V.regulation.demand.dryRun')).to.equal(false);
+        // ohne Schluessel gilt der Instanz-Probelauf als AN - das zeigt der Datenpunkt
+        expect(a.wert('Daikin_V.regulation.demand.dryRun')).to.equal(true);
+        expect(a.objekte.get('Daikin_V.regulation.demand.dryRun').common).to.include({ write: false, role: 'indicator', def: false });
         expect(a.wert('Daikin_V.regulation.demand.active')).to.equal(false);
         expect(a.wert('Daikin_V.regulation.demand.state')).to.equal('off');
         expect(a.objekte.get('Daikin_V.regulation.demand.active').common.write).to.equal(true);

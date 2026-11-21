@@ -269,7 +269,7 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
     ];
     const HEIZEN_NEU = [{ x: -10, y: 100 }, ...HEIZEN_ALT.slice(1)];
     /** Stand "schon umgezogen" - damit ein Test genau EINE Regel zeigt. */
-    const FERTIG = { externClientIdStandard: 'iobroker-faikout-0-abc', externClientId: 'iobroker-faikout-0-abc', regelUmzugStand: 1, regelProbelauf: true };
+    const FERTIG = { externClientIdStandard: 'iobroker-faikout-0-abc', externClientId: 'iobroker-faikout-0-abc', regelUmzugStand: 2, regelProbelauf: true };
 
     /**
      * Adapter mit einer gespeicherten Instanzkonfiguration; konfigUmziehen schreibt sie ganz zurueck.
@@ -371,7 +371,7 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
             { geraet: 'B', individuell: false, fuehlerWeg: 'sollwert' },
             { geraet: 'C', individuell: true, fuehlerWeg: 'sollwert' },
         ]);
-        expect(a.gespeichert.native.regelUmzugStand).to.equal(1);
+        expect(a.gespeichert.native.regelUmzugStand).to.equal(2);
         expect(regel.konfigAusInstanz(a.config).fuer('A', 'A').konfig.bedarf.obergrenze).to.equal(vorher).and.to.equal(85);
         await zweiterStart(a);
         // nach dem Umzug ohne Haken angelegt: bleibt ohne Haken (= Vorlage)
@@ -404,7 +404,7 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
             await eigen.konfigUmziehen();
             expect(eigen.gespeichert.native.regelObergrenze, String(ober)).to.equal(ober);
             expect(eigen.gespeichert.native.regelKennlinieHeizen, String(ober)).to.eql(punkte);
-            expect(eigen.gespeichert.native.regelUmzugStand).to.equal(1);
+            expect(eigen.gespeichert.native.regelUmzugStand).to.equal(2);
         }
         // Werte je Geraet sind eigene Werte und bleiben
         const geraet = instanz({ ...basis, regelGeraete: [{ geraet: 'A', obergrenze: 95, kennlinieHeizen: HEIZEN_ALT }] });
@@ -424,9 +424,9 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
         expect(regel.konfigAusInstanz(neu.config).probelaufGlobal).to.equal(false);
         // Bestand mit gespeichertem Wert: nie angefasst (auch nicht beim allerersten Umzug)
         for (const wert of [true, false]) {
-            for (const stand of [{}, { regelUmzugStand: 1 }]) {
+            for (const stand of [{}, { regelUmzugStand: 1 }, { regelUmzugStand: 2 }]) {
                 const a = instanz({ externClientIdStandard: 'x', externClientId: 'x', ...stand, regelProbelauf: wert, regelGeraete: [{ geraet: 'A', fuehlerWeg: 'sollwert', individuell: true }] });
-                expect(await a.konfigUmziehen(), JSON.stringify([wert, stand])).to.equal(!stand.regelUmzugStand);
+                expect(await a.konfigUmziehen(), JSON.stringify([wert, stand])).to.equal(stand.regelUmzugStand !== 2);
                 expect(a.gespeichert.native.regelProbelauf).to.equal(wert);
                 expect(regel.konfigAusInstanz(a.config).probelaufGlobal).to.equal(wert);
             }
@@ -435,9 +435,9 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
         // vor und nach dem Umzug auf 1.0.0; auch null zaehlt als fehlend
         for (const native of [
             { regelUmzugStand: 1, regelGeraete: [{ geraet: 'A', fuehlerWeg: 'sollwert' }] },
-            { regelUmzugStand: 1 },
+            { regelUmzugStand: 2 },
             { regelGeraete: [{ geraet: 'A' }] },
-            { regelProbelauf: null, regelUmzugStand: 1 },
+            { regelProbelauf: null, regelUmzugStand: 2 },
             {},
         ]) {
             const a = instanz({ externClientIdStandard: 'x', externClientId: 'x', ...native });
@@ -446,6 +446,90 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
             expect(a.gespeichert.native.regelProbelauf, JSON.stringify(native)).to.equal(true);
             expect(a.config.regelProbelauf).to.equal(true);
             await zweiterStart(a);
+        }
+    });
+
+    it('Probelauf-Datenpunkte der Geraete: beim Update EINMAL an die Instanz angeglichen - alle Kombinationen', async () => {
+        const DP = id => `${id}.regulation.demand.dryRun`;
+        const alt = (a, id, wert) => {
+            a.objekte.set(id, { type: 'device', common: { name: id.replace('_', ' ') }, native: {} });
+            a.objekte.set(DP(id), { type: 'state', common: { type: 'boolean', role: 'switch', write: true, def: true, name: 'alt' }, native: { regulation: true } });
+            if (wert !== undefined) {
+                a.werte.set(DP(id), { val: wert, ack: true });
+            }
+        };
+        // Instanz: fehlt (Bestand = AN) / an / aus; Umzugsstand 0 (Vorabstand) / 1 (Stand vor diesem Umzug)
+        for (const instanzWert of [undefined, true, false]) {
+            for (const stand of [undefined, 1]) {
+                const native = { externClientIdStandard: 'x', externClientId: 'x' };
+                if (instanzWert !== undefined) {
+                    native.regelProbelauf = instanzWert;
+                }
+                if (stand !== undefined) {
+                    native.regelUmzugStand = stand;
+                }
+                const a = instanz(native);
+                alt(a, 'Alt_An', true); // alter Geraeteschalter an (ueblicher Bestand)
+                alt(a, 'Alt_Aus', false); // bewusst ausgeschaltet
+                alt(a, 'Alt_Leer', undefined); // Objekt ohne Wert
+                a.objekte.set('Ohne_Regelung', { type: 'device', common: { name: 'Ohne Regelung' }, native: {} });
+                const fall = JSON.stringify([instanzWert, stand]);
+                const wirksam = instanzWert !== false; // fehlender Schluessel wird im selben Start als AN festgeschrieben
+                expect(await a.konfigUmziehen(), fall).to.equal(true);
+                expect(a.gespeichert.native, fall).to.include({ regelProbelauf: wirksam, regelUmzugStand: 2 });
+                for (const id of ['Alt_An', 'Alt_Aus', 'Alt_Leer']) {
+                    expect(a.wert(DP(id)), `${fall} ${id}`).to.equal(wirksam);
+                    expect(a.werte.get(DP(id)).ack).to.equal(true);
+                    expect(a.objekte.get(DP(id)).common, `${fall} ${id}`).to.include({ write: false, role: 'indicator', def: false, type: 'boolean' });
+                }
+                expect(a.objekte.has(DP('Ohne_Regelung'))).to.equal(false);
+                // die Geraetezeilen bekommen KEINEN Probelauf-Schalter: nach dem Umzug gilt allein die Instanz
+                expect(JSON.stringify(a.gespeichert.native.regelGeraete || [])).to.not.contain('probelauf');
+                // Log: nur wo sich fuer das Geraet etwas aendert - "scharf" als Warnung, "bleibt Probelauf" als Info
+                const zeilen = stufe => a.zeilen.filter(z => z.stufe === stufe && /per-unit dry-run switch/.test(z.text)).map(z => z.text.split(':')[0]);
+                expect(zeilen('warn'), fall).to.eql(wirksam ? [] : ['Alt An']);
+                expect(zeilen('info'), fall).to.eql(wirksam ? ['Alt Aus'] : []);
+                expect(a.zeilen.filter(z => /now LIVE/.test(z.text)).length, fall).to.equal(wirksam ? 0 : 1);
+                await zweiterStart(a);
+            }
+        }
+        // Stand 2 (schon angeglichen): der Start fasst nichts mehr an - das uebernimmt die Regelung je Geraet
+        const fertig = instanz({ ...FERTIG, regelProbelauf: false });
+        alt(fertig, 'Alt_An', true);
+        expect(await fertig.konfigUmziehen()).to.equal(false);
+        expect(fertig.wert(DP('Alt_An'))).to.equal(true);
+        // ... und zwar bei der ersten Meldung: Anzeige = Instanz (aus), kein eigener Schalter mehr
+        fertig.regelung = new regel.Bedarfsregelung(fertig, { jetzt: () => START });
+        await fertig.regelung.geraet('Alt_An', 'Alt An');
+        expect(fertig.wert(DP('Alt_An'))).to.equal(false);
+        expect(fertig.objekte.get(DP('Alt_An')).common.write).to.equal(false);
+        // ein Fehler beim Lesen der Geraete haelt den Start nicht auf
+        const kaputt = instanz({ externClientIdStandard: 'x', externClientId: 'x', regelProbelauf: true, regelUmzugStand: 1 });
+        kaputt.getDevicesAsync = async () => {
+            throw new Error('keine Verbindung');
+        };
+        expect(await kaputt.konfigUmziehen()).to.equal(true);
+        expect(kaputt.gespeichert.native.regelUmzugStand).to.equal(2);
+    });
+
+    it('Probelauf nur einer Anlage: Feld `probelauf` der Geraetezeile - wirksam = Instanz ODER Zeile', () => {
+        for (const [instanzWert, zeile, erwartet] of [
+            [false, undefined, false],
+            [false, false, false],
+            [false, true, true],
+            [false, 'true', false], // nur ein echtes true zaehlt (Formular schreibt boolean)
+            [true, false, true],
+            [true, true, true],
+            [undefined, false, true],
+        ]) {
+            const c = { regelGeraete: [{ geraet: 'A', probelauf: zeile }, { geraet: 'B' }] };
+            if (instanzWert !== undefined) {
+                c.regelProbelauf = instanzWert;
+            }
+            const e = regel.konfigAusInstanz(c);
+            expect(regel.probelaufWirksam(e, 'A', 'A'), JSON.stringify([instanzWert, zeile])).to.equal(erwartet);
+            expect(regel.probelaufWirksam(e, 'B', 'B')).to.equal(instanzWert !== false);
+            expect(regel.probelaufWirksam(e, 'Unbekannt', 'Unbekannt')).to.equal(instanzWert !== false);
         }
     });
 
@@ -458,7 +542,7 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
         const a = instanz(io.native);
         expect(await a.konfigUmziehen()).to.equal(true);
         expect(a.geschrieben).to.equal(1);
-        expect(a.gespeichert.native).to.include({ regelObergrenze: 100, regelUmzugStand: 1 });
+        expect(a.gespeichert.native).to.include({ regelObergrenze: 100, regelUmzugStand: 2 });
         await zweiterStart(a);
     });
 
@@ -475,7 +559,7 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
         expect(await a.konfigUmziehen()).to.equal(true);
         expect(a.geschrieben).to.equal(1);
         const n = a.gespeichert.native;
-        expect(n).to.include({ user: 'klima', User: '', pass: 'X', regelObergrenze: 100, regelUmzugStand: 1 });
+        expect(n).to.include({ user: 'klima', User: '', pass: 'X', regelObergrenze: 100, regelUmzugStand: 2 });
         expect(n.regelGeraete).to.eql([{ geraet: 'A', kennlinieHeizen: [{ x: -5, y: 80 }, { x: 10, y: 50 }], stufen, individuell: true, fuehlerWeg: 'sollwert' }]);
         expect(n.externClientId).to.be.a('string').and.not.equal('');
         await zweiterStart(a);

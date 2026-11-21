@@ -438,7 +438,6 @@ describe('Regelung: Vorgabe-Szenen in der Systemsprache, Plan haengt an der ID',
         await laufen(a, uhr, anlage, 2);
         const { szenen } = wochenplan.szenenLesen(null);
         const planText = JSON.stringify(wochenplan.vorgabePlan(szenen));
-        await a.regelung.schalter('Sprach_A', 'dryRun', false);
         await a.regelung.schalter('Sprach_A', 'schedule.weekJson', planText);
         await a.regelung.schalter('Sprach_A', 'schedule.active', true);
         await laufen(a, uhr, anlage, 5);

@@ -37,6 +37,8 @@ interface Zustand extends ConfigGenericState {
     fehler: Record<number, Record<string, string>>;
     frage: number;
     uebersicht: Uebersicht[] | null;
+    /** eingelesene Datei, die auf die Entscheidung "ersetzen / hinzufuegen" wartet - oder ihr Fehler */
+    einfuhr: { datei: string; zeilen?: Zeile[]; ignoriert?: number; fehler?: boolean } | null;
 }
 
 const kopie = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -90,6 +92,8 @@ const D = {
     runter: 'M12 5v14M6 13l6 6 6-6',
     kopie: 'M9 9h10v10H9zM5 15V5h10',
     weg: 'M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13',
+    export: 'M12 4v11M7 10l5 5 5-5M5 20h14',
+    einfuhr: 'M12 15V4M7 9l5-5 5 5M5 20h14',
 };
 
 class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
@@ -97,6 +101,7 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
     takt: ReturnType<typeof setInterval> | null = null;
     lebt = false;
     gemeldet = '';
+    datei = React.createRef<HTMLInputElement>();
 
     /** Angaben unter `custom` des Schemas (direkt am Eintrag werden sie ebenfalls verstanden) */
     angaben(): { items: Feld[]; titleAttr: string } {
@@ -118,6 +123,7 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
             fehler: {},
             frage: -1,
             uebersicht: null,
+            einfuhr: null,
         });
         this.lebt = true;
         this.fragen();
@@ -307,6 +313,91 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
         );
     };
 
+    /** Namen der gespeicherten Felder einer Zeile (ohne die reinen Anzeigefelder, die mit "_" beginnen) */
+    feldNamen(): Set<string> {
+        return new Set(
+            this.angaben()
+                .items.map(f => f.attr || '')
+                .filter(a => a && !a.startsWith('_')),
+        );
+    }
+
+    /** Geraeteliste als JSON-Datei herunterladen (wie "exportieren" der Standardliste des Admins) */
+    exportieren = (): void => {
+        const text = JSON.stringify(this.state.zeilen || [], null, 2);
+        const blob = new Blob([text], { type: 'application/json' });
+        const adresse = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const kontext = this.props.oContext;
+        a.href = adresse;
+        a.download = `${kontext?.adapterName || 'faikout'}-${kontext?.instance ?? 0}-${this.props.attr || 'liste'}-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(adresse), 1000);
+    };
+
+    /** Datei gewaehlt: lesen und pruefen - uebernommen wird erst nach der Rueckfrage im Formular */
+    dateiGewaehlt = (ereignis: React.ChangeEvent<HTMLInputElement>): void => {
+        const datei = ereignis.target.files?.[0];
+        ereignis.target.value = ''; // dieselbe Datei laesst sich noch einmal waehlen
+        if (!datei) {
+            return;
+        }
+        const fehler = (): void => {
+            if (this.lebt) {
+                this.setState({ einfuhr: { datei: datei.name, fehler: true }, frage: -1 });
+            }
+        };
+        if (datei.size > 2000000) {
+            fehler();
+            return;
+        }
+        datei
+            .text()
+            .then(inhalt => {
+                const roh: unknown = JSON.parse(inhalt);
+                const bekannt = this.feldNamen();
+                const { titleAttr } = this.angaben();
+                if (!Array.isArray(roh) || !roh.length || roh.length > 200) {
+                    throw new Error('keine Liste');
+                }
+                let ignoriert = 0;
+                const zeilen = roh.map(eintrag => {
+                    if (!eintrag || typeof eintrag !== 'object' || Array.isArray(eintrag)) {
+                        throw new Error('kein Eintrag');
+                    }
+                    const zeile: Zeile = {};
+                    for (const [feld, wert] of Object.entries(eintrag as Zeile)) {
+                        if (bekannt.has(feld)) {
+                            zeile[feld] = wert;
+                        } else {
+                            ignoriert++;
+                        }
+                    }
+                    const kennung = zeile[titleAttr];
+                    if (!(titleAttr in zeile) || (kennung !== null && typeof kennung !== 'string')) {
+                        throw new Error('ohne Geraet');
+                    }
+                    return zeile;
+                });
+                if (this.lebt) {
+                    this.setState({ einfuhr: { datei: datei.name, zeilen, ignoriert }, frage: -1 });
+                }
+            })
+            .catch(fehler);
+    };
+
+    /** Rueckfrage beantwortet: eingelesene Zeilen ersetzen die Liste oder kommen dazu */
+    einfuegen = (ersetzen: boolean): void => {
+        const neu = this.state.einfuhr?.zeilen;
+        if (!neu) {
+            return;
+        }
+        const zeilen = ersetzen ? kopie(neu) : [...kopie(this.state.zeilen || []), ...kopie(neu)];
+        this.setzen({ offen: -1, frage: -1, lauf: this.state.lauf + 10000, fehler: {}, einfuhr: null }, zeilen);
+    };
+
     /** die Felder einer Zeile - gezeichnet vom Admin, wie im accordion */
     felder(zeile: Zeile, nr: number): React.JSX.Element {
         const schema = {
@@ -360,6 +451,9 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
         const { titleAttr } = this.angaben();
         const dunkel = (this.props.oContext?.themeType || this.props.oContext?.theme?.palette?.mode) === 'dark';
         const label = (this.props.schema as { label?: unknown }).label;
+        const einfuhr = this.state.einfuhr;
+        // Probelauf aller Anlagen (Instanz) - nur ein ausdrueckliches false schaltet ihn ab, wie im Adapter
+        const probeAlle = (this.props.data as Record<string, unknown> | undefined)?.regelProbelauf !== false;
         const AKZENT = {
             individuell: dunkel ? '#6cb6e6' : '#1f78b4',
             vorlage: dunkel ? '#6fca83' : '#2e8540',
@@ -422,6 +516,21 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                     '& .fk-g-marke-art': { color: 'var(--fk-g-akzent)' },
                     '& .fk-g-marke-neben': { color: 'text.secondary', fontWeight: 500 },
                     '& .fk-g-marke-fehler': { color: 'error.main' },
+                    '& .fk-g-marke-probe': { color: dunkel ? '#f0b04a' : '#a86a00' },
+                    '& .fk-g-knoepfe': { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 10px', mt: 1.5 },
+                    '& .fk-g-knoepfe .MuiButton-root': { textTransform: 'none' },
+                    '& .fk-g-einfuhr': {
+                        mt: 1.5,
+                        border: '1px solid',
+                        borderColor: dunkel ? '#f0b04a' : '#d98a00',
+                        borderRadius: '8px',
+                        padding: '10px 12px',
+                        backgroundColor: 'rgba(217,138,0,0.12)',
+                        fontSize: '0.875rem',
+                        overflowWrap: 'anywhere',
+                    },
+                    '& .fk-g-einfuhr.fk-g-einfuhr-fehler': { borderColor: 'error.main', backgroundColor: 'rgba(217,83,79,0.12)' },
+                    '& .fk-g-einfuhr-knoepfe': { display: 'flex', flexWrap: 'wrap', gap: '6px 8px', mt: 1 },
                     '& .fk-g-pfeil': { flex: '0 0 auto', display: 'inline-flex', transition: 'transform 0.15s', color: 'text.secondary' },
                     '& .fk-g-karte.fk-offen .fk-g-pfeil': { transform: 'rotate(180deg)' },
                     '& .fk-g-inhalt': { padding: '4px 14px 8px 16px' },
@@ -489,6 +598,9 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                                                 <span className="fk-g-marke fk-g-marke-art">
                                                     {individuell ? t('individuell') : t('vorlage')}
                                                 </span>
+                                            ) : null}
+                                            {kennung && (probeAlle || zeile.probelauf === true) ? (
+                                                <span className="fk-g-marke fk-g-marke-probe">{t('probelauf')}</span>
                                             ) : null}
                                             {zeile.betrieb === 'faikout' ? (
                                                 <span className="fk-g-marke fk-g-marke-neben">{t('faikoutAuto')}</span>
@@ -594,16 +706,118 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                         );
                     })}
                 </div>
-                <Button
-                    className="fk-g-hinzu"
-                    variant="outlined"
-                    size="small"
-                    startIcon={<Zeichen d={D.plus} />}
-                    onClick={this.hinzufuegen}
-                    sx={{ mt: 1.5, textTransform: 'none' }}
-                >
-                    {t('hinzufuegen')}
-                </Button>
+                <div className="fk-g-knoepfe">
+                    <Button
+                        className="fk-g-hinzu"
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Zeichen d={D.plus} />}
+                        onClick={this.hinzufuegen}
+                    >
+                        {t('hinzufuegen')}
+                    </Button>
+                    <span style={{ flex: '1 1 auto' }} />
+                    <Tooltip title={t('exportTipp')}>
+                        <span>
+                            <Button
+                                className="fk-g-export"
+                                color="inherit"
+                                size="small"
+                                startIcon={<Zeichen d={D.export} />}
+                                disabled={!zeilen.length}
+                                onClick={this.exportieren}
+                            >
+                                {t('exportieren')}
+                            </Button>
+                        </span>
+                    </Tooltip>
+                    <Tooltip title={t('importTipp')}>
+                        <Button
+                            className="fk-g-import"
+                            color="inherit"
+                            size="small"
+                            startIcon={<Zeichen d={D.einfuhr} />}
+                            onClick={() => this.datei.current?.click()}
+                        >
+                            {t('importieren')}
+                        </Button>
+                    </Tooltip>
+                    <input
+                        ref={this.datei}
+                        className="fk-g-datei"
+                        type="file"
+                        accept=".json,application/json"
+                        hidden
+                        onChange={this.dateiGewaehlt}
+                    />
+                </div>
+                {einfuhr ? (
+                    <div
+                        className={`fk-g-einfuhr${einfuhr.fehler ? ' fk-g-einfuhr-fehler' : ''}`}
+                        role={einfuhr.fehler ? 'alert' : 'group'}
+                    >
+                        {einfuhr.fehler || !einfuhr.zeilen ? (
+                            <>
+                                <div>{t('importFehler', einfuhr.datei)}</div>
+                                <div className="fk-g-einfuhr-knoepfe">
+                                    <Button
+                                        size="small"
+                                        color="inherit"
+                                        className="fk-g-einfuhr-zu"
+                                        onClick={() => this.setState({ einfuhr: null })}
+                                    >
+                                        {t('schliessen')}
+                                    </Button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div>
+                                    {t(
+                                        'importFrage',
+                                        einfuhr.datei,
+                                        einfuhr.zeilen.length,
+                                        einfuhr.zeilen
+                                            .map(z => {
+                                                const k = String(z[titleAttr] ?? '').trim();
+                                                return uebersicht?.find(u => u.id === k || u.name === k)?.name || k || t('ohneGeraet');
+                                            })
+                                            .join(', '),
+                                    )}{' '}
+                                    {einfuhr.ignoriert ? `${t('importIgnoriert', einfuhr.ignoriert)} ` : ''}
+                                    {t('importHinweis')}
+                                </div>
+                                <div className="fk-g-einfuhr-knoepfe">
+                                    <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="warning"
+                                        className="fk-g-einfuhr-ersetzen"
+                                        onClick={() => this.einfuegen(true)}
+                                    >
+                                        {t('importErsetzen', zeilen.length)}
+                                    </Button>
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        className="fk-g-einfuhr-anhaengen"
+                                        onClick={() => this.einfuegen(false)}
+                                    >
+                                        {t('importAnhaengen')}
+                                    </Button>
+                                    <Button
+                                        size="small"
+                                        color="inherit"
+                                        className="fk-g-einfuhr-zu"
+                                        onClick={() => this.setState({ einfuhr: null })}
+                                    >
+                                        {t('nein')}
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ) : null}
             </Box>
         );
     }

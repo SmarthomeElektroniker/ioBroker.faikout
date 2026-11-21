@@ -198,7 +198,7 @@ it would do, but sends nothing. Instances from older versions keep their dry run
   has an entry with who controls, sensor sources and frost protection – and the checkbox
   "Individual instead of global template": without it all template values apply, with it the
   values of the unit (a single empty field still takes the template).
-- **Who controls**: *Adapter controls* (schedule, temperature levels, power limit, humidity – nothing is stored
+- **Who controls**: *ioBroker adapter controls* (schedule, temperature levels, power limit, humidity – nothing is stored
   in the module) or *Faikout auto* (the module controls to the target itself; the adapter supplies
   target, sensor value and schedule). With Faikout auto the power limit is only set with the
   strategy "Auto", and every change of the target is stored in the module's flash memory – the
