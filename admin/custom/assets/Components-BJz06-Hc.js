@@ -1,1 +1,0 @@
-import{n as e,r as t}from"./Kennlinie-D2ClGqeR.js";var n={KennlinieHeizen:e,KennlinieKuehlen:t};export{n as default};
