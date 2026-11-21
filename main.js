@@ -1326,6 +1326,20 @@ class Faikout extends utils.Adapter {
         if (def.step !== undefined) {
             common.step = def.step;
         }
+        if (feld === 'target') {
+            // Bereich und Schrittweite der Solltemperatur meldet das Modul selbst (klimaConfig). Die festen
+            // Vorgaben oben duerfen das nicht bei jedem Adapterstart wieder ueberschreiben - sonst blieb das
+            // Objekt auf 16-29 Grad stehen, obwohl die Anlage bis 32 geht (Volltest 21.11.2026: Warnung
+            // "value 32 greater than max 29").
+            const g = this.geraete.get(geraetId);
+            const vorhanden = g && g.grenzen ? null : await this.getObjectAsync(stateId);
+            const quelle = (g && g.grenzen) || (vorhanden && vorhanden.common) || {};
+            for (const k of ['min', 'max', 'step']) {
+                if (typeof quelle[k] === 'number' && Number.isFinite(quelle[k])) {
+                    common[k] = quelle[k];
+                }
+            }
+        }
 
         await this.extendObject(stateId, { type: 'state', common, native: { feld } });
         if (def.unbekannt) {

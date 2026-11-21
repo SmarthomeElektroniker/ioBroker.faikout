@@ -588,6 +588,28 @@ describe('Device-Manager: Karte', () => {
         expect([s.min, s.max, s.step, s.falseText, s.trueText]).to.eql([18, 30, 1, '18', '30']);
     });
 
+    it('Sollwertbereich aus der Discovery bleibt, wenn die Objekte beim naechsten Lauf neu angelegt werden', async () => {
+        const a = await adapterMitGeraet();
+        await a.klimaConfig(
+            JSON.stringify({ avty_t: 'state/Wohnzimmer AC', min_temp: 16, max_temp: 32, temp_step: 0.5 }),
+        );
+        const lies = () => {
+            const c = a.objekte.get('Wohnzimmer_AC.control.target').common;
+            return [c.min, c.max, c.step];
+        };
+        expect(lies()).to.eql([16, 32, 0.5]);
+        // naechste Statusmeldung nach einem Adapterstart: das Objekt wird wieder angelegt
+        const g = a.geraete.get('Wohnzimmer_AC');
+        g.angelegt.clear();
+        await a.werteUebernehmen('Wohnzimmer AC', { target: 32 });
+        expect(lies()).to.eql([16, 32, 0.5]);
+        // und auch dann, wenn der Lauf den Bereich noch nicht kennt (Discovery kam vor dem Geraet)
+        g.grenzen = null;
+        g.angelegt.clear();
+        await a.werteUebernehmen('Wohnzimmer AC', { target: 31 });
+        expect(lies()).to.eql([16, 32, 0.5]);
+    });
+
     it('ohne gemeldete Felder keine Bedienelemente', async () => {
         const a = await adapterMitGeraet({ online: true, rssi: -70 });
         const k = (await kartenLaden(a)).karten[0];
@@ -1719,6 +1741,35 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             // nichts, was der Admin als Muster auswerten wuerde
             expect(html).not.to.match(/[`\\]|\$\{/);
             expect(a.gesetzt).to.eql([]);
+        });
+
+        it('Strategie Vortag: kein Kennlinienbild - die Kennlinie ist dann nicht im Einsatz', async () => {
+            const { a } = await mitRegelung();
+            a.config.regelStrategie = 'vortag';
+            const html = (await a.deviceManagement.detailsFormular(ID, 'de')).items.inhalt.text;
+            expect(html).not.to.contain('Heizkennlinie');
+            expect(html.match(/<svg/g)).to.have.length(1); // nur noch der Verlauf
+            expect(html).to.contain('Leistungsgrenze, letzte 24 Stunden');
+            a.config.regelStrategie = 'kennlinie';
+            const mit = (await a.deviceManagement.detailsFormular(ID, 'de')).items.inhalt.text;
+            expect(mit.match(/<svg/g)).to.have.length(2);
+        });
+
+        it('Bedarfsregelung ruht (Modul regelt selbst) oder Anlage ohne Leistungsgrenze: kein Kennlinienbild, keine Marke mit einem Wert', async () => {
+            const { a } = await mitRegelung();
+            const vorher = a.regelung;
+            for (const art of ['ruhtAuto', 'nichtFaehig']) {
+                a.regelung = { geraete: new Map([[ID, { weg: { art } }]]) };
+                const html = (await a.deviceManagement.detailsFormular(ID, 'de')).items.inhalt.text;
+                expect(html, art).not.to.contain('Heizkennlinie');
+                expect(html.match(/<svg/g), art).to.have.length(1);
+                expect(html, art).not.to.match(/(Leistungsgrenze|würde senden) 60 %/);
+            }
+            a.regelung = { geraete: new Map([[ID, { weg: { art: 'normal' } }]]) };
+            const mit = (await a.deviceManagement.detailsFormular(ID, 'de')).items.inhalt.text;
+            expect(mit.match(/<svg/g)).to.have.length(2);
+            expect(mit).to.match(/(Leistungsgrenze|würde senden) 60 %/);
+            a.regelung = vorher;
         });
 
         it('Texte aus Datenpunkten werden maskiert (kein HTML, kein Muster)', async () => {
