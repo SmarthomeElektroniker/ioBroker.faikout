@@ -2858,7 +2858,8 @@
                             "lg": 3,
                             "xl": 3
                         }
-                    }
+                    },
+                    "color": "primary"
                 },
                 "_pVorgabe": {
                     "type": "panel",
@@ -3312,7 +3313,8 @@
                                 }
                             ]
                         }
-                    }
+                    },
+                    "color": "primary"
                 },
                 "_pFein": {
                     "type": "panel",
@@ -3363,7 +3365,8 @@
                             "step": 0.1,
                             "default": 0.5
                         }
-                    }
+                    },
+                    "color": "primary"
                 },
                 "_hHand": {
                     "type": "header",

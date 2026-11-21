@@ -204,6 +204,8 @@ class Faikout extends utils.Adapter {
                 praefix: this.config.externPraefix,
                 log: this.log,
                 onMessage,
+                // Verbindung zum Broker da/weg -> info.connection nachfuehren
+                onClient: () => this.verbindungPruefen(),
             });
         } else {
             this.broker = new FaikoutBroker({
@@ -300,7 +302,10 @@ class Faikout extends utils.Adapter {
 
     verbindungPruefen() {
         // Verbunden heisst hier: mindestens ein faikout-Modul haengt am Broker.
-        this.setState('info.connection', { val: this.geraete.size > 0, ack: true });
+        // Am externen Broker zaehlt zusaetzlich die Verbindung zum Broker selbst: faellt er weg, kommt
+        // keine Meldung mehr an - "verbunden" waere dann falsch (Brokertest 21.11.2026).
+        const brokerDa = this.config.brokerModus !== 'extern' || !!(this.broker && this.broker.verbunden);
+        this.setState('info.connection', { val: this.geraete.size > 0 && brokerDa, ack: true });
     }
 
     // ---------------------------------------------------------------- MQTT hinein
