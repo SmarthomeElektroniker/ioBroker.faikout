@@ -160,6 +160,8 @@ class Faikout extends utils.Adapter {
         this.regelung = null;
 
         this.broker = null;
+        /** Zuletzt geschriebener Wert von info.connection (geschrieben wird nur bei Aenderung). */
+        this.verbindungStand = false;
         this.stopping = false;
         this.stundenTimer = null;
 
@@ -183,6 +185,11 @@ class Faikout extends utils.Adapter {
         // Startzeit: die Einrichtungsseite wartet kurz nach dem Start auf das erste Modul (oberflaeche.einrichtungStandHtml)
         this.startZeit = Date.now();
         await this.setState('info.connection', { val: false, ack: true });
+        this.verbindungStand = false;
+        // Der Umzug steht bewusst VOR allem anderen, vor allem vor dem Start des Brokers: Ein Altfall mit
+        // `User` (grosses U) + `pass` liefe sonst einen Lauf lang als offener Broker. Wird geschrieben,
+        // endet onReady hier (die Instanz startet neu); kann nicht geschrieben werden, steht `user`
+        // trotzdem schon in this.config - der Broker dieses Laufs verlangt die Anmeldung.
         if (await this.konfigUmziehen()) {
             return; // die Instanz startet mit der umgezogenen Konfiguration neu
         }
@@ -213,9 +220,19 @@ class Faikout extends utils.Adapter {
                 praefix: this.config.externPraefix,
                 log: this.log,
                 onMessage,
-                // Verbindung zum Broker da/weg -> info.connection nachfuehren
-                onClient: () => this.verbindungPruefen(),
+                // Verbindung zum Broker da/weg -> info.connection nachfuehren. Ist sie weg, erfaehrt der
+                // Adapter nichts mehr von den Modulen (auch deren Abmeldung nicht): <Geraet>.info.up
+                // wird false, bis sich das Modul wieder meldet.
+                onClient: (id, verbunden) => {
+                    if (!verbunden) {
+                        this.moduleGetrenntMelden().catch(e => this.log.debug(`info.up: ${e.message}`));
+                    }
+                    this.verbindungPruefen();
+                },
             });
+            // Start ohne Wissen ueber die Module: ein `up: true` aus dem letzten Lauf gilt erst wieder,
+            // wenn das Modul sich meldet (am eigenen Broker besorgt das die Abmeldung der Module).
+            await this.moduleGetrenntMelden(true);
         } else {
             this.broker = new FaikoutBroker({
                 port: ziel.port,
@@ -261,6 +278,9 @@ class Faikout extends utils.Adapter {
         this.subscribeStates('*.regulation.*');
         // Zeittakt der Regelung: Schaltpunkte des Wochenplans, Ablauf von Sperren, Fuehleralter.
         this.regelTakt = this.setInterval(() => {
+            // Externer Broker: "verbunden" haengt an der letzten Meldung der Module - ohne neue Meldung
+            // faellt es nur ueber diesen Takt wieder ab.
+            this.verbindungPruefen();
             if (this.regelung) {
                 this.regelung.takt().catch(e => this.log.warn(`Climate control: ${e.message}`));
             }
@@ -309,15 +329,77 @@ class Faikout extends utils.Adapter {
         }
     }
 
+    /**
+     * Fuehrt info.connection nach: true heisst, dass wirklich mindestens ein Modul verbunden ist.
+     *  - eigener Broker: mindestens ein Client haengt am Broker (An- und Abmeldung rufen hierher; eine
+     *    abgelehnte Anmeldung erzeugt keinen Client). Bis 1.0.0-Vorabstand zaehlten die BEKANNTEN
+     *    Geraete - die Anzeige blieb gruen, wenn alle Module weg oder abgelehnt waren.
+     *  - externer Broker: die Verbindung zum Broker steht UND ein bekanntes Geraet hat in den letzten
+     *    Minuten gemeldet (die Clients des fremden Brokers sind nicht sichtbar, siehe modulClients())
+     *    und sich nicht abgemeldet (`up: false`, der "letzte Wille" des Moduls).
+     * Geschrieben wird nur bei Aenderung; aufgerufen bei An-/Abmeldung, Brokerverbindung da/weg, neuem
+     * oder vergessenem Geraet, der ersten Meldung nach "getrennt", Wechsel von `up` und im 30-s-Takt.
+     */
     verbindungPruefen() {
         if (this.stopping) {
             return; // beim Beenden nichts mehr schreiben (die Verbindung zur Datenbank schliesst gerade)
         }
-        // Verbunden heisst hier: mindestens ein faikout-Modul haengt am Broker.
-        // Am externen Broker zaehlt zusaetzlich die Verbindung zum Broker selbst: faellt er weg, kommt
-        // keine Meldung mehr an - "verbunden" waere dann falsch (Brokertest 21.11.2026).
-        const brokerDa = (this.config || {}).brokerModus !== 'extern' || !!(this.broker && this.broker.verbunden);
-        this.setState('info.connection', { val: this.geraete.size > 0 && brokerDa, ack: true });
+        let verbunden;
+        if ((this.config || {}).brokerModus === 'extern') {
+            const gemeldet = this.modulClients();
+            verbunden =
+                !!(this.broker && this.broker.verbunden) &&
+                [...this.geraete.values()].some(g => g.up !== false && gemeldet.includes(g.name));
+        } else {
+            verbunden = this.mqttClients.size > 0;
+        }
+        if (verbunden === this.verbindungStand) {
+            return;
+        }
+        this.verbindungStand = verbunden;
+        this.setState('info.connection', { val: verbunden, ack: true });
+    }
+
+    /**
+     * Externer Broker: setzt `<Geraet>.info.up` auf false - bei Verbindungsverlust zum Broker, beim
+     * Start und beim Beenden. Am eigenen Broker meldet der Broker die Abmeldung eines Moduls selbst
+     * (dessen "letzter Wille" {"up":false}); haengt der Adapter als Client an einem fremden Broker und
+     * verliert die Verbindung, kaeme nichts mehr an und `up` bliebe true (Test Strang E).
+     * Die naechste Meldung des Moduls schreibt wieder true: der Schreib-Zwischenspeicher wird mitgefuehrt.
+     *
+     * @param {boolean} [ausObjekten]  auch Geraete aus frueheren Laeufen (beim Start ist this.geraete leer)
+     */
+    async moduleGetrenntMelden(ausObjekten = false) {
+        const ids = new Map([...this.geraete.keys()].map(id => [id, null]));
+        if (ausObjekten && typeof this.getDevicesAsync === 'function') {
+            for (const o of (await this.getDevicesAsync()) || []) {
+                const id = String((o && o._id) || '').slice(this.namespace.length + 1);
+                if (id && !ids.has(id)) {
+                    ids.set(id, o);
+                }
+            }
+        }
+        for (const [id, objekt] of ids) {
+            const stateId = `${id}.info.up`;
+            const g = this.geraete.get(id);
+            const gemerkt = this.geschrieben.get(stateId);
+            let war = gemerkt ? gemerkt.val : undefined;
+            if (war === undefined) {
+                const st = await this.getStateAsync(stateId);
+                war = st ? st.val : undefined;
+            }
+            if (war !== true) {
+                continue; // nie gemeldet oder schon getrennt
+            }
+            await this.setState(stateId, { val: false, ack: true });
+            this.geschrieben.set(stateId, { val: false, zeit: Date.now() });
+            // WLAN-Symbol der Geraetekarte (native.wlan) mitziehen
+            if (g) {
+                await this.wlanStufeAktualisieren(id, g, { up: false });
+            } else if (objekt && objekt.native && objekt.native.wlan && objekt.native.wlan !== 'off') {
+                await this.extendObject(id, { native: { wlan: 'off', wlanAn: '', wlanAus: true } });
+            }
+        }
     }
 
     // ---------------------------------------------------------------- MQTT hinein
@@ -374,6 +456,10 @@ class Faikout extends utils.Adapter {
             return;
         } // command/…, Faikout/… - nicht ausgewertet
         this.gesehen.set(t.geraet, Date.now());
+        if (!this.verbindungStand) {
+            // erste Meldung nach "getrennt" (externer Broker: hier zaehlt die Meldung, nicht die Anmeldung)
+            this.verbindungPruefen();
+        }
 
         if (t.art === 'error') {
             const abgelehnt = felder.abgelehntAuswerten(t.unter, text);
@@ -704,8 +790,10 @@ class Faikout extends utils.Adapter {
         if (typeof daten.rssi === 'number') {
             g.rssi = daten.rssi;
         }
-        if (typeof daten.up === 'boolean') {
+        if (typeof daten.up === 'boolean' && g.up !== daten.up) {
             g.up = daten.up;
+            // externer Broker: ein abgemeldetes Modul ({"up":false}) zaehlt nicht als verbunden
+            this.verbindungPruefen();
         }
         if (!('rssi' in daten) && !('up' in daten)) {
             return;
@@ -1390,14 +1478,17 @@ class Faikout extends utils.Adapter {
                     );
                 }
                 case 'brokerTesten': {
-                    // Knopf "Verbindung testen": Werte aus dem (ungespeicherten) Formular; ein leeres
-                    // Passwortfeld heisst "das gespeicherte nehmen".
+                    // Werte aus dem (ungespeicherten) Formular; zum Passwort siehe brokerextern.testPasswort()
                     const r = await brokerextern.testen({
                         host: feldWert(msg.host),
                         port: Number(feldWert(msg.port)) || undefined,
                         tls: msg.tls === true || msg.tls === 'true',
                         user: feldWert(msg.user),
-                        pass: feldWert(msg.pass) || String(this.config.externPass || ''),
+                        pass: brokerextern.testPasswort(
+                            feldWert(msg.pass),
+                            msg.passUnveraendert,
+                            this.config.externPass,
+                        ),
                         clientId: feldWert(msg.clientId) || brokerextern.standardClientId(this.instance),
                     });
                     return antworten(r);
@@ -1746,7 +1837,10 @@ class Faikout extends utils.Adapter {
             this.anbindenPlaene.delete(ip);
             return { error: fehler, native: { _bindPlan: '', _bindPreview: '', _bindOther: false } };
         }
-        const plan = anbinden.planen(gelesen, this.anbindenZiel(adresse));
+        const plan = anbinden.planen(gelesen, {
+            ...this.anbindenZiel(adresse),
+            verbunden: this.modulVerbunden(gelesen.fp.hostname),
+        });
         if (plan.schonHier) {
             this.anbindenPlaene.delete(ip);
             const text = anbinden.t('schonHier', sprache, { name: plan.titel });
@@ -1784,6 +1878,7 @@ class Faikout extends utils.Adapter {
         }
         const frisch = anbinden.planen(gelesen, {
             ...this.anbindenZiel(plan.neu.mqtthost.slice(0, plan.neu.mqtthost.lastIndexOf(':'))),
+            verbunden: this.modulVerbunden(gelesen.fp.hostname),
         });
         const anders = anbinden.abweichung(plan, frisch);
         if (anders) {
@@ -1799,7 +1894,11 @@ class Faikout extends utils.Adapter {
             mqttpass: benutzer ? this.brokerZiel().pass : undefined,
         });
         const start = Date.now();
-        this.log.info(`Connect: setting MQTT host of module "${plan.titel}" (${ip}) to this adapter, module restarts`);
+        this.log.info(
+            plan.nurZugang
+                ? `Connect: transferring the MQTT credentials to module "${plan.titel}" (${ip}), module restarts`
+                : `Connect: setting MQTT host of module "${plan.titel}" (${ip}) to this adapter, module restarts`,
+        );
         const r = await anbinden.posten(ip, daten, { timer: this });
         if (!r.ok) {
             this.log.warn(`Connect: module "${plan.titel}" (${ip}) rejected the change: ${r.fehler}`);
@@ -1960,6 +2059,17 @@ class Faikout extends utils.Adapter {
     }
 
     /**
+     * Haengt das Modul gerade am Broker (externer Broker: hat es in den letzten Minuten gemeldet)?
+     *
+     * @param {string} hostname Hostname = Topic des Moduls
+     * @returns {boolean} verbunden
+     */
+    modulVerbunden(hostname) {
+        const name = String(hostname || '');
+        return !!name && this.modulClients().some(c => c === name || c.startsWith(`${name}_`));
+    }
+
+    /**
      * Hat sich das Modul seit `seit` am Broker gemeldet (verbunden UND eine Nachricht geschickt)?
      *
      * @param {string} hostname Hostname = Topic des Moduls
@@ -1968,8 +2078,7 @@ class Faikout extends utils.Adapter {
      */
     modulGemeldetSeit(hostname, seit) {
         const zuletzt = this.gesehen.get(hostname) || 0;
-        const clients = this.modulClients();
-        return zuletzt > seit && clients.some(c => c === hostname || c.startsWith(`${hostname}_`));
+        return zuletzt > seit && this.modulVerbunden(hostname);
     }
 
     /**
@@ -2044,6 +2153,10 @@ class Faikout extends utils.Adapter {
                 await this.zaehlerstandSichern(id, g);
             }
             await this.setState('info.connection', { val: false, ack: true });
+            // Externer Broker: nach dem Beenden erfaehrt niemand mehr, ob die Module noch da sind
+            if ((this.config || {}).brokerModus === 'extern') {
+                await this.moduleGetrenntMelden();
+            }
             if (this.broker) {
                 await this.broker.stop();
             }

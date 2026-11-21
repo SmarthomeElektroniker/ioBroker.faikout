@@ -121,6 +121,167 @@ describe('Externer MQTT-Broker', function () {
         await b.stop();
     });
 
+    it('Anmeldung abgelehnt und der Broker laesst die Verbindung offen: der Adapter verbindet selbst neu, meldet einmal', async () => {
+        // mqtt.js tut nach einem CONNACK-Fehler nichts (reconnectOnConnackError ist ab Werk aus) - ohne
+        // eigenes Neuverbinden blieb es bei genau EINEM Versuch.
+        let versuche = 0;
+        const offen = net.createServer(sock => {
+            versuche++;
+            sock.on('error', () => {});
+            sock.on('data', () => sock.write(Buffer.from([0x20, 2, 0, 4]))); // CONNACK: bad user name or password
+        });
+        const p = await new Promise(res => offen.listen(0, '127.0.0.1', () => res(offen.address().port)));
+        const fehler = [];
+        const b = new ExternerBroker({
+            host: '127.0.0.1',
+            port: p,
+            user: 'klima',
+            pass: 'falsch',
+            log: { ...log, error: t => fehler.push(t) },
+            onMessage: () => {},
+            anmeldungWiederholenMs: 100,
+        });
+        await b.start();
+        expect(await bis(() => versuche >= 4)).to.equal(true);
+        expect(fehler).to.have.length(1);
+        expect(fehler[0]).to.match(/user name or password not accepted .* trying again every/);
+        expect(fehler[0]).to.not.include('falsch');
+        // stop() beendet auch die Wiederholung
+        await b.stop();
+        const stand = versuche;
+        await new Promise(r => setTimeout(r, 400));
+        expect(versuche).to.equal(stand);
+        await new Promise(r => offen.close(r));
+    });
+
+    it('Anmeldung abgelehnt, spaeter am Broker berichtigt: verbindet ohne Neustart und meldet "Connected"', async () => {
+        await starten('klima', 'geheim');
+        const zeilen = [];
+        const verbindung = [];
+        const b = new ExternerBroker({
+            host: '127.0.0.1',
+            port,
+            user: 'klima',
+            pass: 'neu',
+            log: { ...log, error: t => zeilen.push(`E ${t}`), info: t => zeilen.push(`I ${t}`) },
+            onMessage: () => {},
+            onClient: (id, an) => verbindung.push(an),
+            anmeldungWiederholenMs: 150,
+        });
+        await b.start();
+        expect(await bis(() => zeilen.some(z => /^E .*not accepted/.test(z)))).to.equal(true);
+        await new Promise(r => setTimeout(r, 500)); // mehrere abgelehnte Versuche
+        expect(b.verbunden).to.equal(false);
+        expect(verbindung).to.eql([]);
+        expect(zeilen.filter(z => z.startsWith('E '))).to.have.length(1);
+        fremd.pass = 'neu'; // Passwort am Broker berichtigt
+        expect(await bis(() => b.verbunden)).to.equal(true);
+        expect(zeilen.some(z => /^I Connected to external MQTT broker/.test(z))).to.equal(true);
+        expect(verbindung).to.eql([true]);
+        expect(await b.publish('command/X/power', 'true')).to.equal(true);
+        // dieselbe Ursache wird nach einem Erfolg wieder gemeldet
+        expect(b.gemeldet).to.equal('');
+        await b.stop();
+    });
+
+    it('Standardabstand nach abgelehnter Anmeldung: 60 s', () => {
+        expect(require('../lib/brokerextern').ANMELDUNG_WIEDERHOLEN_MS).to.equal(60000);
+        expect(new ExternerBroker({ host: 'h', log, onMessage() {} }).wiederholenMs).to.equal(60000);
+    });
+
+    it('Adapter im Extern-Betrieb: info.connection und <Geraet>.info.up folgen Brokerverbindung und Meldungen', async () => {
+        await starten();
+        const a = proxyquire('../main', { '@iobroker/adapter-core': { Adapter: Attrappe } })({});
+        Object.assign(a, {
+            instance: 0,
+            subscribeStates() {},
+            subscribeObjectsAsync: async () => {},
+            setInterval: () => null,
+            clearInterval() {},
+            clearTimeout() {},
+        });
+        a.verbrauchUmziehen = async () => {};
+        a.objekteAbgleichen = async () => {};
+        a.stundenTaktStarten = () => {};
+        a.config = { brokerModus: 'extern', externHost: '127.0.0.1', externPort: port, externClientId: 'test-adapter' };
+        // Stand aus dem letzten Lauf: ein Geraet stand noch auf "erreichbar"
+        a.objekte.set('Alt', { type: 'device', common: { name: 'Alt' }, native: { wlan: 's3', wlanAn: 's3', wlanAus: false } });
+        a.werte.set('Alt.info.up', { val: true, ack: true });
+        a.objekte.set('Nie', { type: 'device', common: { name: 'Nie' }, native: {} });
+        await a.onReady();
+        // Start: up aus dem letzten Lauf gilt nicht mehr; ein Geraet ohne up bekommt keinen Wert
+        expect(a.wert('Alt.info.up')).to.equal(false);
+        expect(a.objekte.get('Alt').native).to.include({ wlan: 'off', wlanAn: '', wlanAus: true });
+        expect(a.werte.has('Nie.info.up')).to.equal(false);
+        // Broker verbunden, aber noch kein Modul gemeldet: nicht "verbunden"
+        expect(await bis(() => a.broker.verbunden)).to.equal(true);
+        expect(a.wert('info.connection')).to.equal(false);
+        modul = mqtt.connect(`mqtt://127.0.0.1:${port}`, { clientId: 'Faikout:Sim_ABC' });
+        await new Promise(r => modul.once('connect', r));
+        const meldung = JSON.stringify({ up: true, power: true, mode: 'heat', target: 21, temp: 20, rssi: -60 });
+        modul.publish('state/Sim', meldung);
+        expect(await bis(() => a.wert('info.connection') === true && a.wert('Sim.info.up') === true)).to.equal(true);
+        expect(a.objekte.get('Sim').native.wlan).to.equal('s3');
+        // Verbindung zum Broker weg: beides false (vorher blieb up true)
+        await fremd.stop();
+        fremd = null;
+        expect(await bis(() => a.wert('info.connection') === false && a.wert('Sim.info.up') === false)).to.equal(true);
+        expect(await bis(() => a.objekte.get('Sim').native.wlan === 'off')).to.equal(true);
+        // naechste Meldung des Moduls: up wieder true (der Schreib-Zwischenspeicher haelt es nicht zurueck);
+        // info.connection bleibt false, solange der Broker fehlt
+        a.onMqtt('state/Sim', Buffer.from(meldung));
+        expect(await bis(() => a.wert('Sim.info.up') === true && a.geraete.get('Sim').up === true)).to.equal(true);
+        expect(a.wert('info.connection')).to.equal(false);
+        // Broker wieder da, Modul hat aber seit ueber fuenf Minuten nichts gemeldet: nicht "verbunden"
+        a.broker.verbunden = true;
+        a.verbindungPruefen();
+        expect(a.wert('info.connection')).to.equal(true);
+        // das Modul meldet sich ab (letzter Wille ueber den Broker): sofort nicht mehr "verbunden"
+        a.onMqtt('state/Sim', Buffer.from('{"up":false}'));
+        expect(await bis(() => a.wert('info.connection') === false)).to.equal(true);
+        a.onMqtt('state/Sim', Buffer.from(meldung));
+        expect(await bis(() => a.wert('info.connection') === true)).to.equal(true);
+        a.gesehen.set('Sim', Date.now() - 6 * 60000);
+        a.verbindungPruefen(); // im Betrieb der 30-s-Takt
+        expect(a.wert('info.connection')).to.equal(false);
+        a.gesehen.set('Sim', Date.now());
+        a.broker.verbunden = false;
+        // Beenden: up false
+        await new Promise(res => a.onUnload(res));
+        expect(a.wert('Sim.info.up')).to.equal(false);
+        expect(a.wert('info.connection')).to.equal(false);
+    });
+
+    it('"Verbindung testen": das gespeicherte Passwort nur, wenn die Seite "unveraendert" meldet', async () => {
+        const { testPasswort } = require('../lib/brokerextern');
+        expect(testPasswort('', true, 'alt')).to.equal('alt');
+        expect(testPasswort('getippt', true, 'alt')).to.equal('alt');
+        expect(testPasswort('', false, 'alt')).to.equal('');
+        expect(testPasswort('getippt', false, 'alt')).to.equal('getippt');
+        expect(testPasswort('', 'false', 'alt')).to.equal('');
+        // ohne das Feld (aeltere Einstellungsseite): wie bisher
+        expect(testPasswort('', undefined, 'alt')).to.equal('alt');
+        expect(testPasswort('getippt', undefined, 'alt')).to.equal('getippt');
+        expect(testPasswort('', undefined, undefined)).to.equal('');
+        // ueber die Nachricht der Einstellungsseite
+        const o = require('../lib/oberflaeche');
+        const aufrufe = [];
+        const a = {
+            config: { externPass: 'gespeichert' },
+            instance: 0,
+            log: { warn() {}, debug() {} },
+            sendTo() {},
+            getForeignObjectAsync: async () => ({ common: { language: 'en' } }),
+            brokerTestFunktion: async x => (aufrufe.push(x.pass), { ok: true, art: 'ok' }),
+        };
+        const frage = message => o.nachricht(a, { command: 'brokerVerbindungTesten', message, from: 'admin', callback: {} });
+        await frage({ host: 'h', user: 'u', pass: '' });
+        await frage({ host: 'h', user: 'u', pass: '', passUnveraendert: false });
+        await frage({ host: 'h', user: 'u', pass: 'neu', passUnveraendert: false });
+        await frage({ host: 'h', user: 'u', pass: '', passUnveraendert: true });
+        expect(aufrufe).to.eql(['gespeichert', '', 'neu', 'gespeichert']);
+    });
+
     it('Adapter im Extern-Betrieb: gleiche Wege, Ziel ist der externe Broker; der eigene Broker startet nicht', async () => {
         await starten();
         const gestartet = [];

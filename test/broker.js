@@ -138,6 +138,213 @@ describe('FaikoutBroker', () => {
     });
 });
 
+describe('FaikoutBroker: Anmeldung (Maengel aus dem Test der MQTT-Anmeldung)', function () {
+    this.timeout(15000);
+    const mqtt = require('mqtt');
+    let broker;
+    afterEach(async () => {
+        if (broker) {
+            await broker.stop();
+        }
+        broker = null;
+    });
+    /** Ein Verbindungsversuch: 'verbunden' oder 'abgelehnt'. */
+    const versuch = (port, clientId, username, password) =>
+        new Promise(res => {
+            const c = mqtt.connect(`mqtt://127.0.0.1:${port}`, { clientId, username, password, reconnectPeriod: 0 });
+            const ende = r => c.end(true, {}, () => res(r));
+            c.on('connect', () => ende('verbunden'));
+            c.on('error', () => ende('abgelehnt'));
+        });
+    const mitLog = () => {
+        const zeilen = [];
+        const merke = stufe => text => zeilen.push({ stufe, text });
+        return { zeilen, log: { debug: merke('debug'), info: merke('info'), warn: merke('warn'), error: merke('error') } };
+    };
+
+    it('Startzeile nennt, ob der Broker MIT oder OHNE Anmeldung laeuft; Passwort ohne Benutzer wird gewarnt', async () => {
+        let l = mitLog();
+        broker = new FaikoutBroker({ port: await freierPort(), user: 'klima', pass: 'geheim', log: l.log, timer: zeitgeber, onMessage() {} });
+        await broker.start();
+        expect(l.zeilen.filter(z => z.stufe === 'info').map(z => z.text).join('\n')).to.match(/WITH login \(user "klima"\)/);
+        expect(l.zeilen.map(z => z.text).join('\n')).to.not.include('geheim');
+        await broker.stop();
+
+        l = mitLog();
+        broker = new FaikoutBroker({ port: await freierPort(), log: l.log, timer: zeitgeber, onMessage() {} });
+        await broker.start();
+        expect(l.zeilen.filter(z => z.stufe === 'info').map(z => z.text).join('\n')).to.match(/WITHOUT login/);
+        expect(l.zeilen.filter(z => z.stufe === 'warn')).to.eql([]);
+        await broker.stop();
+
+        l = mitLog();
+        broker = new FaikoutBroker({ port: await freierPort(), pass: 'geheim', log: l.log, timer: zeitgeber, onMessage() {} });
+        await broker.start();
+        expect(l.zeilen.filter(z => z.stufe === 'warn').map(z => z.text).join('\n')).to.match(/no user name .* WITHOUT login/);
+        expect(l.zeilen.map(z => z.text).join('\n')).to.not.include('geheim');
+    });
+
+    it('"MQTT login rejected": je Client beim ersten Mal, dann hoechstens stuendlich, mit Handlungshinweis', async () => {
+        const { ABLEHNUNG_MELDEN_MS } = require('../lib/broker');
+        const l = mitLog();
+        let uhr = 1000000;
+        const port = await freierPort();
+        broker = new FaikoutBroker({ port, user: 'klima', pass: 'geheim', log: l.log, timer: zeitgeber, onMessage() {}, jetzt: () => uhr });
+        await broker.start();
+        const warnungen = () => l.zeilen.filter(z => z.stufe === 'warn').map(z => z.text);
+        for (let i = 0; i < 3; i++) {
+            expect(await versuch(port, 'Faikout:Wohnzimmer', 'klima', 'FALSCH')).to.equal('abgelehnt');
+        }
+        expect(warnungen()).to.have.length(1);
+        expect(warnungen()[0]).to.match(/^MQTT login rejected for "Faikout:Wohnzimmer" \(user "klima"\)\./);
+        expect(warnungen()[0]).to.include('"mqttuser" and "mqttpass"').and.to.include('"Connect" in the tab "Find modules"');
+        expect(l.zeilen.filter(z => z.stufe === 'debug' && /login rejected/.test(z.text))).to.have.length(2);
+        // ein anderer Client wird fuer sich gemeldet
+        expect(await versuch(port, 'Faikout:Buero', '', '')).to.equal('abgelehnt');
+        expect(warnungen()).to.have.length(2);
+        // kurz vor Ablauf der Stunde: weiter still; danach wieder eine Warnung mit der Zahl der Versuche
+        uhr += ABLEHNUNG_MELDEN_MS - 1000;
+        await versuch(port, 'Faikout:Wohnzimmer', 'klima', 'FALSCH');
+        expect(warnungen()).to.have.length(2);
+        uhr += 2000;
+        await versuch(port, 'Faikout:Wohnzimmer', 'klima', 'FALSCH');
+        expect(warnungen()).to.have.length(3);
+        expect(warnungen()[2]).to.include('3 more attempt(s)');
+        // nach gelungener Anmeldung ist die naechste Ablehnung wieder neu
+        expect(await versuch(port, 'Faikout:Wohnzimmer', 'klima', 'geheim')).to.equal('verbunden');
+        await versuch(port, 'Faikout:Wohnzimmer', 'klima', 'FALSCH');
+        expect(warnungen()).to.have.length(4);
+        // Passwoerter stehen nie im Log
+        expect(l.zeilen.map(z => z.text).join('\n')).to.not.match(/FALSCH|geheim/);
+    });
+
+    it('der Merker der Drosselung waechst nicht unbegrenzt (wechselnde Client-IDs)', () => {
+        const l = mitLog();
+        const b = new FaikoutBroker({ port: 1, user: 'u', pass: 'p', log: l.log, timer: zeitgeber, onMessage() {} });
+        for (let i = 0; i < 500; i++) {
+            b.ablehnungMelden(`scanner-${i}`, 'x');
+        }
+        expect(b.abgelehnt.size).to.equal(200);
+    });
+});
+
+describe('Adapter am eigenen Broker: Altfall `User`, info.connection', function () {
+    this.timeout(15000);
+    const mqtt = require('mqtt');
+    const proxyquire = require('proxyquire').noCallThru();
+    const { Attrappe } = require('./sim/simulator');
+    let a;
+    let clients = [];
+    afterEach(async () => {
+        clients.forEach(c => c.end(true));
+        clients = [];
+        if (a && a.broker) {
+            await a.broker.stop();
+        }
+        a = null;
+    });
+    const bis = async (fn, ms = 4000) => {
+        const ende = Date.now() + ms;
+        while (Date.now() < ende) {
+            if (fn()) {
+                return true;
+            }
+            await new Promise(r => setTimeout(r, 20));
+        }
+        return false;
+    };
+    const adapter = (config, broker) => {
+        const stub = { '@iobroker/adapter-core': { Adapter: Attrappe } };
+        if (broker) {
+            stub['./lib/broker'] = { FaikoutBroker: broker };
+        }
+        const x = proxyquire('../main', stub)({});
+        Object.assign(x, { instance: 0, subscribeStates() {}, subscribeObjectsAsync: async () => {}, setInterval: () => null });
+        x.verbrauchUmziehen = async () => {};
+        x.objekteAbgleichen = async () => {};
+        x.stundenTaktStarten = () => {};
+        // alles ausser `User` ist schon auf dem Stand von 1.0.0 - der Umzug betrifft nur den Benutzernamen
+        x.config = { externClientIdStandard: 'id', externClientId: 'id', regelUmzugStand: 1, ...config };
+        return x;
+    };
+    const verbinden = (port, opt) =>
+        new Promise(res => {
+            const c = mqtt.connect(`mqtt://127.0.0.1:${port}`, { reconnectPeriod: 0, ...opt });
+            clients.push(c);
+            c.on('connect', () => res(c));
+            c.on('error', () => res(null));
+        });
+
+    it('`User` + `pass`: der Umzug schreibt `user` und beendet onReady VOR dem Brokerstart - nie ein offener Broker', async () => {
+        const gebaut = [];
+        class Merker {
+            constructor(opts) {
+                gebaut.push(opts);
+            }
+            async start() {
+                gebaut.push('gestartet');
+            }
+            async stop() {}
+        }
+        a = adapter({ port: 1888, User: 'klima', pass: 'geheim' }, Merker);
+        const objekt = { native: { port: 1888, User: 'klima', pass: 'VERSCHLUESSELT' } };
+        const geschrieben = [];
+        a.getForeignObjectAsync = async () => JSON.parse(JSON.stringify(objekt));
+        a.setForeignObjectAsync = async (id, o) => geschrieben.push([id, o]);
+        a.extendForeignObjectAsync = async () => {};
+        await a.onReady();
+        expect(gebaut, 'in diesem Lauf entsteht kein Broker').to.eql([]);
+        expect(a.broker).to.equal(null);
+        expect(geschrieben).to.have.length(1);
+        expect(geschrieben[0][0]).to.equal('system.adapter.faikout.0');
+        // das (verschluesselte) Passwort bleibt, wie es gespeichert ist
+        expect(geschrieben[0][1].native).to.include({ user: 'klima', User: '', pass: 'VERSCHLUESSELT' });
+
+        // Laesst sich die Instanz nicht schreiben, laeuft der Broker DIESES Laufs trotzdem mit Anmeldung
+        const b = adapter({ port: 1888, User: 'klima', pass: 'geheim' }, Merker);
+        await b.onReady();
+        expect(gebaut[0]).to.include({ user: 'klima', pass: 'geheim' });
+        expect(gebaut[1]).to.equal('gestartet');
+    });
+
+    it('nach dem Umzug: ohne Anmeldung abgelehnt, mit den Zugangsdaten angenommen', async () => {
+        const port = await freierPort();
+        a = adapter({ port, User: 'klima', pass: 'geheim' });
+        await a.onReady(); // die Attrappe kann die Instanz nicht schreiben: derselbe Lauf, Broker echt
+        expect(a.zeilen.map(z => z.text).join('\n')).to.match(/WITH login \(user "klima"\)/);
+        expect(await verbinden(port, { clientId: 'Faikout:Ohne' })).to.equal(null);
+        expect(await verbinden(port, { clientId: 'Faikout:Falsch', username: 'klima', password: 'x' })).to.equal(null);
+        expect(await verbinden(port, { clientId: 'Faikout:Recht', username: 'klima', password: 'geheim' })).to.not.equal(null);
+    });
+
+    it('info.connection: true nur, solange wirklich ein Modul am Broker haengt', async () => {
+        const port = await freierPort();
+        a = adapter({ port, user: 'klima', pass: 'geheim' });
+        await a.onReady();
+        expect(a.wert('info.connection')).to.equal(false);
+        // abgelehnte Anmeldung: kein Client, bleibt false
+        expect(await verbinden(port, { clientId: 'Faikout:Sim', username: 'klima', password: 'x' })).to.equal(null);
+        await new Promise(r => setTimeout(r, 100));
+        expect(a.mqttClients.size).to.equal(0);
+        expect(a.wert('info.connection')).to.equal(false);
+        // Modul meldet sich an und sendet
+        const c = await verbinden(port, { clientId: 'Faikout:Sim', username: 'klima', password: 'geheim' });
+        c.publish('state/Sim', JSON.stringify({ up: true, power: true, target: 21, temp: 20 }));
+        expect(await bis(() => a.geraete.has('Sim') && a.wert('info.connection') === true)).to.equal(true);
+        // Modul weg: das Geraet bleibt bekannt, die Anzeige faellt trotzdem ab (vorher blieb sie true)
+        await new Promise(r => c.end(true, {}, r));
+        expect(await bis(() => a.wert('info.connection') === false)).to.equal(true);
+        expect(a.geraete.size).to.equal(1);
+        // ... und es wird nur bei Aenderung geschrieben
+        let n = 0;
+        const echt = a.setState.bind(a);
+        a.setState = async (id, w) => (id === 'info.connection' && n++, echt(id, w));
+        a.verbindungPruefen();
+        a.verbindungPruefen();
+        expect(n).to.equal(0);
+    });
+});
+
 describe('Feldkunde', () => {
     it('kennt die schreibbaren Steuerfelder', () => {
         for (const f of [

@@ -127,6 +127,36 @@ describe('Anbinden: Bausteine', () => {
         expect(hier.schonHier).to.equal(true);
     });
 
+    it('"schon hier" nur mit passender Anmeldung - sonst Zugangsdaten uebertragen (mqttuser alt -> neu, nie das Passwort)', () => {
+        const fp = { faikout: true, art: 'seite', adresse: '192.168.30.70', hostname: 'Wohnzimmer', titel: 'Wohnzimmer', version: 'v1', revkId: 'A' };
+        const ziel = { adresse: '192.168.30.10', port: 8089, user: '', eigeneAdressen: ['192.168.30.10'] };
+        const lesen = mqttuser => ({ fp, werte: { mqtthost: '192.168.30.10:8089', mqttuser } });
+        // Adapter ohne Benutzer: nichts zu uebertragen
+        expect(anbinden.planen(lesen('irgendwer'), ziel)).to.include({ schonHier: true, nurZugang: false });
+        // Benutzer nachtraeglich gesetzt, Modul hat keinen/einen anderen
+        for (const alt of ['', 'alt']) {
+            const plan = anbinden.planen(lesen(alt), { ...ziel, user: 'iob', verbunden: true });
+            expect(plan, alt).to.include({ schonHier: false, nurZugang: true, anderer: false });
+            const text = anbinden.vorschau(plan, 'de');
+            expect(text).to.include(`mqttuser: ${alt || '(leer)'} → iob`);
+            expect(text).to.include('nur die MQTT-Zugangsdaten übertragen');
+            expect(text).to.include('mqttpass: wird aus diesem Adapter gesetzt (nicht angezeigt');
+            expect(anbinden.vorschau(plan, 'en')).to.include('only the MQTT credentials are transferred');
+        }
+        // gleicher Benutzer und verbunden (oder unbekannt): fertig
+        expect(anbinden.planen(lesen('iob'), { ...ziel, user: 'iob', verbunden: true }).schonHier).to.equal(true);
+        expect(anbinden.planen(lesen('iob'), { ...ziel, user: 'iob' }).schonHier).to.equal(true);
+        // gleicher Benutzer, aber das Modul haengt nicht am Broker: das (nicht lesbare) Passwort stimmt wohl nicht
+        expect(anbinden.planen(lesen('iob'), { ...ziel, user: 'iob', verbunden: false })).to.include({ schonHier: false, nurZugang: true });
+        // anderer Broker: gewoehnliches Anbinden, kein "nur Zugangsdaten"
+        const fremd = anbinden.planen({ fp, werte: { mqtthost: '10.0.0.1:1883', mqttuser: 'x' } }, { ...ziel, user: 'iob' });
+        expect(fremd).to.include({ schonHier: false, nurZugang: false });
+        expect(anbinden.vorschau(fremd, 'de')).to.include('mqttuser: x → iob').and.not.include('nur die MQTT-Zugangsdaten');
+        // der alte Benutzer gehoert zum Vergleich zwischen Pruefen und Anbinden
+        const plan = anbinden.planen(lesen('alt'), { ...ziel, user: 'iob' });
+        expect(anbinden.abweichung(plan, anbinden.planen(lesen('anders'), { ...ziel, user: 'iob' }))).to.equal('mqttuser');
+    });
+
     it('Abweichung zwischen Pruefen und Anbinden wird erkannt', () => {
         const a = { revkId: 'A', hostname: 'h', version: '1', alt: { mqtthost: 'x' } };
         expect(anbinden.abweichung(a, { ...a })).to.equal('');
@@ -309,6 +339,45 @@ describe('Anbinden: Ablauf im Adapter (Pruefen, Anbinden, Erfolg, Zurueckstellen
         expect(z.result).to.match(/nicht rücklesbar/);
         expect(modul.werte).to.include({ mqtthost: '192.168.30.90:1888', mqttuser: 'alt' });
         expect(adapter.logs.join('\n')).to.not.match(/\bneu\b|altpass/);
+    });
+
+    it('schon angebunden, Benutzer/Passwort nachtraeglich gesetzt: Zugangsdaten lassen sich uebertragen', async () => {
+        modul.werte.mqtthost = '192.168.30.10:8089'; // steht schon auf diesem Adapter
+        // ohne Benutzer im Adapter: nichts zu tun
+        const ohne = await senden('anbindenPruefen', { ip: 'm', adresse: '192.168.30.10' });
+        expect(ohne.result).to.equal('Modul "TCL_Ferienhaus" ist schon auf diesen Adapter eingestellt.');
+        expect(ohne.native._bindPlan).to.equal('');
+        // Benutzer gesetzt: Vorschau statt "schon eingestellt"
+        adapter.config.user = 'iob';
+        adapter.config.pass = 'neuespasswort';
+        const p = await senden('anbindenPruefen', { ip: 'm', adresse: '192.168.30.10' });
+        expect(p.native._bindPlan).to.equal('m');
+        expect(p.native._bindOther).to.equal(false);
+        expect(p.native._bindPreview).to.include('mqttuser: alt → iob');
+        expect(p.native._bindPreview).to.include('nur die MQTT-Zugangsdaten übertragen');
+        expect(p.native._bindPreview).to.not.match(/neuespasswort|altpass/);
+        expect(modul.posts).to.eql([]);
+        meldetSich();
+        const r = await senden('anbinden', { ip: 'm' });
+        expect(r.result).to.match(/ist mit diesem Adapter verbunden/);
+        expect(modul.posts).to.eql([
+            [
+                ['mqtthost', '192.168.30.10:8089'],
+                ['mqttuser', 'iob'],
+                ['mqttpass', 'neuespasswort'],
+                ['_reboot', 'Reboot'],
+            ],
+        ]);
+        expect(adapter.logs.join('\n')).to.include('transferring the MQTT credentials');
+        expect(adapter.logs.join('\n')).to.not.match(/neuespasswort|altpass/);
+        // jetzt passt alles und das Modul haengt am Broker: wieder "schon eingestellt"
+        const fertig = await senden('anbindenPruefen', { ip: 'm', adresse: '192.168.30.10' });
+        expect(fertig.result).to.match(/schon auf diesen Adapter eingestellt/);
+        // Passwort im Adapter geaendert, Modul faellt vom Broker: gleicher Benutzer, trotzdem uebertragbar
+        adapter.mqttClients.clear();
+        const wieder = await senden('anbindenPruefen', { ip: 'm', adresse: '192.168.30.10' });
+        expect(wieder.native._bindPlan).to.equal('m');
+        expect(wieder.native._bindPreview).to.include('mqttuser: iob → iob');
     });
 
     it('Passwortschutz: Passwort als erstes Feld, nur fuer diesen Aufruf', async () => {
