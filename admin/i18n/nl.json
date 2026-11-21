@@ -314,5 +314,7 @@
   "helpExternPass": "Wordt versleuteld opgeslagen. Vergrendeld zonder gebruikersnaam: zonder naam is er geen aanmelding, een wachtwoord zou niets doen.",
   "headerSchritt4": "3 · Schema aanmaken (optioneel)",
   "textSchritt4": "Tabblad “Schema’s”: stel de temperatuurniveaus in (Comfort, Verlaging …) en maak per toestel het weekschema aan. Het weekschema staat ook op de toestelkaart (knop “Weekschema”); het werkt meteen, zonder “Opslaan”.",
-  "headerGeraetFeuchte": "Vocht"
+  "headerGeraetFeuchte": "Vocht",
+  "textMqtthostFehlt": "Vul eerst het “Adres voor modules” in het tabblad “Modules zoeken” in.",
+  "textMqtthostFehltExtern": "Vul eerst het adres van de externe broker in het tabblad “MQTT-broker” in."
 }

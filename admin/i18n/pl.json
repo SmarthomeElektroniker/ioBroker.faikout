@@ -314,5 +314,7 @@
   "helpExternPass": "Zapisywane w postaci zaszyfrowanej. Zablokowane bez nazwy użytkownika: bez niej nie ma logowania, hasło nie miałoby działania.",
   "headerSchritt4": "3 · Utwórz harmonogram (opcjonalnie)",
   "textSchritt4": "Karta „Harmonogramy”: ustaw poziomy temperatury (komfort, obniżenie …) i utwórz harmonogram tygodniowy dla każdego urządzenia. Harmonogram tygodniowy jest też na karcie urządzenia (przycisk „Harmonogram”); działa od razu, bez „Zapisz”.",
-  "headerGeraetFeuchte": "Wilgotność"
+  "headerGeraetFeuchte": "Wilgotność",
+  "textMqtthostFehlt": "Najpierw wpisz „Adres dla modułów” na karcie „Szukaj modułów”.",
+  "textMqtthostFehltExtern": "Najpierw wpisz adres zewnętrznego brokera na karcie „Broker MQTT”."
 }

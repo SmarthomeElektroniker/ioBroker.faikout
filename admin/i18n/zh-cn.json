@@ -314,5 +314,7 @@
   "helpExternPass": "加密保存。没有用户名时此项被锁定：没有用户名就不会登录，密码不起作用。",
   "headerSchritt4": "3 · 创建计划（可选）",
   "textSchritt4": "“计划”选项卡：设置温度档位（舒适、节能等）并为每台设备创建周计划。周计划也在设备卡片上（“周计划”按钮）；无需“保存”，立即生效。",
-  "headerGeraetFeuchte": "湿度"
+  "headerGeraetFeuchte": "湿度",
+  "textMqtthostFehlt": "请先在“搜索模块”选项卡中填写“模块使用的地址”",
+  "textMqtthostFehltExtern": "请先在“MQTT 代理”选项卡中填写外部代理的地址"
 }

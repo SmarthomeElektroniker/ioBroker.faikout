@@ -926,7 +926,10 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
     // Am Geraet sagt die Ueberschrift, was gilt: die globale Kennlinie oder eine eigene (eigene Punkte ODER eine
     // eigene Grenze) - der Wechsel aendert nur den Text in der Klammer, nichts am Aufbau darunter.
     const eigenStand = eigene || grenzeEigen;
-    const titelText = istVorlage ? props.titel : `${props.titel} (${k(eigenStand ? 'klammerEigen' : 'klammerGlobal')})`;
+    // nur die Grenze eigen, die Punkte aus der Vorlage: nicht "eigene Kennlinie" nennen (passt zum Etikett im Bild)
+    const titelText = istVorlage
+        ? props.titel
+        : `${props.titel} (${k(eigene ? 'klammerEigen' : grenzeEigen ? 'klammerGlobalGrenze' : 'klammerGlobal')})`;
     const kopfZeile = !eigene
         ? k(istVorlage ? 'etikettWerk' : grenzeEigen ? 'etikettVorlageKurve' : 'etikettVorlage')
         : fehler

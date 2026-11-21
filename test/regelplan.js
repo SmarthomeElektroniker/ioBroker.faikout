@@ -1255,7 +1255,12 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 2);
         const warnungen = a.zeilen.filter(z => z.stufe === 'warn' && /weekly schedule cannot be used/.test(z.text));
         expect(warnungen).to.have.length(1);
-        expect(warnungen[0].text).to.contain('Plan Z').and.to.contain('„tag“').and.to.contain('"Schedules"');
+        // das Log ist einsprachig englisch - auch der Grund in der Klammer (die Karte bleibt in der Systemsprache)
+        expect(warnungen[0].text)
+            .to.contain('Plan Z')
+            .and.to.contain('(Monday: temperature level “tag” does not exist)')
+            .and.to.contain('"Schedules"');
+        expect(warnungen[0].text).not.to.contain('gibt es nicht');
         expect(a.wert('Plan_Z.regulation.reason')).to.contain('Wochenplan: Montag: Temperaturstufe „tag“ gibt es nicht');
         // der Plan selbst bleibt stehen - nichts wird geloescht
         expect(a.wert('Plan_Z.regulation.schedule.weekJson')).to.equal(alt);

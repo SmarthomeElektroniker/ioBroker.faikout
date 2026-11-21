@@ -314,5 +314,7 @@
   "helpExternPass": "Wird verschlüsselt gespeichert. Ohne Benutzername gesperrt: Ohne ihn gibt es keine Anmeldung, ein Passwort bliebe wirkungslos.",
   "headerSchritt4": "3 · Zeitplan anlegen (freiwillig)",
   "textSchritt4": "Reiter „Zeitpläne“: Temperaturstufen (Komfort, Absenken …) festlegen und je Anlage den Wochenplan anlegen. Der Wochenplan steht auch auf der Gerätekarte (Knopf „Wochenplan“); er wirkt sofort, ohne „Speichern“.",
-  "headerGeraetFeuchte": "Feuchte"
+  "headerGeraetFeuchte": "Feuchte",
+  "textMqtthostFehlt": "Erst die „Adresse für Module“ im Reiter „Module suchen“ eintragen.",
+  "textMqtthostFehltExtern": "Erst die Adresse des externen Brokers im Reiter „MQTT-Broker“ eintragen."
 }

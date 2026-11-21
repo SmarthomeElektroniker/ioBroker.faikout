@@ -121,6 +121,28 @@
                     "lg": 6,
                     "xl": 6
                 },
+                "_mqtthostFehlt": {
+                    "type": "staticText",
+                    "text": "textMqtthostFehlt",
+                    "hidden": "data.brokerModus === 'extern' || !!data.moduleAddress",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 8,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "_mqtthostFehltExtern": {
+                    "type": "staticText",
+                    "text": "textMqtthostFehltExtern",
+                    "hidden": "data.brokerModus !== 'extern' || !!data.externHost",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 8,
+                    "lg": 6,
+                    "xl": 6
+                },
                 "hS4": {
                     "type": "header",
                     "size": 4,

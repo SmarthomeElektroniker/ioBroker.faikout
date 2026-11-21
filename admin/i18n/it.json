@@ -314,5 +314,7 @@
   "helpExternPass": "Salvata cifrata. Bloccata senza nome utente: senza di esso non c’è accesso, una password non avrebbe effetto.",
   "headerSchritt4": "3 · Creare un programma (facoltativo)",
   "textSchritt4": "Scheda «Programmi»: imposta i livelli di temperatura (comfort, riduzione…) e crea il programma settimanale per ogni apparecchio. Il programma settimanale si trova anche sulla scheda del dispositivo (pulsante «Programma settimanale»); ha effetto subito, senza «Salva».",
-  "headerGeraetFeuchte": "Umidità"
+  "headerGeraetFeuchte": "Umidità",
+  "textMqtthostFehlt": "Inserisci prima l’«Indirizzo per i moduli» nella scheda «Cerca moduli».",
+  "textMqtthostFehltExtern": "Inserisci prima l’indirizzo del broker esterno nella scheda «Broker MQTT»."
 }

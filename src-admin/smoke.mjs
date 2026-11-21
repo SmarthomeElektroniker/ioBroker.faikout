@@ -140,8 +140,9 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         // "Zuruecksetzen" am Geraet: nur, wenn es etwas Eigenes gibt
         const zurueck = h => (h.match(/<button[^>]*fk-wz-zurueck[^>]*>/) || [''])[0];
         assert.ok(!/disabled/.test(zurueck(html.eigene)) && /disabled/.test(zurueck(html.leer)) && !/disabled/.test(zurueck(html.grenzeEigen)), 'Zuruecksetzen nur mit eigenen Werten');
-        // eigene Grenze, Punkte der Vorlage: oben "eigene Kennlinie", im Bild nicht mehr "nicht angepasst"
-        assert.ok(/Kennlinie \(eigene Kennlinie\)/.test(html.grenzeEigen) && /Kurve aus der Vorlage \(eigene Grenze\)/.test(html.grenzeEigen) && !/nicht angepasst/.test(html.grenzeEigen), 'eigene Grenze: Etikett im Bild passt zur Klammer');
+        // eigene Grenze, Punkte der Vorlage: oben "globale Kennlinie, eigene Grenze" (nicht "eigene Kennlinie"),
+        // im Bild nicht mehr "nicht angepasst"
+        assert.ok(/Kennlinie \(globale Kennlinie, eigene Grenze\)/.test(html.grenzeEigen) && !/\(eigene Kennlinie\)/.test(html.grenzeEigen) && /Kurve aus der Vorlage \(eigene Grenze\)/.test(html.grenzeEigen) && !/nicht angepasst/.test(html.grenzeEigen), 'eigene Grenze: Etikett im Bild passt zur Klammer');
         // "So entsteht der Wert gerade": am Geraet immer da (fester Platz), an der Vorlage nie
         assert.ok(/class="[^"]*fk-weg[^"]*"[^>]*>.*So entsteht der Wert gerade:.*Kennlinie 87 % → Raum 1,0 K zu kalt: \+7 → 95 %/.test(html.eigene), 'Rechenweg unter dem Bild');
         assert.ok(/So entsteht der Wert gerade:.*Noch kein Wert/.test(html.leer), 'ohne Daten steht die Zeile trotzdem da');

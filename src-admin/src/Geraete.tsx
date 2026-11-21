@@ -45,7 +45,7 @@ interface Zustand extends ConfigGenericState {
     frage: number;
     uebersicht: Uebersicht[] | null;
     /** eingelesene Datei, die auf die Entscheidung "ersetzen / hinzufuegen" wartet - oder ihr Fehler */
-    einfuhr: { datei: string; zeilen?: Zeile[]; ignoriert?: number; fehler?: boolean; altHaken?: boolean } | null;
+    einfuhr: { datei: string; zeilen?: Zeile[]; ignoriert?: number; fehler?: boolean; altHaken?: boolean; verworfen?: string[] } | null;
 }
 
 const kopie = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -385,6 +385,12 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                 }
                 let ignoriert = 0;
                 let altHaken = false;
+                const verworfen = new Set<string>();
+                const schemata = new Map<string, unknown>(
+                    this.angaben()
+                        .items.filter(f => f.attr)
+                        .map(f => [String(f.attr), f]),
+                );
                 const zeilen = roh.map(roheZeile => {
                     if (!roheZeile || typeof roheZeile !== 'object' || Array.isArray(roheZeile)) {
                         throw new Error('kein Eintrag');
@@ -406,10 +412,46 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                     if (!(titleAttr in zeile) || (kennung !== null && typeof kennung !== 'string')) {
                         throw new Error('ohne Geraet');
                     }
+                    // Werte pruefen: Auswahlfelder gegen ihre Eintraege, Zahlen gegen ihren Bereich. Unzulaessiges
+                    // wird nicht uebernommen (dafuer gilt die Vorlage bzw. die Vorgabe) und in der Rueckfrage genannt.
+                    for (const feld of Object.keys(zeile)) {
+                        const wert = zeile[feld];
+                        if (feld === titleAttr || wert === null || wert === undefined || wert === '') {
+                            continue;
+                        }
+                        const schema = schemata.get(feld) as { type?: string; options?: { value?: unknown }[]; min?: number; max?: number } | undefined;
+                        let gut = true;
+                        if (feld === 'untergrenze' || feld === 'obergrenze') {
+                            gut = typeof wert === 'number' && wert >= 30 && wert <= 100;
+                        } else if (schema && schema.type === 'select' && Array.isArray(schema.options)) {
+                            gut = schema.options.some(o => o && o.value === wert);
+                        } else if (schema && schema.type === 'number') {
+                            gut =
+                                typeof wert === 'number' &&
+                                Number.isFinite(wert) &&
+                                (typeof schema.min !== 'number' || wert >= schema.min) &&
+                                (typeof schema.max !== 'number' || wert <= schema.max);
+                        } else if (schema && schema.type === 'checkbox') {
+                            gut = typeof wert === 'boolean';
+                        }
+                        if (!gut) {
+                            delete zeile[feld];
+                            verworfen.add(`${typeof kennung === 'string' && kennung ? `${kennung}: ` : ''}${feld}`);
+                        }
+                    }
+                    if (
+                        typeof zeile.untergrenze === 'number' &&
+                        typeof zeile.obergrenze === 'number' &&
+                        zeile.untergrenze > zeile.obergrenze
+                    ) {
+                        delete zeile.untergrenze;
+                        delete zeile.obergrenze;
+                        verworfen.add(`${typeof kennung === 'string' && kennung ? `${kennung}: ` : ''}untergrenze/obergrenze`);
+                    }
                     return zeile;
                 });
                 if (this.lebt) {
-                    this.setState({ einfuhr: { datei: datei.name, zeilen, ignoriert, altHaken }, frage: -1 });
+                    this.setState({ einfuhr: { datei: datei.name, zeilen, ignoriert, altHaken, verworfen: [...verworfen] }, frage: -1 });
                 }
             })
             .catch(fehler);
@@ -823,6 +865,9 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                                     {einfuhr.ignoriert
                                         ? `${einfuhr.ignoriert === 1 ? t('importIgnoriertEin') : t('importIgnoriert', einfuhr.ignoriert)} `
                                         : ''}
+                                    {einfuhr.verworfen && einfuhr.verworfen.length ? (
+                                        <span className="fk-g-einfuhr-verworfen">{`${t('importVerworfen', einfuhr.verworfen.join(', '))} `}</span>
+                                    ) : null}
                                     {einfuhr.altHaken ? `${t('importAltHaken')} ` : ''}
                                     {t('importHinweis')}
                                 </div>

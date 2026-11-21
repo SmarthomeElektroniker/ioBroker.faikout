@@ -314,5 +314,7 @@
   "helpExternPass": "Enregistré chiffré. Verrouillé sans nom d’utilisateur : sans lui, pas d’authentification, un mot de passe resterait sans effet.",
   "headerSchritt4": "3 · Créer un programme (facultatif)",
   "textSchritt4": "Onglet « Programmes » : définissez les niveaux de température (confort, réduit …) et créez le programme hebdomadaire de chaque appareil. Le programme hebdomadaire se trouve aussi sur la carte de l’appareil (bouton « Programme hebdo ») ; il agit immédiatement, sans « Enregistrer ».",
-  "headerGeraetFeuchte": "Humidité"
+  "headerGeraetFeuchte": "Humidité",
+  "textMqtthostFehlt": "Saisissez d’abord l’« Adresse pour les modules » dans l’onglet « Rechercher des modules ».",
+  "textMqtthostFehltExtern": "Saisissez d’abord l’adresse du broker externe dans l’onglet « Broker MQTT »."
 }
