@@ -1,1 +1,3009 @@
-[]
+[
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera",
+  "modell": "FTXM20R",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 5.7,
+   "M": 7.5,
+   "H": 10.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.1,
+   "L": 6.2,
+   "M": 8.2,
+   "H": 9.3
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: Spaltenzuordnung in der Herstellertabelle nicht eindeutig (Zeile kürzer als der Tabellenkopf) - nicht übernommen."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera",
+  "modell": "FTXM25R",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.1,
+   "L": 5.7,
+   "M": 7.6,
+   "H": 10.5
+  },
+  "luftstromHeizen": {
+   "SL": 4.9,
+   "L": 6.3,
+   "M": 8,
+   "H": 9.8
+  },
+  "nennKuehlenKW": 2.5,
+  "nennHeizenKW": 2.8,
+  "seer": 8.65,
+  "scop": 5.1,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R---RXM-R.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera",
+  "modell": "FTXM35R",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.2,
+   "L": 6,
+   "M": 7.8,
+   "H": 11.3
+  },
+  "luftstromHeizen": {
+   "SL": 4.9,
+   "L": 6.5,
+   "M": 8.5,
+   "H": 9.8
+  },
+  "nennKuehlenKW": 3.4,
+  "nennHeizenKW": 4,
+  "seer": 8.65,
+  "scop": 5.1,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R---RXM-R.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera",
+  "modell": "FTXM42R",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 6.5,
+   "M": 9,
+   "H": 11.9
+  },
+  "luftstromHeizen": {
+   "SL": 4.9,
+   "L": 6.5,
+   "M": 9.7,
+   "H": 12.4
+  },
+  "nennKuehlenKW": 4.2,
+  "nennHeizenKW": 5.4,
+  "seer": 7.85,
+  "scop": 4.71,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R---RXM-R.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera",
+  "modell": "FTXM50R",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 8.3,
+   "L": 11.4,
+   "M": 14,
+   "H": 15.8
+  },
+  "luftstromHeizen": {
+   "SL": 10.5,
+   "L": 12,
+   "M": 14.2,
+   "H": 15.8
+  },
+  "nennKuehlenKW": 5,
+  "nennHeizenKW": 5.8,
+  "seer": 7.41,
+  "scop": 4.71,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R---RXM-R.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera",
+  "modell": "FTXM60R",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 9.1,
+   "L": 11.8,
+   "M": 14,
+   "H": 16.7
+  },
+  "luftstromHeizen": {
+   "SL": 11.1,
+   "L": 12.4,
+   "M": 15.2,
+   "H": 16.5
+  },
+  "nennKuehlenKW": 6,
+  "nennHeizenKW": 7,
+  "seer": 6.9,
+  "scop": 4.3,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R---RXM-R.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera",
+  "modell": "FTXM71R",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10,
+   "L": 12.2,
+   "M": 15,
+   "H": 16.9
+  },
+  "luftstromHeizen": {
+   "SL": 11.6,
+   "L": 12.7,
+   "M": 15.8,
+   "H": 17.7
+  },
+  "nennKuehlenKW": 7.1,
+  "nennHeizenKW": 8.2,
+  "seer": 6.2,
+  "scop": 4.1,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-R---RXM-R.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "modell": "FTXM20A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.9,
+   "L": 6.3,
+   "M": 8.9,
+   "H": 11.9
+  },
+  "luftstromHeizen": {
+   "SL": 4.9,
+   "L": 6.9,
+   "M": 9.2,
+   "H": 11.4
+  },
+  "nennKuehlenKW": 2,
+  "nennHeizenKW": 2.5,
+  "seer": 9.47,
+  "scop": 5.2,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A---RXM-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "modell": "FTXM25A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.9,
+   "L": 6.3,
+   "M": 8.9,
+   "H": 11.9
+  },
+  "luftstromHeizen": {
+   "SL": 4.9,
+   "L": 6.9,
+   "M": 9.2,
+   "H": 11.4
+  },
+  "nennKuehlenKW": 2.5,
+  "nennHeizenKW": 2.8,
+  "seer": 9.47,
+  "scop": 5.2,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A---RXM-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "modell": "FTXM35A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 7.1,
+   "M": 9.4,
+   "H": 13.2
+  },
+  "luftstromHeizen": {
+   "SL": 5.1,
+   "L": 6.9,
+   "M": 9.4,
+   "H": 11.1
+  },
+  "nennKuehlenKW": 3.5,
+  "nennHeizenKW": 4,
+  "seer": 9.25,
+  "scop": 5.2,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A---RXM-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "modell": "FTXM42A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 5,
+   "L": 7.2,
+   "M": 9.8,
+   "H": 13.3
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 7.1,
+   "M": 10,
+   "H": 14
+  },
+  "nennKuehlenKW": 4.2,
+  "nennHeizenKW": 5.4,
+  "seer": 8.11,
+  "scop": 5,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A---RXM-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "modell": "FTXM50A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 5.9,
+   "L": 7.8,
+   "M": 10.4,
+   "H": 12.7
+  },
+  "luftstromHeizen": {
+   "SL": 6.9,
+   "L": 8.6,
+   "M": 11.5,
+   "H": 14.5
+  },
+  "nennKuehlenKW": 5,
+  "nennHeizenKW": 5.8,
+  "seer": 7.8,
+  "scop": 4.8,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A---RXM-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "modell": "FTXM60A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 8.6,
+   "L": 11.2,
+   "M": 13.4,
+   "H": 15.6
+  },
+  "luftstromHeizen": {
+   "SL": 10.5,
+   "L": 11.8,
+   "M": 14.6,
+   "H": 15.9
+  },
+  "nennKuehlenKW": 6,
+  "nennHeizenKW": 7,
+  "seer": 6.9,
+  "scop": 4.3,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A---RXM-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "modell": "FTXM71A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 9.3,
+   "L": 11.4,
+   "M": 13.6,
+   "H": 15.8
+  },
+  "luftstromHeizen": {
+   "SL": 11.2,
+   "L": 12.3,
+   "M": 15.3,
+   "H": 17.3
+  },
+  "nennKuehlenKW": 7.1,
+  "nennHeizenKW": 8.2,
+  "seer": 6.2,
+  "scop": 4.1,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-A---RXM-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera Truhe",
+  "modell": "FVXM25A",
+  "bauform": "truhe",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.1,
+   "L": 4.9,
+   "M": 7,
+   "H": 8.7
+  },
+  "luftstromHeizen": {
+   "SL": 4.1,
+   "L": 5.6,
+   "M": 7.2,
+   "H": 9.2
+  },
+  "nennKuehlenKW": 2.4,
+  "nennHeizenKW": 3.4,
+  "seer": 8.55,
+  "scop": 4.65,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FVXM-A.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FVXM-A---RXM-R9.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera Truhe",
+  "modell": "FVXM35A",
+  "bauform": "truhe",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.1,
+   "L": 4.9,
+   "M": 7,
+   "H": 9.2
+  },
+  "luftstromHeizen": {
+   "SL": 4.1,
+   "L": 5.6,
+   "M": 7.2,
+   "H": 9.8
+  },
+  "nennKuehlenKW": 3.4,
+  "nennHeizenKW": 4.5,
+  "seer": 8.11,
+  "scop": 4.63,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FVXM-A.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FVXM-A---RXM-R9.html",
+  "geprueft": "original",
+  "bypassfaktor": 0.11,
+  "bypassLuftstrom": 9.2,
+  "quelleLeistungstabelle": "https://www.daikin.es/content/dam/MDM/TechnicalDrawings/Split/capacity%20tables%20update/FVXM35A(9)-RXM35R9_capcoolheat_4D133701B_EN.pdf",
+  "luecken": [],
+  "hinweis": "Bypassfaktor 0,11 bei 9,2 m3/min aus der Leistungstabelle 4D133701B (Kühlen)."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera Truhe",
+  "modell": "FVXM50A",
+  "bauform": "truhe",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 5.4,
+   "L": 6.6,
+   "M": 9,
+   "H": 11.6
+  },
+  "luftstromHeizen": {
+   "SL": 5.9,
+   "L": 8.4,
+   "M": 10,
+   "H": 12.8
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FVXM-A.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Emura",
+  "modell": "FTXJ20A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6,
+   "M": 8.4,
+   "H": 11
+  },
+  "luftstromHeizen": {
+   "SL": 4.6,
+   "L": 6.4,
+   "M": 8.7,
+   "H": 11.1
+  },
+  "nennKuehlenKW": 2,
+  "nennHeizenKW": 2.5,
+  "seer": 8.75,
+  "scop": 5.15,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS---RXJ-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Emura",
+  "modell": "FTXJ25A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6,
+   "M": 8.6,
+   "H": 11.4
+  },
+  "luftstromHeizen": {
+   "SL": 4.6,
+   "L": 6.4,
+   "M": 9,
+   "H": 11.3
+  },
+  "nennKuehlenKW": 2.5,
+  "nennHeizenKW": 2.8,
+  "seer": 8.74,
+  "scop": 5.15,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS---RXJ-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Emura",
+  "modell": "FTXJ35A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6,
+   "M": 8.6,
+   "H": 11.8
+  },
+  "luftstromHeizen": {
+   "SL": 4.6,
+   "L": 6.4,
+   "M": 9,
+   "H": 11.7
+  },
+  "nennKuehlenKW": 3.4,
+  "nennHeizenKW": 4,
+  "seer": 8.73,
+  "scop": 5.15,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS---RXJ-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Emura",
+  "modell": "FTXJ42A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 7.2,
+   "M": 9.5,
+   "H": 13
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 7.7,
+   "M": 10.5,
+   "H": 14.4
+  },
+  "nennKuehlenKW": 4.2,
+  "nennHeizenKW": 5.4,
+  "seer": 7.5,
+  "scop": 4.6,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS---RXJ-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Emura",
+  "modell": "FTXJ50A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 5.2,
+   "L": 7.6,
+   "M": 10.4,
+   "H": 13.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.7,
+   "L": 8.2,
+   "M": 11.1,
+   "H": 15
+  },
+  "nennKuehlenKW": 5,
+  "nennHeizenKW": 5.8,
+  "seer": 7.33,
+  "scop": 4.6,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXJ-AS---RXJ-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Comfora",
+  "modell": "FTXP20M",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.2,
+   "L": 5.6,
+   "M": 7.4,
+   "H": 9.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 6.2,
+   "M": 8.1,
+   "H": 10.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXP-M.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: Spaltenzuordnung in der Herstellertabelle nicht eindeutig (Zeile kürzer als der Tabellenkopf) - nicht übernommen."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Comfora",
+  "modell": "FTXP25M",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.2,
+   "L": 5.8,
+   "M": 7.7,
+   "H": 9.7
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 6.4,
+   "M": 8.1,
+   "H": 10.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXP-M.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: Spaltenzuordnung in der Herstellertabelle nicht eindeutig (Zeile kürzer als der Tabellenkopf) - nicht übernommen."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Comfora",
+  "modell": "FTXP35M",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.5,
+   "L": 6.3,
+   "M": 8.3,
+   "H": 11.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 7,
+   "M": 9,
+   "H": 11.5
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXP-M.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: Spaltenzuordnung in der Herstellertabelle nicht eindeutig (Zeile kürzer als der Tabellenkopf) - nicht übernommen."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Comfora",
+  "modell": "FTXP50M",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 8.3,
+   "L": 11.5,
+   "M": 14,
+   "H": 16.3
+  },
+  "luftstromHeizen": {
+   "SL": 10.4,
+   "L": 11.8,
+   "M": 14.4,
+   "H": 17.3
+  },
+  "nennKuehlenKW": 5,
+  "nennHeizenKW": 6,
+  "seer": 7.3,
+  "scop": 4.4,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXP-M.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXP-M---RXP-M.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Comfora",
+  "modell": "FTXP60M",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 9.2,
+   "L": 11.8,
+   "M": 14.4,
+   "H": 16.8
+  },
+  "luftstromHeizen": {
+   "SL": 11,
+   "L": 12.4,
+   "M": 15.3,
+   "H": 17.9
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXP-M.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: Spaltenzuordnung in der Herstellertabelle nicht eindeutig (Zeile kürzer als der Tabellenkopf) - nicht übernommen."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Comfora",
+  "modell": "FTXP71M",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10.1,
+   "L": 11.8,
+   "M": 14.4,
+   "H": 16.8
+  },
+  "luftstromHeizen": {
+   "SL": 11,
+   "L": 12.4,
+   "M": 15.3,
+   "H": 17.9
+  },
+  "nennKuehlenKW": 7.1,
+  "nennHeizenKW": 8.2,
+  "seer": 6.2,
+  "scop": 4.01,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXP-M.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXP-M---RXP-M.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-E)",
+  "modell": "FTXF20E",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 6,
+   "M": 8,
+   "H": 9.8
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.2,
+   "M": 8.3,
+   "H": 10.4
+  },
+  "nennKuehlenKW": 2,
+  "nennHeizenKW": 2.4,
+  "seer": 6.5,
+  "scop": 4.2,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-E.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-E---RXF-E.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-E)",
+  "modell": "FTXF25E",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 6.2,
+   "M": 8,
+   "H": 10
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.4,
+   "M": 8.4,
+   "H": 10.4
+  },
+  "nennKuehlenKW": 2.5,
+  "nennHeizenKW": 2.8,
+  "seer": 6.5,
+  "scop": 4.2,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-E.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-E---RXF-E.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-E)",
+  "modell": "FTXF35E",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.4,
+   "L": 6.4,
+   "M": 8,
+   "H": 11.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.5,
+   "M": 8.6,
+   "H": 11.9
+  },
+  "nennKuehlenKW": 3.3,
+  "nennHeizenKW": 3.5,
+  "seer": 6.5,
+  "scop": 4.2,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-E.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-E---RXF-E.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-E)",
+  "modell": "FTXF42E",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.9,
+   "L": 6.9,
+   "M": 9,
+   "H": 12.6
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 6.7,
+   "M": 8.8,
+   "H": 12.8
+  },
+  "nennKuehlenKW": 4.2,
+  "nennHeizenKW": 4.6,
+  "seer": 6.5,
+  "scop": 4.3,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-E.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-E---RXF-E.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-D)",
+  "modell": "FTXF20D",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 6,
+   "M": 8,
+   "H": 9.8
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.2,
+   "M": 8.3,
+   "H": 10.4
+  },
+  "nennKuehlenKW": 2,
+  "nennHeizenKW": 2.4,
+  "seer": 6.5,
+  "scop": 4.11,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D---RXF-D.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-D)",
+  "modell": "FTXF25D",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 6.2,
+   "M": 8,
+   "H": 10
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.4,
+   "M": 8.4,
+   "H": 10.4
+  },
+  "nennKuehlenKW": 2.5,
+  "nennHeizenKW": 2.8,
+  "seer": 6.5,
+  "scop": 4.11,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D---RXF-D.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-D)",
+  "modell": "FTXF35D",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.4,
+   "L": 6.4,
+   "M": 8,
+   "H": 11.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.5,
+   "M": 8.6,
+   "H": 11.9
+  },
+  "nennKuehlenKW": 3.3,
+  "nennHeizenKW": 3.5,
+  "seer": 6.5,
+  "scop": 4.11,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D---RXF-D.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-D)",
+  "modell": "FTXF42D",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.9,
+   "L": 6.9,
+   "M": 9,
+   "H": 12.6
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 6.7,
+   "M": 8.8,
+   "H": 12.8
+  },
+  "nennKuehlenKW": 4.2,
+  "nennHeizenKW": 4.6,
+  "seer": 6.5,
+  "scop": 4.3,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D---RXF-D.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-D)",
+  "modell": "FTXF50D",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10.5,
+   "L": 11.9,
+   "M": 14.4,
+   "H": 16.8
+  },
+  "luftstromHeizen": {
+   "SL": 10.7,
+   "L": 12.2,
+   "M": 14.8,
+   "H": 17.3
+  },
+  "nennKuehlenKW": 5,
+  "nennHeizenKW": 6,
+  "seer": 6.21,
+  "scop": 4.06,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D---RXF-D.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-D)",
+  "modell": "FTXF60D",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10.7,
+   "L": 12.2,
+   "M": 14.8,
+   "H": 17.3
+  },
+  "luftstromHeizen": {
+   "SL": 11.3,
+   "L": 12.8,
+   "M": 15.8,
+   "H": 17.9
+  },
+  "nennKuehlenKW": 6,
+  "nennHeizenKW": 6.4,
+  "seer": 6.15,
+  "scop": 4.06,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D---RXF-D.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Sensira (FTXF-D)",
+  "modell": "FTXF71D",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10.7,
+   "L": 12.2,
+   "M": 14.8,
+   "H": 17.3
+  },
+  "luftstromHeizen": {
+   "SL": 11.3,
+   "L": 12.8,
+   "M": 15.8,
+   "H": 17.9
+  },
+  "nennKuehlenKW": 7.1,
+  "nennHeizenKW": 8.2,
+  "seer": 5.15,
+  "scop": 3.81,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXF-D---RXF-D.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera FTXTM (Optimised Heating)",
+  "modell": "FTXTM30R",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.1,
+   "L": 5.3,
+   "M": 7.8,
+   "H": 12.2
+  },
+  "luftstromHeizen": {
+   "SL": 4,
+   "L": 4.9,
+   "M": 7.5,
+   "H": 12.5
+  },
+  "nennKuehlenKW": 3,
+  "nennHeizenKW": 3.2,
+  "seer": 7.6,
+  "scop": 5.12,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXTM-R.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXTM-R---RXTM-R.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Perfera FTXTM (Optimised Heating)",
+  "modell": "FTXTM40R",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 5.8,
+   "M": 9.5,
+   "H": 15.4
+  },
+  "luftstromHeizen": {
+   "SL": 5.9,
+   "L": 7.1,
+   "M": 10.5,
+   "H": 17.5
+  },
+  "nennKuehlenKW": 4,
+  "nennHeizenKW": 4,
+  "seer": 7.7,
+  "scop": 5.3,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXTM-R.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXTM-R---RXTM-R.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Kanal FDXM-F",
+  "modell": "FDXM25F",
+  "bauform": "kanal",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": null,
+   "L": 7.3,
+   "M": null,
+   "H": 8.7
+  },
+  "luftstromHeizen": {
+   "SL": null,
+   "L": 7.3,
+   "M": null,
+   "H": 8.7
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FDXM-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.SL",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.SL",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Kanal FDXM-F",
+  "modell": "FDXM35F",
+  "bauform": "kanal",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": null,
+   "L": 7.3,
+   "M": null,
+   "H": 8.7
+  },
+  "luftstromHeizen": {
+   "SL": null,
+   "L": 7.3,
+   "M": null,
+   "H": 8.7
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FDXM-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.SL",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.SL",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Kanal FDXM-F",
+  "modell": "FDXM50F",
+  "bauform": "kanal",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": null,
+   "L": 10,
+   "M": null,
+   "H": 12
+  },
+  "luftstromHeizen": {
+   "SL": null,
+   "L": 13.5,
+   "M": null,
+   "H": 16
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FDXM-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.SL",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.SL",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Kanal FDXM-F",
+  "modell": "FDXM60F",
+  "bauform": "kanal",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": null,
+   "L": 13.5,
+   "M": null,
+   "H": 16
+  },
+  "luftstromHeizen": {
+   "SL": null,
+   "L": 13.5,
+   "M": null,
+   "H": 16
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FDXM-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.SL",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.SL",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXM-N",
+  "modell": "ATXM20N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.4,
+   "L": 6,
+   "M": 7.9,
+   "H": 11.1
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.5,
+   "M": 8.7,
+   "H": 10.8
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXM-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXM-N",
+  "modell": "ATXM25N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.4,
+   "L": 6.2,
+   "M": 8.1,
+   "H": 11.1
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.8,
+   "M": 8.7,
+   "H": 10.8
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXM-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXM-N",
+  "modell": "ATXM35N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6.4,
+   "M": 8.3,
+   "H": 12.3
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 7.1,
+   "M": 9,
+   "H": 10.8
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXM-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXM-N",
+  "modell": "ATXM50N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 8.1,
+   "L": 11.6,
+   "M": 14.2,
+   "H": 16.1
+  },
+  "luftstromHeizen": {
+   "SL": 10.7,
+   "L": 12.2,
+   "M": 14.6,
+   "H": 17.1
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXM-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXP-N",
+  "modell": "ATXP20N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.2,
+   "L": 5.6,
+   "M": 7.4,
+   "H": 9.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 6.2,
+   "M": 8.1,
+   "H": 10.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXP-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXP-N",
+  "modell": "ATXP25N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.2,
+   "L": 5.8,
+   "M": 7.7,
+   "H": 9.7
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 6.4,
+   "M": 8.1,
+   "H": 10.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXP-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXP-N",
+  "modell": "ATXP35N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.5,
+   "L": 6.3,
+   "M": 8.3,
+   "H": 11.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 7,
+   "M": 9,
+   "H": 11.5
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXP-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-E",
+  "modell": "ATXF20E",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 6,
+   "M": 8,
+   "H": 9.8
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.2,
+   "M": 8.3,
+   "H": 10.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-E.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-E",
+  "modell": "ATXF25E",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 6.2,
+   "M": 8,
+   "H": 10
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.4,
+   "M": 8.4,
+   "H": 10.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-E.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-E",
+  "modell": "ATXF35E",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.4,
+   "L": 6.4,
+   "M": 8,
+   "H": 11.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.5,
+   "M": 8.6,
+   "H": 11.9
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-E.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-E",
+  "modell": "ATXF42E",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.9,
+   "L": 6.9,
+   "M": 9,
+   "H": 12.6
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 6.7,
+   "M": 8.8,
+   "H": 12.8
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-E.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-F",
+  "modell": "ATXF20F",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 6,
+   "M": 8,
+   "H": 9.8
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.2,
+   "M": 8.3,
+   "H": 10.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-F",
+  "modell": "ATXF25F",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.3,
+   "L": 6.2,
+   "M": 8,
+   "H": 10
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.4,
+   "M": 8.4,
+   "H": 10.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-F",
+  "modell": "ATXF35F",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.4,
+   "L": 6.4,
+   "M": 8,
+   "H": 11.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.3,
+   "L": 6.5,
+   "M": 8.6,
+   "H": 11.9
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-F",
+  "modell": "ATXF42F",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.9,
+   "L": 6.9,
+   "M": 9,
+   "H": 12.6
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 6.7,
+   "M": 8.8,
+   "H": 12.8
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-F",
+  "modell": "ATXF50F",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 6.4,
+   "L": 7.2,
+   "M": 9,
+   "H": 12.6
+  },
+  "luftstromHeizen": {
+   "SL": 6.4,
+   "L": 7.2,
+   "M": 9.6,
+   "H": 12.8
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-F",
+  "modell": "ATXF60F",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10.7,
+   "L": 12.2,
+   "M": 14.8,
+   "H": 17.3
+  },
+  "luftstromHeizen": {
+   "SL": 11.3,
+   "L": 12.8,
+   "M": 15.8,
+   "H": 17.9
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Siesta ATXF-F",
+  "modell": "ATXF71F",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10.7,
+   "L": 12.2,
+   "M": 14.8,
+   "H": 17.3
+  },
+  "luftstromHeizen": {
+   "SL": 11.3,
+   "L": 12.8,
+   "M": 15.8,
+   "H": 17.9
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/ATXF-F.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-A",
+  "modell": "FTXA20A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6.1,
+   "M": 8.2,
+   "H": 11
+  },
+  "luftstromHeizen": {
+   "SL": 4.5,
+   "L": 6.4,
+   "M": 8.7,
+   "H": 10.9
+  },
+  "nennKuehlenKW": 2,
+  "nennHeizenKW": 2.5,
+  "seer": 8.75,
+  "scop": 5.15,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW---RXA-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-A",
+  "modell": "FTXA25A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6.1,
+   "M": 8.6,
+   "H": 11.5
+  },
+  "luftstromHeizen": {
+   "SL": 4.5,
+   "L": 6.4,
+   "M": 9,
+   "H": 11.1
+  },
+  "nennKuehlenKW": 2.5,
+  "nennHeizenKW": 2.8,
+  "seer": 8.74,
+  "scop": 5.15,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW---RXA-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-A",
+  "modell": "FTXA35A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6.1,
+   "M": 8.6,
+   "H": 11.9
+  },
+  "luftstromHeizen": {
+   "SL": 4.5,
+   "L": 6.4,
+   "M": 9,
+   "H": 11.5
+  },
+  "nennKuehlenKW": 3.4,
+  "nennHeizenKW": 4,
+  "seer": 8.73,
+  "scop": 5.15,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW---RXA-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-A",
+  "modell": "FTXA42A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 7.2,
+   "M": 9.8,
+   "H": 13.1
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 7.7,
+   "M": 10.5,
+   "H": 14.6
+  },
+  "nennKuehlenKW": 4.2,
+  "nennHeizenKW": 5.4,
+  "seer": 7.5,
+  "scop": 4.6,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW---RXA-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-A",
+  "modell": "FTXA50A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 5.2,
+   "L": 7.6,
+   "M": 10.4,
+   "H": 13.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.7,
+   "L": 8.2,
+   "M": 11.1,
+   "H": 15.1
+  },
+  "nennKuehlenKW": 5,
+  "nennHeizenKW": 5.8,
+  "seer": 7.33,
+  "scop": 4.6,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW.html",
+  "quelleLeistung": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-AW---RXA-A.html",
+  "geprueft": "original",
+  "luecken": [],
+  "hinweis": ""
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Ururu Sarara FTXZ-N",
+  "modell": "FTXZ25N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4,
+   "L": 5.3,
+   "M": null,
+   "H": 10.7
+  },
+  "luftstromHeizen": {
+   "SL": 4.8,
+   "L": 6.7,
+   "M": null,
+   "H": 11.7
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXZ-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Mittelstufe in der Herstellertabelle nicht eindeutig beschriftet (zwei Zeilen \"Nom.\") - nicht übernommen. Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Ururu Sarara FTXZ-N",
+  "modell": "FTXZ35N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4,
+   "L": 5.6,
+   "M": null,
+   "H": 12.1
+  },
+  "luftstromHeizen": {
+   "SL": 4.8,
+   "L": 6.9,
+   "M": null,
+   "H": 13.3
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXZ-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Mittelstufe in der Herstellertabelle nicht eindeutig beschriftet (zwei Zeilen \"Nom.\") - nicht übernommen. Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Ururu Sarara FTXZ-N",
+  "modell": "FTXZ50N",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6.6,
+   "M": null,
+   "H": 15
+  },
+  "luftstromHeizen": {
+   "SL": 5.9,
+   "L": 7.7,
+   "M": null,
+   "H": 14.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXZ-N.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Mittelstufe in der Herstellertabelle nicht eindeutig beschriftet (zwei Zeilen \"Nom.\") - nicht übernommen. Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-K",
+  "modell": "FTXS20K",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 3.9,
+   "L": 4.7,
+   "M": 6.7,
+   "H": 8.8
+  },
+  "luftstromHeizen": {
+   "SL": 4.3,
+   "L": 6,
+   "M": 7.8,
+   "H": 9.5
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-K.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt. Mittelstufe nur bei den Varianten K3V1B genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-K",
+  "modell": "FTXS25K",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 3.9,
+   "L": 5,
+   "M": 7,
+   "H": 9.1
+  },
+  "luftstromHeizen": {
+   "SL": 4.3,
+   "L": 6,
+   "M": 8,
+   "H": 10
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-K.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt. Mittelstufe nur bei den Varianten K3V1B genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-K",
+  "modell": "FTXS35K",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.1,
+   "L": 5.8,
+   "M": 8.5,
+   "H": 11.2
+  },
+  "luftstromHeizen": {
+   "SL": 4.2,
+   "L": 6.5,
+   "M": 9.3,
+   "H": 12.1
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-K.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt. Mittelstufe nur bei den Varianten K3V1B genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-K",
+  "modell": "FTXS42K",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.1,
+   "L": 7,
+   "M": 9.1,
+   "H": 11.2
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 7.8,
+   "M": 10,
+   "H": 12.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-K.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt. Mittelstufe nur bei den Varianten K3V1B genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-K",
+  "modell": "FTXS50K",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.5,
+   "L": 7.4,
+   "M": 9.6,
+   "H": 11.9
+  },
+  "luftstromHeizen": {
+   "SL": 5.5,
+   "L": 8.4,
+   "M": 10.8,
+   "H": 13.3
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-K.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt. Mittelstufe nur bei den Varianten K3V1B genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXC-A",
+  "modell": "FTXC25A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.7,
+   "L": 6.1,
+   "M": 7.7,
+   "H": 9.8
+  },
+  "luftstromHeizen": {
+   "SL": 4.7,
+   "L": 6.1,
+   "M": 7.7,
+   "H": 9.8
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXC-A.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXC-A",
+  "modell": "FTXC35A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.7,
+   "L": 6.6,
+   "M": 8,
+   "H": 10.1
+  },
+  "luftstromHeizen": {
+   "SL": 4.7,
+   "L": 6.6,
+   "M": 8,
+   "H": 10.1
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXC-A.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXC-A",
+  "modell": "FTXC50A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10.6,
+   "L": 11.8,
+   "M": 13.3,
+   "H": 15
+  },
+  "luftstromHeizen": {
+   "SL": 10.6,
+   "L": 11.8,
+   "M": 13.3,
+   "H": 15.3
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXC-A.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXC-A",
+  "modell": "FTXC60A",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 12.4,
+   "L": 14.4,
+   "M": 16.6,
+   "H": 18.5
+  },
+  "luftstromHeizen": {
+   "SL": 12.4,
+   "L": 14.4,
+   "M": 16.6,
+   "H": 18.9
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXC-A.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-C",
+  "modell": "FTXA20C",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6.1,
+   "M": 8.2,
+   "H": 11
+  },
+  "luftstromHeizen": {
+   "SL": 4.5,
+   "L": 6.4,
+   "M": 8.7,
+   "H": 10.9
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-CW.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-C",
+  "modell": "FTXA25C",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6.1,
+   "M": 8.6,
+   "H": 11.5
+  },
+  "luftstromHeizen": {
+   "SL": 4.5,
+   "L": 6.4,
+   "M": 9,
+   "H": 11.1
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-CW.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-C",
+  "modell": "FTXA35C",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 6.1,
+   "M": 8.6,
+   "H": 11.9
+  },
+  "luftstromHeizen": {
+   "SL": 4.5,
+   "L": 6.4,
+   "M": 9,
+   "H": 11.5
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-CW.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-C",
+  "modell": "FTXA42C",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4.6,
+   "L": 7.2,
+   "M": 9.8,
+   "H": 13.1
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 7.7,
+   "M": 10.5,
+   "H": 14.6
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-CW.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "Stylish FTXA-C",
+  "modell": "FTXA50C",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 5.2,
+   "L": 7.6,
+   "M": 10.4,
+   "H": 13.5
+  },
+  "luftstromHeizen": {
+   "SL": 5.7,
+   "L": 8.2,
+   "M": 11.1,
+   "H": 15.1
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXA-CW.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXG-L (Emura 1. Gen.)",
+  "modell": "FTXG20L",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 2.6,
+   "L": 4.4,
+   "M": 6.6,
+   "H": 8.9
+  },
+  "luftstromHeizen": {
+   "SL": 3.8,
+   "L": 6.3,
+   "M": 8.4,
+   "H": 10.2
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXG-LW.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXG-L (Emura 1. Gen.)",
+  "modell": "FTXG25L",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 2.6,
+   "L": 4.4,
+   "M": 6.6,
+   "H": 8.9
+  },
+  "luftstromHeizen": {
+   "SL": 3.8,
+   "L": 6.3,
+   "M": 8.6,
+   "H": 11
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXG-LW.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXG-L (Emura 1. Gen.)",
+  "modell": "FTXG35L",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 2.9,
+   "L": 4.8,
+   "M": 7.8,
+   "H": 10.9
+  },
+  "luftstromHeizen": {
+   "SL": 4.1,
+   "L": 6.9,
+   "M": 9.6,
+   "H": 12.4
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXG-LW.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXG-L (Emura 1. Gen.)",
+  "modell": "FTXG50L",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 3.6,
+   "L": 6.8,
+   "M": 8.9,
+   "H": 10.9
+  },
+  "luftstromHeizen": {
+   "SL": 5,
+   "L": 8.1,
+   "M": 10.5,
+   "H": 12.6
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXG-LW.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-G",
+  "modell": "FTXS20G",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 4,
+   "L": 5.5,
+   "M": null,
+   "H": 9.4
+  },
+  "luftstromHeizen": {
+   "SL": 5.5,
+   "L": 6.5,
+   "M": null,
+   "H": 9.9
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-G.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-G",
+  "modell": "FTXS25G",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 3.7,
+   "L": 5.2,
+   "M": null,
+   "H": 9.1
+  },
+  "luftstromHeizen": {
+   "SL": 5.2,
+   "L": 6.2,
+   "M": null,
+   "H": 9.8
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-G.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-G",
+  "modell": "FTXS35G",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 3.5,
+   "L": 4.8,
+   "M": null,
+   "H": 10.4
+  },
+  "luftstromHeizen": {
+   "SL": 5.4,
+   "L": 6.4,
+   "M": null,
+   "H": 10.6
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-G.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-G",
+  "modell": "FTXS42G",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 5.4,
+   "L": 6.3,
+   "M": null,
+   "H": 9.1
+  },
+  "luftstromHeizen": {
+   "SL": 6.8,
+   "L": 7.7,
+   "M": null,
+   "H": 11.2
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-G.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-G",
+  "modell": "FTXS50G",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 6,
+   "L": 7,
+   "M": null,
+   "H": 10.2
+  },
+  "luftstromHeizen": {
+   "SL": 6.7,
+   "L": 7.6,
+   "M": null,
+   "H": 11
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-G.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-G",
+  "modell": "FTXS60G",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10.1,
+   "L": 11.3,
+   "M": null,
+   "H": 16
+  },
+  "luftstromHeizen": {
+   "SL": 11.3,
+   "L": 12.6,
+   "M": null,
+   "H": 17.2
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-G.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ },
+ {
+  "hersteller": "Daikin",
+  "reihe": "FTXS-G",
+  "modell": "FTXS71G",
+  "bauform": "wand",
+  "einheit": "m3/min",
+  "luftstromKuehlen": {
+   "SL": 10.5,
+   "L": 11.5,
+   "M": null,
+   "H": 17.2
+  },
+  "luftstromHeizen": {
+   "SL": 12.6,
+   "L": 14.2,
+   "M": null,
+   "H": 19.5
+  },
+  "nennKuehlenKW": null,
+  "nennHeizenKW": null,
+  "seer": null,
+  "scop": null,
+  "quelle": "https://www.daikin-ce.com/en_us/products/product.table.html/FTXS-G.html",
+  "quelleLeistung": null,
+  "geprueft": "original",
+  "luecken": [
+   "nennKuehlenKW",
+   "nennHeizenKW",
+   "seer",
+   "scop",
+   "luftstromHeizen.M",
+   "luftstromKuehlen.M"
+  ],
+  "hinweis": "Nennleistung/SEER/SCOP: auf der Produktseite nicht genannt."
+ }
+]

@@ -451,3 +451,76 @@ describe('Effizienz: Kalibrierung', () => {
         expect(kalibrierung.abdeckung([], 'heizen').naechste).to.equal('M');
     });
 });
+
+describe('Effizienz: Modellliste', () => {
+    const modelle = require('../lib/effizienz/modelle');
+
+    it('enthält die Daikin-Reihen, jede Bezeichnung nur einmal', () => {
+        expect(modelle.LISTE.length).to.be.at.least(96);
+        const namen = modelle.LISTE.map(m => m.modell.toUpperCase());
+        expect(new Set(namen).size).to.equal(namen.length);
+        for (const reihe of ['FTXM35R', 'FVXM35A', 'FTXJ25A', 'FTXA35A', 'FTXP35M', 'FTXF35E', 'FTXS35K']) {
+            expect(namen, reihe).to.include(reihe);
+        }
+    });
+
+    it('jeder Eintrag: Schema, Einheit m³/min, Plausibilitätsgrenzen, Quelle (URL) und Prüfstand', () => {
+        const fehler = [];
+        for (const m of modelle.LISTE) {
+            for (const f of modelle.pruefen(m)) {
+                fehler.push(`${m.modell}: ${f}`);
+            }
+            if (!/^https:\/\/www\.daikin/.test(m.quelle)) {
+                fehler.push(`${m.modell}: Quelle ist keine Herstellerseite`);
+            }
+            if (['nennKuehlenKW', 'nennHeizenKW', 'seer', 'scop'].some(k => m[k] !== null) && !m.quelleLeistung) {
+                fehler.push(`${m.modell}: Leistungswerte ohne Quelle`);
+            }
+        }
+        expect(fehler).to.eql([]);
+    });
+
+    it('Lücken sind als Lücken geführt (null und in "luecken"), nichts ist aufgefüllt', () => {
+        for (const m of modelle.LISTE) {
+            expect(m.luecken.slice().sort(), m.modell).to.eql(modelle.luecken(m).sort());
+            if (m.luecken.length) {
+                expect(m.hinweis, `${m.modell}: Lücke ohne Erklärung`).to.not.equal('');
+            }
+        }
+        // die in der Herstellertabelle nicht eindeutig zuordenbaren Werte bleiben leer
+        expect(modelle.finde('FTXP20M').seer).to.equal(null);
+        expect(modelle.finde('FTXM20R').nennHeizenKW).to.equal(null);
+        expect(modelle.finde('FTXZ25N').luftstromHeizen.M).to.equal(null);
+    });
+
+    it('FVXM35A (Daikin 1OG): Werte wie in Herstellertabelle und Leistungstabelle', () => {
+        const m = modelle.finde('fvxm35a');
+        expect(m.luftstromHeizen).to.eql({ SL: 4.1, L: 5.6, M: 7.2, H: 9.8 });
+        expect(m.luftstromKuehlen).to.eql({ SL: 4.1, L: 4.9, M: 7, H: 9.2 });
+        expect(m).to.deep.include({ nennKuehlenKW: 3.4, nennHeizenKW: 4.5, seer: 8.11, scop: 4.63, bauform: 'truhe', bypassfaktor: 0.11, geprueft: 'original' });
+        expect(m.bypassfaktor).to.equal(tabelle.bypassfaktor);
+        expect(m.luftstromHeizen.H).to.equal(tabelle.luftstromHeizen);
+    });
+
+    it('prüft Grenzen und Reihenfolge der Stufen', () => {
+        const gut = { hersteller: 'X', modell: 'AB35C', einheit: 'm3/min', luftstromHeizen: { L: 5, H: 9 }, luftstromKuehlen: {} };
+        expect(modelle.pruefen(gut, { eigen: true })).to.eql([]);
+        expect(modelle.pruefen({ ...gut, luftstromHeizen: { L: 9, H: 5 } }, { eigen: true }).join()).to.match(/below the lower stage/);
+        expect(modelle.pruefen({ ...gut, luftstromHeizen: { H: 540 } }, { eigen: true }).join()).to.match(/outside/);
+        expect(modelle.pruefen({ ...gut, einheit: 'm3/h' }, { eigen: true }).join()).to.match(/einheit/);
+        expect(modelle.pruefen({ ...gut, scop: 14 }, { eigen: true }).join()).to.match(/scop/);
+        expect(modelle.pruefen(gut).join(), 'mitgelieferte Eintraege brauchen Quelle und Pruefstand').to.match(/quelle.*geprueft/);
+    });
+
+    it('eigene Modelle kommen dazu und gehen bei gleichem Namen vor; Suche und Filter', () => {
+        const eigene = [{ hersteller: 'Daikin', modell: 'FVXM35A', luftstromHeizen: { H: 10 }, luftstromKuehlen: {} }, { hersteller: 'Andere', modell: 'XY25Z' }];
+        const alle = modelle.alle(eigene);
+        expect(alle.length).to.equal(modelle.LISTE.length + 1);
+        expect(modelle.finde('FVXM35A', eigene)).to.deep.include({ eigen: true, geprueft: 'eigen' });
+        expect(modelle.filtern(alle, { text: 'perfera 35' }).map(m => m.modell)).to.include('FTXM35R');
+        expect(modelle.filtern(alle, { bauform: 'truhe' }).every(m => m.bauform === 'truhe')).to.equal(true);
+        expect(modelle.filtern(alle, { groesse: 35, hersteller: 'Daikin' }).every(m => modelle.baugroesse(m.modell) === 35)).to.equal(true);
+        expect(modelle.baugroesse('FTXM35R')).to.equal(35);
+        expect(modelle.baugroesse('Eigenbau')).to.equal(null);
+    });
+});
