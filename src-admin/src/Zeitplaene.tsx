@@ -822,7 +822,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                         </Box>
                     )}
                     {g.individuell ? (
-                        <Box sx={{ mt: 0.25, fontSize: '0.8em', color: 'text.secondary' }}>{tx('eigeneStufen')}</Box>
+                        <Box sx={{ mt: 0.25, fontSize: '0.9em', color: 'text.secondary' }}>{tx('eigeneStufen')}</Box>
                     ) : null}
                 </Box>
                 <Wochenvorschau
@@ -868,7 +868,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                             />
                             <Box
                                 component="span"
-                                sx={{ fontSize: '0.8em', color: 'text.secondary' }}
+                                sx={{ fontSize: '0.9em', color: 'text.secondary' }}
                             >
                                 {tx('schalterHinweis')}
                             </Box>
@@ -1033,7 +1033,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                         quelle={tx('vorlage')}
                         sprache={sprache}
                     />
-                    <Box sx={{ mt: 0.5, fontSize: '0.8em', color: 'text.secondary' }}>{tx('vorlageAendern')}</Box>
+                    <Box sx={{ mt: 0.5, fontSize: '0.9em', color: 'text.secondary' }}>{tx('vorlageAendern')}</Box>
                 </Box>
                 {vorlageEigen && !vorlagePlan ? (
                     <Box sx={{ gridColumn: '1 / -1' }}>
