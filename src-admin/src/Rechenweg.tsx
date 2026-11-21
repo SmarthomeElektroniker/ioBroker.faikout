@@ -54,6 +54,8 @@ export interface Weg {
     /** Bedarfsregelung ist ausgeschaltet - der Weg zeigt, was sie rechnen wuerde */
     aus?: boolean;
     probelauf?: boolean;
+    /** der Wert ist noch nicht gesendet - fertiger Text des Adapters (Haltezeit bis ..., Mindestabstand bis ...) */
+    wartet?: string;
 }
 
 /** Vorgaben der Raumkorrektur (lib/regel/bedarf.js VORGABEN) */
@@ -90,7 +92,8 @@ export function wegText(weg: Weg | null | undefined, sprache: string, richtung?:
         return t(fremd);
     }
     const vorn = weg.aus ? `${t('aus')} ` : '';
-    const hinten = weg.probelauf && !weg.aus ? ` ${t('probelauf')}` : '';
+    const wartet = typeof weg.wartet === 'string' && weg.wartet && !weg.aus ? ` · ${weg.wartet}` : '';
+    const hinten = `${weg.probelauf && !weg.aus ? ` ${t('probelauf')}` : ''}${wartet}`;
     if (weg.art === 'rueckfall') {
         return `${vorn}${t(weg.strategie === 'vortag' ? 'rueckfallVortag' : 'rueckfallAussen', zahl(weg.sollwert ?? 100))}${hinten}`;
     }

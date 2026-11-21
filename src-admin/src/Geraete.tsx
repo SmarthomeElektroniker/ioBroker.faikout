@@ -595,6 +595,9 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                         const kennung = String(zeile[titleAttr] ?? '').trim();
                         const live = uebersicht?.find(u => u.id === kennung || u.name === kennung) || null;
                         const name = live?.name || kennung;
+                        // dieselbe Anlage in mehreren Eintraegen (z. B. nach „Eintrag duplizieren“): der Adapter nimmt
+                        // den untersten - das muss man sehen, sonst aendert man an einer Karte ohne Wirkung
+                        const doppelt = !!kennung && zeilen.filter(z => String(z[titleAttr] ?? '').trim() === kennung).length > 1;
                         // was diese Anlage selbst festlegt (leer = alles aus der Vorlage)
                         const eigen = kennung ? vorlage.eigeneTeile(zeile) : [];
                         const istOffen = offen === nr;
@@ -640,6 +643,7 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
                                             {live && live.online === false ? (
                                                 <span className="fk-g-marke fk-g-marke-neben">{t('offline')}</span>
                                             ) : null}
+                                            {doppelt ? <span className="fk-g-marke fk-g-marke-fehler fk-g-marke-doppelt">{t('doppelt')}</span> : null}
                                             {hatFehler ? (
                                                 <span className="fk-g-marke fk-g-marke-fehler">{t('fehler')}</span>
                                             ) : null}

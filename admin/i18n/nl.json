@@ -147,7 +147,7 @@
   "optBetriebAdapter": "ioBroker-adapter regelt",
   "optBetriebFaikout": "Faikout-module regelt zelf",
   "textBetriebAdapter": "De adapter schakelt volgens weekschema en temperatuurniveaus, begrenst het vermogen naar behoefte en grijpt in bij vocht. Elke beslissing staat als “reden” op de toestelkaart.",
-  "textBetriebFaikout": "De module regelt zelf op de doeltemperatuur (automatisering van de firmware). De adapter levert doel, sensorwaarde en weekschema en begrenst verder het vermogen als het toestel dat kan.",
+  "textBetriebFaikout": "De module regelt zelf op de doeltemperatuur (automatisering van de firmware). De adapter levert doel, sensorwaarde en weekschema en begrenst verder het vermogen als het toestel dat kan. Voorwaarde: de automatisering is in de module ingeschakeld – zet in de webinterface van de module “Enable” aan en kies bij “Auto temp” een bereik (niet “Off”). Zolang dat ontbreekt, meldt de apparaatkaart dat de automatisering van de module niet is ingeschakeld.",
   "headerKann": "Wat dit toestel kan",
   "textFuehler": "“Automatisch” neemt de beste beschikbare sensor. Een BLE-sensor aan de module heeft altijd voorrang – dat bepaalt de firmware. Is een waarde te oud, dan rekent de adapter zonder en meldt dat op de kaart.",
   "labelAussenQuelle": "Buitentemperatuur",

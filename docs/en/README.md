@@ -35,7 +35,7 @@ add, with a confirmation; nothing is saved until you press "Save").
 
 | Tab | What it holds |
 |---|---|
-| **Setup** | step list with ticks: broker, connect module, climate control, schedule |
+| **Setup** | step list with ticks: broker, connect module, schedule, climate control |
 | **Schedules** | WHEN which temperature applies: temperature levels of the template (sliders to drag), weekly schedule of the template and per unit preview, switch and “Edit weekly schedule”. Collapsed: manual override and public holidays |
 | **Climate control** | HOW the unit is run: diagram of the control, the global template (strategy, heating and cooling curve with limits in the chart, humidity limits in the chart), below it the units as cards. Collapsed: dry run and fine tuning |
 | **Consumption** | chart and recording |
@@ -49,7 +49,9 @@ header of the unit card say what applies: “all from the template” or e.g. �
 Below every curve of a unit you find **“How the value comes about right now”** – the calculation with
 the numbers of the control, e.g. “curve 52 % → room 1.0 K too warm: −7 → 45 %” (with the strategy
 previous day “previous day 48 % + 10 → …”), including lower limit, upper limit, full power,
-overheating protection and the maximum power of the temperature level when they take effect. How
+overheating protection and the maximum power of the temperature level when they take effect. If the value has
+not been sent to the unit yet, the reason follows (e.g. the hold time: the adapter waits 60 seconds
+before raising and 10 minutes before lowering the limit, to see whether the request stays stable). How
 strongly the room temperature corrects is set under **For advanced users** in the chart **Room
 correction** (drag correction strength and dead band).
 
@@ -89,6 +91,10 @@ The factory defaults of the template: lower limit **40 %**, upper limit **100 %*
 
 Limits of "Faikout module controls itself":
 
+- **Prerequisite in the module:** its automatic mode must be enabled – in the module's web interface
+  switch on "Enable" and choose a range for "Auto temp" (not "Off"; settings `autoe` and `autor`).
+  Until then the device card shows "not set up" with the note that the module's automatic mode is
+  not enabled.
 - The power limit is only set with the strategy **Auto**. With the strategy "curve", demand control
   rests; the card then says "rests (module controls itself)".
 - **Every change of the target is stored in the module (flash memory).** If the schedule changes

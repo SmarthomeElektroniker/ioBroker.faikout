@@ -147,7 +147,7 @@
   "optBetriebAdapter": "ioBroker-Adapter regelt",
   "optBetriebFaikout": "Faikout-Modul regelt selbst",
   "textBetriebAdapter": "Der Adapter schaltet nach Wochenplan und Temperaturstufen, begrenzt die Leistung nach Bedarf und greift bei Feuchte ein. Jede Entscheidung steht als „Grund“ auf der Gerätekarte.",
-  "textBetriebFaikout": "Das Modul regelt selbst auf die Zieltemperatur (Automatik der Firmware). Der Adapter liefert Ziel, Sensorwert und Wochenplan und begrenzt weiter die Leistung, wenn die Anlage das kann.",
+  "textBetriebFaikout": "Das Modul regelt selbst auf die Zieltemperatur (Automatik der Firmware). Der Adapter liefert Ziel, Sensorwert und Wochenplan und begrenzt weiter die Leistung, wenn die Anlage das kann. Voraussetzung: Die Automatik ist im Modul eingeschaltet – in der Weboberfläche des Moduls „Enable“ einschalten und bei „Auto temp“ einen Bereich wählen (nicht „Off“). Solange das fehlt, meldet die Gerätekarte, dass die Automatik des Moduls nicht eingeschaltet ist.",
   "headerKann": "Was diese Anlage kann",
   "textFuehler": "„Automatisch“ nimmt den besten verfügbaren Sensor. Ein BLE-Sensor am Modul hat immer Vorrang, das legt die Firmware fest. Ist ein Wert zu alt, rechnet der Adapter ohne ihn und meldet das auf der Karte.",
   "labelAussenQuelle": "Außentemperatur",

@@ -147,7 +147,7 @@
   "optBetriebAdapter": "Reguluje adapter ioBroker",
   "optBetriebFaikout": "Reguluje sam moduł Faikout",
   "textBetriebAdapter": "Adapter przełącza według harmonogramu tygodniowego i poziomów temperatury, ogranicza moc według zapotrzebowania i reaguje na wilgotność. Każda decyzja widnieje jako „powód” na karcie urządzenia.",
-  "textBetriebFaikout": "Moduł sam reguluje do temperatury docelowej (automatyka oprogramowania). Adapter dostarcza cel, wartość czujnika i harmonogram tygodniowy oraz nadal ogranicza moc, jeśli urządzenie to obsługuje.",
+  "textBetriebFaikout": "Moduł sam reguluje do temperatury docelowej (automatyka oprogramowania). Adapter dostarcza cel, wartość czujnika i harmonogram tygodniowy oraz nadal ogranicza moc, jeśli urządzenie to obsługuje. Warunek: automatyka jest włączona w module – w interfejsie WWW modułu włącz „Enable” i wybierz zakres w „Auto temp” (nie „Off”). Dopóki tego brakuje, karta urządzenia zgłasza, że automatyka modułu nie jest włączona.",
   "headerKann": "Co obsługuje to urządzenie",
   "textFuehler": "„Automatycznie” wybiera najlepszy dostępny czujnik. Czujnik BLE przy module zawsze ma pierwszeństwo – tak ustala oprogramowanie. Jeśli wartość jest zbyt stara, adapter liczy bez niej i zgłasza to na karcie.",
   "labelAussenQuelle": "Temperatura zewnętrzna",

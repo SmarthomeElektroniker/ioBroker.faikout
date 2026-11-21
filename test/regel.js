@@ -271,6 +271,23 @@ describe('Regelung: Schreiber', () => {
         expect(gesendet).to.be.within(12, 21); // 1 h: 12er-Grenze/180 s-Abstand
     });
 
+    it('`wartet` sagt, dass ein Wunsch ansteht und noch nicht gesendet ist (Haltezeit, Mindestabstand) - sonst nie', () => {
+        // Haltezeit nach unten
+        let r = schritt(null, 80, 100, T0);
+        expect(r).to.include({ aktion: 'nichts', wartet: true });
+        expect(r.grund).to.match(/Haltezeit/);
+        r = schritt(r.zustand, 80, 100, T0 + 600000);
+        expect(r).to.include({ aktion: 'senden', wartet: false });
+        // Mindestabstand nach dem Befehl
+        r = schritt(r.zustand, 60, 80, T0 + 600000 + 1000);
+        r = schreiber.entscheiden({ sollwert: 60, istwert: 80, probelauf: false, faehig: 'yes', jetzt: T0 + 601000, zustand: r.zustand, grenzen: { haltRunterMs: 0 } });
+        expect(r).to.include({ aktion: 'nichts', wartet: true });
+        expect(r.grund).to.match(/Mindestabstand/);
+        // nichts zu tun ist kein Warten
+        expect(schritt(null, 100, 100, T0).wartet).to.equal(false);
+        expect(schritt(null, null, 100, T0).wartet).to.equal(false);
+    });
+
     it('sendet nichts bei gleichem Istwert, neutral oder nicht faehiger Anlage', () => {
         expect(schritt(null, 100, 100, T0).aktion).to.equal('nichts');
         expect(schritt(null, null, 100, T0).aktion).to.equal('nichts');

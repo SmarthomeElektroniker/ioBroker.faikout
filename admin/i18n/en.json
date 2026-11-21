@@ -147,7 +147,7 @@
   "optBetriebAdapter": "ioBroker adapter controls",
   "optBetriebFaikout": "Faikout module controls itself",
   "textBetriebAdapter": "The adapter switches by weekly schedule and temperature levels, limits the power by demand and steps in on humidity. Every decision is shown as “reason” on the device card.",
-  "textBetriebFaikout": "The module itself controls to the target temperature (automatic mode of the firmware). The adapter supplies target, sensor value and weekly schedule and still limits the power if the unit supports it.",
+  "textBetriebFaikout": "The module itself controls to the target temperature (automatic mode of the firmware). The adapter supplies target, sensor value and weekly schedule and still limits the power if the unit supports it. Prerequisite: the automatic mode is enabled in the module – in the module’s web interface switch on “Enable” and choose a range for “Auto temp” (not “Off”). Until then the device card reports that the module’s automatic mode is not enabled.",
   "headerKann": "What this unit supports",
   "textFuehler": "“Automatic” takes the best available sensor. A BLE sensor on the module always has priority – the firmware defines that. If a value is too old, the adapter calculates without it and says so on the card.",
   "labelAussenQuelle": "Outside temperature",

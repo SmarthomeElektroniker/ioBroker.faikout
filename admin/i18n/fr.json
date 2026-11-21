@@ -147,7 +147,7 @@
   "optBetriebAdapter": "L’adaptateur ioBroker régule",
   "optBetriebFaikout": "Le module Faikout régule lui-même",
   "textBetriebAdapter": "L’adaptateur commute selon le programme hebdomadaire et les niveaux de température, limite la puissance selon le besoin et intervient en cas d’humidité. Chaque décision figure comme « raison » sur la carte de l’appareil.",
-  "textBetriebFaikout": "Le module régule lui-même sur la température cible (automatisme du firmware). L’adaptateur fournit la cible, la valeur du capteur et le programme hebdomadaire et continue de limiter la puissance si l’appareil le permet.",
+  "textBetriebFaikout": "Le module régule lui-même sur la température cible (automatisme du firmware). L’adaptateur fournit la cible, la valeur du capteur et le programme hebdomadaire et continue de limiter la puissance si l’appareil le permet. Condition : l’automatisme est activé dans le module – dans l’interface web du module, activez « Enable » et choisissez une plage pour « Auto temp » (pas « Off »). Tant que ce n’est pas fait, la carte de l’appareil signale que l’automatisme du module n’est pas activé.",
   "headerKann": "Ce que cet appareil sait faire",
   "textFuehler": "« Automatique » prend le meilleur capteur disponible. Un capteur BLE sur le module a toujours la priorité – c’est le firmware qui l’impose. Si une valeur est trop ancienne, l’adaptateur calcule sans elle et le signale sur la carte.",
   "labelAussenQuelle": "Température extérieure",

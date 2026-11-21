@@ -35,7 +35,7 @@ Die Geräteliste lässt sich unter den Karten als JSON-Datei **exportieren** und
 
 | Reiter | Was dort steht |
 |---|---|
-| **Einrichtung** | Schrittliste mit Haken: Broker, Modul verbinden, Regelung, Zeitplan |
+| **Einrichtung** | Schrittliste mit Haken: Broker, Modul verbinden, Zeitplan, Regelung |
 | **Zeitpläne** | WANN welche Temperatur gilt: Temperaturstufen der Vorlage (Regler zum Ziehen), Wochenplan der Vorlage und je Gerät Vorschau, Schalter und „Wochenplan bearbeiten“. Eingeklappt: Handeingriff und Feiertage |
 | **Regelung** | WIE die Anlage gefahren wird: Schaubild der Regelung, die globale Vorlage (Strategie, Heiz- und Kühlkennlinie mit Grenzen im Bild, Feuchte-Grenzen im Bild), darunter die Geräte als Karten. Eingeklappt: Probelauf und Feinabstimmung |
 | **Verbrauch** | Diagramm und Aufzeichnung |
@@ -49,7 +49,9 @@ der Gerätekarte sagen, was gilt: „alles aus der Vorlage“ oder z. B. „eige
 Unter jeder Kennlinie eines Geräts steht **„So entsteht der Wert gerade“** – der Rechenweg mit den
 Zahlen der Regelung, z. B. „Kennlinie 52 % → Raum 1,0 K zu warm: −7 → 45 %“ (bei der Strategie Vortag
 „Vortag 48 % + 10 → …“), samt Untergrenze, Obergrenze, voller Leistung, Überheizschutz und der
-Höchstleistung der Temperaturstufe, wenn sie greifen. Wie stark die Raumtemperatur korrigiert, stellst
+Höchstleistung der Temperaturstufe, wenn sie greifen. Ist der Wert noch nicht an die Anlage
+gesendet, steht der Grund dahinter (z. B. „Haltezeit bis 22:15:36“: nach oben wartet der Adapter
+60 Sekunden, nach unten 10 Minuten, ob der Wunsch stabil bleibt). Wie stark die Raumtemperatur korrigiert, stellst
 du unter **Für Fortgeschrittene** im Bild **Raumkorrektur** ein (Korrekturstärke und Totband ziehen).
 
 ## 2. Vorlage und Einstellungen je Gerät
@@ -88,6 +90,10 @@ Die Werksvorgaben der Vorlage: Untergrenze **40 %**, Obergrenze **100 %**, Heizk
 
 Grenzen von „Faikout-Modul regelt selbst“:
 
+- **Voraussetzung im Modul:** Die Automatik muss dort eingeschaltet sein – in der Weboberfläche des
+  Moduls „Enable“ einschalten und bei „Auto temp“ einen Bereich wählen (nicht „Off“; Einstellungen
+  `autoe` und `autor`). Solange das fehlt, steht auf der Gerätekarte „nicht eingerichtet“ mit dem
+  Hinweis, dass die Automatik des Moduls nicht eingeschaltet ist.
 - Die Leistungsgrenze wird nur mit der Strategie **Auto** gesetzt. Mit der Strategie „Kennlinie“
   ruht die Bedarfsregelung; auf der Karte steht dann „ruht (Modul regelt selbst)“.
 - **Jede Zieländerung wird im Modul gespeichert (Flash-Speicher).** Ändert der Wochenplan das Ziel
