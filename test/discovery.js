@@ -469,6 +469,12 @@ describe('Module suchen: Nachrichten an den Adapter', () => {
         const a = adapter();
         expect(await senden(a, 'mqtthostWert', { adresse: 'nas.local', port: '1999' })).to.equal('nas.local:1999');
         expect(await senden(a, 'mqtthostWert', { adresse: '', port: '' })).to.match(/^\(erst die „Adresse für Module“/);
+        // Wechsel auf den externen Broker VOR dem Speichern: Wert und Anleitung folgen dem Formular
+        const extern = { modus: 'extern', adresse: 'nas.local', port: '1999', externHost: 'mq.lan', externPort: 1884, externTls: false, externUser: 'klima' };
+        expect(await senden(a, 'mqtthostWert', extern)).to.equal('mq.lan:1884');
+        expect(await senden(a, 'anleitung', extern)).to.contain('MQTT host: mq.lan:1884').and.to.contain('MQTT user: klima');
+        expect(await senden(a, 'mqtthostWert', { ...extern, externHost: '' })).to.match(/^\(erst die Adresse des externen Brokers/);
+        expect(await senden(a, 'anleitung', { modus: 'intern', adresse: '', port: '' })).to.contain('erst die „Adresse für Module“');
         const html = await senden(a, 'anleitung', { adresse: '<b>', port: '1888', user: '' });
         expect(html).to.include('MQTT host: &lt;b&gt;:1888<br>');
     });

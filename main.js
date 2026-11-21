@@ -1370,27 +1370,27 @@ class Faikout extends utils.Adapter {
                     return antworten(r);
                 }
                 case 'mqtthostWert': {
-                    const z = this.brokerZiel(feldWert(msg.adresse));
-                    const port = z.extern ? z.port : Number(feldWert(msg.port)) || z.port;
+                    const z = this.zielAusFormular(msg);
+                    const o = require('./lib/oberflaeche');
                     return antworten(
                         z.adresse
-                            ? `${z.adresse}:${port}`
-                            : `(${require('./lib/oberflaeche').t('mqttWertFehlt', await this.sprache())})`,
+                            ? `${z.adresse}:${z.port}`
+                            : `(${o.t(z.extern ? 'mqttWertFehltExtern' : 'mqttWertFehlt', await this.sprache())})`,
                     );
                 }
                 case 'anleitung': {
                     const sprache = await this.sprache();
+                    const z = this.zielAusFormular(msg);
+                    if (!z.adresse) {
+                        const o = require('./lib/oberflaeche');
+                        return antworten(htmlZeilen(o.t(z.extern ? 'mqttWertFehltExtern' : 'mqttWertFehlt', sprache)));
+                    }
                     return antworten(
                         htmlZeilen(
                             discovery.anleitung({
-                                adresse: this.brokerZiel(feldWert(msg.adresse)).adresse,
-                                port: this.brokerZiel().extern
-                                    ? this.brokerZiel().port
-                                    : Number(feldWert(msg.port)) || this.brokerZiel().port,
-                                user:
-                                    !this.brokerZiel().extern && msg.user !== undefined
-                                        ? feldWert(msg.user)
-                                        : this.brokerZiel().user,
+                                adresse: z.adresse,
+                                port: z.port,
+                                user: z.user,
                                 sprache: sprache === 'de' ? 'de' : 'en',
                             }),
                         ),
@@ -1493,6 +1493,39 @@ class Faikout extends utils.Adapter {
             this.log.warn(`${obj.command}: ${e.message}`);
             antworten({ error: e.message });
         }
+    }
+
+    /**
+     * Ziel der Module aus dem (UNGESPEICHERTEN) Formular der Einstellungsseite: Die Seite schickt
+     * Betriebsart, Adresse, Port und Benutzer mit, damit "Wert fuer MQTT host" und die Anleitung
+     * sofort zu dem passen, was der Nutzer gerade eingestellt hat - auch beim Wechsel auf den
+     * externen Broker vor dem Speichern. Fehlt die Betriebsart in der Nachricht, gilt die gespeicherte.
+     *
+     * @param {Record<string, unknown>} msg Formularwerte (modus, adresse, port, user, externHost, externPort, externTls, externUser)
+     * @returns {{extern: boolean, adresse: string, port: number, user: string}} Ziel
+     */
+    zielAusFormular(msg) {
+        const gespeichert = this.brokerZiel(feldWert(msg.adresse));
+        const modus = feldWert(msg.modus);
+        const extern = modus ? modus === 'extern' : gespeichert.extern;
+        if (extern) {
+            const tls = msg.externTls === undefined ? this.config.externTls === true : msg.externTls === true;
+            return {
+                extern: true,
+                adresse:
+                    msg.externHost === undefined
+                        ? String(this.config.externHost || '').trim()
+                        : feldWert(msg.externHost),
+                port: Number(feldWert(msg.externPort)) || Number(this.config.externPort) || (tls ? 8883 : 1883),
+                user: msg.externUser === undefined ? String(this.config.externUser || '') : feldWert(msg.externUser),
+            };
+        }
+        return {
+            extern: false,
+            adresse: feldWert(msg.adresse) || String(this.config.moduleAddress || '').trim(),
+            port: Number(feldWert(msg.port)) || Number(this.config.port) || 1888,
+            user: msg.user === undefined ? String(this.config.user || '') : feldWert(msg.user),
+        };
     }
 
     /**

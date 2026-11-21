@@ -83,10 +83,16 @@
                     "command": "mqtthostWert",
                     "copyToClipboard": true,
                     "label": "labelMqtthostValue",
-                    "jsonData": "{\"adresse\":${JSON.stringify(data.moduleAddress ?? '')},\"port\":${JSON.stringify(data.port ?? '')}}",
+                    "jsonData": "{\"modus\":${JSON.stringify(data.brokerModus ?? \"\")},\"adresse\":${JSON.stringify(data.moduleAddress ?? \"\")},\"port\":${JSON.stringify(data.port ?? \"\")},\"user\":${JSON.stringify(data.user ?? \"\")},\"externHost\":${JSON.stringify(data.externHost ?? \"\")},\"externPort\":${JSON.stringify(data.externPort ?? \"\")},\"externTls\":${!!data.externTls},\"externUser\":${JSON.stringify(data.externUser ?? \"\")}}",
                     "alsoDependsOn": [
                         "moduleAddress",
-                        "port"
+                        "port",
+                        "user",
+                        "brokerModus",
+                        "externHost",
+                        "externPort",
+                        "externTls",
+                        "externUser"
                     ],
                     "newLine": true,
                     "xs": 12,
@@ -1567,10 +1573,16 @@
                     "command": "mqtthostWert",
                     "copyToClipboard": true,
                     "label": "labelMqtthostValue",
-                    "jsonData": "{\"adresse\":${JSON.stringify(data.moduleAddress ?? '')},\"port\":${JSON.stringify(data.port ?? '')}}",
+                    "jsonData": "{\"modus\":${JSON.stringify(data.brokerModus ?? \"\")},\"adresse\":${JSON.stringify(data.moduleAddress ?? \"\")},\"port\":${JSON.stringify(data.port ?? \"\")},\"user\":${JSON.stringify(data.user ?? \"\")},\"externHost\":${JSON.stringify(data.externHost ?? \"\")},\"externPort\":${JSON.stringify(data.externPort ?? \"\")},\"externTls\":${!!data.externTls},\"externUser\":${JSON.stringify(data.externUser ?? \"\")}}",
                     "alsoDependsOn": [
                         "moduleAddress",
-                        "port"
+                        "port",
+                        "user",
+                        "brokerModus",
+                        "externHost",
+                        "externPort",
+                        "externTls",
+                        "externUser"
                     ],
                     "newLine": true,
                     "xs": 12,
@@ -1583,11 +1595,16 @@
                     "type": "textSendTo",
                     "container": "html",
                     "command": "anleitung",
-                    "jsonData": "{\"adresse\":${JSON.stringify(data.moduleAddress ?? '')},\"port\":${JSON.stringify(data.port ?? '')},\"user\":${JSON.stringify(data.user ?? '')}}",
+                    "jsonData": "{\"modus\":${JSON.stringify(data.brokerModus ?? \"\")},\"adresse\":${JSON.stringify(data.moduleAddress ?? \"\")},\"port\":${JSON.stringify(data.port ?? \"\")},\"user\":${JSON.stringify(data.user ?? \"\")},\"externHost\":${JSON.stringify(data.externHost ?? \"\")},\"externPort\":${JSON.stringify(data.externPort ?? \"\")},\"externTls\":${!!data.externTls},\"externUser\":${JSON.stringify(data.externUser ?? \"\")}}",
                     "alsoDependsOn": [
                         "moduleAddress",
                         "port",
-                        "user"
+                        "user",
+                        "brokerModus",
+                        "externHost",
+                        "externPort",
+                        "externTls",
+                        "externUser"
                     ],
                     "xs": 12,
                     "sm": 12,
@@ -2940,9 +2957,9 @@
                             "newLine": true,
                             "xs": 12,
                             "sm": 12,
-                            "md": 6,
-                            "lg": 6,
-                            "xl": 6,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
                             "items": [
                                 {
                                     "type": "number",
@@ -2995,10 +3012,11 @@
                             ],
                             "xs": 12,
                             "sm": 12,
-                            "md": 6,
-                            "lg": 6,
-                            "xl": 6,
-                            "hidden": "data.regelStrategie === 'vortag'"
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
+                            "hidden": "data.regelStrategie === 'vortag'",
+                            "newLine": true
                         },
                         "regelKennlinieKuehlen": {
                             "type": "table",
@@ -3007,9 +3025,9 @@
                             "newLine": true,
                             "xs": 12,
                             "sm": 12,
-                            "md": 6,
-                            "lg": 6,
-                            "xl": 6,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
                             "items": [
                                 {
                                     "type": "number",
@@ -3058,10 +3076,11 @@
                             ],
                             "xs": 12,
                             "sm": 12,
-                            "md": 6,
-                            "lg": 6,
-                            "xl": 6,
-                            "hidden": "data.regelStrategie === 'vortag'"
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
+                            "hidden": "data.regelStrategie === 'vortag'",
+                            "newLine": true
                         },
                         "_tVortag": {
                             "type": "staticText",
