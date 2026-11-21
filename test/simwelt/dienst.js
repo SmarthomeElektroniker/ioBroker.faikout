@@ -166,7 +166,7 @@ class Dienst {
                 // Das Modul meldet seine Adresse wie ein echtes ("ipv4" in state/<Name>); mit eigenem
                 // Port als "Adresse:Port", damit der Adapter die Einstellungsseite ohne Handarbeit findet.
                 if (eigenerPort) {
-                    const host = konfig.bind && konfig.bind !== '0.0.0.0' ? konfig.bind : '127.0.0.1';
+                    const host = k.bind && k.bind !== '0.0.0.0' ? k.bind : '127.0.0.1';
                     m.httpAdresse = eigenerPort === 80 ? host : `${host}:${eigenerPort}`;
                 }
                 this.http.anmelden(m, {
