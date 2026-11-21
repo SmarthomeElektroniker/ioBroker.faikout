@@ -157,7 +157,7 @@
   "labelBand": "Zielband für Faikout-Auto (± K)",
   "helpBand": "Nur für Anlagen im Betrieb „Faikout-Auto“: Das Modul hält den Raum im Bereich Ziel ± diesen Wert.",
   "headerHand": "Handeingriff",
-  "textHand": "Bedient jemand die Anlage am Gerät oder in einer App, warten Plan und Szenen. Bedarfs- und Feuchteregelung arbeiten weiter. „Freigeben“ auf der Gerätekarte beendet das Warten sofort.",
+  "textHand": "Bedient jemand die Anlage am Gerät oder in einer App, warten Plan und Szenen. Bedarfs- und Feuchteregelung arbeiten weiter. „Handeingriff beenden“ auf der Gerätekarte beendet das Warten sofort.",
   "labelHandModus": "Nach Bedienung von Hand wartet die Automatik",
   "optHandSchaltpunkt": "bis zum nächsten Schaltpunkt",
   "optHandDauer": "eine feste Dauer",

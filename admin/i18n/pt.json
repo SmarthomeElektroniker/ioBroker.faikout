@@ -157,7 +157,7 @@
   "labelBand": "Banda alvo para Faikout automático (± K)",
   "helpBand": "Só para aparelhos no modo “Faikout automático”: o módulo mantém a divisão dentro de objetivo ± este valor.",
   "headerHand": "Intervenção manual",
-  "textHand": "Se alguém operar o aparelho no local ou numa app, programa e cenários aguardam. A regulação por necessidade e de humidade continua. «Libertar» no cartão do aparelho termina a espera de imediato.",
+  "textHand": "Se alguém operar o aparelho no local ou numa app, programa e cenários aguardam. A regulação por necessidade e de humidade continua. «Terminar intervenção manual» no cartão do aparelho termina a espera de imediato.",
   "labelHandModus": "Após operação manual o automatismo aguarda",
   "optHandSchaltpunkt": "até à próxima comutação",
   "optHandDauer": "durante um tempo fixo",

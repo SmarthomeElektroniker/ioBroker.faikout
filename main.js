@@ -194,6 +194,10 @@ class Faikout extends utils.Adapter {
         // Zweig, den er fuer angelegt haelt - "State ... has no existing object".
         await this.subscribeObjectsAsync('*');
         this.regelung = new Bedarfsregelung(this);
+        // Systemsprache im Betrieb umgestellt: Begruendungen und Szenennamen folgen ohne Neustart
+        if (typeof this.subscribeForeignObjectsAsync === 'function') {
+            await this.subscribeForeignObjectsAsync('system.config');
+        }
 
         const ziel = this.brokerZiel();
         const onMessage = (topic, payload) => this.onMqtt(topic, payload);
@@ -608,7 +612,8 @@ class Faikout extends utils.Adapter {
                 gesichert: Date.now(),
                 zaehlerGeaendert: false,
                 // WLAN-Stufe fuer die Geraetekarte (native.wlan), dazu die letzten Rohwerte
-                wlan: (alt && alt.native && alt.native.wlan) || null,
+                // (ohne native.wlanAus stammt das Objekt aus einem aelteren Stand: einmal neu schreiben)
+                wlan: (alt && alt.native && typeof alt.native.wlanAus === 'boolean' && alt.native.wlan) || null,
                 rssi: undefined,
                 up: undefined,
             };
@@ -685,7 +690,8 @@ class Faikout extends utils.Adapter {
     }
 
     /**
-     * Haelt die WLAN-Stufe der Geraetekarte im Geraeteobjekt aktuell (native.wlan: s1..s4/off).
+     * Haelt die WLAN-Stufe der Geraetekarte im Geraeteobjekt aktuell (native.wlan: s1..s4/off, dazu
+     * native.wlanAn: s1..s4 oder leer und native.wlanAus: true/false).
      * Die Karte zeigt damit EIN WLAN-Symbol, das Signalstaerke und Verbindung zusammenfasst - dafuer
      * braucht sie rssi und up zugleich, eine Kartenanzeige haengt aber nur an einem Wert. Geschrieben
      * wird nur, wenn sich die Stufe aendert (selten), nicht bei jedem dBm.
@@ -707,7 +713,10 @@ class Faikout extends utils.Adapter {
         const stufe = felder.wlanStufe(g.rssi, g.up);
         if (stufe && stufe !== g.wlan) {
             g.wlan = stufe;
-            await this.extendObject(id, { native: { wlan: stufe } });
+            // wlanAn/wlanAus: die Karte zeigt verbunden (Stufe mit "… dBm") und getrennt (ohne Einheit)
+            // als zwei Anzeigen, von denen immer nur eine einen Wert hat
+            const aus = stufe === 'off';
+            await this.extendObject(id, { native: { wlan: stufe, wlanAn: aus ? '' : stufe, wlanAus: aus } });
         }
     }
 
@@ -1080,6 +1089,12 @@ class Faikout extends utils.Adapter {
      * @param {ioBroker.Object | null | undefined} obj  neues Objekt, null/undefined beim Loeschen
      */
     onObjectChange(volleId, obj) {
+        if (volleId === 'system.config') {
+            if (obj && this.regelung && !this.stopping) {
+                this.regelung.sprachWechsel().catch(e => this.log.warn(`Language change: ${e.message}`));
+            }
+            return;
+        }
         if (obj || !volleId.startsWith(`${this.namespace}.`)) {
             return;
         }
@@ -1462,16 +1477,23 @@ class Faikout extends utils.Adapter {
                             const ips = new Set(neu.map(z => z.ip));
                             this.letzteZeilen = [...(this.letzteZeilen || []).filter(z => !ips.has(z.ip)), ...neu];
                         }
-                        // Ohne Treffer und bei leerer Tabelle: nur die Meldung, KEIN Formularwert - sonst
-                        // gilt das Formular als geaendert und "Speichern" wird aktiv (UX-Fund 21.11.2026).
-                        // Der Admin zeigt `error` als eigenen Dialog (ein `result` waere ein Browser-alert).
+                        const uhrzeit = new Date().toLocaleTimeString(sprache, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                        });
+                        // Ohne Treffer und bei leerer Tabelle: ein neutraler Hinweis als Statuszeile (wie bei
+                        // "Adresse pruefen"), kein roter Fehlerdialog - nichts gefunden ist kein Fehler
+                        // (Nutzerentscheid 21.11.2026). Die Tabelle bleibt unberuehrt. Bekannte Grenze: jeder
+                        // Formularwert macht "Speichern" aktiv, auch dieser nicht gespeicherte Hinweis.
                         if (!ziel && !r.fingerprints.length && msg.leer === true && !this.letzteZeilen.length) {
-                            return antworten({ error: r.text });
+                            return antworten({ native: { _foundText: '', _foundLeer: `${r.text} (${uhrzeit})` } });
                         }
                         return antworten({
                             native: {
                                 _found: this.letzteZeilen,
-                                _foundText: `${r.text} (${new Date().toLocaleTimeString(sprache, { hour: '2-digit', minute: '2-digit', second: '2-digit' })})`,
+                                _foundText: `${r.text} (${uhrzeit})`,
+                                _foundLeer: '',
                             },
                         });
                     } finally {

@@ -981,7 +981,7 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 45);
         expect(anlage.befehle).to.eql([]);
         expect(a.gesendet).to.eql([]);
-        expect(JSON.parse(a.wert('Plan_B.regulation.lastCommand')).aktion).to.equal('wuerde');
+        expect(JSON.parse(a.wert('Plan_B.regulation.lastCommand')).action).to.equal('would');
         expect(a.zeilen.some(z => /dry run\) would send/.test(z.text))).to.equal(true);
     });
 
@@ -1001,6 +1001,39 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 30); // ueber 22:00: Absenken
         expect(a.wert('Plan_C.regulation.manual.locked')).to.equal(false);
         expect(anlage.target).to.equal(19);
+    });
+
+    it('Handeingriff ohne wartenden Plan: kein Hinweis (kein Plan hinterlegt, Plan aus, nur Feuchte an)', async () => {
+        const faelle = {
+            // Feuchteregelung an, Wochenplan aus und keiner hinterlegt
+            Hand_A: async (a, id) => {
+                await a.regelung.schalter(id, 'humidity.active', true);
+            },
+            // Plan hinterlegt, aber ausgeschaltet
+            Hand_B: async (a, id) => {
+                await a.regelung.schalter(id, 'schedule.weekJson', planText);
+                await a.regelung.schalter(id, 'humidity.active', true);
+            },
+            // Plan eingeschaltet, aber keiner hinterlegt
+            Hand_C: async (a, id) => {
+                await a.regelung.schalter(id, 'schedule.active', true);
+            },
+        };
+        for (const [id, einrichten] of Object.entries(faelle)) {
+            const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+            const anlage = new Anlage({ name: id.replace('_', ' '), target: 21, mode: 'heat' });
+            await laufen(a, uhr, anlage, 2);
+            await a.regelung.schalter(id, 'dryRun', false);
+            await einrichten(a, id);
+            await laufen(a, uhr, anlage, 3);
+            anlage.target = 24; // jemand dreht an der Fernbedienung
+            await laufen(a, uhr, anlage, 10);
+            expect(a.wert(`${id}.regulation.manual.locked`), id).to.equal(false);
+            expect(a.wert(`${id}.regulation.manual.until`), id).to.equal(null);
+            expect(a.wert(`${id}.regulation.state`), id).to.not.equal('manual');
+            expect(a.zeilen.some(z => /manual change detected/.test(z.text)), id).to.equal(false);
+            expect(anlage.target, id).to.equal(24);
+        }
     });
 
     it('Wochenplan eingeschaltet, aber keiner hinterlegt: "einrichten" und plan.fehlt - keine Stoerung', async () => {

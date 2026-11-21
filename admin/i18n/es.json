@@ -157,7 +157,7 @@
   "labelBand": "Banda objetivo para Faikout automático (± K)",
   "helpBand": "Solo para equipos en modo «Faikout automático»: el módulo mantiene la estancia dentro de objetivo ± este valor.",
   "headerHand": "Intervención manual",
-  "textHand": "Si alguien maneja el equipo en el aparato o en una app, programa y escenas esperan. La regulación por demanda y de humedad sigue funcionando. «Liberar» en la tarjeta del equipo termina la espera al instante.",
+  "textHand": "Si alguien maneja el equipo en el aparato o en una app, programa y escenas esperan. La regulación por demanda y de humedad sigue funcionando. «Finalizar intervención manual» en la tarjeta del equipo termina la espera al instante.",
   "labelHandModus": "Tras el manejo manual el automatismo espera",
   "optHandSchaltpunkt": "hasta la próxima conmutación",
   "optHandDauer": "durante un tiempo fijo",

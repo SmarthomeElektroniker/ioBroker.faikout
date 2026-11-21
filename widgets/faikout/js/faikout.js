@@ -717,10 +717,15 @@ vis.binds.faikout = {
         var ausDp = ctx.hat('regulation.demand.curveJson') ? ctx.wert('regulation.demand.curveJson') : null;
         if (ausDp) {
             try {
+                // Schluessel englisch (heating, cooling, lowerLimit, upperLimit); das deutsche Format des
+                // Vorabstands wird weiter gelesen
                 var k = JSON.parse(ausDp);
+                var erst = function (neu, alt) { return k[neu] !== undefined ? k[neu] : k[alt]; };
                 return fertig({
-                    heizen: b.kennliniePunkte(k.heizen, VOR.heizen), kuehlen: b.kennliniePunkte(k.kuehlen, VOR.kuehlen),
-                    untergrenze: zahl(k.untergrenze, VOR.untergrenze), obergrenze: zahl(k.obergrenze, VOR.obergrenze)
+                    heizen: b.kennliniePunkte(erst('heating', 'heizen'), VOR.heizen),
+                    kuehlen: b.kennliniePunkte(erst('cooling', 'kuehlen'), VOR.kuehlen),
+                    untergrenze: zahl(erst('lowerLimit', 'untergrenze'), VOR.untergrenze),
+                    obergrenze: zahl(erst('upperLimit', 'obergrenze'), VOR.obergrenze)
                 });
             } catch (e) { /* weiter mit den Instanzeinstellungen */ }
         }
@@ -842,6 +847,7 @@ vis.binds.faikout = {
                         untergrenze: kennlinie.untergrenze,
                         obergrenze: kennlinie.obergrenze,
                         arbeitspunkt: isNaN(x) ? null : { x: x, wert: an && aktiv && !isNaN(soll) ? soll : null },
+                        sprache: b.sprache(),
                         kompakt: true,
                         blass: !aktiv || !an,
                         breite: 260,

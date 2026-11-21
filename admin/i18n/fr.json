@@ -157,7 +157,7 @@
   "labelBand": "Bande cible pour Faikout auto (± K)",
   "helpBand": "Uniquement pour les appareils en mode « Faikout auto » : le module maintient la pièce dans la plage consigne ± cette valeur.",
   "headerHand": "Intervention manuelle",
-  "textHand": "Si quelqu’un commande l’appareil sur place ou dans une application, programme et scènes attendent. Les régulations selon le besoin et d’humidité continuent. « Libérer » sur la carte de l’appareil met fin à l’attente aussitôt.",
+  "textHand": "Si quelqu’un commande l’appareil sur place ou dans une application, programme et scènes attendent. Les régulations selon le besoin et d’humidité continuent. « Terminer l’intervention manuelle » sur la carte de l’appareil met fin à l’attente aussitôt.",
   "labelHandModus": "Après une commande manuelle, l’automatisme attend",
   "optHandSchaltpunkt": "jusqu’à la prochaine commutation",
   "optHandDauer": "pendant une durée fixe",

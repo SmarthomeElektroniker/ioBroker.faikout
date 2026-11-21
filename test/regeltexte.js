@@ -386,3 +386,74 @@ describe('Regeltexte (mehrsprachig)', () => {
         });
     });
 });
+
+describe('Regelung: Vorgabe-Szenen in der Systemsprache, Plan haengt an der ID', function () {
+    this.timeout(20000);
+    const { Anlage, aufbau, laufen } = require('./sim/simulator');
+    const START = new Date(2026, 10, 20, 21, 30).getTime(); // Freitag, Komfort bis 22:00
+
+    afterEach(() => {
+        texte.setzeSprache('de');
+    });
+
+    it('Namen der Vorgabe-Szenen in jeder Sprache, IDs immer gleich', () => {
+        for (const s of texte.SPRACHEN) {
+            texte.setzeSprache(s);
+            const { szenen, fehler } = wochenplan.szenenLesen([]);
+            expect(fehler, s).to.equal(null);
+            expect([...szenen.keys()], s).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
+            expect(szenen.get('komfort').name, s).to.equal(texte.TEXTE['szene.komfort'][s]);
+            // der Vorgabeplan gilt in jeder Sprache
+            expect(wochenplan.planLesen(wochenplan.vorgabePlan(szenen), szenen).fehler, s).to.equal(null);
+        }
+        texte.setzeSprache('en');
+        expect([...wochenplan.szenenLesen(null).szenen.values()].map(s => s.name)).to.eql([
+            'Comfort',
+            'Setback',
+            'Away',
+            'Off',
+        ]);
+    });
+
+    it('gespeicherte Szenen behalten ihren Namen - auch wenn sie wie die Vorgabe heissen', () => {
+        texte.setzeSprache('en');
+        const eigene = [
+            { id: 'komfort', name: 'Komfort', soll: 21 },
+            { name: 'Mein Abend', soll: 22 },
+        ];
+        const { szenen } = wochenplan.szenenLesen(eigene);
+        expect([...szenen.values()].map(s => s.name)).to.eql(['Komfort', 'Mein Abend']);
+        expect(eigene[0].name).to.equal('Komfort');
+    });
+
+    it('bestehender Plan laeuft nach einem Sprachwechsel im Betrieb weiter; Szenenname und Begruendung folgen', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        let language = 'de';
+        a.getForeignObjectAsync = async id => (id === 'system.config' ? { common: { language } } : null);
+        a.regelung = new Bedarfsregelung(a, { jetzt: () => uhr.t });
+        const anlage = new Anlage({ name: 'Sprach A', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        const { szenen } = wochenplan.szenenLesen(null);
+        const planText = JSON.stringify(wochenplan.vorgabePlan(szenen));
+        await a.regelung.schalter('Sprach_A', 'dryRun', false);
+        await a.regelung.schalter('Sprach_A', 'schedule.weekJson', planText);
+        await a.regelung.schalter('Sprach_A', 'schedule.active', true);
+        await laufen(a, uhr, anlage, 5);
+        expect(a.wert('Sprach_A.regulation.schedule.scene')).to.equal('Komfort');
+
+        language = 'en';
+        a.onObjectChange('system.config', { common: { language } });
+        await new Promise(r => setTimeout(r, 30));
+        expect(texte.sprache()).to.equal('en');
+        expect(a.wert('Sprach_A.regulation.schedule.scene')).to.equal('Comfort');
+        expect(a.wert('Sprach_A.regulation.schedule.nextScene')).to.equal('Setback');
+        // der gespeicherte Plan ist unveraendert und gilt weiter
+        expect(a.wert('Sprach_A.regulation.schedule.weekJson')).to.equal(planText);
+        expect(a.regelung.geraete.get('Sprach_A').planFehler).to.equal(null);
+        expect(a.wert('Sprach_A.regulation.state')).to.equal('ok');
+        await laufen(a, uhr, anlage, 40); // ueber 22:00: der Plan schaltet auf Absenken
+        expect(anlage.target).to.equal(19);
+        expect(a.wert('Sprach_A.regulation.schedule.scene')).to.equal('Setback');
+        expect(a.zeilen.some(z => /System language changed to "en"/.test(z.text))).to.equal(true);
+    });
+});

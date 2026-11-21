@@ -769,6 +769,26 @@
                     "lg": 12,
                     "xl": 12
                 },
+                "_modFehler": {
+                    "type": "staticText",
+                    "text": "${data._modFehler || \"\"}",
+                    "noTranslation": true,
+                    "doNotSave": true,
+                    "hidden": "!data._modFehler",
+                    "newLine": true,
+                    "style": {
+                        "border": "1px solid #d98a00",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,138,0,0.12)",
+                        "whiteSpace": "pre-line"
+                    },
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
                 "_modReporting": {
                     "type": "number",
                     "label": "labelModReporting",
@@ -1797,6 +1817,26 @@
                         "borderRadius": 6,
                         "padding": "8px 12px",
                         "backgroundColor": "rgba(61,154,80,0.12)",
+                        "whiteSpace": "pre-line"
+                    },
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_foundLeer": {
+                    "type": "staticText",
+                    "text": "${data._foundLeer || \"\"}",
+                    "noTranslation": true,
+                    "doNotSave": true,
+                    "hidden": "!data._foundLeer",
+                    "newLine": true,
+                    "style": {
+                        "border": "1px solid #8a8a8a",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(138,138,138,0.12)",
                         "whiteSpace": "pre-line"
                     },
                     "xs": 12,

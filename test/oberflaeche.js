@@ -42,6 +42,25 @@ const frage = async (a, command, message) => {
 };
 
 describe('Kennlinienbild (SVG)', () => {
+    it('Zahlen: Englisch und Chinesisch mit Punkt, alle anderen Sprachen mit Komma - auch im Bild und im Etikett', () => {
+        expect(bild.zahl(95.94, 1)).to.equal('95,9'); // ohne Sprache wie bisher
+        for (const s of o.SPRACHEN) {
+            const punkt = s === 'en' || s === 'zh-cn';
+            expect(bild.zahl(95.94, 1, s), s).to.equal(punkt ? '95.9' : '95,9');
+            expect(bild.zahl(-3.3, 1, s), s).to.equal(punkt ? '−3.3' : '−3,3');
+            const svg = o.kennlinieSvg({
+                punkte: HEIZEN,
+                richtung: 'heizen',
+                untergrenze: 40,
+                obergrenze: 95,
+                sprache: s,
+                punkt: { x: -3.3, wert: 85, roh: 85.9, richtung: 'heizen', probelauf: false, aktiv: true },
+            });
+            expect(svg, s).to.contain(punkt ? '85.9' : '85,9').and.to.contain(punkt ? '−3.3' : '−3,3');
+            expect(svg, s).to.not.contain(punkt ? '85,9' : '85.9');
+        }
+    });
+
     it('zeichnet Achsen, Stuetzpunkte, Grenzen und Zonen', () => {
         const svg = bild.kennlinie({
             punkte: HEIZEN,
@@ -471,6 +490,82 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
         return { gelesen, basis, pruefung: p, auftrag: { ...basis, plan: p.native && p.native._modPlan, zeitlimitMs: 50, abstandMs: 10 } };
     }
 
+    it('Lesen schlaegt nach einem Erfolg fehl: alter Stand und Erfolgszeile weg, Fehler als eigene Zeile (kein Dialog)', async () => {
+        const { a } = mitModul();
+        const gut = (await frage(a, 'modulEinstellungenLesen', { ip: '10.0.0.5' })).antwort;
+        expect(gut.native._modHinweis).to.match(/^✓ Gelesen von Sim Wohnzimmer/);
+        expect(gut.native._modFehler).to.equal('');
+        a.erreichbar = false;
+        const schlecht = (await frage(a, 'modulEinstellungenLesen', { ip: '10.0.0.5' })).antwort;
+        expect(schlecht.error).to.equal(undefined);
+        expect(schlecht.native).to.include({ _modStand: '', _modHinweis: '', _modPlan: '', _modVorschau: '', _modSicherung: '', _modFehlt: '' });
+        expect(schlecht.native._modFehler).to.contain('10.0.0.5').and.to.match(/ \(\d\d:\d\d:\d\d\)$/);
+        // ohne Stand laesst sich nichts pruefen oder schreiben
+        expect((await frage(a, 'modulEinstellungenPruefen', { ip: '10.0.0.5', stand: schlecht.native._modStand, formular: FORMULAR })).antwort.error).to.equal(o.TEXTE.mErstLesen.de);
+        a.erreichbar = true;
+        const wieder = (await frage(a, 'modulEinstellungenLesen', { ip: '10.0.0.5' })).antwort.native;
+        expect(wieder._modFehler).to.equal('');
+        expect(wieder._modStand).to.contain('Sim Wohnzimmer');
+    });
+
+    it('Auswahlfelder (selectSendTo) bekommen IMMER ein Array von {label, value} - auch bei Fehlern und ohne Angaben', async () => {
+        const LISTEN = ['regelGeraeteListe', 'regelZeilenListe', 'modulEinstellungenListe', 'modulAuswahlListe', 'modulEinstellungenSicherungen'];
+        const jsonConfig = fs.readFileSync(path.join(__dirname, '..', 'admin', 'jsonConfig.json'), 'utf8');
+        const inSeite = new Set();
+        JSON.parse(jsonConfig, (k, v) => {
+            if (v && typeof v === 'object' && v.type === 'selectSendTo') {
+                inSeite.add(v.command);
+            }
+            return v;
+        });
+        expect([...inSeite].sort()).to.eql([...LISTEN].sort());
+        const pruefe = (antwort, wo) => {
+            expect(Array.isArray(antwort), wo).to.equal(true);
+            for (const x of antwort) {
+                expect(x, wo).to.be.an('object');
+                expect(x.label, wo).to.be.a('string');
+                expect(x.value, wo).to.be.a('string');
+            }
+        };
+        const nachrichten = [undefined, null, 'timeout', 42, {}, { zeilen: 'x' }, { zeilen: [null, 7, 'Sim Wohnzimmer'] }, { stand: '{kaputt' }, { stand: '"text"' }, { stand: '{"name":"Sim Wohnzimmer"}' }];
+        for (const befehl of LISTEN) {
+            for (const message of nachrichten) {
+                // laufender Adapter
+                const { a } = mitModul();
+                pruefe((await frage(a, befehl, message)).antwort, `${befehl} ${JSON.stringify(message)}`);
+                // startender Adapter: noch keine Geraete, kein Broker, Objektzugriff wirft
+                const start = adapter();
+                start.geraete = undefined;
+                start.letzteSuche = undefined;
+                start.broker = null;
+                start.getObjectAsync = async () => {
+                    throw new Error('DB closed');
+                };
+                pruefe((await frage(start, befehl, message)).antwort, `${befehl} (Start) ${JSON.stringify(message)}`);
+                // alles wirft (Adapter stoppt gerade)
+                const kaputt = adapter();
+                kaputt.sprache = async () => {
+                    throw new Error('Connection is closed');
+                };
+                Object.defineProperty(kaputt, 'geraete', {
+                    get() {
+                        throw new Error('Connection is closed');
+                    },
+                });
+                pruefe((await frage(kaputt, befehl, message)).antwort, `${befehl} (Stopp) ${JSON.stringify(message)}`);
+            }
+        }
+        // eine kaputte Sicherungsliste im Geraeteobjekt ergibt eine leere Auswahl, keinen Fehler
+        const { a } = mitModul();
+        a.objekte.sim.native.modulSicherung = 'timeout';
+        pruefe((await frage(a, 'modulEinstellungenSicherungen', { stand: '{"name":"Sim Wohnzimmer"}' })).antwort, 'Sicherung');
+        // die Modulliste nennt angebundene Module mit Text statt mit einem unerklaerten Haekchen
+        a.letzteSuche = [{ ip: '10.0.0.7', name: 'Neu', status: 'verbunden' }, { ip: '10.0.0.8', name: 'Werk', status: 'werk' }];
+        const liste = (await frage(a, 'modulEinstellungenListe', {})).antwort;
+        expect(liste.map(x => x.label)).to.include('Neu (10.0.0.7) – verbunden').and.to.include('Werk (10.0.0.8)');
+        expect(JSON.stringify(liste)).to.not.contain('✓');
+    });
+
     it('Lesen fuellt das Formular, Pruefen nennt nur die Unterschiede', async () => {
         const { a } = mitModul();
         const { gelesen, basis, pruefung } = await vorbereiten(a, { _modLivestatus: true, _modTopicgroup1: 'Sim_Wohnzimmer' });
@@ -546,7 +641,16 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
         expect(modul.reporting).to.equal('90');
         const liste = (await frage(a, 'modulEinstellungenSicherungen', { stand: nach._modStand })).antwort;
         expect(liste).to.have.length(1);
-        expect(liste[0].label).to.match(/\d\d\.\d\d\.,? \d\d:\d\d/);
+        // Datum UND Uhrzeit mit Sekunden: zwei Staende derselben Minute bleiben unterscheidbar
+        expect(liste[0].label).to.match(/^\d\d\.\d\d\.\d{4}, \d\d:\d\d:\d\d$/);
+        const minute = new Date(2026, 10, 21, 14, 3).getTime();
+        a.objekte.sim.native.modulSicherung = [
+            { zeit: minute + 5000, werte: { reporting: '60' } },
+            { zeit: minute + 27000, werte: { reporting: '90' } },
+        ];
+        const zwei = (await frage(a, 'modulEinstellungenSicherungen', { stand: nach._modStand })).antwort;
+        expect(zwei.map(x => x.label)).to.eql(['21.11.2026, 14:03:27', '21.11.2026, 14:03:05']);
+        a.objekte.sim.native.modulSicherung = [{ zeit: Number(liste[0].value), werte: { reporting: '60' } }];
         const basis = { ip: '10.0.0.5', stand: nach._modStand };
         expect((await frage(a, 'modulEinstellungenWiederherstellen', { ...basis, zeit: '' })).antwort.error).to.equal(o.TEXTE.mSicherungFehlt.de);
         const w = (await frage(a, 'modulEinstellungenWiederherstellen', { ...basis, zeit: liste[0].value })).antwort.native;

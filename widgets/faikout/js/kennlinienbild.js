@@ -40,13 +40,21 @@ const esc = s =>
 
 const r1 = n => Math.round(n * 10) / 10;
 
+/** Sprachen mit Punkt als Dezimalzeichen; alle anderen der elf schreiben ein Komma. */
+const PUNKT_SPRACHEN = ['en', 'zh-cn'];
+
 /**
- * Zahl in Anzeigeform: Komma statt Punkt, echtes Minus.
+ * Zahl in Anzeigeform: Dezimalzeichen der Sprache (Englisch und Chinesisch Punkt, sonst Komma),
+ * echtes Minus. Ohne Sprache gilt das Komma.
  *
  * @param {number} n  Zahl
  * @param {number} [stellen]  Nachkommastellen
+ * @param {string} [sprache]  Sprachkuerzel
  */
-const zahl = (n, stellen = 0) => r1(Number(n)).toFixed(stellen).replace('.', ',').replace('-', '−');
+const zahl = (n, stellen = 0, sprache = '') => {
+    const text = r1(Number(n)).toFixed(stellen).replace('-', '−');
+    return PUNKT_SPRACHEN.indexOf(sprache) >= 0 ? text : text.replace('.', ',');
+};
 
 /**
  * Wert der stueckweise linearen Kennlinie (Enden waagerecht) - wie lib/regel/kennlinie.wert, hier
@@ -124,6 +132,7 @@ function achse(punkte, x) {
  * @param {boolean} [o.kompakt]  ohne Achsenbeschriftung (Kachel)
  * @param {string} [o.farbe]  feste Schriftfarbe statt currentColor (fuer <img>)
  * @param {boolean} [o.blass]  Kennlinie gedaempft (Regelung ruht)
+ * @param {string} [o.sprache]  Sprache der Zahlen (Dezimalzeichen)
  * @returns {string} SVG
  */
 function kennlinie(o) {
@@ -166,7 +175,7 @@ function kennlinie(o) {
         for (let x = a.min; x <= a.max; x += a.schritt) {
             teile.push(
                 `<line x1="${X(x)}" x2="${X(x)}" y1="${Y(0)}" y2="${Y(0) + 4}" stroke="${fg}" stroke-opacity="0.35"/>`,
-                `<text x="${X(x)}" y="${H - 8}" text-anchor="middle" fill-opacity="0.7">${zahl(x)}${x + a.schritt > a.max ? ' °C' : ''}</text>`,
+                `<text x="${X(x)}" y="${H - 8}" text-anchor="middle" fill-opacity="0.7">${zahl(x, 0, o.sprache)}${x + a.schritt > a.max ? ' °C' : ''}</text>`,
             );
         }
     }
@@ -179,7 +188,7 @@ function kennlinie(o) {
         `<line x1="${rand.l}" x2="${B - rand.r}" y1="${Y(y)}" y2="${Y(y)}" stroke="${fg}" stroke-opacity="0.55" stroke-dasharray="5 4"/>${
             kompakt || !text
                 ? ''
-                : `<text x="${B - rand.r - 4}" y="${Y(y) + (oben ? 13 : -5)}" text-anchor="end" fill-opacity="0.75">${esc(text)} ${zahl(y)} %</text>`
+                : `<text x="${B - rand.r - 4}" y="${Y(y) + (oben ? 13 : -5)}" text-anchor="end" fill-opacity="0.75">${esc(text)} ${zahl(y, 0, o.sprache)} %</text>`
         }`;
     if (unter !== null && unter > 0) {
         teile.push(zone(0, unter));

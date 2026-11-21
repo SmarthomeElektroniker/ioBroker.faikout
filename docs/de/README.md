@@ -107,7 +107,7 @@ Adapter startet neu – andere ungespeicherte Änderungen auf der Seite vorher s
 
 - **Handeingriff:** Bedient jemand die Anlage am Gerät oder in einer App, warten Plan und Szenen –
   bis zum nächsten Schaltpunkt, eine feste Dauer oder gar nicht. Bedarfs- und Feuchteregelung
-  arbeiten weiter. „Freigeben“ auf der Karte beendet das Warten sofort.
+  arbeiten weiter. „Handeingriff beenden“ auf der Karte beendet das Warten sofort.
 - **Feuchte und Taupunkt:** ΔTP ist der Abstand zwischen Raumtemperatur und Taupunkt. Wird er zu
   klein oder die Feuchte zu hoch, schaltet der Adapter auf Entfeuchten, senkt beim Kühlen das Ziel
   um 1 K oder meldet nur – je nach Einstellung, mit Mindestlaufzeit und Pause.
@@ -133,7 +133,7 @@ Die Karte zeigt den laufenden Betrieb und bietet die Bedienung des Alltags:
 - **Szene** und **nächste Schaltung**.
 - **Automatik:** drei Symbolknöpfe schalten Bedarfsregelung, Feuchteregelung und Wochenplan ein und
   aus (gefüllt = an).
-- **Handeingriff:** Hinweis mit Uhrzeit und Knopf „Freigeben“.
+- **Handeingriff:** Hinweis mit Uhrzeit und Knopf „Handeingriff beenden“.
 - **Fühler:** grün = gewählter Fühler liefert, gelb = Rückfall oder kein Wert; die Quelle steht im
   Tooltip.
 
@@ -253,6 +253,28 @@ Leistungsgrenze annimmt, steht in `<Gerät>.info.demandCapable` (`unknown`, `yes
 Vorabstände von 1.0.0 führten diese Datenpunkte unter `<Gerät>.regel.*`. Der Adapter zieht sie beim
 Start einmal um (Schalter, Wochenplan, Abwesenheit, Verlauf und eigene History-Einstellungen bleiben
 erhalten) und löscht die alten Objekte.
+
+### JSON-Datenpunkte
+
+Die Schlüssel in den JSON-Datenpunkten sind englisch. Vorabstände von 1.0.0 schrieben deutsche
+Schlüssel: Der Adapter liest sie weiterhin (auch wenn ein Skript noch das alte Format schreibt),
+schreibt selbst nur noch die englischen und schreibt gespeicherte Altwerte beim Start einmal um.
+
+| Datenpunkt | alt | neu | Beispiel (neu) |
+|---|---|---|---|
+| `demand.curveJson` | `heizen` · `kuehlen` · `untergrenze` · `obergrenze` | `heating` · `cooling` · `lowerLimit` · `upperLimit` | `{"heating":[[-10,95],[0,75],[7,55],[15,40]],"cooling":[[25,40],[30,65],[35,95]],"lowerLimit":40,"upperLimit":95}` |
+| `lastCommand` | `felder` · `zeit` · `aktion` (`senden`/`wuerde`) | `fields` · `time` · `action` (`send`/`would`) | `{"fields":{"target":22,"fan":"auto"},"time":"2026-11-21T11:38:19.361Z","action":"send"}` |
+| `demand.wouldSend` | `wert` · `zeit` · `aktion` (`senden`/`wuerde`) · `ist` | `value` · `time` · `action` (`send`/`would`) · `current` | `{"value":85,"time":"2026-11-21T12:14:38.489Z","action":"would","current":100}` |
+| `schedule.absenceJson` | `von` · `bis` · `szene` | `from` · `to` · `scene` | `{"from":1798326000000,"to":1798930800000,"scene":"abwesend"}` (Zeit in ms oder als ISO-Text; leer = keine Abwesenheit) |
+
+Unverändert, weil ohne deutsche Schlüssel: `schedule.weekJson` (sieben Tage ab Montag, je Schaltpunkt
+`{"t": Minuten seit Mitternacht, "s": Szenen-ID}`), `historyJson` (Paare `[Zeit in ms, Prozent]`) und
+`consumption.*Json` (`hour`/`day`/`month`, `kwh`). `demand.stateJson` ist das Gedächtnis des Adapters
+über einen Neustart hinweg – keine Schnittstelle, der Aufbau kann sich jederzeit ändern.
+
+Die Szenen-IDs (`komfort`, `absenken`, `abwesend`, `aus` oder aus dem eigenen Namen gebildet) sind
+sprachunabhängig und bleiben, wie sie sind: an ihnen hängt der Wochenplan. Nur der angezeigte Name
+der vier Vorgabe-Szenen folgt der Systemsprache; eigene Szenen behalten ihren Namen.
 
 ## 9. Verbrauch
 

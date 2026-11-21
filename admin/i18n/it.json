@@ -157,7 +157,7 @@
   "labelBand": "Banda obiettivo per Faikout auto (± K)",
   "helpBand": "Solo per apparecchi in modalità “Faikout auto”: il modulo mantiene l’ambiente entro obiettivo ± questo valore.",
   "headerHand": "Intervento manuale",
-  "textHand": "Se qualcuno comanda l’apparecchio sul posto o da un’app, programma e scenari attendono. Le regolazioni di fabbisogno e umidità continuano. «Sblocca» sulla scheda dell’apparecchio termina subito l’attesa.",
+  "textHand": "Se qualcuno comanda l’apparecchio sul posto o da un’app, programma e scenari attendono. Le regolazioni di fabbisogno e umidità continuano. «Termina intervento manuale» sulla scheda dell’apparecchio termina subito l’attesa.",
   "labelHandModus": "Dopo un comando manuale l’automatismo attende",
   "optHandSchaltpunkt": "fino alla prossima commutazione",
   "optHandDauer": "per una durata fissa",

@@ -210,24 +210,29 @@ describe('Device-Manager: Karte', () => {
         expect(k.status.warning.stateId).to.equal('faikout.0.Wohnzimmer_AC.info.online');
         expect(k.status.warning.mapping.false).to.equal(TEXTE.nichtErreichbar);
         const w = k.indicators.find(i => i.id === 'wlan');
-        expect(w.value).to.eql({ objectId: 'faikout.0.Wohnzimmer_AC', property: 'native.wlan' });
+        expect(w.value).to.eql({ objectId: 'faikout.0.Wohnzimmer_AC', property: 'native.wlanAn' });
         expect(w.text).to.eql({ stateId: 'faikout.0.Wohnzimmer_AC.info.rssi' });
         expect(w.unit).to.equal('dBm');
-        expect(w.levels.map(l => l.value)).to.eql(['s4', 's3', 's2', 's1', 'off']);
+        expect(w.levels.map(l => l.value)).to.eql(['s4', 's3', 's2', 's1']);
         for (const l of w.levels) {
             expect(l.tooltip).to.equal(WLAN_TEXTE[l.value]);
             expect(l.icon).to.match(/^data:image\/svg\+xml;base64,/);
         }
         // Boegen je Stufe: s4 drei gefuellte Boegen, s1 keiner; getrennt grau und durchgestrichen
-        const svg = v => Buffer.from(w.levels.find(l => l.value === v).icon.split(',')[1], 'base64').toString();
+        // getrennt ist eine eigene Anzeige OHNE Einheit ("Getrennt", nicht "Getrennt dBm")
+        const off = k.indicators.find(i => i.id === 'wlanAus');
+        const text = b64 => Buffer.from(b64.split(',')[1], 'base64').toString();
+        const svg = v => text(v === 'off' ? off.icon : w.levels.find(l => l.value === v).icon);
         const blau = v => (svg(v).match(/#2196f3/g) || []).length;
         expect([blau('s4'), blau('s3'), blau('s2'), blau('s1'), blau('off')]).to.eql([4, 3, 2, 1, 0]);
         expect(svg('off')).to.contain('M4 3.5 20 20.5');
-        const off = w.levels.find(l => l.value === 'off');
+        expect(off.value).to.eql({ objectId: 'faikout.0.Wohnzimmer_AC', property: 'native.wlanAus' });
         expect(off.text).to.equal(WLAN_TEXTE.getrennt);
+        expect(off.tooltip).to.equal(WLAN_TEXTE.off);
+        expect(off.unit).to.equal(undefined);
         expect(off.color).to.equal('error');
         // steht vor dem Ein/Aus-Umschalter
-        expect(k.indicators.map(i => i.id)).to.eql(['wlan', 'power']);
+        expect(k.indicators.map(i => i.id)).to.eql(['wlan', 'wlanAus', 'power']);
     });
 
     it('WLAN-Stufe im Geraeteobjekt: Grenzen, getrennt, nur bei Aenderung geschrieben', async () => {
@@ -263,9 +268,11 @@ describe('Device-Manager: Karte', () => {
         a.onMqtt('state/Wohnzimmer AC', Buffer.from(JSON.stringify({ up: false })));
         await warte();
         expect(a.objekte.get('Wohnzimmer_AC').native.wlan).to.equal('off');
+        // getrennt: die Anzeige mit der Einheit hat keinen Wert mehr, die Anzeige "Getrennt" einen
+        expect(a.objekte.get('Wohnzimmer_AC').native).to.include({ wlanAn: '', wlanAus: true });
         a.onMqtt('state/Wohnzimmer AC', Buffer.from(JSON.stringify({ up: true })));
         await warte();
-        expect(a.objekte.get('Wohnzimmer_AC').native.wlan).to.equal('s3');
+        expect(a.objekte.get('Wohnzimmer_AC').native).to.include({ wlan: 's3', wlanAn: 's3', wlanAus: false });
         expect(schreiben).to.have.length(2); // off, dann wieder s3
     });
 
@@ -568,7 +575,7 @@ describe('Device-Manager: Karte', () => {
         const a = await adapterMitGeraet();
         a.objekte.get('Wohnzimmer_AC.control.power').common.write = false;
         const k = (await kartenLaden(a)).karten[0];
-        expect(k.indicators.map(i => i.id)).to.eql(['wlan']);
+        expect(k.indicators.map(i => i.id)).to.eql(['wlan', 'wlanAus']);
         expect(k.actions).to.equal(undefined);
     });
 
@@ -881,10 +888,24 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             g: `faikout.0.${ID}.regulation.reason`,
             p: `faikout.0.${ID}.regulation.demand.dryRun`,
         });
-        // Handeingriff: Hinweis und Knopf nur bei Sperre; der Knopf heisst "Freigeben" und schreibt den Knopf-Datenpunkt
+        // Handeingriff: Hinweis und Knopf nur bei Sperre; der Knopf heisst "Handeingriff beenden" und schreibt den Knopf-Datenpunkt
         expect(items.regelHand.hidden).to.equal('_states.h?.val !== true');
         expect(items.regelFortsetzen).to.include({ oid: `faikout.0.${ID}.regulation.manual.resume`, control: 'button', buttonValue: true });
-        expect(items.regelFortsetzen.falseText.de).to.equal('Freigeben');
+        expect(items.regelFortsetzen.falseText.de).to.equal('Handeingriff beenden');
+        expect(items.regelFortsetzen.falseText.en).to.equal('End manual override');
+        // "Wochenplan bearbeiten" traegt den Kalender, der Schalter des Wochenplans die Uhr: zwei
+        // verschiedene Symbole - und der Einrichtungstext nennt den "Knopf mit dem Kalender"
+        const svgVon = url => Buffer.from(url.split(',')[1], 'base64').toString();
+        const aktion = svgVon(k.actions.find(x => x.id === dm.WOCHENPLAN).icon);
+        expect(aktion).to.contain(dm.REGEL_SYMBOL.kalender).and.to.not.contain(dm.REGEL_SYMBOL.plan);
+        expect(dm.REGEL_SYMBOL.kalender).to.contain('<rect').and.to.not.equal(dm.REGEL_SYMBOL.plan);
+        expect(dm.REGEL_SYMBOL.plan).to.contain('<circle'); // Uhr
+        expect(svgVon(items.regelKnoepfe.items.plan ? items.regelKnoepfe.items.plan.labelIcon || '' : ',')).to.not.contain('<rect');
+        for (const l of SPRACHEN) {
+            const schritt = JSON.parse(require('node:fs').readFileSync(`${__dirname}/../admin/i18n/${l}.json`, 'utf8')).textSchritt3;
+            expect(schritt, l).to.match(/Kalender|calendar|календар|calendário|kalender|calendrier|calendario|kalendarz|日历/i);
+            expect(schritt, l).to.not.match(/\bUhr\b|clock|часами|relógio|klok|horloge|orologio|reloj|zegar|时钟/i);
+        }
         // Szene nur bei eingeschaltetem Wochenplan
         expect(items.regelPlan.hidden).to.equal('_states.a?.val !== true');
     });
@@ -1020,7 +1041,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             expect(JSON.parse(plan.wert.val)).to.have.length(7);
             expect(JSON.parse(plan.wert.val)[0][1]).to.eql({ t: 360, s: 'komfort' });
             const abw = JSON.parse(a.gesetzt.find(g => g.id === `${ID}.regulation.schedule.absenceJson`).wert.val);
-            expect(abw).to.eql({ von: new Date(2026, 11, 27).getTime(), bis: new Date(2027, 0, 3).getTime(), szene: 'abwesend' });
+            expect(abw).to.eql({ from: new Date(2026, 11, 27).getTime(), to: new Date(2027, 0, 3).getTime(), scene: 'abwesend' });
             // Wochenplan war schon an: keine zweite Rueckfrage
             expect(k.formulare).to.have.length(1);
         });
@@ -1210,11 +1231,17 @@ describe('Device-Manager: Fuehlerkorrektur neben der Solltemperatur', () => {
         const namenListe = Object.keys(items);
         expect(namenListe.indexOf('regelKorrektur')).to.equal(namenListe.indexOf('targetSlider') + 1);
         expect(e.hidden).to.contain('Math.abs(_states.k.val) >= 0.05');
-        const text = werte =>
-            new Function('_states', `return \`${e.text.func.de}\``)(
+        const textIn = (l, werte) =>
+            new Function('_states', `return \`${e.text.func[l]}\``)(
                 Object.fromEntries(Object.entries(werte).map(([k, v]) => [k, { val: v }])),
             );
+        const text = werte => textIn('de', werte);
         expect(text({ k: 1, z: 21 })).to.contain('Fühlerkorrektur +1,0 K · Ziel 21,0 °C');
+        // Dezimalzeichen der Sprache: Englisch und Chinesisch Punkt, alle anderen Komma
+        for (const l of SPRACHEN) {
+            const punkt = l === 'en' || l === 'zh-cn';
+            expect(textIn(l, { k: 1.5, z: 21.5 }), l).to.contain(punkt ? '+1.5 K' : '+1,5 K').and.to.contain(punkt ? '21.5 °C' : '21,5 °C');
+        }
         expect(text({ k: -0.5 })).to.contain('Fühlerkorrektur −0,5 K').and.not.to.contain('Ziel');
         for (const l of SPRACHEN) {
             expect(e.text.func[l]).to.be.a('string');

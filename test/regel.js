@@ -292,7 +292,7 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
             });
             expect(a.gesendet, JSON.stringify(config)).to.have.length(0);
             const w = JSON.parse(a.wert('Daikin_Wohnzimmer.regulation.demand.wouldSend'));
-            expect(w.aktion).to.equal('wuerde');
+            expect(w.action).to.equal('would');
             expect(a.wert('Daikin_Wohnzimmer.regulation.demand.dryRun')).to.equal(true);
             expect(a.wert('Daikin_Wohnzimmer.regulation.demand.setpoint')).to.be.within(30, 100);
             expect(a.zeilen.filter(z => /would send/.test(z.text)).length).to.be.at.least(1);

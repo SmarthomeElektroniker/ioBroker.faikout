@@ -439,11 +439,17 @@ describe('Module suchen: Nachrichten an den Adapter', () => {
         expect(a.logs.join('\n')).to.not.match(/10\.9\.9\.9|1777|geheimnutzer|192\.168\.30\.70/);
     });
 
-    it('suchen ohne Treffer bei leerer Tabelle: nur eine Meldung, kein Formularwert (Speichern bleibt aus)', async () => {
+    it('suchen ohne Treffer bei leerer Tabelle: neutraler Hinweis als Statuszeile, kein Fehlerdialog, Tabelle unberuehrt', async () => {
         const a = adapter([]);
         const r = await senden(a, 'suchen', { adresse: '10.0.0.1', leer: true });
-        expect(r.native).to.equal(undefined);
-        expect(r.error).to.match(/^0 Module gefunden\. Läuft der ioBroker in Docker\?/);
+        expect(r.error).to.equal(undefined);
+        expect(Object.keys(r.native).sort()).to.eql(['_foundLeer', '_foundText']);
+        expect(r.native._foundText).to.equal('');
+        expect(r.native._foundLeer).to.match(/^0 Module gefunden\. Läuft der ioBroker in Docker\?[^]* \(\d\d:\d\d:\d\d\)$/);
+        // ein Treffer danach raeumt den Hinweis wieder weg
+        const mit = await senden(adapter(), 'suchen', { adresse: '10.0.0.1', leer: true });
+        expect(mit.native._foundLeer).to.equal('');
+        expect(mit.native._foundText).to.match(/1 faikout-Modul/);
         // steht in der Tabelle der Seite noch etwas, wird sie geleert (dann aendert sich das Formular wirklich)
         const r2 = await senden(a, 'suchen', { adresse: '10.0.0.1', leer: false });
         expect(r2.native._found).to.eql([]);

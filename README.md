@@ -205,15 +205,15 @@ nothing until the dry run is switched off – in the settings and, per unit, in 
   temperature (drawn live, with the current operating point) or as "Auto" (yesterday's consumption
   plus a margin).
 - **Scenes and weekly schedule**: a scene is a complete state of the unit (on/off, mode, target,
-  fan, power cap). The schedule is edited on the device card (clock button): click into a block to
+  fan, power cap). The schedule is edited on the device card (calendar button): click into a block to
   add a switching time, drag a line to move it, click a line to change or delete it, copy and paste
   whole days, load the default schedule, set an absence.
 - **Sensor sources**: automatic, sensor of the unit, BLE sensor on the module or any ioBroker data
   point. A room data point either adjusts the setpoint of the unit (recommended) or is sent to the
   module.
 - **Humidity and dew point**, **manual override** (schedule and scenes wait after someone used the
-  remote control; "Release" on the card ends the wait) and **public holidays** are set once for
-  all units.
+  remote control; "End manual override" on the card ends the wait) and **public holidays** are set
+  once for all units.
 - **Device card**: state and reason, power limit, scene and next switching time, three symbol
   buttons for demand control, humidity control and weekly schedule, sensors with a warning when a
   fallback sensor is used. The chart button explains the current decision (curve with operating
@@ -264,8 +264,9 @@ one detail page per unit with controls, energy history and a phone view. They us
 - Sensor sources with fallback (BLE sensor at the module, any data point, sensor of the unit);
   external or slow room sensors are handled by a slow correction of the unit's setpoint.
 - Device cards with control state, weekly schedule dialog and details dialog; new VIS widget.
-- The control data points live below `<unit>.regulation.*` with English IDs and state values;
-  data points of pre-release builds (`regel.*`) are moved once at start.
+- The control data points live below `<unit>.regulation.*` with English IDs, state values and JSON
+  keys; data points and JSON values of pre-release builds (`regel.*`, German keys) are moved or
+  rewritten once at start.
 - Module settings can be read and written (with preview, backup and read-back).
 - The reason why a unit does not accept the power limit is explained (Daikin Wi-Fi module and app).
 - New tab "Find modules" in the instance settings: one-off mDNS search or check of a single

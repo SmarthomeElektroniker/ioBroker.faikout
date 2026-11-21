@@ -157,7 +157,7 @@
   "labelBand": "Pasmo docelowe dla Faikout auto (± K)",
   "helpBand": "Tylko dla urządzeń w trybie „Faikout auto”: moduł utrzymuje pomieszczenie w zakresie cel ± ta wartość.",
   "headerHand": "Ingerencja ręczna",
-  "textHand": "Gdy ktoś obsługuje urządzenie na miejscu lub w aplikacji, harmonogram i sceny czekają. Regulacja zapotrzebowania i wilgotności działa dalej. „Zwolnij” na karcie urządzenia od razu kończy oczekiwanie.",
+  "textHand": "Gdy ktoś obsługuje urządzenie na miejscu lub w aplikacji, harmonogram i sceny czekają. Regulacja zapotrzebowania i wilgotności działa dalej. „Zakończ ingerencję ręczną” na karcie urządzenia od razu kończy oczekiwanie.",
   "labelHandModus": "Po obsłudze ręcznej automatyka czeka",
   "optHandSchaltpunkt": "do następnego punktu przełączenia",
   "optHandDauer": "przez stały czas",

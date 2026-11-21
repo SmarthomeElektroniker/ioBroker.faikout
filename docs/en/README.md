@@ -105,11 +105,11 @@ other unsaved changes on the page first.
 
 - **Manual override:** if someone operates the unit at the device or in an app, schedule and
   scenes wait – until the next switching time, for a fixed time, or not at all. Demand and
-  humidity control keep working. "Release" on the card ends the wait at once.
-- **Humidity and dew point:** ΔTP is the distance between room temperature and dew point. If it
-  becomes too small or the humidity too high, the adapter switches to dry mode, lowers the target
-  by 1 K when cooling, or only reports – depending on the setting, with a minimum run time and a
-  pause.
+  humidity control keep working. "End manual override" on the card ends the wait at once.
+- **Humidity and dew point:** ΔDP (dew-point spread) is the distance between room temperature and
+  dew point. If it becomes too small or the humidity too high, the adapter switches to dry mode,
+  lowers the target by 1 K when cooling, or only reports – depending on the setting, with a minimum
+  run time and a pause.
 - **Public holidays:** on public holidays the Sunday schedule can apply (German nationwide
   holidays and own dates).
 
@@ -132,7 +132,7 @@ The card shows the running operation and offers everyday control:
 - **Scene** and **next switch**.
 - **Automation:** three symbol buttons switch demand control, humidity control and the weekly
   schedule on and off (filled = on).
-- **Manual override:** note with the time and the button "Release".
+- **Manual override:** note with the time and the button "End manual override".
 - **Sensors:** green = the chosen sensor delivers, yellow = fallback or no value; the source is in
   the tooltip.
 
@@ -247,6 +247,28 @@ limit is shown in `<unit>.info.demandCapable` (`unknown`, `yes`, `no`).
 Pre-release builds of 1.0.0 kept these data points below `<unit>.regel.*`. The adapter moves them
 once at start (switches, weekly schedule, absence, history and your own history settings are kept)
 and removes the old objects.
+
+### JSON data points
+
+The keys inside the JSON data points are English. Pre-release builds of 1.0.0 wrote German keys: the
+adapter still reads them (also when a script keeps writing the old format), writes English keys
+only, and rewrites stored old values once at start.
+
+| Data point | old | new | Example (new) |
+|---|---|---|---|
+| `demand.curveJson` | `heizen` · `kuehlen` · `untergrenze` · `obergrenze` | `heating` · `cooling` · `lowerLimit` · `upperLimit` | `{"heating":[[-10,95],[0,75],[7,55],[15,40]],"cooling":[[25,40],[30,65],[35,95]],"lowerLimit":40,"upperLimit":95}` |
+| `lastCommand` | `felder` · `zeit` · `aktion` (`senden`/`wuerde`) | `fields` · `time` · `action` (`send`/`would`) | `{"fields":{"target":22,"fan":"auto"},"time":"2026-11-21T11:38:19.361Z","action":"send"}` |
+| `demand.wouldSend` | `wert` · `zeit` · `aktion` (`senden`/`wuerde`) · `ist` | `value` · `time` · `action` (`send`/`would`) · `current` | `{"value":85,"time":"2026-11-21T12:14:38.489Z","action":"would","current":100}` |
+| `schedule.absenceJson` | `von` · `bis` · `szene` | `from` · `to` · `scene` | `{"from":1798326000000,"to":1798930800000,"scene":"abwesend"}` (time in ms or as ISO text; empty = no absence) |
+
+Unchanged, because they never had German keys: `schedule.weekJson` (seven days starting on Monday,
+each switching time `{"t": minutes since midnight, "s": scene ID}`), `historyJson` (pairs
+`[time in ms, percent]`) and `consumption.*Json` (`hour`/`day`/`month`, `kwh`). `demand.stateJson` is
+the adapter's memory across a restart – not an interface, its structure may change at any time.
+
+The scene IDs (`komfort`, `absenken`, `abwesend`, `aus`, or derived from your own scene name) are
+language-independent and stay as they are: the weekly schedule refers to them. Only the displayed
+name of the four default scenes follows the system language; your own scenes keep their names.
 
 ## 9. Consumption
 

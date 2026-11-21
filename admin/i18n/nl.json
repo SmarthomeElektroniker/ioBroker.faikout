@@ -157,7 +157,7 @@
   "labelBand": "Doelband voor Faikout-auto (± K)",
   "helpBand": "Alleen voor toestellen in modus “Faikout-auto”: de module houdt de ruimte binnen doel ± deze waarde.",
   "headerHand": "Handmatige ingreep",
-  "textHand": "Bedient iemand het toestel aan het apparaat of in een app, dan wachten schema en scènes. Vraag- en vochtregeling werken door. “Vrijgeven” op de toestelkaart beëindigt het wachten meteen.",
+  "textHand": "Bedient iemand het toestel aan het apparaat of in een app, dan wachten schema en scènes. Vraag- en vochtregeling werken door. “Handmatige ingreep beëindigen” op de toestelkaart beëindigt het wachten meteen.",
   "labelHandModus": "Na handbediening wacht de automatiek",
   "optHandSchaltpunkt": "tot het volgende schakelpunt",
   "optHandDauer": "een vaste duur",
