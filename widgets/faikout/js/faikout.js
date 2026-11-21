@@ -54,7 +54,7 @@ vis.binds.faikout = {
         modusFanOnly: ['Fan only', 'Nur Lüfter', 'Только вентилятор', 'Só ventilação', 'Alleen ventilator', 'Ventilation seule', 'Ventilazione', 'Solo ventilador', 'Tylko wentylator', 'Лише вентилятор', '仅送风'],
         betriebsart: ['Mode', 'Betriebsart', 'Режим', 'Modo', 'Modus', 'Mode', 'Modalità', 'Modo', 'Tryb', 'Режим', '模式'],
         luefter: ['Fan', 'Lüfter', 'Вентилятор', 'Ventilador', 'Ventilator', 'Ventilateur', 'Ventola', 'Ventilador', 'Wentylator', 'Вентилятор', '风扇'],
-        luefterLeise: ['Quiet', 'Leise', 'Тихий режим', 'Silencioso', 'Stil', 'Silencieux', 'Silenzioso', 'Silencioso', 'Cichy', 'Тихий режим', '静音'],
+        luefterLeise: ['Quiet', 'Leise', 'Тихий', 'Silencioso', 'Stil', 'Silencieux', 'Silenzioso', 'Silencioso', 'Cichy', 'Тихий', '静音'],
         tag: ['Day', 'Tag', 'День', 'Dia', 'Dag', 'Jour', 'Giorno', 'Día', 'Dzień', 'День', '日'],
         monat: ['Month', 'Monat', 'Месяц', 'Mês', 'Maand', 'Mois', 'Mese', 'Mes', 'Miesiąc', 'Місяць', '月'],
         jahr: ['Year', 'Jahr', 'Год', 'Ano', 'Jaar', 'Année', 'Anno', 'Año', 'Rok', 'Рік', '年'],
@@ -858,8 +858,11 @@ vis.binds.faikout = {
                 $wurzel.find('.fk-regel-balken span').each(function (i) {
                     $(this).toggleClass('fk-voll', i < n).toggleClass('fk-spitze', i + 1 === n);
                 });
-                $wurzel.find('.fk-regel-prozent').toggleClass('fk-wort', faehig === 'no' || ruht || !aktiv).text(
-                    faehig === 'no' ? b.t('nichtUnterstuetzt') : ruht ? b.t('ruht') : !aktiv ? b.t('grenzeAus') : isNaN(soll) ? '–' : Math.round(soll) + ' %');
+                // "ruht (Modul regelt selbst)" ist fuer die Zeile der Kachel zu lang (die Beschriftung daneben schrumpfte
+                // in langen Sprachen auf drei Buchstaben): hier steht nur "ruht", der ganze Text im Tooltip
+                var ruhtText = b.t('ruht');
+                $wurzel.find('.fk-regel-prozent').toggleClass('fk-wort', faehig === 'no' || ruht || !aktiv).attr('title', ruht && faehig !== 'no' ? ruhtText : null).text(
+                    faehig === 'no' ? b.t('nichtUnterstuetzt') : ruht ? ruhtText.split(/\s*[(（]/)[0] : !aktiv ? b.t('grenzeAus') : isNaN(soll) ? '–' : Math.round(soll) + ' %');
                 $wurzel.find('.fk-regel-balken').toggleClass('fk-ruht', !aktiv);
                 // Kennlinie mit Arbeitspunkt
                 if (kennlinie) {

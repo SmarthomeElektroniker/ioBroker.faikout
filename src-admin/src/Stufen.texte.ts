@@ -231,14 +231,14 @@ export const TEXTE = {
     fan_night: {
         en: 'Quiet',
         de: 'Leise',
-        ru: 'Тихий режим',
+        ru: 'Тихий',
         pt: 'Silencioso',
         nl: 'Stil',
         fr: 'Silencieux',
         it: 'Silenzioso',
         es: 'Silencioso',
         pl: 'Cichy',
-        uk: 'Тихий режим',
+        uk: 'Тихий',
         'zh-cn': '静音',
     },
     fan_low: {
@@ -606,7 +606,7 @@ export const TEXTE = {
         'zh-cn': '%s 的周计划使用了模板中没有的档位：',
     },
     ruecksetzZeile: {
-        en: 'Replace “%s” by:',
+        en: 'Replace “%s” with:',
         de: '„%s“ ersetzen durch:',
         ru: 'Заменить «%s» на:',
         pt: 'Substituir «%s» por:',
@@ -619,7 +619,7 @@ export const TEXTE = {
         'zh-cn': '将“%s”替换为：',
     },
     ersetzenDurch: {
-        en: 'Replace it there by:',
+        en: 'Replace it there with:',
         de: 'Dort ersetzen durch:',
         ru: 'Заменить там на:',
         pt: 'Substituir aí por:',

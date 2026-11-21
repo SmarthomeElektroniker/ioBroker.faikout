@@ -145,7 +145,11 @@ const zahlOder = (v: unknown, sonst: number): number => (istLeer(v) || !Number.i
 const gleich = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 /** geschaetzte Breite eines 11-px-Textes der Zeichnung (CJK-Zeichen sind etwa doppelt so breit) */
 const textBreite = (text: string): number =>
-    [...text].reduce((summe, z) => summe + ((z.codePointAt(0) || 0) > 0x2e80 ? 11.2 : 6.1), 0);
+    [...text].reduce((summe, z) => {
+        const c = z.codePointAt(0) || 0;
+        // kyrillische Buchstaben laufen etwas breiter als lateinische
+        return summe + (c > 0x2e80 ? 11.2 : c >= 0x400 && c <= 0x4ff ? 6.7 : 6.1);
+    }, 0);
 
 /** Ein Zahlenfeld der Tabelle: zeigt den Wert des Formulars, laesst beim Tippen Zwischenstaende zu. */
 function Zahlfeld(props: {
@@ -790,6 +794,9 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                 ? k('jetztOhne', zug.anzeigeFest(Number(ap.x), 1, sprache))
                 : k('jetzt', zug.anzeigeFest(Number(ap.x), 1, sprache), zahl(Math.round(wert)));
         const links = X(x) + 8 + textBreite(text) > B - RAND.r;
+        // schmales Bild, langer Text (z. B. Russisch bei 420 px): passt er auch links nicht, beginnt er am linken
+        // Rand der Zeichenflaeche statt aus dem Bild zu laufen
+        const linksRaus = links && X(x) - 7 - textBreite(text) < RAND.l + 2;
         if (ziehend < 0 && !grenzeZiehtGerade) {
             jetztBild = (
                 <g
@@ -818,9 +825,9 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                     />
                     <text
                         className="fk-jetzt-etikett"
-                        x={X(x) + (links ? -7 : 7)}
+                        x={linksRaus ? RAND.l + 3 : X(x) + (links ? -7 : 7)}
                         y={Y(0) - 7}
-                        textAnchor={links ? 'end' : 'start'}
+                        textAnchor={links && !linksRaus ? 'end' : 'start'}
                         fillOpacity="0.8"
                         stroke={farben.flaeche}
                         strokeWidth="3"

@@ -264,8 +264,9 @@ one detail page per unit with controls, energy history and a phone view. They us
 
 The adapter, its settings page, device cards and data point names are available in English, German,
 Russian, Portuguese, Dutch, French, Italian, Spanish, Polish, Ukrainian and Simplified Chinese. German
-and English are maintained by the author; the other translations are machine-assisted and have not been
-reviewed by native speakers – corrections are welcome (issue or pull request). The vis widgets
+and English are maintained by the author; the other nine translations are machine-made and
+machine-proofread (consistent terms, layout checked in every language), but have not been reviewed by
+native speakers – corrections are welcome (issue or pull request). The vis widgets
 show their texts in the same eleven languages (they follow the language of vis and fall back to English);
 their attribute names are translated too. The step-by-step
 guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).

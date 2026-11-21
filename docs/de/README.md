@@ -400,8 +400,9 @@ oder Tabelle. Die Daten kommen aus den eigenen Zählern des Adapters (48 Stunden
 
 Die Oberfläche gibt es in elf Sprachen (en, de, ru, pt, nl, fr, it, es, pl, uk, zh-cn); sie folgt der
 Systemsprache des ioBroker, Zahlen stehen mit dem Dezimalzeichen der Sprache. Deutsch und Englisch
-pflegt der Autor selbst. Alle anderen Übersetzungen sind maschinell unterstützt und nicht von
-Muttersprachlern durchgesehen – Korrekturen sind willkommen. Die VIS-Bausteine zeigen ihre Texte in
+pflegt der Autor selbst. Die anderen neun Übersetzungen sind maschinell erstellt und maschinell
+gegengelesen (Begriffe einheitlich, Darstellung in allen Sprachen bei breitem und schmalem Fenster
+geprüft), aber nicht von Muttersprachlern durchgesehen – Korrekturen sind willkommen. Die VIS-Bausteine zeigen ihre Texte in
 denselben elf Sprachen – sie folgen der Sprache von VIS, mit Rückfall auf Englisch (die Attributnamen
 sind ebenfalls übersetzt); diese Anleitung gibt es auf Deutsch und Englisch.
 

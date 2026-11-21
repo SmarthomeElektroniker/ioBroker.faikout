@@ -256,7 +256,7 @@
   "helpModSicherung": "Prima di ogni scrittura l’adattatore conserva lo stato letto – gli ultimi cinque per modulo.",
   "btnModRestore": "Carica questo stato nel formulario",
   "labelFuehlerWeg": "Come agisce il punto dati ambiente",
-  "optWegSollwert": "Adeguare il setpoint dell’apparecchio (consigliato)",
+  "optWegSollwert": "Adeguare il setpoint (consigliato)",
   "optWegModul": "Inviare il valore del sensore al modulo",
   "textWegSollwert": "Il setpoint sull’apparecchio si discosta allora dall’obiettivo di un valore pari alla correzione del sensore (al massimo ±3 K). L’obiettivo stesso è indicato nel motivo sulla scheda del dispositivo.",
   "labelRaumTraege": "Il sensore è lento (minuti)",

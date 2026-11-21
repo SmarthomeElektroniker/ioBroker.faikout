@@ -256,7 +256,7 @@
   "helpModSicherung": "Avant chaque écriture, l’adaptateur conserve l’état lu – les cinq derniers par module.",
   "btnModRestore": "Charger cet état dans le formulaire",
   "labelFuehlerWeg": "Comment agit le point de données de la pièce",
-  "optWegSollwert": "Ajuster la consigne de l’appareil (recommandé)",
+  "optWegSollwert": "Ajuster la consigne (recommandé)",
   "optWegModul": "Envoyer la valeur du capteur au module",
   "textWegSollwert": "La consigne de l’appareil s’écarte alors de la cible de la correction du capteur (au plus ±3 K). La cible elle-même figure dans la raison sur la carte de l’appareil.",
   "labelRaumTraege": "Le capteur est lent (minutes)",
