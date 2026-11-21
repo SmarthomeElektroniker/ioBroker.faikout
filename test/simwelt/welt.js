@@ -48,7 +48,7 @@ class Welt {
      * @param {string|object} [opt.szenario] Name oder Szenario-Objekt (Vorgabe heizenKalterTag)
      * @param {number} [opt.seed] Zufallsstartwert
      * @param {string} [opt.praefix] Vorsatz der Modulnamen (Vorgabe "sim-")
-     * @param {Array<object>} [opt.module] je Modul {typ, name?, id?, einstellungen?, anlage?, physik?, nimmtDemand?, abtauMeldung?, feuchteFuehler?}
+     * @param {Array<object>} [opt.module] je Modul {typ, name?, id?, einstellungen?, anlage?, physik?, nimmtDemand?, abtauMeldung?, feuchteFuehler?, austrittSensor?}
      * @param {number} [opt.zeitfaktor] simulierte Sekunden Physik je Modulsekunde
      * @param {(modul: string, topic: string, payload: string, o: {retain: boolean}) => void} opt.senden Ausgang
      * @param {() => number} [opt.uhr] Wanduhr der Module; ohne Angabe Startzeit des Szenarios + Modulzeit

@@ -360,6 +360,7 @@ class Modul {
      * @param {'immer'|'nie'|'nurEin'} [opt.nimmtDemand] ueberschreibt den Typ
      * @param {boolean} [opt.abtauMeldung] Anlage meldet `antifreeze` -> action "defrosting" (S21 tut das nicht, Z. 1043)
      * @param {boolean} [opt.feuchteFuehler] Anlage meldet `hum`
+     * @param {boolean} [opt.austrittSensor] zusaetzliches Feld `simoutlet`: simulierter Sensor am Luftaustritt
      * @param {number} [opt.bootSek] Dauer eines Neustarts
      */
     constructor(opt) {
@@ -377,6 +378,7 @@ class Modul {
         this.nimmtDemand = opt.nimmtDemand || this.art.nimmtDemand;
         this.abtauMeldung = !!opt.abtauMeldung;
         this.feuchteFuehler = !!opt.feuchteFuehler;
+        this.austrittSensor = !!opt.austrittSensor;
         this.bootSek = opt.bootSek ?? 6;
         // Die Anlage selbst (was die Fernbedienung zeigen wuerde)
         this.ac = {
@@ -1589,6 +1591,11 @@ class Modul {
         }
         if (k('comp')) {
             j.ganz('comp', d.comp);
+        }
+        if (this.austrittSensor) {
+            // KEIN Feld der Firmware: simulierter Sensor am Luftaustritt, damit der Kalibrierassistent des
+            // Adapters im Testnetz einen Datenpunkt hat (der Adapter legt unbekannte Felder unter status.* an)
+            j.zahl('simoutlet', this.physik.messwerte().austritt, 1);
         }
         if (this.bleVerbunden()) {
             const b = this.bleWerte();

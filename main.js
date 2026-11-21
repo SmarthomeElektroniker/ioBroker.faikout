@@ -11,6 +11,7 @@ const brokerextern = require('./lib/brokerextern');
 const felder = require('./lib/fields');
 const namen = require('./lib/namen');
 const verbrauch = require('./lib/verbrauch');
+const { Effizienz } = require('./lib/effizienz');
 const { FaikoutDeviceManagement } = require('./lib/devicemanager');
 const discovery = require('./lib/discovery');
 const suche = require('./lib/suche');
@@ -201,6 +202,8 @@ class Faikout extends utils.Adapter {
         // Zweig, den er fuer angelegt haelt - "State ... has no existing object".
         await this.subscribeObjectsAsync('*');
         this.regelung = new Bedarfsregelung(this);
+        // Waermeleistung, COP und Mengen je Geraet (lib/effizienz)
+        this.effizienz = new Effizienz(this);
         // Systemsprache im Betrieb umgestellt: Begruendungen und Szenennamen folgen ohne Neustart
         if (typeof this.subscribeForeignObjectsAsync === 'function') {
             await this.subscribeForeignObjectsAsync('system.config');
@@ -283,6 +286,9 @@ class Faikout extends utils.Adapter {
             this.verbindungPruefen();
             if (this.regelung) {
                 this.regelung.takt().catch(e => this.log.warn(`Climate control: ${e.message}`));
+            }
+            if (this.effizienz) {
+                this.effizienz.takt().catch(e => this.log.warn(`Efficiency: ${e.message}`));
             }
         }, 30000);
         this.stundenTaktStarten();
@@ -773,6 +779,13 @@ class Faikout extends utils.Adapter {
 
         await this.zaehlerVerarbeiten(id, g, daten);
         await this.wlanStufeAktualisieren(id, g, daten);
+        if (this.effizienz) {
+            try {
+                await this.effizienz.status(id, g, daten);
+            } catch (e) {
+                this.log.warn(`${geraetName} efficiency: ${e.message}`);
+            }
+        }
     }
 
     /**
@@ -1153,6 +1166,9 @@ class Faikout extends utils.Adapter {
         this.geraete.delete(id);
         if (this.regelung) {
             this.regelung.geraete.delete(id);
+        }
+        if (this.effizienz) {
+            this.effizienz.vergessen(id);
         }
         const praefix = `${id}.`;
         for (const speicher of [this.geschrieben, this.reihenStunde]) {
@@ -2260,6 +2276,10 @@ class Faikout extends utils.Adapter {
             // Zustand der Regelung sichern (Sperren, Haltezeiten, laufender Feuchteeingriff).
             if (this.regelung) {
                 await this.regelung.sichernAlle();
+            }
+            // Mengen, gelernte Drehzahlen und eine laufende Kalibriermessung sichern.
+            if (this.effizienz) {
+                await this.effizienz.sichernAlle();
             }
             // Zaehlerstaende sichern, damit nach dem Neustart weitergezaehlt wird.
             for (const [id, g] of this.geraete) {

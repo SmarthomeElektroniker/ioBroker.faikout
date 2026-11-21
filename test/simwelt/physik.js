@@ -86,6 +86,23 @@ const VORGABE = {
     // (Faikout.c Z. 688, 3843). Mit 0,5 laesst jeder Sprung die Vorhersage der Firmware
     // (Z. 4180-4195) um 1 K ausschlagen - das Faikout-Auto taktet dann die Anlage.
     fuehlerAufloesung: 0.1,
+    // Luft am Innengeraet (fuer Waermeleistung/COP, Adapter-Teil "Effizienz"): Der Luftstrom folgt der
+    // Drehzahl stueckweise linear ueber die Stufenpunkte; der Faktor verstellt den WAHREN Luftstrom gegen das
+    // Datenblatt (verschmutzter Filter). epsWahr = (T_aus - T_ein) / (liquid - T_ein) je Betriebsart.
+    luftstromFaktor: 1,
+    epsHeizen: 1.12,
+    epsKuehlen: 0.84,
+    epsGefaelle: 0, // relativer Unterschied von epsWahr zwischen leiser und hoher Stufe (0 = konstant)
+    austrittTraege: 90, // s Zeitkonstante des simulierten Austrittssensors
+    austrittRauschen: 0.15, // K Ausschlag des Sensorrauschens
+};
+
+/** Drehzahl je fest eingestellter Luefterstufe (1/min); Auto laeuft wie bisher mit 600 + 6 * Frequenz. */
+const STUFEN_DREHZAHL = { Q: 450, 1: 600, 2: 720, 3: 840, 4: 980, 5: 1140 };
+/** Wahrer Luftstrom je Stufe in m³/min - Werte des FVXM35A (Daikin-Produkttabelle), Zwischenstufen gemittelt. */
+const STUFEN_LUFT = {
+    heizen: { Q: 4.1, 1: 5.6, 2: 6.4, 3: 7.2, 4: 8.5, 5: 9.8 },
+    kuehlen: { Q: 4.1, 1: 4.9, 2: 5.95, 3: 7.0, 4: 8.1, 5: 9.2 },
 };
 
 /** Raum, Aussenluft und Anlage. */
@@ -140,6 +157,10 @@ class Physik {
         this.abtauRest = 0;
         this.abtauZaehler = 0;
         this.abtauungen = 0;
+        // eigener Zufall fuer den Austrittssensor: die Folge der Aussenluft bleibt, wie sie war
+        this.zufallSensor = zufallsquelle((opt.seed ?? 1) + 7919);
+        this.austritt = opt.raum ?? 20;
+        this.austrittWahr = opt.raum ?? 20;
         this.starts = 0;
         this.watt = 0;
         this.wh = 0;
@@ -323,7 +344,12 @@ class Physik {
         }
         // Das Register braucht etwa eine Minute, bis die Leistung im Raum ankommt.
         this.qWirksam += ((q - this.qWirksam) * TAKT) / 60;
-        this.luefter = s.power ? (this.abtauen ? 0 : 600 + 6 * this.comp) : 0;
+        this.luefter = s.power ? (this.abtauen ? 0 : (STUFEN_DREHZAHL[s.fan] ?? 600 + 6 * this.comp)) : 0;
+        // Austrittsluft: was das Register an die Luft abgibt, verteilt auf den Luftstrom
+        const m3s = this.luftstrom() / 60;
+        const rho = 101325 / (287.05 * (this.luft + 273.15));
+        this.austrittWahr = m3s > 0 ? this.luft + this.qWirksam / (rho * 1006 * m3s) : this.luft;
+        this.austritt += ((this.austrittWahr - this.austritt) * TAKT) / p.austrittTraege;
         this.watt = s.power ? p.grundLast + pVerd : p.ruheLast;
         const wh = (this.watt * TAKT) / 3600;
         this.wh += wh;
@@ -350,6 +376,44 @@ class Physik {
     }
 
     /**
+     * Wahrer Luftstrom des Innengeraets zur augenblicklichen Drehzahl.
+     *
+     * @returns {number} m³/min
+     */
+    luftstrom() {
+        const tafel = STUFEN_LUFT[this.heizt ? 'heizen' : 'kuehlen'];
+        const punkte = Object.keys(STUFEN_DREHZAHL)
+            .map(k => [STUFEN_DREHZAHL[k], tafel[k]])
+            .sort((a, b) => a[0] - b[0]);
+        const rpm = this.luefter || 0;
+        let [x0, y0] = [0, 0];
+        let v = null;
+        for (const [x1, y1] of punkte) {
+            if (rpm <= x1) {
+                v = y0 + ((y1 - y0) * (rpm - x0)) / (x1 - x0);
+                break;
+            }
+            [x0, y0] = [x1, y1];
+        }
+        if (v === null) {
+            v = (y0 * rpm) / x0;
+        }
+        return v * this.p.luftstromFaktor;
+    }
+
+    /**
+     * Wahre Wirksamkeit (Luft gegen `liquid`) zum augenblicklichen Luftstrom.
+     *
+     * @returns {number} epsWahr
+     */
+    epsWahr() {
+        const p = this.p;
+        const tafel = STUFEN_LUFT[this.heizt ? 'heizen' : 'kuehlen'];
+        const lage = grenze((this.luftstrom() / p.luftstromFaktor - tafel.Q) / (tafel[5] - tafel.Q), 0, 1);
+        return (this.heizt ? p.epsHeizen : p.epsKuehlen) * (1 + p.epsGefaelle * (0.5 - lage));
+    }
+
+    /**
      * Was die Anlage ueber ihre Fuehler meldet (Schrittweite `fuehlerAufloesung`) - samt Szenario-Eingriffen.
      *
      * @returns {{home: number, inlet: number, outside: number, liquid: number, comp: number, fanrpm: number,
@@ -366,7 +430,11 @@ class Physik {
         }
         let liquid = this.luft;
         if (this.comp > 0) {
-            liquid = this.abtauen ? 2 : this.heizt ? 28 + 18 * anteil : 14 - 8 * anteil;
+            // liquid passt zur wahren Austrittsluft: T_aus = T_ein + epsWahr * (liquid - T_ein). Steht der
+            // Luefter (Anlauf), bleibt die alte Naeherung ueber die Frequenz.
+            const naeherung = this.heizt ? 28 + 18 * anteil : 14 - 8 * anteil;
+            const ausLuft = this.luft + (this.austrittWahr - this.luft) / this.epsWahr();
+            liquid = this.abtauen ? 2 : this.luefter > 0 ? ausLuft : naeherung;
         }
         const w = {
             home: stufe(this.luft),
@@ -381,6 +449,8 @@ class Physik {
             Whcooling: Math.floor(this.whKuehlen / 100) * 100,
             hum: Math.round(this.feuchte()),
             antifreeze: this.abtauen,
+            // simulierter Sensor am Luftaustritt (traege, mit Rauschen) - kein Wert der Anlage
+            austritt: Math.round((this.austritt + (this.zufallSensor() - 0.5) * 2 * p.austrittRauschen) * 10) / 10,
         };
         for (const k of Object.keys(this.fest)) {
             if (k in w) {
@@ -417,8 +487,12 @@ class Physik {
             abtauen: this.abtauen,
             starts: this.starts,
             abtauungen: this.abtauungen,
+            // wahre Waerme an die Raumluft (W, negativ = Kuehlen), wahrer Luftstrom und wahre Austrittsluft
+            waerme: Math.round(this.qWirksam),
+            luftstrom: Math.round(this.luftstrom() * 100) / 100,
+            austritt: Math.round(this.austrittWahr * 100) / 100,
         };
     }
 }
 
-module.exports = { Physik, zufallsquelle, saettigung, VORGABE };
+module.exports = { Physik, zufallsquelle, saettigung, VORGABE, STUFEN_DREHZAHL, STUFEN_LUFT };
