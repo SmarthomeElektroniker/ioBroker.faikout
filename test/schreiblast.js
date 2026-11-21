@@ -272,8 +272,9 @@ describe('Schreiblast je Nachricht (Issue #5)', () => {
         const d = neuerAdapter(new Map(a.objekte));
         d.onMqtt('state/Daikin 1OG', meldung(500));
         await warte();
-        expect(d.werte.get('Daikin_1OG.consumption.total.currentHour').val).to.equal(0);
-        expect(d.werte.get('Daikin_1OG.consumption.total.today').val).to.equal(0);
+        // Der Ruecksprung selbst zaehlt nicht; was bis zur letzten Sicherung gezaehlt war, bleibt stehen.
+        expect(d.werte.get('Daikin_1OG.consumption.total.currentHour').val).to.equal(0.3);
+        expect(d.werte.get('Daikin_1OG.consumption.total.today').val).to.equal(0.3);
     });
 });
 

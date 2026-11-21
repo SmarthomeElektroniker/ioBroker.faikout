@@ -685,6 +685,8 @@
                         // not embedded
                     }
                     document.body.classList.toggle('dark', !!dark);
+                    // Rollbalken und Formularfelder des Browsers folgen dem Thema (sonst weisser Rollbalken im dunklen Dialog)
+                    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
                     applyColors();
                 }
 
@@ -871,6 +873,11 @@
                                     .map(p => ({ m: p.m - d * DAY, type: p.type })),
                             };
                             render();
+                            // sagen, dass kopiert wurde und wie es weitergeht - vorher wurden nur die
+                            // Einfuegen-Symbole etwas heller (Volltest 21.11.2026)
+                            if (info.texts.pKopiert) {
+                                status(info.texts.pKopiert.replace('{tag}', dayName(d, 'long')));
+                            }
                         });
                         const paste = tool(ICON_PASTE, info.texts.pTagEinfuegen, () => pasteDay(d));
                         paste.disabled = !clip;

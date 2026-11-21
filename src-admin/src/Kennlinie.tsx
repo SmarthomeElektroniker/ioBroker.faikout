@@ -158,6 +158,8 @@ interface AnsichtProps {
     /** das Geraet darf zur Vorgabe zurueck (Liste leeren) */
     mitVorgabe: boolean;
     onWert: (zeilen: Punkt[]) => void;
+    /** meldet dem Formular eine ungueltige Kennlinie ('' = in Ordnung) - der Admin sperrt dann "Speichern" */
+    onFehler?: (meldung: string) => void;
 }
 
 /** Bild und Tabelle - ohne jsonConfig, damit es sich einzeln rendern und pruefen laesst. */
@@ -465,6 +467,14 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
     if (fehler) {
         meldungen.push(fehler.n ? t(fehler.schluessel, fehler.n) : t(fehler.schluessel));
     }
+    // Nur die eigene Liste sperrt das Speichern (nicht die Grenzen - die pruefen ihre eigenen Felder).
+    const fehlerText = fehler ? meldungen[0] : '';
+    const onFehler = props.onFehler;
+    useEffect(() => {
+        if (onFehler) {
+            onFehler(fehlerText);
+        }
+    }, [fehlerText, onFehler]);
     if (!(unter >= 30 && unter <= ober && ober <= 100)) {
         meldungen.push(t('fGrenzen'));
     }
@@ -925,7 +935,9 @@ function useArbeitspunkt(props: ConfigGenericProps, geraet: string, obergrenze: 
     return punkt;
 }
 
-function KennlinieFeld(props: ConfigGenericProps & { richtung: Richtung; onWert: (zeilen: Punkt[]) => void }): React.JSX.Element {
+function KennlinieFeld(
+    props: ConfigGenericProps & { richtung: Richtung; onWert: (zeilen: Punkt[]) => void; onFehler: (meldung: string) => void },
+): React.JSX.Element {
     const f = felder(props, props.richtung);
     const punkt = useArbeitspunkt(props, f.geraet, f.obergrenze, props.richtung);
     const palette = props.oContext?.theme?.palette;
@@ -947,6 +959,7 @@ function KennlinieFeld(props: ConfigGenericProps & { richtung: Richtung; onWert:
             }}
             mitVorgabe={f.mitVorgabe}
             onWert={props.onWert}
+            onFehler={props.onFehler}
         />
     );
 }
@@ -961,12 +974,34 @@ class Kennlinie extends ConfigGeneric<ConfigGenericProps, ConfigGenericState> {
         }
     };
 
+    /**
+     * Ungueltige Kennlinie ans Formular melden: der Admin sperrt dann "Speichern" und markiert den
+     * Geraete-Eintrag - vorher liess sich eine Liste mit leerem oder doppeltem Punkt speichern.
+     */
+    letzterFehler = '';
+    onFehler = (meldung: string): void => {
+        if (this.props.attr && meldung !== this.letzterFehler) {
+            this.letzterFehler = meldung;
+            this.onError(this.props.attr, meldung || undefined);
+        }
+    };
+
+    componentWillUnmount(): void {
+        // ein zugeklappter oder geloeschter Eintrag darf das Formular nicht gesperrt zuruecklassen
+        if (this.props.attr && this.letzterFehler) {
+            this.letzterFehler = '';
+            this.onError(this.props.attr, undefined);
+        }
+        super.componentWillUnmount?.();
+    }
+
     renderItem(): React.JSX.Element {
         return (
             <KennlinieFeld
                 {...this.props}
                 richtung={this.richtung}
                 onWert={this.onWert}
+                onFehler={this.onFehler}
             />
         );
     }

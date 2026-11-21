@@ -889,20 +889,38 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(items.regelPlan.hidden).to.equal('_states.a?.val !== true');
     });
 
-    it('drei Symbolknoepfe: je Schalter ein gefuellter (aus-schalten) und ein blasser (ein-schalten) Knopf mit Tooltip', async () => {
+    it('Automatik: je Regelung eine beschriftete Schalterzeile (Zustand am Schalter, nicht nur als Farbe), Hinweis "wirkt sofort"', async () => {
         const { a } = await mitRegelung();
         const knoepfe = (await kartenLaden(a)).karten[0].customInfo.schema.items.regelKnoepfe.items;
+        expect(knoepfe.label.text).to.equal(oberflaeche.TEXTE.automatik);
+        expect(knoepfe.hinweis.text.de).to.equal('Wirkt sofort – ohne Speichern');
+        expect(dm.REGEL_SCHALTER.map(s => oberflaeche.TEXTE[s.text].de)).to.eql(['Leistungsgrenze', 'Feuchte', 'Wochenplan']);
         for (const s of dm.REGEL_SCHALTER) {
-            const an = knoepfe[`${s.name}On`];
-            const aus = knoepfe[`${s.name}Off`];
-            expect(an.oid).to.equal(`faikout.0.${ID}.${s.rel}`);
-            expect(an).to.include({ control: 'button', buttonValue: false, hidden: '_states.v?.val !== true' });
-            expect(aus).to.include({ control: 'button', buttonValue: true, hidden: '_states.v?.val === true' });
-            expect(an.tooltip).to.equal(oberflaeche.TEXTE[s.an]);
-            expect(aus.tooltip).to.equal(oberflaeche.TEXTE[s.aus]);
-            expect(an.falseTextStyle.backgroundImage).to.contain('data:image/svg+xml');
-            expect(an.falseTextStyle.backgroundColor).not.to.equal(aus.falseTextStyle.backgroundColor);
+            const z = knoepfe[s.name];
+            expect(z).to.include({ type: 'state', control: 'switch', foreign: true, oid: `faikout.0.${ID}.${s.rel}` });
+            expect(z.label).to.equal(oberflaeche.TEXTE[s.text]);
+            expect(z.labelIcon).to.match(/^data:image\/svg\+xml;base64,/);
         }
+        // keine reinen Symbolknoepfe mehr
+        expect(Object.keys(knoepfe)).to.eql(['label', 'hinweis', 'bedarf', 'feuchte', 'plan']);
+    });
+
+    it('Knoepfe − und + neben dem Schieber schreiben die vorhandenen Datenpunkte regulation.target.down/up', async () => {
+        const { a } = await mitRegelung({ 'regulation.target.down': false, 'regulation.target.up': false });
+        const items = (await kartenLaden(a)).karten[0].customInfo.schema.items;
+        expect(items.targetMinus).to.include({ control: 'button', buttonValue: true, oid: `faikout.0.${ID}.regulation.target.down` });
+        expect(items.targetPlus).to.include({ control: 'button', buttonValue: true, oid: `faikout.0.${ID}.regulation.target.up` });
+        expect(items.targetMinus.falseText.de).to.equal('−');
+        expect(items.targetPlus.falseText.de).to.equal('+');
+        // jeder Knopf zeigt auf einen Datenpunkt, den es gibt (sonst blendet der Admin ihn aus)
+        for (const k of [items.targetMinus, items.targetPlus]) {
+            expect(a.objekte.has(k.oid.slice(a.namespace.length + 1))).to.equal(true);
+        }
+        expect(items.targetSlider.xs).to.equal(8);
+        // ohne die Datenpunkte: nur der Schieber ueber die volle Breite
+        const ohne = (await kartenLaden((await mitRegelung()).a)).karten[0].customInfo.schema.items;
+        expect(ohne.targetMinus).to.equal(undefined);
+        expect(ohne.targetSlider.xs).to.equal(12);
     });
 
     it('Muster der Karte: Zustand, Probelauf, Balken, "ruht (Faikout-Auto)", nicht unterstuetzt, Fuehler-Rueckfall', () => {
@@ -1045,6 +1063,42 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             await a.deviceManagement.wochenplanDialog(ID, k);
             expect(k.meldungen[0].de).to.equal('Der Wochenplan wurde nicht gespeichert: der Plan hat keinen Schaltpunkt');
             expect(a.gesetzt).to.eql([]);
+        });
+
+        it('"Plan uebernehmen" mit zuletzt fehlerhafter Eingabe speichert nichts und sagt warum', async () => {
+            const { a } = await mitRegelung();
+            const k = kontext(async schema => {
+                const token = kennung(schema);
+                const n = (program, abwesenheit) =>
+                    a.deviceManagement.wochenplanNachricht('wochenplanEntwurf', { device: ID, token, program, abwesenheit });
+                const plan = [{ day: 'Mon', time: '06:00', type: 'komfort' }];
+                // erst ein gueltiger Entwurf, danach die Abwesenheit mit Ende vor Beginn
+                expect((await n(plan)).ok).to.equal(true);
+                const falsch = { aktiv: true, von: '2026-12-27T00:00', bis: '2026-12-26T00:00', szene: 'abwesend' };
+                expect((await n(plan, falsch)).error).to.equal(oberflaeche.TEXTE.pAbwFehler.de);
+                return {};
+            });
+            await a.deviceManagement.wochenplanDialog(ID, k);
+            expect(k.meldungen).to.have.length(1);
+            expect(k.meldungen[0].de).to.equal(`Der Wochenplan wurde nicht gespeichert: ${oberflaeche.TEXTE.pAbwFehler.de}`);
+            expect(k.meldungen[0].en).to.equal(`The weekly schedule was not saved: ${oberflaeche.TEXTE.pAbwFehler.en}`);
+            expect(a.gesetzt).to.eql([]);
+        });
+
+        it('ein spaeter korrigierter Fehler sperrt das Speichern nicht mehr', async () => {
+            const { a } = await mitRegelung();
+            const k = kontext(async schema => {
+                const token = kennung(schema);
+                const n = (program, abwesenheit) =>
+                    a.deviceManagement.wochenplanNachricht('wochenplanEntwurf', { device: ID, token, program, abwesenheit });
+                const plan = [{ day: 'Mon', time: '06:00', type: 'komfort' }];
+                await n(plan, { aktiv: true, von: '2026-12-27T00:00', bis: '2026-12-26T00:00', szene: 'abwesend' });
+                expect((await n(plan, { aktiv: true, von: '2026-12-27T00:00', bis: '2026-12-28T00:00', szene: 'abwesend' })).ok).to.equal(true);
+                return {};
+            });
+            await a.deviceManagement.wochenplanDialog(ID, k);
+            expect(k.meldungen).to.eql([]);
+            expect(a.gesetzt.some(g => g.id === `${ID}.regulation.schedule.absenceJson` && g.wert)).to.equal(true);
         });
 
         it('fremde oder abgelaufene Kennung wird abgewiesen', async () => {

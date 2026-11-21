@@ -298,8 +298,14 @@ vis.binds.faikout = {
                 .toggleClass('fk-blank', data.rahmen === false);
             $div.empty().append($wurzel);
 
-            var zeichnen = aufbau($wurzel, ctx, data);
-            if (typeof zeichnen !== 'function') return;
+            var zeichnenBaustein = aufbau($wurzel, ctx, data);
+            if (typeof zeichnenBaustein !== 'function') return;
+            // Der Ein/Aus-Schalter im Kopf zeigt in jedem Baustein den Zustand der Anlage - Leistung,
+            // Verlauf, Messwerte und Verbrauch liessen ihn sonst immer auf "aus" stehen.
+            var zeichnen = function () {
+                zeichnenBaustein.apply(this, arguments);
+                $wurzel.find('.fk-kopf .fk-schalter').toggleClass('fk-an', ctx.hat('control.power') ? !!ctx.wert('control.power') : true);
+            };
 
             var gebunden = [];
             Object.keys(zustaende).forEach(function (id) {

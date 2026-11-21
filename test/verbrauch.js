@@ -49,10 +49,28 @@ describe('Verbrauchsrechnung', () => {
         let s = v.verarbeiten(null, 3774300, zeit(17, 10)).stand;
         s = v.verarbeiten(s, 3774800, zeit(17, 10)).stand;
         const r = v.verarbeiten(s, 12, zeit(17, 10));
-        expect(r.werte.currentHour, 'nach dem Reset wieder bei null').to.equal(0);
-        expect(r.werte.today).to.equal(0);
+        // der Sprung selbst zaehlt nicht - was bis dahin gezaehlt war (0,5 kWh), bleibt aber stehen
+        expect(r.werte.currentHour, 'bisher Gezaehltes bleibt, der Sprung zaehlt nicht').to.equal(0.5);
+        expect(r.werte.today).to.equal(0.5);
+        expect(r.werte.thisMonth).to.equal(0.5);
         expect(r.werte.total).to.equal(0.012);
         expect(r.hinweise.join(' ')).to.match(/went backwards/);
+    });
+
+    it('nach einem Zählerrücksprung zählen Stunde, Tag und Monat nahtlos weiter und bleiben zueinander stimmig', () => {
+        let s = v.verarbeiten(null, 5000000, zeit(17, 9)).stand;
+        s = v.verarbeiten(s, 5001000, zeit(17, 9)).stand; // 1,0 kWh in Stunde 9
+        s = v.verarbeiten(s, 5001400, zeit(17, 10)).stand; // 0,4 kWh in Stunde 10
+        s = v.verarbeiten(s, 100, zeit(17, 10)).stand; // Modul neu gestartet, Zaehler bei 100 Wh
+        const r = v.verarbeiten(s, 700, zeit(17, 10)); // danach 0,6 kWh
+        expect(r.werte.currentHour).to.equal(1);
+        expect(r.werte.today).to.equal(2);
+        expect(r.werte.thisMonth).to.equal(2);
+        // Stundenring plus laufende Stunde ergibt den Tageswert
+        const ring = r.werte.hours.reduce((a, h) => a + (h.kwh || 0), 0);
+        expect(ring + r.werte.currentHour).to.equal(r.werte.today);
+        expect(r.werte.days[r.werte.days.length - 1].kwh).to.equal(2);
+        expect(r.werte.months[r.werte.months.length - 1].kwh).to.equal(2);
     });
 
     it('vermerkt Ausfallzeiten als Lücke statt sie einer Stunde zuzuschlagen', () => {

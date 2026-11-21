@@ -180,6 +180,8 @@ class Faikout extends utils.Adapter {
     // ---------------------------------------------------------------- Start
 
     async onReady() {
+        // Startzeit: die Einrichtungsseite wartet kurz nach dem Start auf das erste Modul (oberflaeche.einrichtungStandHtml)
+        this.startZeit = Date.now();
         await this.setState('info.connection', { val: false, ack: true });
         if (await this.konfigUmziehen()) {
             return; // die Instanz startet mit der umgezogenen Konfiguration neu

@@ -824,7 +824,57 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(attrs).to.include.members(['geraet', 'betrieb', 'strategie', 'kennlinieHeizen', 'kennlinieKuehlen', 'untergrenze', 'obergrenze', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'szenen', 'aussenQuelle', 'aussenDp', 'raumQuelle', 'raumDp', 'feuchteQuelle', 'feuchteDp', 'feuchteMassnahme', 'frostAb']);
         expect(attrs).not.to.include('eigeneKennlinie');
         expect(JSON.stringify(konfig)).not.to.contain('regelQuellen');
-        expect(Object.keys(r)[0]).to.equal('regelProbelauf');
+        // ganz oben nur der Hinweis "Adapter laeuft nicht" (sichtbar bei gestoppter Instanz), dann der Probelauf
+        expect(Object.keys(r).slice(0, 2)).to.eql(['_nichtAktiv', 'regelProbelauf']);
+        expect(r._nichtAktiv).to.include({ type: 'staticText', hidden: '_alive' });
+    });
+
+    it('jsonConfig: Hinweise des Volltests - Adapter gestoppt, Aufklappen, Szenenspalten, Feinabstimmung, lesbare Zwischenueberschriften', () => {
+        // jeder Reiter sagt bei gestoppter Instanz, warum Listen leer und Knoepfe grau sind
+        for (const [name, reiter] of Object.entries(konfig.items)) {
+            const erstes = Object.entries(reiter.items)[0];
+            expect(erstes[0], name).to.equal('_nichtAktiv');
+            expect(erstes[1], name).to.include({ type: 'staticText', text: 'textNichtAktiv', hidden: '_alive' });
+        }
+        const r = konfig.items.tabRegelung.items;
+        // Aufklapp-Hinweis direkt vor der Geraeteliste
+        const namen = Object.keys(r);
+        expect(namen[namen.indexOf('regelGeraete') - 1]).to.equal('_tAufklappen');
+        expect(admin('de').textRegelAufklappen).to.contain('aufzuklappen');
+        // Szenen: was Hoechstleistung, "Bedarf regeln" und "Feuchte regeln" bewirken - je Geraet und in der Vorgabe
+        const g = r.regelGeraete.items;
+        expect(g[g.findIndex(i => i.attr === 'szenen') + 1]).to.include({ type: 'staticText', text: 'textSzenenSpalten' });
+        expect(r._pVorgabe.items._tSzenenSpalten.text).to.equal('textSzenenSpalten');
+        for (const l of o.SPRACHEN) {
+            const t = admin(l);
+            for (const spalte of ['colSzDeckel', 'colSzBedarf', 'colSzFeuchte']) {
+                expect(t.textSzenenSpalten, `${l} ${spalte}`).to.contain(t[spalte]);
+            }
+        }
+        // Feinabstimmung und "Fruehestens alle ... Minuten" erklaeren sich
+        expect(r._pFein.items.regelTotband.help).to.equal('helpTotband');
+        expect(r._pFein.items.regelProzentProK.help).to.equal('helpProzentProK');
+        expect(r._pFein.items.regelBand.help).to.equal('helpBand');
+        expect(g.find(i => i.attr === 'korrAbstandMin').help).to.equal('helpKorrAbstand');
+        // Kopieren: Erklaerung, Knopf mit Verb und Objekt
+        expect(Object.keys(r._pKopie.items)[0]).to.equal('_tKopie');
+        expect(admin('de').btnKopie).to.equal('Werte übernehmen');
+        // "Pruefen" grau ohne Adresse: der Grund steht daneben
+        expect(konfig.items.tabSearch.items._bindAdresseFehlt.hidden).to.contain('data.moduleAddress');
+        // Moduleinstellungen wirken sofort - das steht da
+        expect(konfig.items.tabModule.items.modSofortText.text).to.equal('textModulSofort');
+        // keine Zwischenueberschrift mehr in 10-px-Schrift (h5)
+        const klein = [];
+        const lauf = x => {
+            if (x && typeof x === 'object') {
+                if (x.type === 'header' && (x.size || 5) >= 5) {
+                    klein.push(x.text);
+                }
+                Object.values(x).forEach(lauf);
+            }
+        };
+        lauf(konfig);
+        expect(klein).to.eql([]);
     });
 
     it('jsonConfig: Kennlinien je Geraet sind die ziehbare Komponente am Tabellen-Attribut, das reine Bild ist weg', () => {
@@ -1142,6 +1192,40 @@ describe('UX-Funde 21.11.2026', () => {
         a.brokerZiel = () => ({ extern: true, adresse: 'mq.lan', port: 1883 });
         const leer = (await frage(a, 'einrichtungStand', {})).antwort;
         expect(leer).to.contain('Keine Verbindung zum externen Broker mq.lan:1883').and.to.contain('Noch hat sich kein Modul gemeldet');
+    });
+
+    it('Einrichtung: kurz nach dem Start wartet der Stand auf das erste Modul statt sofort "kein Modul" zu melden', async () => {
+        const a = adapter();
+        a.broker = {};
+        a.brokerZiel = () => ({ extern: false, port: 1888 });
+        const alle = a.geraete;
+        // gerade gestartet, noch kein Modul: die Antwort wartet, bis sich eines meldet
+        a.geraete = new Map();
+        a.startZeit = 1000;
+        let uhr = 1500;
+        let gewartet = 0;
+        const warte = async ms => {
+            gewartet += ms;
+            uhr += ms;
+            if (gewartet >= 1500) {
+                a.geraete = alle; // die Module haben sich verbunden
+            }
+        };
+        const html = await o.einrichtungStandHtml(a, { warte, jetzt: () => uhr });
+        expect(gewartet).to.equal(1500);
+        expect(html).to.contain('Module, die sich gemeldet haben: 2').and.not.to.contain('Noch hat sich kein Modul gemeldet');
+        // meldet sich keines, endet das Warten nach START_WARTEN_MS mit der ehrlichen Auskunft
+        a.geraete = new Map();
+        uhr = 1500;
+        gewartet = 0;
+        const leer = await o.einrichtungStandHtml(a, { warte: async ms => void ((gewartet += ms), (uhr += ms)), jetzt: () => uhr });
+        expect(leer).to.contain('Noch hat sich kein Modul gemeldet');
+        expect(gewartet).to.be.within(o.START_WARTEN_MS - 1000, o.START_WARTEN_MS);
+        // laeuft der Adapter schon laenger, wird gar nicht gewartet
+        uhr = 1000 + o.START_WARTEN_MS + 1;
+        gewartet = 0;
+        await o.einrichtungStandHtml(a, { warte: async ms => void (gewartet += ms), jetzt: () => uhr });
+        expect(gewartet).to.equal(0);
     });
 
     it('History-Hinweis: nur wenn kein History-Adapter installiert ist oder die Instanz fehlt', async () => {
