@@ -280,7 +280,7 @@
   "headerSchritt2": "2 · Connecter un module",
   "textSchritt2": "Onglet « Rechercher des modules » : cliquez sur « Rechercher », choisissez le module dans la liste et appuyez sur « Connecter ». Si ioBroker tourne dans Docker, la recherche ne trouve rien – vérifiez alors l’adresse du module sous « Adresse unique ». À la main, c’est possible aussi : dans l’interface web du module, sous Settings → Basic, saisissez dans « MQTT host » la valeur ci-dessous.",
   "textSchritt2Extern": "Broker externe : les modules doivent pointer vers votre broker externe, pas vers cet adaptateur. Onglet « Rechercher des modules » : cliquez sur « Rechercher » – la colonne « Statut » indique vers où pointe chaque module ; « Connecter » bascule un module vers le broker externe. À la main : dans l’interface web du module, sous Settings → Basic, saisissez dans « MQTT host » la valeur ci-dessous.",
-  "headerSchritt3": "3 · Configurer la régulation (facultatif)",
+  "headerSchritt3": "4 · Configurer la régulation (facultatif)",
   "textSchritt3": "Onglet « Régulation » : réglez la courbe et les limites une fois dans le modèle global (en les faisant glisser) ; créez une entrée par appareil pour ses capteurs. Tant que la « Marche d’essai » est activée, l’adaptateur calcule seulement et n’envoie rien.",
   "textBindExtern": "Bascule le MQTT host d’UN module vers le broker externe (adresse et port de l’onglet « Broker MQTT », ainsi qu’utilisateur et mot de passe s’ils y sont saisis). Choisissez un module, cliquez sur « Vérifier », lisez l’aperçu, puis « Connecter ». Le module redémarre et doit s’annoncer via le broker externe dans les 90 s. « Restaurer » réécrit le MQTT host précédent. Le firmware et tous les autres réglages restent inchangés.",
   "labelTabHeizenVorgabe": "Courbe de chauffe",
@@ -298,10 +298,11 @@
   "textVorlage": "S’applique à tous les appareils – sauf à ceux pour lesquels « Individuel au lieu du modèle global » est coché plus bas.",
   "labelIndividuell": "Individuel au lieu du modèle global",
   "textFolgtVorlage": "Suit le modèle : stratégie, courbes, limites, niveaux de température et action en cas d’humidité viennent du modèle global. Capteurs et protection antigel se règlent ici.",
+  "textFolgtEigeneStufen": "Attention : cet appareil a ses propres niveaux de température. Sans la coche, les niveaux du modèle s’appliquent – un programme hebdomadaire qui utilise les niveaux propres ne fonctionne alors plus. Après l’enregistrement, vérifiez l’onglet « Programmes » : choisissez-y « Appliquer le modèle » ou recréez le programme.",
   "textIstIndividuell": "Individuel : pour cet appareil, les valeurs ci-dessous s’appliquent. Ce que vous laissez vide vient toujours du modèle.",
   "headerStufenGeraet": "Niveaux de température propres à cet appareil",
   "textStufenGeraet": "Ils appartiennent au programme de cet appareil : son programme hebdomadaire (onglet « Programmes ») passe de l’un à l’autre.",
   "helpExternPass": "Enregistré chiffré. Verrouillé sans nom d’utilisateur : sans lui, pas d’authentification, un mot de passe resterait sans effet.",
-  "headerSchritt4": "4 · Créer un programme (facultatif)",
+  "headerSchritt4": "3 · Créer un programme (facultatif)",
   "textSchritt4": "Onglet « Programmes » : définissez les niveaux de température (confort, réduit …) et créez le programme hebdomadaire de chaque appareil. Le programme hebdomadaire se trouve aussi sur la carte de l’appareil (bouton « Programme hebdo ») ; il agit immédiatement, sans « Enregistrer »."
 }

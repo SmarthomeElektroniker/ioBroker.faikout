@@ -131,14 +131,17 @@ describe('Regeltexte (mehrsprachig)', () => {
         expect(texte.t('gibt.es.nicht')).to.equal('gibt.es.nicht');
         expect(texte.t('gibt.es.nicht', { a: 1 })).to.equal('gibt.es.nicht');
         // wie in einer Zeichenkettenvorlage: undefined/null werden ausgeschrieben, Fehlendes bleibt stehen
-        expect(texte.t('plan.schaltzeit', { tag: 1, zeit: undefined })).to.equal(
-            'Tag 1: Schaltzeit undefined ungültig',
+        expect(texte.t('plan.schaltzeit', { tag: texte.wochentag(0), zeit: undefined })).to.equal(
+            'Montag: Schaltzeit undefined ungültig',
         );
+        // Wochentag als Name in der aktuellen Sprache, gross begonnen (0 = Montag ... 6 = Sonntag)
+        expect([0, 6].map(texte.wochentag)).to.eql(['Montag', 'Sonntag']);
         expect(texte.t('fuehler.veraltet', {})).to.equal('veraltet ({min} min)');
         // ein eingesetzter Wert wird nicht noch einmal nach Platzhaltern durchsucht
         expect(texte.t('koord.feuchte', { grund: '{grund} {x}' })).to.equal('Feuchte: {grund} {x}');
         expect(texte.setzeSprache('en')).to.equal('en');
         expect(texte.t('fuehler.veraltet', { min: 70 })).to.equal('stale (70 min)');
+        expect(texte.wochentag(2)).to.equal('Wednesday');
         expect(texte.setzeSprache('ZH-CN')).to.equal('zh-cn');
         expect(texte.setzeSprache('xx')).to.equal('en');
         expect(texte.setzeSprache(undefined)).to.equal('en');

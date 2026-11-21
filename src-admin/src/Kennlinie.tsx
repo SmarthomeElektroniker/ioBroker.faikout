@@ -40,6 +40,10 @@ import bildLib from '../../lib/kennlinienbild.js';
 import Werkzeugleiste from './Werkzeugleiste';
 import { kt, type Schluessel } from './Kennlinie.texte';
 
+/** Geraet ohne Maus (grober Zeiger): dort gibt es weder Doppel- noch Rechtsklick */
+const TOUCH =
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+
 export type Richtung = 'heizen' | 'kuehlen';
 type Grenze = 'unter' | 'ober';
 interface Punkt {
@@ -1040,7 +1044,8 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                             inhalt={{ punkte: gueltig ? punkte : [], untergrenze: unter, obergrenze: ober }}
                             onEinfuegen={einfuegen}
                             onZuruecksetzen={zuruecksetzen}
-                            zuruecksetzenText={k(istVorlage ? 'frageWerk' : 'tipVorlage')}
+                            zuruecksetzenText={istVorlage ? undefined : k('tipVorlage')}
+                            frageText={istVorlage ? k('frageWerk') : undefined}
                             istVorlage={istVorlage}
                             quelle={props.quelle || (istVorlage ? k('quelleVorlage') : '')}
                             sprache={sprache}
@@ -1658,6 +1663,8 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                             sx={{ display: 'block', mt: 0.5 }}
                         >
                             {k('hinweis')}
+                            {/* ohne Maus gibt es weder Doppel- noch Rechtsklick: auf die Tabelle verweisen */}
+                            {TOUCH ? ` ${k('hinweisTouch')}` : ''}
                         </Typography>
                     ) : null}
                 </>

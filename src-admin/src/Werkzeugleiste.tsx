@@ -9,7 +9,8 @@
  *  - Einfuegen ist grau, solange die Zwischenablage leer ist oder etwas anderer Art haelt; der Hinweis
  *    am Knopf sagt, warum.
  *  - Zuruecksetzen heisst am Geraet "Vorlage uebernehmen" (sofort, mit Rueckgaengig) und in der Vorlage
- *    "Werksvorgabe" - dort mit einer Sicherheitsabfrage in der Leiste selbst, ohne Browser-Dialog.
+ *    "Auf die Werksvorgabe zuruecksetzen" - dort mit einer Sicherheitsabfrage in der Leiste selbst, ohne
+ *    Browser-Dialog.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Button, SvgIcon, Tooltip } from '@mui/material';
@@ -22,12 +23,21 @@ export interface WerkzeugleisteProps {
     art: Art;
     /** was "Kopieren" merkt (muss sich als JSON schreiben lassen) */
     inhalt: unknown;
-    /** uebernimmt eine Kopie; `false` heisst "passt hier nicht" (dann aendert sich nichts) */
-    onEinfuegen: (inhalt: unknown) => void | boolean;
-    /** Geraet: wieder die Vorlage verwenden; Vorlage: Werksvorgabe */
-    onZuruecksetzen: () => void;
-    /** Erklaerung am Zuruecksetzen-Knopf und Frage der Sicherheitsabfrage (leer: allgemeiner Text) */
+    /**
+     * uebernimmt eine Kopie; `false` heisst "passt hier nicht" (dann aendert sich nichts). Schreibt die
+     * Komponente sofort (Wochenplan eines Geraets), gibt sie ein Promise zurueck: die Bestaetigung
+     * erscheint erst, wenn es gelungen ist - `false` heisst dann "nicht geschrieben", die Komponente
+     * zeigt den Grund selbst.
+     */
+    onEinfuegen: (inhalt: unknown) => void | boolean | Promise<void | boolean>;
+    /** Geraet: wieder die Vorlage verwenden; Vorlage: Werksvorgabe (Promise wie bei onEinfuegen) */
+    onZuruecksetzen: () => void | boolean | Promise<void | boolean>;
+    /** Erklaerung am Zuruecksetzen-Knopf (leer: allgemeiner Text) */
     zuruecksetzenText?: string;
+    /** Frage der Sicherheitsabfrage in der Vorlage (leer: "Wirklich auf die Werksvorgabe zuruecksetzen?") */
+    frageText?: string;
+    /** Bestaetigung nach dem Zuruecksetzen (leer: "Es gilt wieder die Vorlage." bzw. "... Werksvorgabe ...") */
+    zurueckMeldung?: string;
     /** true: die Leiste gehoert zur globalen Vorlage (Zuruecksetzen = Werksvorgabe, mit Abfrage) */
     istVorlage: boolean;
     /** Herkunft fuer die Kopie, z. B. der Name des Geraets */
@@ -38,7 +48,7 @@ export interface WerkzeugleisteProps {
      * es gilt die Vorlage"). Fehlt er, merkt die Leiste `inhalt` und nimmt mit `onEinfuegen` zurueck.
      */
     stand?: unknown;
-    onRueckgaengig?: (stand: unknown) => void;
+    onRueckgaengig?: (stand: unknown) => void | boolean | Promise<void | boolean>;
 }
 
 const symbol = (pfad: string) =>
@@ -92,14 +102,16 @@ export function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
             uhr.current = setTimeout(() => setMeldung(null), m.vorher ? DAUER.lang : DAUER.kurz);
         }
     }, []);
-    useEffect(
-        () => () => {
+    const lebt = useRef(true);
+    useEffect(() => {
+        lebt.current = true;
+        return () => {
+            lebt.current = false;
             if (uhr.current) {
                 clearTimeout(uhr.current);
             }
-        },
-        [],
-    );
+        };
+    }, []);
 
     const vorhanden = lesen(art);
     const anderes = vorhanden ? null : gemerkt();
@@ -110,35 +122,54 @@ export function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
         setFrage(false);
         zeigen({ text: t('kopiert') });
     };
+    /**
+     * Fuehrt eine Aenderung aus und zeigt die Bestaetigung erst, wenn sie gelungen ist. Eine Komponente,
+     * die sofort schreibt, antwortet mit einem Promise: scheitert das Schreiben (`false`), bleibt die
+     * Leiste still - sonst staende "Eingefuegt" neben der Fehlermeldung der Komponente.
+     */
+    const ausfuehren = (tat: () => void | boolean | Promise<void | boolean>, gut: Meldung, passtNicht: boolean): void => {
+        setFrage(false);
+        const ergebnis = tat();
+        if (ergebnis && typeof (ergebnis as Promise<void | boolean>).then === 'function') {
+            zeigen(null);
+            (ergebnis as Promise<void | boolean>).then(
+                ok => (lebt.current ? zeigen(ok === false ? null : gut) : undefined),
+                () => (lebt.current ? zeigen(null) : undefined),
+            );
+            return;
+        }
+        zeigen(ergebnis === false ? (passtNicht ? { text: t('passtNicht') } : null) : gut);
+    };
     const fuegeEin = (): void => {
         const k = lesen(art);
         if (!k) {
             return;
         }
         const vorher = stand();
-        setFrage(false);
-        if (props.onEinfuegen(kopie(k.inhalt)) === false) {
-            zeigen({ text: t('passtNicht') });
-            return;
-        }
-        zeigen({ text: k.quelle ? t('eingefuegtAus', k.quelle) : t('eingefuegt'), vorher });
+        ausfuehren(
+            () => props.onEinfuegen(kopie(k.inhalt)),
+            { text: k.quelle ? t('eingefuegtAus', k.quelle) : t('eingefuegt'), vorher },
+            true,
+        );
     };
     const setzeZurueck = (): void => {
         const vorher = stand();
-        setFrage(false);
-        props.onZuruecksetzen();
-        zeigen({ text: t(props.istVorlage ? 'giltWerk' : 'giltVorlage'), vorher });
+        ausfuehren(
+            () => props.onZuruecksetzen(),
+            { text: props.zurueckMeldung || t(props.istVorlage ? 'giltWerk' : 'giltVorlage'), vorher },
+            false,
+        );
     };
     const nimmZurueck = (): void => {
         if (!meldung || !meldung.vorher) {
             return;
         }
-        if (props.onRueckgaengig) {
-            props.onRueckgaengig(meldung.vorher.stand);
-        } else {
-            props.onEinfuegen(meldung.vorher.stand);
-        }
-        zeigen({ text: t('zurueckgenommen') });
+        const vorher = meldung.vorher.stand;
+        ausfuehren(
+            () => (props.onRueckgaengig ? props.onRueckgaengig(vorher) : props.onEinfuegen(vorher)),
+            { text: t('zurueckgenommen') },
+            false,
+        );
     };
 
     const tipEinfuegen = vorhanden
@@ -224,7 +255,8 @@ export function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
                         }
                     }}
                 >
-                    {t(props.istVorlage ? 'werk' : 'vorlage')}
+                    {/* Verb + Objekt: "Auf die Werksvorgabe zuruecksetzen" statt nur "Werksvorgabe" */}
+                    {t(props.istVorlage ? 'tipWerk' : 'vorlage')}
                 </Button>
             </Tooltip>
             {frage ? (
@@ -239,7 +271,7 @@ export function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
                         }
                     }}
                 >
-                    <span>{props.zuruecksetzenText || t('frageWerk')}</span>
+                    <span>{props.frageText || t('frageWerk')}</span>
                     <Button
                         className="fk-wz-knopf fk-wz-ja"
                         size="small"

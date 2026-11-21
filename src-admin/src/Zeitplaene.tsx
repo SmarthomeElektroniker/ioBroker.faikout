@@ -75,6 +75,8 @@ export type Senden = (befehl: string, nachricht: Record<string, unknown>) => Pro
 
 const TAG = 1440;
 const ABFRAGE_MS = 30000;
+/** Takt, solange noch kein Geraet in der Liste steht (Adapter gerade gestartet) */
+const ABFRAGE_LEER_MS = 3000;
 const ANTWORT_MS = 15000;
 
 /** Farben des Editors (lib/oberflaeche.js SZENEN_FARBEN): hell -> dunkel, fuer das dunkle Thema. */
@@ -558,6 +560,16 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
         const takt = setInterval(() => void ladenRef.current(), ABFRAGE_MS);
         return () => clearInterval(takt);
     }, [alive, senden]);
+    // Nach "Speichern" startet der Adapter neu: bis sich die Module wieder gemeldet haben, ist die Liste
+    // leer. Dann in kurzem Takt nachfragen statt eine halbe Minute "Noch keine Geraete" zu zeigen.
+    const ohneGeraete = !!alive && !!senden && (!liste || !liste.geraete.length);
+    useEffect(() => {
+        if (!ohneGeraete) {
+            return undefined;
+        }
+        const takt = setInterval(() => void ladenRef.current(), ABFRAGE_LEER_MS);
+        return () => clearInterval(takt);
+    }, [ohneGeraete]);
 
     // exakter Plantext je Geraet fuer "Kopieren" - nur wenn sich der Plan geaendert hat
     useEffect(() => {
@@ -637,14 +649,18 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
             await laden();
         }
     };
-    const planSchreiben = (id: string, inhalt: unknown): void => {
+    /**
+     * Schreibt einen Plan sofort ins Geraet. Das Ergebnis (true = geschrieben) geht an die Knopfleiste:
+     * sie bestaetigt erst danach - lehnt der Adapter den Plan ab, steht nur die Fehlermeldung da.
+     */
+    const planSchreiben = async (id: string, inhalt: unknown): Promise<boolean> => {
         const week =
             inhalt === null || inhalt === undefined ? '' : typeof inhalt === 'string' ? inhalt : JSON.stringify(inhalt);
         if (week && !planLesen(week)) {
             setFehler(f => ({ ...f, [id]: tx('einfuegenUngueltig') }));
-            return;
+            return false;
         }
-        void aktion(id, 'wochenplanEinfuegen', { week });
+        return (await aktion(id, 'wochenplanEinfuegen', { week })) !== null;
     };
     const schalten = (g: PlanGeraet, an: boolean): void => {
         // sofort zeigen, die naechste Liste bestaetigt oder korrigiert
@@ -762,8 +778,11 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                             className="fk-zp-status"
                             sx={{ mt: 0.5, fontSize: '0.9em', lineHeight: 1.45 }}
                         >
-                            <Box sx={{ fontWeight: 600 }}>{tx('keinPlan')}</Box>
-                            <Box sx={{ color: 'text.secondary' }}>{tx('keinPlanText')}</Box>
+                            {/* hinterlegt, aber nicht lesbar (eine Stufe gibt es nicht mehr) ist etwas anderes als "noch keiner" */}
+                            <Box sx={{ fontWeight: 600, color: g.planFehler ? 'error.main' : undefined }}>
+                                {g.planFehler ? tx('planUngueltig') : tx('keinPlan')}
+                            </Box>
+                            <Box sx={{ color: 'text.secondary' }}>{g.planFehler ? tx('planUngueltigText') : tx('keinPlanText')}</Box>
                         </Box>
                     ) : (
                         <Box
@@ -861,6 +880,8 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                         onEinfuegen={neu => planSchreiben(g.id, neu)}
                         onZuruecksetzen={() => planSchreiben(g.id, vorlageText)}
                         zuruecksetzenText={tx('vorlageUebernehmen')}
+                        // der Plan ist eine Kopie der Vorlage und steht sofort im Geraet - nicht "es gilt wieder die Vorlage"
+                        zurueckMeldung={tx('vorlageUebernommen')}
                         istVorlage={false}
                         quelle={name}
                         sprache={sprache}
@@ -904,6 +925,51 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                 {tx('hinweisSofort')}
             </Meldung>
 
+            <Typography
+                component="div"
+                className="fk-zp-titel"
+                sx={{ fontWeight: 600, mt: 0.5 }}
+            >
+                {tx('geraete')}
+            </Typography>
+
+            {!alive || !senden ? (
+                <Meldung
+                    art="neutral"
+                    klasse="fk-zp-instanz-aus"
+                >
+                    {tx('instanzAus')}
+                </Meldung>
+            ) : null}
+            {alive && senden && ladeFehler ? (
+                <Meldung
+                    art="fehler"
+                    klasse="fk-zp-ladefehler"
+                    knopf={{ text: tx('nochmal'), onClick: () => void laden() }}
+                >
+                    {tx('fehlerLaden', ladeFehler)}
+                </Meldung>
+            ) : null}
+            {alive && senden && !liste && !ladeFehler ? (
+                <Box
+                    className="fk-zp-laden"
+                    sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', py: 1 }}
+                >
+                    <CircularProgress size={18} />
+                    {tx('laden')}
+                </Box>
+            ) : null}
+            {alive && senden && liste && !liste.geraete.length ? (
+                <Meldung
+                    art="neutral"
+                    klasse="fk-zp-leer"
+                >
+                    {tx('keineGeraete')}
+                </Meldung>
+            ) : null}
+            {alive && senden && liste ? liste.geraete.map(geraeteZeile) : null}
+
+            {/* die Vorlage steht unter den Geraeten: zuerst das, was die meisten suchen - den Wochenplan ihrer Anlage */}
             <Box
                 className="fk-zp-zeile fk-zp-vorlage"
                 sx={zeileSx}
@@ -963,7 +1029,6 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                         }}
                         onEinfuegen={vorlageEinfuegen}
                         onZuruecksetzen={() => vorlageEinfuegen('')}
-                        zuruecksetzenText={tx('werksvorgabe')}
                         istVorlage
                         quelle={tx('vorlage')}
                         sprache={sprache}
@@ -992,50 +1057,6 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                     </Box>
                 ) : null}
             </Box>
-
-            <Typography
-                component="div"
-                className="fk-zp-titel"
-                sx={{ fontWeight: 600, mt: 0.5 }}
-            >
-                {tx('geraete')}
-            </Typography>
-
-            {!alive || !senden ? (
-                <Meldung
-                    art="neutral"
-                    klasse="fk-zp-instanz-aus"
-                >
-                    {tx('instanzAus')}
-                </Meldung>
-            ) : null}
-            {alive && senden && ladeFehler ? (
-                <Meldung
-                    art="fehler"
-                    klasse="fk-zp-ladefehler"
-                    knopf={{ text: tx('nochmal'), onClick: () => void laden() }}
-                >
-                    {tx('fehlerLaden', ladeFehler)}
-                </Meldung>
-            ) : null}
-            {alive && senden && !liste && !ladeFehler ? (
-                <Box
-                    className="fk-zp-laden"
-                    sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', py: 1 }}
-                >
-                    <CircularProgress size={18} />
-                    {tx('laden')}
-                </Box>
-            ) : null}
-            {alive && senden && liste && !liste.geraete.length ? (
-                <Meldung
-                    art="neutral"
-                    klasse="fk-zp-leer"
-                >
-                    {tx('keineGeraete')}
-                </Meldung>
-            ) : null}
-            {alive && senden && liste ? liste.geraete.map(geraeteZeile) : null}
 
             {dialog ? (
                 <Dialog

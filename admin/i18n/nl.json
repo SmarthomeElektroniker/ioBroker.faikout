@@ -280,7 +280,7 @@
   "headerSchritt2": "2 · Module verbinden",
   "textSchritt2": "Tabblad “Modules zoeken”: klik op “Zoeken”, kies de module in de lijst en druk op “Koppelen”. Draait ioBroker in Docker, dan vindt de zoekopdracht niets – controleer dan het adres van de module bij “Eén adres”. Met de hand kan het ook: vul in de webinterface van de module onder Settings → Basic bij “MQTT host” de waarde hieronder in.",
   "textSchritt2Extern": "Externe broker: de modules moeten naar je externe broker wijzen, niet naar deze adapter. Tabblad “Modules zoeken”: klik op “Zoeken” – de kolom “Status” toont welke module waarheen wijst; “Koppelen” zet een module om naar de externe broker. Met de hand: vul in de webinterface van de module onder Settings → Basic bij “MQTT host” de waarde hieronder in.",
-  "headerSchritt3": "3 · Regeling inrichten (optioneel)",
+  "headerSchritt3": "4 · Regeling inrichten (optioneel)",
   "textSchritt3": "Tabblad “Regeling”: stel curve en grenzen één keer in het globale sjabloon in (slepen); maak per toestel een item aan voor de sensoren. Zolang “Proefdraai” aan staat, rekent de adapter alleen en verstuurt hij niets.",
   "textBindExtern": "Zet de MQTT host van ÉÉN module om naar de externe broker (adres en poort uit het tabblad “MQTT-broker”, plus gebruiker en wachtwoord als die daar zijn ingevuld). Kies een module, klik op “Controleren”, lees de voorvertoning en klik dan op “Koppelen”. De module herstart en moet zich binnen 90 s via de externe broker melden. “Terugzetten” schrijft de vorige MQTT host terug. Firmware en alle andere instellingen blijven ongemoeid.",
   "labelTabHeizenVorgabe": "Stooklijn",
@@ -298,10 +298,11 @@
   "textVorlage": "Geldt voor alle toestellen – behalve die waarbij verderop “Individueel in plaats van globaal sjabloon” is aangevinkt.",
   "labelIndividuell": "Individueel in plaats van globaal sjabloon",
   "textFolgtVorlage": "Volgt het sjabloon: strategie, curves, grenzen, temperatuurniveaus en vochtmaatregel komen uit het globale sjabloon. Sensoren en vorstbeveiliging stel je hier in.",
+  "textFolgtEigeneStufen": "Let op: dit toestel heeft eigen temperatuurniveaus. Zonder het vinkje gelden de niveaus van het sjabloon – een weekschema dat de eigen niveaus gebruikt, loopt dan niet meer. Controleer na het opslaan het tabblad “Schema’s”: kies daar “Sjabloon overnemen” of maak het schema opnieuw.",
   "textIstIndividuell": "Individueel: voor dit toestel gelden de waarden hieronder. Wat je leeg laat, komt nog steeds uit het sjabloon.",
   "headerStufenGeraet": "Eigen temperatuurniveaus van dit toestel",
   "textStufenGeraet": "Ze horen bij het schema van dit toestel: het weekschema (tabblad “Schema’s”) schakelt ertussen.",
   "helpExternPass": "Wordt versleuteld opgeslagen. Vergrendeld zonder gebruikersnaam: zonder naam is er geen aanmelding, een wachtwoord zou niets doen.",
-  "headerSchritt4": "4 · Schema aanmaken (optioneel)",
+  "headerSchritt4": "3 · Schema aanmaken (optioneel)",
   "textSchritt4": "Tabblad “Schema’s”: stel de temperatuurniveaus in (Comfort, Verlaging …) en maak per toestel het weekschema aan. Het weekschema staat ook op de toestelkaart (knop “Weekschema”); het werkt meteen, zonder “Opslaan”."
 }

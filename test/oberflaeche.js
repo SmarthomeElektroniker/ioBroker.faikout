@@ -1009,11 +1009,19 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(klein).to.eql([]);
     });
 
-    it('jsonConfig: Reiter Zeitplaene - Erklaerung, Temperaturstufen der Vorlage, Wochenplaene; Handeingriff und Feiertage eingeklappt', () => {
+    it('jsonConfig: Reiter Zeitplaene - zuerst die Wochenplaene, dann Temperaturstufen der Vorlage und die Erklaerung; Handeingriff und Feiertage eingeklappt', () => {
         const zp = konfig.items[o.REITER_ZEITPLAENE];
         expect(zp).to.include({ type: 'panel', label: 'tabZeitplaene' });
         const namen = Object.keys(zp.items);
-        expect(namen).to.eql(['_nichtAktiv', '_tZeitplaene', '_erklaerung', '_hStufen', '_tStufen', 'regelStufen', '_hPlaene', 'regelPlanVorlage', '_pPlanFein']);
+        // der Wochenplan steht oben: ein Klick auf den Reiter genuegt, um ihn zu sehen (Volltest 21.11.2026)
+        expect(namen).to.eql(['_nichtAktiv', '_tZeitplaene', '_hPlaene', 'regelPlanVorlage', '_hStufen', '_tStufen', 'regelStufen', '_erklaerung', '_pPlanFein']);
+        // Geraet ohne Haken "Individuell", aber mit eigenen Stufen: Warnung, dass sein Wochenplan sie nicht mehr findet
+        const zeile = Object.fromEntries(konfig.items.tabRegelung.items.regelGeraete.items.map(x => [x.attr, x]));
+        expect(zeile._tFolgtStufen).to.include({ type: 'staticText', text: 'textFolgtEigeneStufen' });
+        expect(zeile._tFolgtStufen.hidden).to.equal('data.individuell === true || !(Array.isArray(data.stufen) && data.stufen.length)');
+        for (const l of o.SPRACHEN) {
+            expect(admin(l).textFolgtEigeneStufen, l).to.be.a('string').and.to.have.length.above(40);
+        }
         const k = name => ({ type: 'custom', url: 'custom/customComponents.js', name: `ConfigCustomFaikoutSet/Components/${name}`, i18n: true, xs: 12, xl: 12 });
         expect(zp.items._erklaerung).to.include(k('Erklaerung'));
         expect(zp.items._erklaerung.custom).to.eql({ reiterZeitplaene: 'tabZeitplaene', reiterRegelung: 'tabRegelung' });
@@ -1402,33 +1410,34 @@ describe('UX-Funde 21.11.2026', () => {
         const klar = h => h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
         const z = zeilen(html);
         expect(z).to.have.length(4);
-        // die ersten drei erledigt: Haken in der Ampelfarbe "gut", Ueberschrift und Stand in derselben Zeile
+        // Broker, Modul und Regelung erledigt: Haken in der Ampelfarbe "gut", Ueberschrift und Stand in derselben Zeile.
+        // Die Schritte stehen in der Reihenfolge der Reiter: 3 = Zeitplan, 4 = Regelung.
         for (const [i, titel, stand] of [
             [0, '1 · MQTT-Broker', 'Eigener MQTT-Broker läuft auf Port 1888'],
             [1, '2 · Modul verbinden', 'Module, die sich gemeldet haben: 2 (Wohnzimmer AC, OG)'],
-            [2, '3 · Regelung einrichten (freiwillig)', 'Regelung für 1 von 2 Anlagen eingerichtet'],
+            [3, '4 · Regelung einrichten (freiwillig)', 'Regelung für 1 von 2 Anlagen eingerichtet'],
         ]) {
             expect(z[i].startsWith('erledigt"'), titel).to.equal(true);
             expect(z[i], titel).to.contain('✓').and.to.contain(o.AMPEL.gut).and.to.not.contain('○');
             expect(klar(z[i]), titel).to.contain(titel).and.to.contain(stand);
         }
         // erledigte Schritte nennen keinen Reiter mehr, keine getrennte Aufzaehlung "So weit bist du"
-        expect(z.slice(0, 3).join('')).to.not.contain('→');
+        expect([z[0], z[1], z[3]].join('')).to.not.contain('→');
         expect(html).to.not.contain('So weit bist du');
-        // 4 · Zeitplan anlegen: offen, solange kein Geraet einen Wochenplan hat - mit Anweisung und dem Reiter "Zeitplaene"
-        expect(z[3].startsWith('offen"')).to.equal(true);
-        expect(klar(z[3]))
-            .to.contain('4 · Zeitplan anlegen (freiwillig)')
+        // 3 · Zeitplan anlegen: offen, solange kein Geraet einen Wochenplan hat - mit Anweisung und dem Reiter "Zeitplaene"
+        expect(z[2].startsWith('offen"')).to.equal(true);
+        expect(klar(z[2]))
+            .to.contain('3 · Zeitplan anlegen (freiwillig)')
             .and.to.contain('Noch kein Wochenplan hinterlegt')
             .and.to.contain('Reiter „Zeitpläne“: Temperaturstufen')
             .and.to.contain('Reiter „Zeitpläne“ öffnen');
-        expect(z[3]).to.contain(`#tab-instances/config/system.adapter.faikout.0/${o.REITER_ZEITPLAENE}`);
+        expect(z[2]).to.contain(`#tab-instances/config/system.adapter.faikout.0/${o.REITER_ZEITPLAENE}`);
         // gruener Haken, sobald EIN Geraet einen lesbaren Plan hat; ein unlesbarer zaehlt nicht
         const plan = JSON.stringify(wochenplan.vorgabePlan(wochenplan.szenenLesen([]).szenen));
         const mitPlan = adapter({ 'og.regulation.schedule.weekJson': plan, 'wz.regulation.schedule.weekJson': '{kaputt' }, {});
         mitPlan.broker = {};
         mitPlan.brokerZiel = () => ({ extern: false, port: 1888 });
-        const p = zeilen((await frage(mitPlan, 'einrichtungStand', {})).antwort)[3];
+        const p = zeilen((await frage(mitPlan, 'einrichtungStand', {})).antwort)[2];
         expect(p.startsWith('erledigt"')).to.equal(true);
         expect(klar(p)).to.contain('Wochenplan für 1 von 2 Anlagen hinterlegt');
         expect(p).to.contain('✓').and.to.not.contain('→');
@@ -1446,7 +1455,7 @@ describe('UX-Funde 21.11.2026', () => {
         expect(l.every(x => x.startsWith('offen"') && x.includes('○') && !x.includes('✓'))).to.equal(true);
         expect(klar(l[0])).to.contain('Keine Verbindung zum externen Broker mq.lan:1883').and.to.contain('MQTT-Broker (Technik)');
         expect(klar(l[1])).to.contain('Noch hat sich kein Modul gemeldet').and.to.contain('Extern-Betrieb: Die Module müssen auf deinen externen Broker zeigen').and.to.contain('Module suchen');
-        expect(klar(l[2])).to.contain('Noch keine Anlage eingerichtet').and.to.contain('globalen Vorlage').and.to.contain('Regelung');
+        expect(klar(l[3])).to.contain('Noch keine Anlage eingerichtet').and.to.contain('globalen Vorlage').and.to.contain('Regelung');
         expect(leer).to.contain('→');
         // kein Skript, keine fremden Adressen
         expect(html + leer).to.not.match(/<script|https?:/);
@@ -1454,7 +1463,7 @@ describe('UX-Funde 21.11.2026', () => {
         for (const s of o.SPRACHEN) {
             a.sprache = async () => s;
             const h = klar((await frage(a, 'einrichtungStand', {})).antwort);
-            expect(h, s).to.match(/1 · .*2 · .*3 · /).and.to.not.contain('headerSchritt').and.to.not.contain('textSchritt').and.to.not.contain('tabSearch');
+            expect(h, s).to.match(/1 · .*2 · .*3 · .*4 · /).and.to.not.contain('headerSchritt').and.to.not.contain('textSchritt').and.to.not.contain('tabSearch');
         }
     });
 

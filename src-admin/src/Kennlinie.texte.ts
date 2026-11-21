@@ -6,6 +6,7 @@ const TEXTE = {
     en: {
         hinweis:
             'Drag the points. Double-click adds a point, right-click or Del removes it. The arrow keys move the selected point or limit.',
+        hinweisTouch: 'On a touch screen: add or remove points under “Values as table”.',
         hinweisVorlage: 'This device uses the curve of the template.',
         hinweisWerk: 'The factory default applies.',
         etikettVorlage: 'Template (not adjusted)',
@@ -43,6 +44,7 @@ const TEXTE = {
     de: {
         hinweis:
             'Punkte ziehen. Doppelklick fügt einen Punkt hinzu, Rechtsklick oder Entf entfernt ihn. Die Pfeiltasten verschieben den gewählten Punkt oder die gewählte Grenze.',
+        hinweisTouch: 'Am Touchbildschirm: Punkte unter „Werte als Tabelle“ hinzufügen oder löschen.',
         hinweisVorlage: 'Für dieses Gerät gilt die Kennlinie der Vorlage.',
         hinweisWerk: 'Es gilt die Werksvorgabe.',
         etikettVorlage: 'Vorlage (nicht angepasst)',
@@ -80,6 +82,7 @@ const TEXTE = {
     ru: {
         hinweis:
             'Перетаскивайте точки. Двойной щелчок добавляет точку, правый щелчок или Del удаляет её. Клавиши со стрелками двигают выбранную точку или границу.',
+        hinweisTouch: 'На сенсорном экране: добавляйте и удаляйте точки в разделе «Значения в таблице».',
         hinweisVorlage: 'Для этого устройства действует кривая шаблона.',
         hinweisWerk: 'Действуют заводские значения.',
         etikettVorlage: 'Шаблон (не изменён)',
@@ -117,6 +120,7 @@ const TEXTE = {
     pt: {
         hinweis:
             'Arraste os pontos. Duplo clique acrescenta um ponto, clique direito ou Del remove-o. As setas deslocam o ponto ou o limite escolhido.',
+        hinweisTouch: 'No ecrã tátil: adicione ou remova pontos em «Valores em tabela».',
         hinweisVorlage: 'Para este aparelho vale a curva do modelo.',
         hinweisWerk: 'Vale a predefinição de fábrica.',
         etikettVorlage: 'Modelo (não ajustado)',
@@ -154,6 +158,7 @@ const TEXTE = {
     nl: {
         hinweis:
             'Sleep de punten. Dubbelklikken voegt een punt toe, rechtsklikken of Del verwijdert het. De pijltoetsen verschuiven het gekozen punt of de gekozen grens.',
+        hinweisTouch: 'Op een aanraakscherm: punten toevoegen of verwijderen onder “Waarden als tabel”.',
         hinweisVorlage: 'Voor dit apparaat geldt de curve van het sjabloon.',
         hinweisWerk: 'De fabrieksinstelling geldt.',
         etikettVorlage: 'Sjabloon (niet aangepast)',
@@ -191,6 +196,7 @@ const TEXTE = {
     fr: {
         hinweis:
             'Faites glisser les points. Un double clic ajoute un point, un clic droit ou Suppr le retire. Les flèches déplacent le point ou la limite choisie.',
+        hinweisTouch: 'Sur écran tactile : ajoutez ou supprimez des points sous « Valeurs en tableau ».',
         hinweisVorlage: 'Pour cet appareil, la courbe du modèle s’applique.',
         hinweisWerk: 'Le réglage d’usine s’applique.',
         etikettVorlage: 'Modèle (non ajusté)',
@@ -230,6 +236,7 @@ const TEXTE = {
     it: {
         hinweis:
             'Trascina i punti. Il doppio clic aggiunge un punto, il clic destro o Canc lo rimuove. Le frecce spostano il punto o il limite scelto.',
+        hinweisTouch: 'Su schermo tattile: aggiungi o rimuovi punti in «Valori in tabella».',
         hinweisVorlage: 'Per questo dispositivo vale la curva del modello.',
         hinweisWerk: 'Vale l’impostazione di fabbrica.',
         etikettVorlage: 'Modello (non adattato)',
@@ -267,6 +274,7 @@ const TEXTE = {
     es: {
         hinweis:
             'Arrastra los puntos. El doble clic añade un punto; el clic derecho o Supr lo quita. Las flechas mueven el punto o el límite elegido.',
+        hinweisTouch: 'En pantalla táctil: añade o quita puntos en «Valores en tabla».',
         hinweisVorlage: 'Para este equipo rige la curva de la plantilla.',
         hinweisWerk: 'Rigen los valores de fábrica.',
         etikettVorlage: 'Plantilla (sin ajustar)',
@@ -304,6 +312,7 @@ const TEXTE = {
     pl: {
         hinweis:
             'Przeciągaj punkty. Dwuklik dodaje punkt, prawy przycisk myszy lub Del go usuwa. Strzałki przesuwają wybrany punkt albo wybraną granicę.',
+        hinweisTouch: 'Na ekranie dotykowym: dodawaj i usuwaj punkty w sekcji „Wartości w tabeli”.',
         hinweisVorlage: 'Dla tego urządzenia obowiązuje krzywa z szablonu.',
         hinweisWerk: 'Obowiązuje ustawienie fabryczne.',
         etikettVorlage: 'Szablon (niezmieniony)',
@@ -341,6 +350,7 @@ const TEXTE = {
     uk: {
         hinweis:
             'Перетягуйте точки. Подвійне клацання додає точку, клацання правою кнопкою або Del вилучає її. Стрілки зсувають вибрану точку чи межу.',
+        hinweisTouch: 'На сенсорному екрані: додавайте й видаляйте точки в розділі «Значення в таблиці».',
         hinweisVorlage: 'Для цього пристрою діє крива шаблону.',
         hinweisWerk: 'Діють заводські значення.',
         etikettVorlage: 'Шаблон (не змінено)',
@@ -377,6 +387,7 @@ const TEXTE = {
     },
     'zh-cn': {
         hinweis: '拖动各点。双击添加一个点，右键或 Del 删除它。方向键移动所选的点或限值线。',
+        hinweisTouch: '触摸屏上：在“以表格显示数值”中添加或删除点。',
         hinweisVorlage: '此设备采用模板的曲线。',
         hinweisWerk: '当前采用出厂设置。',
         etikettVorlage: '模板（未调整）',

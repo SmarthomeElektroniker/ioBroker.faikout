@@ -280,7 +280,7 @@
   "headerSchritt2": "2 · Collegare un modulo",
   "textSchritt2": "Scheda «Cerca moduli»: fai clic su «Cerca», scegli il modulo nell’elenco e premi «Collega». Se ioBroker gira in Docker la ricerca non trova nulla – verifica allora l’indirizzo del modulo in «Indirizzo singolo». Si può fare anche a mano: nell’interfaccia web del modulo, in Settings → Basic, inserisci in «MQTT host» il valore qui sotto.",
   "textSchritt2Extern": "Broker esterno: i moduli devono puntare al tuo broker esterno, non a questo adattatore. Scheda «Cerca moduli»: fai clic su «Cerca» – la colonna «Stato» mostra dove punta ogni modulo; «Collega» passa un modulo al broker esterno. A mano: nell’interfaccia web del modulo, in Settings → Basic, inserisci in «MQTT host» il valore qui sotto.",
-  "headerSchritt3": "3 · Configurare la regolazione (facoltativo)",
+  "headerSchritt3": "4 · Configurare la regolazione (facoltativo)",
   "textSchritt3": "Scheda «Regolazione»: imposta curva e limiti una volta nel modello globale (trascinando); crea una voce per apparecchio per i suoi sensori. Finché la «Funzionamento di prova» è attiva, l’adattatore calcola soltanto e non invia nulla.",
   "textBindExtern": "Passa il MQTT host di UN modulo al broker esterno (indirizzo e porta dalla scheda «Broker MQTT», più utente e password se lì inseriti). Scegli un modulo, fai clic su «Verifica», leggi l’anteprima, poi «Collega». Il modulo si riavvia e deve annunciarsi tramite il broker esterno entro 90 s. «Ripristina» riscrive il MQTT host precedente. Firmware e tutte le altre impostazioni restano invariati.",
   "labelTabHeizenVorgabe": "Curva di riscaldamento",
@@ -298,10 +298,11 @@
   "textVorlage": "Vale per tutti gli apparecchi – tranne quelli con la spunta «Individuale invece del modello globale» più in basso.",
   "labelIndividuell": "Individuale invece del modello globale",
   "textFolgtVorlage": "Segue il modello: strategia, curve, limiti, livelli di temperatura e misura per l’umidità vengono dal modello globale. Sensori e protezione antigelo si impostano qui.",
+  "textFolgtEigeneStufen": "Attenzione: questo apparecchio ha livelli di temperatura propri. Senza la spunta valgono i livelli del modello – un programma settimanale che usa i livelli propri non funziona più. Dopo il salvataggio controlla la scheda «Programmi»: scegli lì «Applica modello» o crea di nuovo il programma.",
   "textIstIndividuell": "Individuale: per questo apparecchio valgono i valori qui sotto. Ciò che lasci vuoto continua a venire dal modello.",
   "headerStufenGeraet": "Livelli di temperatura propri di questo apparecchio",
   "textStufenGeraet": "Appartengono al programma di questo apparecchio: il suo programma settimanale (scheda «Programmi») commuta tra di essi.",
   "helpExternPass": "Salvata cifrata. Bloccata senza nome utente: senza di esso non c’è accesso, una password non avrebbe effetto.",
-  "headerSchritt4": "4 · Creare un programma (facoltativo)",
+  "headerSchritt4": "3 · Creare un programma (facoltativo)",
   "textSchritt4": "Scheda «Programmi»: imposta i livelli di temperatura (comfort, riduzione…) e crea il programma settimanale per ogni apparecchio. Il programma settimanale si trova anche sulla scheda del dispositivo (pulsante «Programma settimanale»); ha effetto subito, senza «Salva»."
 }

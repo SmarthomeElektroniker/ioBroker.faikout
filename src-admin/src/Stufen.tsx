@@ -29,6 +29,7 @@ import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from 
 
 import Werkzeugleiste from './Werkzeugleiste';
 import { t as text, type Schluessel } from './Stufen.texte';
+import { wt } from './Werkzeugleiste.texte';
 
 export interface Stufe {
     id: string;
@@ -462,7 +463,12 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
     /** Zeilen so, wie sie ins Formular gehoeren: unbekannte Felder bleiben, die ID steht fest drin */
     const zeilen = (): Record<string, unknown>[] =>
         roh.map((z, i) => ({ ...(z && typeof z === 'object' ? (z as object) : {}), ...stufen[i] }));
-    const schreiben = (neu: Record<string, unknown>[]): void => {
+    // zuletzt entfernte Stufe: Hinweis auf die Wochenplaene, mit "Rueckgaengig" (Stand der Liste davor)
+    const [entfernt, setEntfernt] = useState<{ name: string; vorher: unknown[] } | null>(null);
+    const schreiben = (neu: Record<string, unknown>[], nachEntfernen = false): void => {
+        if (!nachEntfernen) {
+            setEntfernt(null);
+        }
         setEntwurf(neu);
         props.onWert(neu);
     };
@@ -491,7 +497,14 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
         };
         schreiben([...alle, { ...neu }]);
     };
-    const weg = (i: number): void => schreiben(zeilen().filter((_z, n) => n !== i));
+    const weg = (i: number): void => {
+        // der Stand davor so, wie er im Formular steht (leer = Werksstufen bzw. Vorlage)
+        setEntfernt({ name: stufen[i].name, vorher: JSON.parse(JSON.stringify(eigeneRoh)) as unknown[] });
+        schreiben(
+            zeilen().filter((_z, n) => n !== i),
+            true,
+        );
+    };
 
     // Pruefung wie szenenLesen() des Adapters - nur die eigene Liste kann falsch sein
     let fehlerText = '';
@@ -1024,6 +1037,35 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                     {fehlerText}
                 </Box>
             ) : null}
+            {entfernt && !nurLesen ? (
+                <Box
+                    className="fk-st-entfernt"
+                    role="status"
+                    sx={{
+                        mt: 1,
+                        px: 1.5,
+                        py: 0.5,
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        gap: 1,
+                        border: '1px solid',
+                        borderColor: 'warning.main',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                    }}
+                >
+                    <span>{t('entferntHinweis', entfernt.name)}</span>
+                    <Button
+                        className="fk-st-entfernt-rueck"
+                        size="small"
+                        sx={{ textTransform: 'none' }}
+                        onClick={() => schreiben(entfernt.vorher as Record<string, unknown>[])}
+                    >
+                        {wt(sprache, 'rueckgaengig')}
+                    </Button>
+                </Box>
+            ) : null}
             {nurLesen ? null : (
                 <Typography
                     variant="caption"
@@ -1044,7 +1086,10 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                     }
                 }}
                 onZuruecksetzen={() => schreiben([])}
-                zuruecksetzenText={jeGeraet ? t('zuruecksetzenGeraet') : t('zuruecksetzenVorlage')}
+                // "Rueckgaengig" stellt genau den Stand davor wieder her - auch "leer = Werksstufen bzw. Vorlage"
+                stand={eigeneRoh}
+                onRueckgaengig={vorher => schreiben((Array.isArray(vorher) ? vorher : []) as Record<string, unknown>[])}
+                zuruecksetzenText={jeGeraet ? t('zuruecksetzenGeraet') : undefined}
                 istVorlage={!jeGeraet}
                 quelle={props.quelle}
                 sprache={sprache}

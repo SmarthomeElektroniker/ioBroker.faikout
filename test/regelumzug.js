@@ -300,7 +300,7 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
     };
 
     it('ist alles auf dem Stand, schreibt der Start nichts', async () => {
-        const a = instanz({ ...FERTIG, user: 'u', regelObergrenze: 95, regelKennlinieHeizen: HEIZEN_ALT, regelGeraete: [{ geraet: 'A' }] });
+        const a = instanz({ ...FERTIG, user: 'u', regelObergrenze: 95, regelKennlinieHeizen: HEIZEN_ALT, regelGeraete: [{ geraet: 'A', fuehlerWeg: 'sollwert' }] });
         expect(await a.konfigUmziehen()).to.equal(false);
         expect(a.geschrieben).to.equal(0);
     });
@@ -330,16 +330,35 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
         expect(await a.konfigUmziehen()).to.equal(true);
         expect(a.gespeichert.native.regelStufen).to.eql(stufen);
         expect('regelSzenen' in a.gespeichert.native).to.equal(false);
-        expect(a.gespeichert.native.regelGeraete).to.eql([{ geraet: 'A', individuell: false, stufen, frostAb: 8 }, { geraet: 'B', individuell: true }]);
+        expect(a.gespeichert.native.regelGeraete).to.eql([
+            { geraet: 'A', individuell: false, stufen, frostAb: 8, fuehlerWeg: 'sollwert' },
+            { geraet: 'B', individuell: true, fuehlerWeg: 'sollwert' },
+        ]);
         expect(regel.konfigAusInstanz(a.config).szenen.has('tag')).to.equal(true);
         await zweiterStart(a);
         // schon gefuellte neue Felder werden nie ueberschrieben; leere alte Listen loesen nichts aus
         const beide = instanz({ ...FERTIG, regelSzenen: stufen, regelStufen: [{ name: 'Neu', soll: 20 }], regelGeraete: [{ geraet: 'A', individuell: true, szenen: stufen, stufen: [{ name: 'Eigen', soll: 19 }] }] });
         await beide.konfigUmziehen();
         expect(beide.gespeichert.native.regelStufen).to.eql([{ name: 'Neu', soll: 20 }]);
-        expect(beide.gespeichert.native.regelGeraete[0]).to.eql({ geraet: 'A', individuell: true, stufen: [{ name: 'Eigen', soll: 19 }] });
-        const leer = instanz({ ...FERTIG, regelSzenen: [], regelGeraete: [{ geraet: 'A', individuell: true, szenen: [] }] });
-        expect(await leer.konfigUmziehen()).to.equal(false);
+        expect(beide.gespeichert.native.regelGeraete[0]).to.eql({ geraet: 'A', individuell: true, stufen: [{ name: 'Eigen', soll: 19 }], fuehlerWeg: 'sollwert' });
+        // ein leeres altes Feld wird nur entfernt (kein toter Schluessel `regelSzenen: []`), die Stufen bleiben unberuehrt
+        const leer = instanz({ ...FERTIG, regelSzenen: [], regelGeraete: [{ geraet: 'A', individuell: true, szenen: [], fuehlerWeg: 'modul' }] });
+        expect(await leer.konfigUmziehen()).to.equal(true);
+        expect('regelSzenen' in leer.gespeichert.native).to.equal(false);
+        expect('regelStufen' in leer.gespeichert.native).to.equal(false);
+        expect(leer.gespeichert.native.regelGeraete).to.eql([{ geraet: 'A', individuell: true, szenen: [], fuehlerWeg: 'modul' }]);
+        await zweiterStart(leer);
+    });
+
+    it('Geraeteeintrag ohne fuehlerWeg bekommt die Vorgabe "sollwert" - sonst waere "Speichern" beim Oeffnen der Seite aktiv', async () => {
+        const a = instanz({ ...FERTIG, regelGeraete: [{ geraet: 'A', individuell: true }, { geraet: 'B', fuehlerWeg: 'modul' }, { geraet: 'C', fuehlerWeg: 'quatsch' }] });
+        expect(await a.konfigUmziehen()).to.equal(true);
+        expect(a.gespeichert.native.regelGeraete).to.eql([
+            { geraet: 'A', individuell: true, fuehlerWeg: 'sollwert' },
+            { geraet: 'B', fuehlerWeg: 'modul' },
+            { geraet: 'C', fuehlerWeg: 'sollwert' },
+        ]);
+        await zweiterStart(a);
     });
 
     it('einmalig: vorhandene Geraeteeintraege bekommen individuell = true (Verhalten bleibt gleich); spaeter angelegte nicht', async () => {
@@ -348,15 +367,15 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
         const vorher = regel.geraeteKonfig(a.config, { ...geraete[0], individuell: true }).konfig.bedarf.obergrenze;
         expect(await a.konfigUmziehen()).to.equal(true);
         expect(a.gespeichert.native.regelGeraete).to.eql([
-            { geraet: 'A', obergrenze: 85, individuell: true },
-            { geraet: 'B', individuell: false },
-            { geraet: 'C', individuell: true },
+            { geraet: 'A', obergrenze: 85, individuell: true, fuehlerWeg: 'sollwert' },
+            { geraet: 'B', individuell: false, fuehlerWeg: 'sollwert' },
+            { geraet: 'C', individuell: true, fuehlerWeg: 'sollwert' },
         ]);
         expect(a.gespeichert.native.regelUmzugStand).to.equal(1);
         expect(regel.konfigAusInstanz(a.config).fuer('A', 'A').konfig.bedarf.obergrenze).to.equal(vorher).and.to.equal(85);
         await zweiterStart(a);
         // nach dem Umzug ohne Haken angelegt: bleibt ohne Haken (= Vorlage)
-        const spaeter = instanz({ ...a.gespeichert.native, regelGeraete: [...a.gespeichert.native.regelGeraete, { geraet: 'D', obergrenze: 70 }] });
+        const spaeter = instanz({ ...a.gespeichert.native, regelGeraete: [...a.gespeichert.native.regelGeraete, { geraet: 'D', obergrenze: 70, fuehlerWeg: 'sollwert' }] });
         expect(await spaeter.konfigUmziehen()).to.equal(false);
         expect(regel.konfigAusInstanz(spaeter.config).fuer('D', 'D').konfig.bedarf.obergrenze).to.equal(100);
     });
@@ -390,7 +409,7 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
         // Werte je Geraet sind eigene Werte und bleiben
         const geraet = instanz({ ...basis, regelGeraete: [{ geraet: 'A', obergrenze: 95, kennlinieHeizen: HEIZEN_ALT }] });
         await geraet.konfigUmziehen();
-        expect(geraet.gespeichert.native.regelGeraete[0]).to.eql({ geraet: 'A', obergrenze: 95, kennlinieHeizen: HEIZEN_ALT, individuell: true });
+        expect(geraet.gespeichert.native.regelGeraete[0]).to.eql({ geraet: 'A', obergrenze: 95, kennlinieHeizen: HEIZEN_ALT, individuell: true, fuehlerWeg: 'sollwert' });
         // nach dem Umzug bewusst wieder auf 95 gestellt: bleibt
         const bewusst = instanz({ ...FERTIG, regelObergrenze: 95, regelKennlinieHeizen: HEIZEN_ALT });
         expect(await bewusst.konfigUmziehen()).to.equal(false);
@@ -423,7 +442,7 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
         expect(a.geschrieben).to.equal(1);
         const n = a.gespeichert.native;
         expect(n).to.include({ user: 'klima', User: '', pass: 'X', regelObergrenze: 100, regelUmzugStand: 1 });
-        expect(n.regelGeraete).to.eql([{ geraet: 'A', kennlinieHeizen: [{ x: -5, y: 80 }, { x: 10, y: 50 }], stufen, individuell: true }]);
+        expect(n.regelGeraete).to.eql([{ geraet: 'A', kennlinieHeizen: [{ x: -5, y: 80 }, { x: 10, y: 50 }], stufen, individuell: true, fuehlerWeg: 'sollwert' }]);
         expect(n.externClientId).to.be.a('string').and.not.equal('');
         await zweiterStart(a);
     });

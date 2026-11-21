@@ -875,7 +875,6 @@ export function FeuchteAnsicht(props: AnsichtProps): React.JSX.Element {
                     }
                 }}
                 onZuruecksetzen={() => schreiben({ ...WERK })}
-                zuruecksetzenText={t('zuruecksetzen')}
                 istVorlage
                 quelle={t('quelle')}
                 sprache={sprache}

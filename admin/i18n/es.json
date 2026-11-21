@@ -280,7 +280,7 @@
   "headerSchritt2": "2 · Conectar un módulo",
   "textSchritt2": "Pestaña «Buscar módulos»: haz clic en «Buscar», elige el módulo en la lista y pulsa «Vincular». Si ioBroker se ejecuta en Docker, la búsqueda no encuentra nada: comprueba entonces la dirección del módulo en «Dirección individual». También se puede a mano: en la interfaz web del módulo, en Settings → Basic, introduce en «MQTT host» el valor de abajo.",
   "textSchritt2Extern": "Broker externo: los módulos deben apuntar a tu broker externo, no a este adaptador. Pestaña «Buscar módulos»: haz clic en «Buscar» – la columna «Estado» muestra a dónde apunta cada módulo; «Vincular» cambia un módulo al broker externo. A mano: en la interfaz web del módulo, en Settings → Basic, introduce en «MQTT host» el valor de abajo.",
-  "headerSchritt3": "3 · Configurar la regulación (opcional)",
+  "headerSchritt3": "4 · Configurar la regulación (opcional)",
   "textSchritt3": "Pestaña «Regulación»: ajusta la curva y los límites una vez en la plantilla global (arrastrando); crea una entrada por equipo para sus sensores. Mientras el «Modo de prueba» esté activado, el adaptador solo calcula y no envía nada.",
   "textBindExtern": "Cambia el MQTT host de UN módulo al broker externo (dirección y puerto de la pestaña «Broker MQTT», además de usuario y contraseña si están indicados allí). Elige un módulo, haz clic en «Comprobar», lee la vista previa y después «Vincular». El módulo se reinicia y debe anunciarse a través del broker externo en 90 s. «Restaurar» vuelve a escribir el MQTT host anterior. El firmware y los demás ajustes no se tocan.",
   "labelTabHeizenVorgabe": "Curva de calefacción",
@@ -298,10 +298,11 @@
   "textVorlage": "Rige para todos los equipos, salvo los que tienen más abajo la marca «Individual en lugar de la plantilla global».",
   "labelIndividuell": "Individual en lugar de la plantilla global",
   "textFolgtVorlage": "Sigue la plantilla: estrategia, curvas, límites, niveles de temperatura y medida de humedad vienen de la plantilla global. Sensores y protección antihielo se ajustan aquí.",
+  "textFolgtEigeneStufen": "Atención: este equipo tiene niveles de temperatura propios. Sin la marca se aplican los niveles de la plantilla – un programa semanal que use los niveles propios deja de funcionar. Después de guardar, revisa la pestaña «Programas»: elige allí «Aplicar plantilla» o crea el programa de nuevo.",
   "textIstIndividuell": "Individual: para este equipo rigen los valores de abajo. Lo que dejes vacío sigue viniendo de la plantilla.",
   "headerStufenGeraet": "Niveles de temperatura propios de este equipo",
   "textStufenGeraet": "Pertenecen al programa de este equipo: su programa semanal (pestaña «Programas») conmuta entre ellos.",
   "helpExternPass": "Se guarda cifrada. Bloqueada sin nombre de usuario: sin él no hay inicio de sesión, una contraseña no tendría efecto.",
-  "headerSchritt4": "4 · Crear un programa (opcional)",
+  "headerSchritt4": "3 · Crear un programa (opcional)",
   "textSchritt4": "Pestaña «Programas»: define los niveles de temperatura (confort, reducción …) y crea el programa semanal de cada equipo. El programa semanal también está en la tarjeta del equipo (botón «Programa semanal»); actúa de inmediato, sin «Guardar»."
 }

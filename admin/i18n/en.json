@@ -280,7 +280,7 @@
   "headerSchritt2": "2 · Connect a module",
   "textSchritt2": "Tab “Find modules”: click “Search”, choose the module in the list and press “Connect”. If ioBroker runs in Docker the search finds nothing – then check the address of the module under “Single address”. By hand it works too: in the web interface of the module under Settings → Basic enter the value below at “MQTT host”.",
   "textSchritt2Extern": "External broker: the modules have to point to your external broker, not to this adapter. Tab “Find modules”: click “Search” – the column “Status” shows which module points where; “Connect” switches a module to the external broker. By hand: in the web interface of the module under Settings → Basic enter the value below at “MQTT host”.",
-  "headerSchritt3": "3 · Set up the control (optional)",
+  "headerSchritt3": "4 · Set up the control (optional)",
   "textSchritt3": "Tab “Climate control”: set curve and limits once in the global template by dragging; add one entry per unit for its sensors. As long as “Dry run” is on, the adapter only calculates and sends nothing.",
   "textBindExtern": "Switches the MQTT host of ONE module to the external broker (address and port from the tab “MQTT broker”, plus user and password if entered there). Choose a module, click “Check”, read the preview, then “Connect”. The module restarts and has to report via the external broker within 90 s. “Restore” writes the previous MQTT host back. Firmware and all other settings stay untouched.",
   "labelTabHeizenVorgabe": "Heating curve",
@@ -298,10 +298,11 @@
   "textVorlage": "Applies to all units – except those with the tick “Individual instead of global template” further down.",
   "labelIndividuell": "Individual instead of global template",
   "textFolgtVorlage": "Follows the template: strategy, curves, limits, temperature levels and humidity action come from the global template. Sensors and frost protection are set here.",
+  "textFolgtEigeneStufen": "Note: this unit has its own temperature levels. Without the tick the levels of the template apply – a weekly schedule that uses the unit’s own levels then no longer runs. After saving, check the tab “Schedules”: choose “Use template” there or create the plan again.",
   "textIstIndividuell": "Individual: the values below apply to this unit. Whatever you leave empty still comes from the template.",
   "headerStufenGeraet": "Own temperature levels of this unit",
   "textStufenGeraet": "They belong to the schedule of this unit: its weekly schedule (tab “Schedules”) switches between them.",
   "helpExternPass": "Stored encrypted. Locked without a user name: without one there is no login, a password would have no effect.",
-  "headerSchritt4": "4 · Create a schedule (optional)",
+  "headerSchritt4": "3 · Create a schedule (optional)",
   "textSchritt4": "Tab “Schedules”: set the temperature levels (comfort, setback …) and create the weekly schedule per unit. The weekly schedule is also on the device card (button “Weekly schedule”); it takes effect at once, without “Save”."
 }

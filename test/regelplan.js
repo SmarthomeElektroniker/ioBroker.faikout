@@ -1135,6 +1135,37 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         expect(a.wert('Plan_X.regulation.schedule.missing')).to.equal(false);
     });
 
+    it('hinterlegter Plan mit unbekannter Temperaturstufe: Warnung beim Start, Grund mit Wochentag - auch nach einem Sprachwechsel', async () => {
+        // typisch: das Geraet folgt jetzt der Vorlage, sein Plan nennt noch die frueheren eigenen Stufen
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const alt = JSON.stringify([[{ t: 480, s: 'tag' }], [], [], [], [], [], []]);
+        a.werte.set('Plan_Z.regulation.schedule.weekJson', { val: alt, ack: true });
+        a.werte.set('Plan_Z.regulation.schedule.active', { val: true, ack: true });
+        const anlage = new Anlage({ name: 'Plan Z', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        const warnungen = a.zeilen.filter(z => z.stufe === 'warn' && /weekly schedule cannot be used/.test(z.text));
+        expect(warnungen).to.have.length(1);
+        expect(warnungen[0].text).to.contain('Plan Z').and.to.contain('„tag“').and.to.contain('"Schedules"');
+        expect(a.wert('Plan_Z.regulation.reason')).to.contain('Wochenplan: Montag: Temperaturstufe „tag“ gibt es nicht');
+        // der Plan selbst bleibt stehen - nichts wird geloescht
+        expect(a.wert('Plan_Z.regulation.schedule.weekJson')).to.equal(alt);
+        // Sprachwechsel: der Grund bleibt (frueher wurde daraus "kein Wochenplan hinterlegt")
+        a.getForeignObjectAsync = async id => (id === 'system.config' ? { common: { language: 'en' } } : null);
+        try {
+            expect(await a.regelung.sprachWechsel()).to.equal(true);
+            expect(a.wert('Plan_Z.regulation.reason')).to.contain('Monday: temperature level “tag” does not exist');
+        } finally {
+            a.getForeignObjectAsync = async id => (id === 'system.config' ? { common: { language: 'de' } } : null);
+            await a.regelung.sprachWechsel();
+        }
+        // ohne Plan und mit lesbarem Plan keine Warnung
+        const { a: b, uhr: uhrB } = aufbau({ regelProbelauf: false }, START);
+        b.werte.set('Plan_Q.regulation.schedule.weekJson', { val: planText, ack: true });
+        b.werte.set('Plan_Q.regulation.schedule.active', { val: true, ack: true });
+        await laufen(b, uhrB, new Anlage({ name: 'Plan Q', target: 21, mode: 'heat' }), 2);
+        expect(b.zeilen.some(z => /weekly schedule cannot be used/.test(z.text))).to.equal(false);
+    });
+
     it('Knoepfe +/- auf der Karte: ein Schritt der Anlage vom jetzigen Sollwert, in den Grenzen', async () => {
         const { a, uhr } = aufbau({ regelProbelauf: false }, START);
         const anlage = new Anlage({ name: 'Plan Y', target: 21, mode: 'heat' });

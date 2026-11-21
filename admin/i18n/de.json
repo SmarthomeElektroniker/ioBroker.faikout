@@ -280,7 +280,7 @@
   "headerSchritt2": "2 · Modul verbinden",
   "textSchritt2": "Reiter „Module suchen“: „Suchen“ klicken, das Modul in der Liste wählen und „Anbinden“ drücken. Läuft der ioBroker in Docker, findet die Suche nichts – dann die Adresse des Moduls bei „Einzelne Adresse“ prüfen. Von Hand geht es auch: in der Weboberfläche des Moduls unter Settings → Basic bei „MQTT host“ den Wert unten eintragen.",
   "textSchritt2Extern": "Extern-Betrieb: Die Module müssen auf deinen externen Broker zeigen, nicht auf diesen Adapter. Reiter „Module suchen“: „Suchen“ klicken – die Spalte „Status“ zeigt, welches Modul wohin zeigt; „Anbinden“ stellt ein Modul auf den externen Broker um. Von Hand: in der Weboberfläche des Moduls unter Settings → Basic bei „MQTT host“ den Wert unten eintragen.",
-  "headerSchritt3": "3 · Regelung einrichten (freiwillig)",
+  "headerSchritt3": "4 · Regelung einrichten (freiwillig)",
   "textSchritt3": "Reiter „Regelung“: Kennlinie und Grenzen einmal in der globalen Vorlage einstellen (ziehen); je Anlage einen Eintrag für ihre Fühler anlegen. Solange „Probelauf“ an ist, rechnet der Adapter nur und sendet nichts.",
   "textBindExtern": "Stellt den MQTT host EINES Moduls auf den externen Broker um (Adresse und Port aus dem Reiter „MQTT-Broker“, dazu Benutzer und Passwort, falls dort eingetragen). Modul wählen, „Prüfen“ klicken, Vorschau lesen, dann „Anbinden“. Das Modul startet neu und muss sich binnen 90 s über den externen Broker melden. „Zurückstellen“ schreibt den vorherigen MQTT host zurück. Firmware und alle anderen Einstellungen bleiben unberührt.",
   "labelTabHeizenVorgabe": "Heizkennlinie",
@@ -298,10 +298,11 @@
   "textVorlage": "Gilt für alle Anlagen – außer für die, bei denen weiter unten „Individuell statt globaler Vorlage“ angehakt ist.",
   "labelIndividuell": "Individuell statt globaler Vorlage",
   "textFolgtVorlage": "Folgt der Vorlage: Strategie, Kennlinien, Grenzen, Temperaturstufen und Feuchte-Maßnahme kommen aus der globalen Vorlage. Fühler und Frostschutz stellst du hier ein.",
+  "textFolgtEigeneStufen": "Achtung: Diese Anlage hat eigene Temperaturstufen. Ohne den Haken gelten die Stufen der Vorlage – ein Wochenplan, der die eigenen Stufen benutzt, läuft dann nicht mehr. Nach dem Speichern im Reiter „Zeitpläne“ prüfen: dort „Vorlage übernehmen“ wählen oder den Plan neu anlegen.",
   "textIstIndividuell": "Individuell: Für diese Anlage gelten die Werte unten. Was du leer lässt, kommt weiter aus der Vorlage.",
   "headerStufenGeraet": "Eigene Temperaturstufen dieser Anlage",
   "textStufenGeraet": "Sie gehören zum Zeitplan dieser Anlage: Ihr Wochenplan (Reiter „Zeitpläne“) schaltet zwischen ihnen um.",
   "helpExternPass": "Wird verschlüsselt gespeichert. Ohne Benutzername gesperrt: Ohne ihn gibt es keine Anmeldung, ein Passwort bliebe wirkungslos.",
-  "headerSchritt4": "4 · Zeitplan anlegen (freiwillig)",
+  "headerSchritt4": "3 · Zeitplan anlegen (freiwillig)",
   "textSchritt4": "Reiter „Zeitpläne“: Temperaturstufen (Komfort, Absenken …) festlegen und je Anlage den Wochenplan anlegen. Der Wochenplan steht auch auf der Gerätekarte (Knopf „Wochenplan“); er wirkt sofort, ohne „Speichern“."
 }

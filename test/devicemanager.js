@@ -1250,7 +1250,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 // unbekannte Stufe, kein JSON: Fehler im Klartext, nichts geschrieben
                 const fremd = JSON.stringify([[{ t: 0, s: 'party' }], [], [], [], [], [], []]);
                 expect((await frage(a, 'wochenplanEinfuegen', { device: ID, week: fremd })).error).to.equal(
-                    'Der Wochenplan wurde nicht gespeichert: Tag 1: Temperaturstufe „party“ gibt es nicht',
+                    'Der Wochenplan wurde nicht gespeichert: Montag: Temperaturstufe „party“ gibt es nicht',
                 );
                 expect((await frage(a, 'wochenplanEinfuegen', { device: ID, week: '{kaputt' })).error).to.contain('nicht gespeichert');
                 expect((await frage(a, 'wochenplanEinfuegen', { device: ID })).error).to.contain('nicht gespeichert');

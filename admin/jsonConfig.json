@@ -121,28 +121,6 @@
                     "lg": 6,
                     "xl": 6
                 },
-                "hS3": {
-                    "type": "header",
-                    "size": 4,
-                    "text": "headerSchritt3",
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12,
-                    "hidden": "_alive"
-                },
-                "tS3": {
-                    "type": "staticText",
-                    "text": "textSchritt3",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12,
-                    "hidden": "_alive"
-                },
                 "hS4": {
                     "type": "header",
                     "size": 4,
@@ -158,6 +136,28 @@
                 "tS4": {
                     "type": "staticText",
                     "text": "textSchritt4",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "_alive"
+                },
+                "hS3": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerSchritt3",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "_alive"
+                },
+                "tS3": {
+                    "type": "staticText",
+                    "text": "textSchritt3",
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
@@ -243,10 +243,21 @@
                     "lg": 12,
                     "xl": 12
                 },
-                "_erklaerung": {
+                "_hPlaene": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerPlaene",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "regelPlanVorlage": {
                     "type": "custom",
                     "url": "custom/customComponents.js",
-                    "name": "ConfigCustomFaikoutSet/Components/Erklaerung",
+                    "name": "ConfigCustomFaikoutSet/Components/Zeitplaene",
                     "i18n": true,
                     "guiApi": 2,
                     "bundlerType": "module",
@@ -255,11 +266,7 @@
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12,
-                    "custom": {
-                        "reiterZeitplaene": "tabZeitplaene",
-                        "reiterRegelung": "tabRegelung"
-                    }
+                    "xl": 12
                 },
                 "_hStufen": {
                     "type": "header",
@@ -298,21 +305,10 @@
                     "lg": 12,
                     "xl": 12
                 },
-                "_hPlaene": {
-                    "type": "header",
-                    "size": 4,
-                    "text": "headerPlaene",
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "regelPlanVorlage": {
+                "_erklaerung": {
                     "type": "custom",
                     "url": "custom/customComponents.js",
-                    "name": "ConfigCustomFaikoutSet/Components/Zeitplaene",
+                    "name": "ConfigCustomFaikoutSet/Components/Erklaerung",
                     "i18n": true,
                     "guiApi": 2,
                     "bundlerType": "module",
@@ -321,7 +317,11 @@
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12
+                    "xl": 12,
+                    "custom": {
+                        "reiterZeitplaene": "tabZeitplaene",
+                        "reiterRegelung": "tabRegelung"
+                    }
                 },
                 "_pPlanFein": {
                     "type": "panel",
@@ -893,6 +893,23 @@
                                 "backgroundColor": "rgba(61,154,80,0.12)"
                             },
                             "attr": "_tFolgt"
+                        },
+                        {
+                            "attr": "_tFolgtStufen",
+                            "type": "staticText",
+                            "text": "textFolgtEigeneStufen",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
+                            "hidden": "data.individuell === true || !(Array.isArray(data.stufen) && data.stufen.length)",
+                            "style": {
+                                "border": "1px solid #d98a00",
+                                "borderRadius": 6,
+                                "padding": "8px 12px",
+                                "backgroundColor": "rgba(217,138,0,0.12)"
+                            }
                         },
                         {
                             "type": "staticText",

@@ -1741,6 +1741,7 @@ class Faikout extends utils.Adapter {
      *   - `User` -> `user`: der Vorabstand 0.5.0-alpha fuehrte den Benutzernamen des eigenen Brokers als
      *     `User`. 1.0.0 liest nur `user` - ohne Umzug verloeren die Module ihre Anmeldung.
      *   - `regelSzenen` -> `regelStufen`, je Geraet `szenen` -> `stufen` ("Szenen" heissen Temperaturstufen).
+     *   - je Geraet fehlendes `fuehlerWeg` -> 'sollwert' (die Vorgabe, mit der die Regelung ohnehin rechnet).
      *   - einmalig (Merker `regelUmzugStand`): vorhandene Geraeteeintraege bekommen `individuell: true`
      *     (ihr Verhalten bleibt gleich); die Obergrenze 95 und die Heizkennlinie der alten Werksvorgabe
      *     werden auf die neue Werksvorgabe (100 bzw. -10 °C: 100 %) gehoben - nur bei exakter
@@ -1761,12 +1762,13 @@ class Faikout extends utils.Adapter {
             c.User = '';
         }
         const gefuellt = v => Array.isArray(v) && v.length > 0;
-        if (gefuellt(c.regelSzenen)) {
-            if (!gefuellt(c.regelStufen)) {
+        if (c.regelSzenen !== undefined) {
+            if (gefuellt(c.regelSzenen) && !gefuellt(c.regelStufen)) {
                 neu.regelStufen = c.regelSzenen;
                 c.regelStufen = neu.regelStufen;
             }
-            // null: konfigUmziehen entfernt das alte Feld aus der Instanzkonfiguration
+            // null: konfigUmziehen entfernt das alte Feld aus der Instanzkonfiguration - auch ein leeres,
+            // sonst bleibt `regelSzenen: []` als toter Schluessel stehen
             neu.regelSzenen = null;
             delete c.regelSzenen;
         }
@@ -1786,6 +1788,12 @@ class Faikout extends utils.Adapter {
             }
             if (erster && typeof z.individuell !== 'boolean') {
                 z.individuell = true;
+                geraeteNeu = true;
+            }
+            if (z.fuehlerWeg !== 'sollwert' && z.fuehlerWeg !== 'modul') {
+                // Eintraege aus dem Vorabstand kennen das Feld nicht. Die Einstellungsseite traegt die Vorgabe
+                // beim Oeffnen selbst ein - dann waere "Speichern" aktiv, ohne dass jemand etwas geaendert hat.
+                z.fuehlerWeg = 'sollwert';
                 geraeteNeu = true;
             }
             return z;
