@@ -1,0 +1,1 @@
+import{n as e,r as t}from"./Kennlinie-CclcXCXa.js";var n={KennlinieHeizen:e,KennlinieKuehlen:t};export{n as default};

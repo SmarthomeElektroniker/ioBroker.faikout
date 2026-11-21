@@ -76,12 +76,13 @@ const RestartAltIcon = symbol(
     'M12 5V2L8 6l4 4V7c3.31 0 6 2.69 6 6 0 2.97-2.17 5.43-5 5.91v2.02c3.95-.49 7-3.85 7-7.93 0-4.42-3.58-8-8-8m-6 8c0-1.65.67-3.15 1.76-4.24L6.34 7.34C4.9 8.79 4 10.79 4 13c0 4.08 3.05 7.44 7 7.93v-2.02c-2.83-.48-5-2.94-5-5.91',
 );
 
-/** Zeichenflaeche (viewBox) - dieselben Masse wie das bisherige Bild. */
-const B = 640;
-const H = 300;
+/**
+ * Zeichenflaeche (viewBox): hoechstens 640 x 300 wie das bisherige Bild. Auf schmalen Schirmen wird
+ * nicht verkleinert, sondern schmaler gezeichnet - Schrift und Griffe behalten ihre Groesse.
+ */
+const B_MAX = 640;
+const B_MIN = 300;
 const RAND = { l: 44, r: 14, o: 14, u: 28 };
-const W = B - RAND.l - RAND.r;
-const HH = H - RAND.o - RAND.u;
 
 /** Text der Komponente (admin/custom/i18n), Platzhalter %s. */
 export function t(schluessel: string, ...werte: (string | number)[]): string {
@@ -169,6 +170,40 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
     const [aktiv, setAktiv] = useState(-1);
     const [zeile, setZeile] = useState(-1);
     const [tastatur, setTastatur] = useState(false);
+    const rahmen = useRef<HTMLDivElement | null>(null);
+    const [platz, setPlatz] = useState(B_MAX);
+    useEffect(() => {
+        const el = rahmen.current;
+        if (!el || typeof ResizeObserver === 'undefined') {
+            return undefined;
+        }
+        const messen = (): void => setPlatz(el.clientWidth || B_MAX);
+        const waechter = new ResizeObserver(messen);
+        waechter.observe(el);
+        messen();
+        return () => waechter.disconnect();
+    }, []);
+    // Finger auf einem Griff: die Seite darf dabei nicht rollen, sonst bricht der Browser das Ziehen ab.
+    // (touch-action wirkt auf Teile einer SVG-Zeichnung nicht verlaesslich; neben den Griffen rollt die
+    // Seite wie gewohnt.)
+    useEffect(() => {
+        const el = svg.current;
+        if (!el) {
+            return undefined;
+        }
+        const halten = (e: TouchEvent): void => {
+            const ziel = e.target as Element | null;
+            if (ziel && typeof ziel.closest === 'function' && ziel.closest('.fk-griff:not(.fk-starr)')) {
+                e.preventDefault();
+            }
+        };
+        el.addEventListener('touchstart', halten, { passive: false });
+        return () => el.removeEventListener('touchstart', halten);
+    }, []);
+    const B = Math.round(Math.min(B_MAX, Math.max(B_MIN, platz)));
+    const H = B < 480 ? 260 : 300;
+    const W = B - RAND.l - RAND.r;
+    const HH = H - RAND.o - RAND.u;
     const zieht = useRef<{ i: number; achse: { min: number; max: number; schritt: number }; zeiger: number } | null>(
         null,
     );
@@ -308,8 +343,10 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
     const zeigeEtikett = ziehend >= 0 ? ziehend : tastatur ? aktiv : -1;
     const hervor = ziehend >= 0 ? ziehend : aktiv >= 0 ? aktiv : zeile;
 
+    // auf schmalen Schirmen jede zweite Zahl, wenn die Achse sonst zu dicht beschriftet waere
+    const xSchritt = W / ((a.max - a.min) / a.schritt) < 34 ? a.schritt * 2 : a.schritt;
     const xStriche: number[] = [];
-    for (let x = a.min; x <= a.max; x += a.schritt) {
+    for (let x = a.min; x <= a.max; x += xSchritt) {
         xStriche.push(x);
     }
 
@@ -440,10 +477,11 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                 width: '100%',
                 color: 'text.primary',
                 '& .fk-reihe': { display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-start' },
-                '& .fk-bild': { flex: '1 1 420px', minWidth: 0, maxWidth: 640 },
-                '& .fk-tabelle': { flex: '0 1 300px', minWidth: 220 },
-                '& svg': { display: 'block', width: '100%', height: 'auto', userSelect: 'none' },
-                '& svg.fk-zieht, & svg.fk-zieht .fk-griff': { cursor: 'grabbing' },
+                '& .fk-bild': { flex: '1 1 420px', minWidth: 0, maxWidth: B_MAX },
+                '& .fk-tabelle': { flex: '1 1 260px', minWidth: 220, maxWidth: 380 },
+                '& .fk-tabelle th': { whiteSpace: 'nowrap' },
+                '& .fk-zeichnung': { display: 'block', width: '100%', height: 'auto', userSelect: 'none' },
+                '& .fk-zeichnung.fk-zieht, & .fk-zeichnung.fk-zieht .fk-griff': { cursor: 'grabbing' },
                 '& .fk-griff': { cursor: 'grab', outline: 'none', touchAction: 'none' },
                 '& .fk-griff.fk-starr': { cursor: 'default' },
                 '& .fk-griff .fk-punkt': {
@@ -486,10 +524,14 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                 {props.titel}
             </Typography>
             <div className="fk-reihe">
-                <div className="fk-bild">
+                <div
+                    className="fk-bild"
+                    ref={rahmen}
+                >
                     <svg
                         ref={svg}
-                        className={ziehend >= 0 ? 'fk-zieht' : undefined}
+                        className={ziehend >= 0 ? 'fk-zeichnung fk-zieht' : 'fk-zeichnung'}
+                        style={{ maxWidth: B }}
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox={`0 0 ${B} ${H}`}
                         role="group"
@@ -534,7 +576,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                     fillOpacity="0.7"
                                 >
                                     {zug.anzeige(x, sprache)}
-                                    {x + a.schritt > a.max ? ' °C' : ''}
+                                    {x + xSchritt > a.max ? ' °C' : ''}
                                 </text>
                             </g>
                         ))}
@@ -804,7 +846,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                         mt: 0.75,
                         px: 1.25,
                         py: 0.75,
-                        maxWidth: 640,
+                        maxWidth: B_MAX,
                         borderRadius: '6px',
                         border: `1px solid ${farben.fehler}`,
                         color: farben.fehler,
