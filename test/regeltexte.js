@@ -34,7 +34,7 @@ const GLEICH_ERLAUBT = new Set([
 
 /** Typische deutsche Woerter, die in einer englischen Begruendung nichts zu suchen haben. */
 const DEUTSCH =
-    /Fühler|fühler|Ziel|Anlage|Raum|Kennlinie|Rückfall|Gerät|Leistung|Bedarf|Feuchte|Szene|Plan:|Probelauf|Handeingriff|Wochenplan|Korrektur|Vortag|Senden|sende|würde|keine|nicht|ohne|unter |über |Außen|Datenpunkt|Regelung|Modul |Deckel|Betriebsart|Abtauen|Grenze|Haltezeit|Istwert|ruht|[äöüßÄÖÜ]/;
+    /Ziel|Anlage|Raum|Kennlinie|Rückfall|Gerät|Leistung|Bedarf|Feuchte|Szene|Plan:|Probelauf|Handeingriff|Wochenplan|Korrektur|Vortag|Senden|sende|würde|keine|nicht|ohne|unter |über |Außen|Datenpunkt|Regelung|Modul |Deckel|Betriebsart|Abtauen|Grenze|Haltezeit|Istwert|ruht|[äöüßÄÖÜ]/;
 
 const platzhalter = s => [...String(s).matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort();
 
@@ -163,7 +163,7 @@ describe('Regeltexte (mehrsprachig)', () => {
             { dp: { wert: 21, zeit: 0 }, intern: { wert: 20, zeit: 3600000 } },
             3600000,
         );
-        expect(q.text).to.equal('Fühler der Anlage (Rückfall: Datenpunkt veraltet (60 min))');
+        expect(q.text).to.equal('Sensor der Anlage (Rückfall: Datenpunkt veraltet (60 min))');
         expect(wochenplan.szenenLesen(null).szenen.get('absenken').name).to.equal('Absenken');
         expect(wochenplan.szenenLesen([{ name: 'A', soll: 45 }]).fehler).to.equal(
             'Temperaturstufe „A“: Zieltemperatur 45 außerhalb 10..32 °C',
@@ -187,7 +187,7 @@ describe('Regeltexte (mehrsprachig)', () => {
         }
     });
 
-    it('der BLE-Fühler beginnt in jeder Sprache mit "BLE" (lib/oberflaeche.js erkennt ihn daran)', () => {
+    it('der BLE-Sensor beginnt in jeder Sprache mit "BLE" (lib/oberflaeche.js erkennt ihn daran)', () => {
         for (const s of SPRACHEN) {
             expect(texte.TEXTE['quellen.ble'][s], s).to.match(/^BLE/);
         }

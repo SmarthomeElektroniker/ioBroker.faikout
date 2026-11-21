@@ -391,7 +391,7 @@ describe('Regelung: Fuehlerquellen', () => {
     it('nichts brauchbar: Messung null, Zustand fehlt', () => {
         const r = quellen.waehlen('aussen', 'auto', { intern: { wert: 5, zeit: T - 2 * 3600000 } }, T);
         expect(r).to.include({ messung: null, stand: 'missing' });
-        expect(quellen.waehlen('aussen', 'auto', {}, T).text).to.equal('kein Fühler vorhanden');
+        expect(quellen.waehlen('aussen', 'auto', {}, T).text).to.equal('kein Sensor vorhanden');
     });
 
     it('traeger Fremdfuehler: schnelle Aenderungen vom Anlagenfuehler, auf Dauer der Fremdwert', () => {
@@ -836,7 +836,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
                 expect(Math.abs(a.sollwerte[i][1] - a.sollwerte[i - 1][1])).to.equal(0.5);
             }
             expect(a.sollwerte.length).to.be.at.most(4); // kein Pendeln
-            expect(a.r.gruende.join(' ')).to.match(/Fühlerkorrektur: Ziel 21 °C, Anlage 22(\.5)? °C/);
+            expect(a.r.gruende.join(' ')).to.match(/Sensorkorrektur: Ziel 21 °C, Anlage 22(\.5)? °C/);
             expect(a.r.bedarf.grund).to.match(/Ziel 21 °C/); // Leistungsgrenze rechnet mit dem Ziel im Raum
         });
 
@@ -1371,12 +1371,12 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 2);
         await scharf(a, 'Plan_I');
         await laufen(a, uhr, anlage, 6);
-        expect(a.wert('Plan_I.regulation.sensors.roomSource')).to.equal('BLE-Fühler am Modul');
+        expect(a.wert('Plan_I.regulation.sensors.roomSource')).to.equal('BLE-Sensor am Modul');
         expect(a.wert('Plan_I.regulation.sensors.room')).to.equal(20.8);
         expect(themen(anlage, 'control').map(n => JSON.parse(n))[0]).to.eql({ target: 21 });
         anlage.ble = null;
         await laufen(a, uhr, anlage, 3);
-        expect(a.wert('Plan_I.regulation.sensors.roomSource')).to.equal('Fühler der Anlage');
+        expect(a.wert('Plan_I.regulation.sensors.roomSource')).to.equal('Sensor der Anlage');
     });
 
     it('Schreiblast: ein ruhiger Tag erzeugt wenige Schreibvorgaenge und kaum Befehle', async function () {

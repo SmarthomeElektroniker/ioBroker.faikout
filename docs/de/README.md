@@ -41,7 +41,7 @@ Die Geräteliste lässt sich unter den Karten als JSON-Datei **exportieren** und
 | **Verbrauch** | Diagramm und Aufzeichnung |
 | **Module suchen**, **MQTT-Broker (Technik)**, **Moduleinstellungen (Technik)** | Anbinden und Technik |
 
-Je Gerät sind im Reiter *Regelung* immer sichtbar: wer regelt, Fühler (mit Live-Wert) und Frostschutz.
+Je Gerät sind im Reiter *Regelung* immer sichtbar: wer regelt, Sensoren (mit Live-Wert) und Frostschutz.
 Strategie, Kennlinien und die eigenen Temperaturstufen des Geräts erscheinen erst mit dem Haken
 **„Individuell statt globaler Vorlage“**; ein farbiger Kasten sagt, was gerade gilt.
 
@@ -58,8 +58,8 @@ Die Regelung kennt genau zwei Ebenen:
 | aus (Vorgabe für neue Einträge) | **alle** Werte der Vorlage. Was im Eintrag an eigenen Kennlinien, Grenzen oder Temperaturstufen steht, bleibt gespeichert, wird aber nicht benutzt. |
 | an | die Werte des Geräts. Ein einzelnes leeres Feld übernimmt weiter die Vorlage (und diese die Werksvorgabe). |
 
-Immer gerätebezogen – mit und ohne Haken – sind: wer regelt, die Fühlerquellen und der Frostschutz.
-Eine Anlage ganz ohne Eintrag nimmt die Vorlage, der ioBroker-Adapter regelt und die Fühler stehen auf
+Immer gerätebezogen – mit und ohne Haken – sind: wer regelt, die Sensorquellen und der Frostschutz.
+Eine Anlage ganz ohne Eintrag nimmt die Vorlage, der ioBroker-Adapter regelt und die Sensoren stehen auf
 Automatik.
 
 Die Werksvorgaben der Vorlage: Untergrenze **40 %**, Obergrenze **100 %**, Heizkennlinie
@@ -71,7 +71,7 @@ Die Werksvorgaben der Vorlage: Untergrenze **40 %**, Obergrenze **100 %**, Heizk
 | Betriebsart | Was passiert | Geeignet für |
 | --- | --- | --- |
 | **ioBroker-Adapter regelt** | Der Adapter schaltet nach Wochenplan und Temperaturstufen, begrenzt die Leistung nach Bedarf und greift bei Feuchte ein. Im Modul wird dabei nichts gespeichert. | den Normalfall |
-| **Faikout-Auto** | Das Modul regelt selbst auf die Zieltemperatur (Automatik der Firmware). Der Adapter liefert Ziel, Fühlerwert und Wochenplan. | wenn das Modul auch ohne ioBroker weiterregeln soll |
+| **Faikout-Auto** | Das Modul regelt selbst auf die Zieltemperatur (Automatik der Firmware). Der Adapter liefert Ziel, Sensorwert und Wochenplan. | wenn das Modul auch ohne ioBroker weiterregeln soll |
 
 Grenzen von Faikout-Auto:
 
@@ -83,7 +83,7 @@ Grenzen von Faikout-Auto:
 
 ### Was diese Anlage kann
 
-Hier steht live, ob die Anlage die Leistungsgrenze übernimmt, ob ein BLE-Fühler am Modul hängt und
+Hier steht live, ob die Anlage die Leistungsgrenze übernimmt, ob ein BLE-Sensor am Modul hängt und
 ob ein Feuchtewert vorhanden ist.
 
 #### Leistungsgrenze bei Daikin
@@ -136,18 +136,18 @@ dieser Zeit arbeiten. Ohne eigene Stufen gelten vier Werksstufen:
 Die Stufen der Vorlage gelten für alle Geräte; ein Gerät mit dem Haken „Individuell“ kann eigene
 haben.
 
-### Fühlerquellen und Frostschutz
+### Sensorquellen und Frostschutz
 
 Für Außentemperatur, Raumtemperatur und Luftfeuchte wählbar:
 
-- **Automatisch** – der beste verfügbare Fühler. Ein BLE-Fühler am Modul hat immer Vorrang (das
+- **Automatisch** – der beste verfügbare Sensor. Ein BLE-Sensor am Modul hat immer Vorrang (das
   legt die Firmware fest).
-- **Fühler der Anlage**, **BLE-Fühler am Modul** oder ein beliebiger **Datenpunkt** aus ioBroker.
+- **Sensor der Anlage**, **BLE-Sensor am Modul** oder ein beliebiger **Datenpunkt** aus ioBroker.
 
-Ist ein Wert zu alt, fällt der Adapter auf den nächsten Fühler zurück und zeigt das auf der Karte
+Ist ein Wert zu alt, fällt der Adapter auf den nächsten Sensor zurück und zeigt das auf der Karte
 gelb an. Bei einem Raum-Datenpunkt gibt es zwei Wege: Die Anlage regelt selbst und der Adapter
-gleicht ihren Sollwert an (empfohlen, auch für träge Fühler in einem anderen Raum – der Sollwert
-an der Anlage weicht dann um höchstens ±3 K vom Ziel ab), oder der Fühlerwert geht ans Modul.
+gleicht ihren Sollwert an (empfohlen, auch für träge Sensoren in einem anderen Raum – der Sollwert
+an der Anlage weicht dann um höchstens ±3 K vom Ziel ab), oder der Sensorwert geht ans Modul.
 
 **Frostschutz:** Unter der eingestellten Raumtemperatur heizt der Adapter auf 10 °C – auch wenn
 der Plan „Aus“ vorsieht. 0 schaltet den Frostschutz ab.
@@ -183,15 +183,15 @@ Die Karte zeigt den laufenden Betrieb und bietet die Bedienung des Alltags:
   Faikout-Auto ist im Modul noch aus. Rot („gestört“) steht nur bei echten Störungen.
 - **Solltemperatur:** Schieber für große Schritte, die Knöpfe − und + daneben für je einen Schritt
   der Anlage (meist 0,5 K).
-- **Fühler:** Fehlt ein gewählter Datenpunkt, nennt die Karte ihn mit Namen und sagt, welcher
-  Fühler stattdessen gilt.
+- **Sensoren:** Fehlt ein gewählter Datenpunkt, nennt die Karte ihn mit Namen und sagt, welcher
+  Sensor stattdessen gilt.
 - **Leistungsgrenze** als Zahl und Stufenbalken, mit Hinweis, wenn nur gerechnet wird (Probelauf),
   die Regelung ruht oder die Anlage den Wert nicht übernimmt.
 - **Temperaturstufe** und **nächste Schaltung**, darunter der Verweis auf den Knopf „Wochenplan“.
 - **Automatik:** drei Symbolknöpfe schalten Bedarfsregelung, Feuchteregelung und Wochenplan ein und
   aus (gefüllt = an).
 - **Handeingriff:** Hinweis mit Uhrzeit und Knopf „Handeingriff beenden“.
-- **Fühler:** grün = gewählter Fühler liefert, gelb = Rückfall oder kein Wert; die Quelle steht im
+- **Sensoren:** grün = gewählter Sensor liefert, gelb = Rückfall oder kein Wert; die Quelle steht im
   Tooltip.
 
 Unten auf der Karte öffnet der beschriftete Knopf **Wochenplan** (mit Kalendersymbol) den Wochenplan
@@ -227,7 +227,7 @@ danach, ob er eingeschaltet werden soll.
 ![Details](../img/details.png)
 
 Die Details erklären die aktuelle Entscheidung: Kennlinie mit Arbeitspunkt, der Rechenweg Schritt
-für Schritt, die Leistungsgrenze der letzten 24 Stunden und die verwendeten Fühler mit ihrer
+für Schritt, die Leistungsgrenze der letzten 24 Stunden und die verwendeten Sensoren mit ihrer
 Quelle.
 
 ## 5. Einstellungen im Modul ändern
@@ -293,7 +293,7 @@ Geräteobjekt, z. B. `faikout.0.Wohnzimmer`.
 
 Alles, was die Oberfläche zeigt, steht auch als Datenpunkt unter `<Gerät>.regulation.*` bereit, unter
 den Kanälen `demand` (Leistungsgrenze), `schedule` (Wochenplan), `humidity` (Feuchte), `manual`
-(Handeingriff), `target` (Tasten wärmer/kühler) und `sensors` (Fühler). Ob die Anlage eine
+(Handeingriff), `target` (Tasten wärmer/kühler) und `sensors` (Sensoren). Ob die Anlage eine
 Leistungsgrenze annimmt, steht in `<Gerät>.info.demandCapable` (`unknown`, `yes`, `no`).
 
 | Datenpunkt unter `regulation.` | Werte | Bedeutung |
@@ -315,9 +315,9 @@ Leistungsgrenze annimmt, steht in `<Gerät>.info.demandCapable` (`unknown`, `yes
 | `humidity.active` · `dewPoint` · `margin` · `intervention` · `reason` |  | Feuchteregelung: Schalter, Taupunkt, Abstand, Eingriff, Begründung |
 | `manual.locked` · `until` · `resume` |  | Handeingriff: Automatik wartet, bis wann, Taste „fortsetzen“ |
 | `target.up` · `target.down` |  | Tasten: Solltemperatur einen Schritt wärmer/kühler |
-| `sensors.outside` · `room` · `humidity` |  | verwendete Fühlerwerte |
-| `sensors.…Source` · `…Status` · `…Kind` | Status: ok · fallback · missing; Kind: ble · dp · internal | Quelle im Klartext, Stand und Art je Fühler |
-| `sensors.correction` · `target` · `note` |  | Fühlerkorrektur, Ziel am Raumfühler, Hinweis auf fehlenden Datenpunkt |
+| `sensors.outside` · `room` · `humidity` |  | verwendete Sensorwerte |
+| `sensors.…Source` · `…Status` · `…Kind` | Status: ok · fallback · missing; Kind: ble · dp · internal | Quelle im Klartext, Stand und Art je Sensor |
+| `sensors.correction` · `target` · `note` |  | Sensorkorrektur, Ziel am Raumsensor, Hinweis auf fehlenden Datenpunkt |
 
 Vorabstände von 1.0.0 führten diese Datenpunkte unter `<Gerät>.regel.*`. Der Adapter zieht sie beim
 Start einmal um (Schalter, Wochenplan, Abwesenheit, Verlauf und eigene History-Einstellungen bleiben

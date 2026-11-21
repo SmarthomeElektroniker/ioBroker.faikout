@@ -831,11 +831,11 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             'regulation.manual.until': null,
             'regulation.manual.resume': false,
             'regulation.sensors.outside': 5,
-            'regulation.sensors.outsideSource': 'Fühler der Anlage',
+            'regulation.sensors.outsideSource': 'Sensor der Anlage',
             'regulation.sensors.room': 21.5,
-            'regulation.sensors.roomSource': 'Fühler der Anlage',
+            'regulation.sensors.roomSource': 'Sensor der Anlage',
             'regulation.sensors.humidity': 50,
-            'regulation.sensors.humiditySource': 'Fühler der Anlage',
+            'regulation.sensors.humiditySource': 'Sensor der Anlage',
             'info.demandCapable': 'yes',
             ...werte,
         };
@@ -976,9 +976,9 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(plan).to.contain('Temperaturstufe').and.to.contain('<svg').and.to.contain('Zeiten ändern: Knopf „Wochenplan“ unten auf der Karte');
         expect(muster(dm.regelPlanHtml().en, { s: '', n: null, ns: '' })).to.contain('button “Weekly schedule”');
 
-        const f = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Fühler der Anlage', rv: 20.6, rq: 'Fühler der Anlage (Rückfall: Datenpunkt zu alt)', fv: null, fq: '', fa: false });
+        const f = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Sensor der Anlage', rv: 20.6, rq: 'Sensor der Anlage (Rückfall: Datenpunkt zu alt)', fv: null, fq: '', fa: false });
         expect(f).to.contain('Außen 4,5 °C').and.to.contain('Raum 20,6 °C · Rückfall').and.not.to.contain('Feuchte');
-        expect(f).to.contain('title="Fühler der Anlage (Rückfall: Datenpunkt zu alt)"');
+        expect(f).to.contain('title="Sensor der Anlage (Rückfall: Datenpunkt zu alt)"');
         expect(muster(dm.regelFuehlerHtml().de, { av: null, fa: true })).to.contain('Außen fehlt').and.to.contain('Feuchte fehlt');
         // mit dem Datenpunkt regulation.sensors.<art>Stand zaehlt der, nicht mehr das Wort im Quellentext
         const stand = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Sensor of the unit (fallback)', as: 'fallback', rv: 20, rq: 'x (Rückfall: y)', rs: 'ok' });
@@ -1682,7 +1682,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             expect(html).to.contain('<li style="margin:2px 0">Szene Komfort</li>');
             expect(html).to.contain('Kennlinie Heizen bei 5 °C → 61 %</li>');
             expect(html).to.contain('Leistungsgrenze, letzte 24 Stunden').and.to.contain('ioBroker-Adapter regelt');
-            expect(html).to.contain('21,5 °C').and.to.contain('Fühler der Anlage');
+            expect(html).to.contain('21,5 °C').and.to.contain('Sensor der Anlage');
             // nichts, was der Admin als Muster auswerten wuerde
             expect(html).not.to.match(/[`\\]|\$\{/);
             expect(a.gesetzt).to.eql([]);
@@ -1740,13 +1740,13 @@ describe('Device-Manager: Fuehlerkorrektur neben der Solltemperatur', () => {
                 Object.fromEntries(Object.entries(werte).map(([k, v]) => [k, { val: v }])),
             );
         const text = werte => textIn('de', werte);
-        expect(text({ k: 1, z: 21 })).to.contain('Fühlerkorrektur +1,0 K · Ziel 21,0 °C');
+        expect(text({ k: 1, z: 21 })).to.contain('Sensorkorrektur +1,0 K · Ziel 21,0 °C');
         // Dezimalzeichen der Sprache: Englisch und Chinesisch Punkt, alle anderen Komma
         for (const l of SPRACHEN) {
             const punkt = l === 'en' || l === 'zh-cn';
             expect(textIn(l, { k: 1.5, z: 21.5 }), l).to.contain(punkt ? '+1.5 K' : '+1,5 K').and.to.contain(punkt ? '21.5 °C' : '21,5 °C');
         }
-        expect(text({ k: -0.5 })).to.contain('Fühlerkorrektur −0,5 K').and.not.to.contain('Ziel');
+        expect(text({ k: -0.5 })).to.contain('Sensorkorrektur −0,5 K').and.not.to.contain('Ziel');
         for (const l of SPRACHEN) {
             expect(e.text.func[l]).to.be.a('string');
         }

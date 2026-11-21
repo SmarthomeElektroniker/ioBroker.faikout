@@ -199,6 +199,65 @@ describe('Sprachen: Regeln fuer alle Quellen', () => {
         expect(fehler).to.eql([]);
     });
 
+    it('Deutsch sagt "Sensor" - kein "Fühler" (auch nicht als "Fuehler") in sichtbaren Texten, Namen der Datenpunkte und der Anleitung', () => {
+        // Nutzerentscheid 21.11.2026: Raumsensor, Aussensensor, Feuchtesensor, BLE-Sensor, "Sensor der Anlage",
+        // Sensorquelle, Sensorkorrektur ... Datenpunkt-IDs (sensors.*) und interne Bezeichner bleiben, wie sie sind.
+        const VERBOTEN = /f(ü|ue)hler/i;
+        const fehler = [];
+        for (const [ort, t] of texte) {
+            if (VERBOTEN.test(String(t.de).replace(/\{\w+\}/g, ''))) {
+                fehler.push(`${ort}: "${String(t.de).slice(0, 60)}"`);
+            }
+        }
+        // Namen von Datenpunkten und Kanaelen, feste Texte im Quelltext, Schema der Einstellungsseite, Anleitung:
+        // dort steht die Umlautform nie mehr (Kommentare und Bezeichner des Quelltexts schreiben ASCII "Fuehler")
+        const ordner = (wurzel, endung) =>
+            fs
+                .readdirSync(path.join(WURZEL, wurzel), { recursive: true })
+                .map(String)
+                .filter(d => endung.test(d) && !/node_modules/.test(d))
+                .map(d => path.join(wurzel, d));
+        const dateien = [
+            'main.js',
+            'io-package.json',
+            'README.md',
+            'docs/de/README.md',
+            'admin/jsonConfig.json',
+            'admin/i18n/de.json',
+            ...ordner('lib', /\.js$/),
+            ...ordner('widgets', /\.(js|html)$/),
+            ...ordner('admin', /\.html$/),
+            ...ordner('src-admin/src', /\.(tsx?|json)$/),
+            ...ordner('vis-templates', /\.json$/),
+        ];
+        expect(dateien.length).to.be.greaterThan(60);
+        for (const datei of dateien) {
+            lies(datei)
+                .split('\n')
+                .forEach((zeile, nr) => {
+                    if (/f\u00fchler/i.test(zeile)) {
+                        fehler.push(`${datei}:${nr + 1}: "${zeile.trim().slice(0, 60)}"`);
+                    }
+                });
+        }
+        // deutsche Namen der Datenpunkte: auch die ASCII-Form waere dort sichtbar
+        const namen = [];
+        sammle(require('../lib/fields').FELDER, 'fields', namen);
+        sammle(require('../lib/regel').DATENPUNKTE, 'regel.DATENPUNKTE', namen);
+        sammle(require('../lib/regel').DATENPUNKTE_REGEL, 'regel.DATENPUNKTE_REGEL', namen);
+        sammle(require('../lib/regel').KANAELE, 'regel.KANAELE', namen);
+        expect(namen.length).to.be.greaterThan(40);
+        for (const [ort, t] of namen) {
+            if (VERBOTEN.test(t.de)) {
+                fehler.push(`${ort}: "${t.de}"`);
+            }
+        }
+        expect(fehler).to.eql([]);
+        // die Pruefung selbst greift: beide Schreibweisen werden erkannt, "Sensor" nicht
+        expect(['Raumfühler', 'BLE-Fühler am Modul', 'Fuehlerkorrektur', 'AUSSENFÜHLER'.toLowerCase()].every(w => VERBOTEN.test(w))).to.equal(true);
+        expect(VERBOTEN.test('Raumsensor, Sensorquelle, Sensor der Anlage')).to.equal(false);
+    });
+
     it('Gedankenstrich statt " - ", keine geraden doppelten Anfuehrungszeichen', () => {
         const fehler = [];
         for (const [ort, t] of texte) {
@@ -312,7 +371,7 @@ describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englisch
             ...['Auto', 'Individual', 'Total', 'Turbo'].map(w => `es:${w}`),
             ...['Absence', 'Auto', 'Faikout auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'Turbo', 'active'].map(w => `fr:${w}`),
             ...['Auto', 'Comfort', 'Faikout auto', 'Turbo'].map(w => `it:${w}`),
-            ...['ioBroker-Adapter regelt', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
+            ...['ioBroker-Adapter regelt', 'Sensoren', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
             ...['Auto', 'Faikout-Auto', 'Komfort', 'Port', 'Punkt %s', 'Status', 'Turbo'].map(w => `pl:${w}`),
             ...['Auto', 'Compressor', 'Individual', 'Total', 'Turbo'].map(w => `pt:${w}`),
         ]);

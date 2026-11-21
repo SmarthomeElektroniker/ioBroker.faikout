@@ -233,7 +233,7 @@ describe('Oberflaeche: Nachrichten der Einstellungsseite', () => {
     });
 
     it('regelKann: Faehigkeiten aus den Datenpunkten', async () => {
-        const a = adapter({ 'wz.info.demandCapable': 'no', 'wz.regulation.sensors.roomSource': 'BLE-Fühler am Modul', 'wz.regulation.sensors.humidity': 48 });
+        const a = adapter({ 'wz.info.demandCapable': 'no', 'wz.regulation.sensors.roomSource': 'BLE-Sensor am Modul', 'wz.regulation.sensors.humidity': 48 });
         const { antwort } = await frage(a, 'regelKann', { geraet: 'wz' });
         expect(antwort).to.contain('nicht unterstützt').and.to.contain('verbunden').and.to.contain('vorhanden');
         expect((await frage(a, 'regelKann', { geraet: '' })).antwort).to.contain(o.TEXTE.kWaehlen.de);
@@ -317,8 +317,8 @@ describe('Oberflaeche: Geraetename statt ID, Hinweise', () => {
     it('BLE-Fuehler: Art aus regulation.sensors.roomKind, ohne den Datenpunkt wie bisher aus dem Quellentext', async () => {
         const kann = async werte => (await frage(adapter(werte), 'regelKann', { geraet: 'wz' })).antwort;
         expect(await kann({ 'wz.regulation.sensors.roomKind': 'ble', 'wz.regulation.sensors.roomSource': 'BLE sensor' })).to.contain('verbunden');
-        expect(await kann({ 'wz.regulation.sensors.roomKind': 'dp', 'wz.regulation.sensors.roomSource': 'BLE-Fühler am Modul' })).to.contain('keiner');
-        expect(await kann({ 'wz.regulation.sensors.roomSource': 'BLE-Fühler am Modul' })).to.contain('verbunden');
+        expect(await kann({ 'wz.regulation.sensors.roomKind': 'dp', 'wz.regulation.sensors.roomSource': 'BLE-Sensor am Modul' })).to.contain('keiner');
+        expect(await kann({ 'wz.regulation.sensors.roomSource': 'BLE-Sensor am Modul' })).to.contain('verbunden');
     });
 
     it('Daikin-Hinweis haengt am Wert "nein" der Leistungsgrenze', async () => {

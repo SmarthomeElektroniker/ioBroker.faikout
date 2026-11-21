@@ -430,7 +430,7 @@ let raumWert = z.raum;
             });
             await uhr.ruhe(20);
         }
-        einrichtung.push('Bedarfsregelung je Gerät ankreuzen, Fühler wählen, speichern (Neustart)');
+        einrichtung.push('Bedarfsregelung je Gerät ankreuzen, Sensor wählen, speichern (Neustart)');
         await neustart();
     }
     await schritt(30);

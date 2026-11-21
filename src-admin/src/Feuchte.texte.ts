@@ -348,7 +348,7 @@ export const TEXTE = {
     },
     liveKeine: {
         en: 'No measured values yet – the adapter is not running or no unit has a humidity sensor.',
-        de: 'Noch keine Messwerte – der Adapter läuft nicht oder kein Gerät hat einen Feuchtefühler.',
+        de: 'Noch keine Messwerte – der Adapter läuft nicht oder kein Gerät hat einen Feuchtesensor.',
         ru: 'Измеренных значений пока нет – адаптер не запущен или ни у одного устройства нет датчика влажности.',
         pt: 'Ainda sem valores medidos – o adaptador não está a correr ou nenhum aparelho tem sensor de humidade.',
         nl: 'Nog geen meetwaarden – de adapter draait niet of geen toestel heeft een vochtsensor.',
