@@ -121,7 +121,7 @@
   "textProbeAus": "正式运行：适配器会发送指令 – 发给自身试运行开关（数据点 regulation.demand.dryRun）也已关闭的每台设备。 保存后生效。",
   "headerRegelGeraete": "设备",
   "textRegelGeraete": "每台空调一个条目。没有条目的设备使用默认设置：由适配器调节，传感器自动选择。",
-  "textRegelAufklappen": "▸ 点击一行即可展开该设备的设置。“+” 为另一台设备添加条目。",
+  "textRegelAufklappen": "→ 点击一行即可展开该设备的设置。“+” 为另一台设备添加条目。",
   "labelRegelGeraete": "各设备的设置",
   "labelGeraet": "设备",
   "labelBetrieb": "由谁调节此设备？",

@@ -121,7 +121,7 @@
   "textProbeAus": "Em serviço: o adaptador envia comandos – a cada aparelho cujo interruptor próprio de teste (ponto de dados regulation.demand.dryRun) também esteja desligado. Vale depois de “Guardar”.",
   "headerRegelGeraete": "Aparelhos",
   "textRegelGeraete": "Uma entrada por ar condicionado. Um aparelho sem entrada usa as predefinições: o adaptador regula, sensores em automático.",
-  "textRegelAufklappen": "▸ Clique numa linha para abrir as definições do aparelho. O “+” cria uma entrada para outro aparelho.",
+  "textRegelAufklappen": "→ Clique numa linha para abrir as definições do aparelho. O “+” cria uma entrada para outro aparelho.",
   "labelRegelGeraete": "Definições por aparelho",
   "labelGeraet": "Aparelho",
   "labelBetrieb": "Quem regula este aparelho?",

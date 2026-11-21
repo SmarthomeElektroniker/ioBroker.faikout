@@ -121,7 +121,7 @@
   "textProbeAus": "En servicio: el adaptador envía comandos – a cada equipo cuyo propio interruptor de prueba (punto de datos regulation.demand.dryRun) también esté desactivado. Se aplica tras «Guardar».",
   "headerRegelGeraete": "Equipos",
   "textRegelGeraete": "Una entrada por aire acondicionado. Un equipo sin entrada usa los valores predeterminados: regula el adaptador, sensores en automático.",
-  "textRegelAufklappen": "▸ Haz clic en una fila para desplegar los ajustes del equipo. El “+” añade una entrada para otro equipo.",
+  "textRegelAufklappen": "→ Haz clic en una fila para desplegar los ajustes del equipo. El “+” añade una entrada para otro equipo.",
   "labelRegelGeraete": "Ajustes por equipo",
   "labelGeraet": "Equipo",
   "labelBetrieb": "¿Quién regula este equipo?",

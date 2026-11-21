@@ -121,7 +121,7 @@
   "textProbeAus": "Praca: adapter wysyła polecenia – do każdego urządzenia, którego własny przełącznik trybu próbnego (punkt danych regulation.demand.dryRun) także jest wyłączony. Obowiązuje po „Zapisz”.",
   "headerRegelGeraete": "Urządzenia",
   "textRegelGeraete": "Jeden wpis na klimatyzator. Urządzenie bez wpisu używa ustawień domyślnych: reguluje adapter, czujniki w trybie automatycznym.",
-  "textRegelAufklappen": "▸ Kliknij wiersz, aby rozwinąć ustawienia urządzenia. „+” dodaje wpis dla kolejnego urządzenia.",
+  "textRegelAufklappen": "→ Kliknij wiersz, aby rozwinąć ustawienia urządzenia. „+” dodaje wpis dla kolejnego urządzenia.",
   "labelRegelGeraete": "Ustawienia dla urządzeń",
   "labelGeraet": "Urządzenie",
   "labelBetrieb": "Kto reguluje to urządzenie?",

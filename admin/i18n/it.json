@@ -121,7 +121,7 @@
   "textProbeAus": "In servizio: l’adattatore invia comandi – a ogni apparecchio il cui interruttore di prova (punto dati regulation.demand.dryRun) è anch’esso disattivato. Vale dopo “Salva”.",
   "headerRegelGeraete": "Apparecchi",
   "textRegelGeraete": "Una voce per climatizzatore. Un apparecchio senza voce usa i valori predefiniti: regola l’adattatore, sensori in automatico.",
-  "textRegelAufklappen": "▸ Fai clic su una riga per aprire le impostazioni dell’apparecchio. Il “+” aggiunge una voce per un altro apparecchio.",
+  "textRegelAufklappen": "→ Fai clic su una riga per aprire le impostazioni dell’apparecchio. Il “+” aggiunge una voce per un altro apparecchio.",
   "labelRegelGeraete": "Impostazioni per apparecchio",
   "labelGeraet": "Apparecchio",
   "labelBetrieb": "Chi regola questo apparecchio?",

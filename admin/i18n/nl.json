@@ -121,7 +121,7 @@
   "textProbeAus": "In bedrijf: de adapter stuurt commando’s – naar elk toestel waarvan de eigen proefloopschakelaar (datapunt regulation.demand.dryRun) ook uit staat. Geldt na “Opslaan”.",
   "headerRegelGeraete": "Toestellen",
   "textRegelGeraete": "Eén item per airco. Een toestel zonder item gebruikt de standaardwaarden: de adapter regelt, sensoren op automatisch.",
-  "textRegelAufklappen": "▸ Klik op een regel om de instellingen van het toestel uit te klappen. De “+” maakt een item voor nog een toestel aan.",
+  "textRegelAufklappen": "→ Klik op een regel om de instellingen van het toestel uit te klappen. De “+” maakt een item voor nog een toestel aan.",
   "labelRegelGeraete": "Instellingen per toestel",
   "labelGeraet": "Toestel",
   "labelBetrieb": "Wie regelt dit toestel?",

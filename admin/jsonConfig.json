@@ -40,7 +40,8 @@
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12
+                    "xl": 12,
+                    "hidden": "!_alive"
                 },
                 "hS1": {
                     "type": "header",

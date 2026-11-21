@@ -121,7 +121,7 @@
   "textProbeAus": "Live: the adapter sends commands – to every unit whose own dry-run switch (data point regulation.demand.dryRun) is off as well. Applies after “Save”.",
   "headerRegelGeraete": "Units",
   "textRegelGeraete": "One entry per air conditioner. A unit without an entry uses the defaults: the adapter controls, sensors on automatic.",
-  "textRegelAufklappen": "▸ Click a row to expand the settings of that unit. The “+” adds an entry for another unit.",
+  "textRegelAufklappen": "→ Click a row to expand the settings of that unit. The “+” adds an entry for another unit.",
   "labelRegelGeraete": "Settings per unit",
   "labelGeraet": "Unit",
   "labelBetrieb": "Who controls this unit?",

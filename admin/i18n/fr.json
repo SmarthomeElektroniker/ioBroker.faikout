@@ -121,7 +121,7 @@
   "textProbeAus": "En service : l’adaptateur envoie des commandes – à chaque appareil dont l’interrupteur d’essai propre (point de données regulation.demand.dryRun) est lui aussi désactivé. S’applique après « Enregistrer ».",
   "headerRegelGeraete": "Appareils",
   "textRegelGeraete": "Une entrée par climatiseur. Un appareil sans entrée utilise les valeurs par défaut : l’adaptateur régule, capteurs en automatique.",
-  "textRegelAufklappen": "▸ Cliquez sur une ligne pour déplier les réglages de l’appareil. Le « + » ajoute une entrée pour un autre appareil.",
+  "textRegelAufklappen": "→ Cliquez sur une ligne pour déplier les réglages de l’appareil. Le « + » ajoute une entrée pour un autre appareil.",
   "labelRegelGeraete": "Réglages par appareil",
   "labelGeraet": "Appareil",
   "labelBetrieb": "Qui régule cet appareil ?",

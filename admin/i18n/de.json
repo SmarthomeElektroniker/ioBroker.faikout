@@ -121,7 +121,7 @@
   "textProbeAus": "Scharf: Der Adapter sendet Befehle – an jede Anlage, deren eigener Probelauf-Schalter (Datenpunkt regulation.demand.dryRun) ebenfalls aus ist. Gilt ab dem Speichern.",
   "headerRegelGeraete": "Geräte",
   "textRegelGeraete": "Ein Eintrag je Klimaanlage. Eine Anlage ohne Eintrag nimmt die Vorgaben: Der Adapter regelt, Fühler auf Automatik.",
-  "textRegelAufklappen": "▸ Auf eine Zeile klicken, um die Einstellungen der Anlage aufzuklappen. Das „+“ legt einen Eintrag für eine weitere Anlage an.",
+  "textRegelAufklappen": "→ Auf eine Zeile klicken, um die Einstellungen der Anlage aufzuklappen. Das „+“ legt einen Eintrag für eine weitere Anlage an.",
   "labelRegelGeraete": "Einstellungen je Gerät",
   "labelGeraet": "Gerät",
   "labelBetrieb": "Wer regelt dieses Gerät?",
