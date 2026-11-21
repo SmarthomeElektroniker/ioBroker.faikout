@@ -952,7 +952,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(ohne.targetSlider.xs).to.equal(12);
     });
 
-    it('Muster der Karte: Zustand, Probelauf, Balken, "ruht (Faikout-Auto)", nicht unterstuetzt, Fuehler-Rueckfall', () => {
+    it('Muster der Karte: Zustand, Probelauf, Balken, "ruht (Modul regelt selbst)", nicht unterstuetzt, Fuehler-Rueckfall', () => {
         const kopf = muster(dm.regelKopfHtml(true).de, { z: 'ok', g: 'Szene <b>Komfort</b>', p: true });
         expect(kopf).to.contain('>aktiv<').and.to.contain('Probelauf').and.to.contain('Szene &lt;b>Komfort');
         expect(muster(dm.regelKopfHtml(false).de, { z: 'manual', g: '', p: false })).to.contain('Handeingriff').and.not.to.contain('Probelauf');
@@ -964,7 +964,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(grenze({ f: 'no' })).to.contain('nicht unterstützt').and.to.contain('>–<');
         // Tooltip am Etikett: warum eine Daikin die Leistungsgrenze nicht uebernimmt
         expect(grenze({ f: 'no' })).to.contain('title="Bei Daikin wirkt die Leistungsgrenze nur').and.to.contain('SP 1');
-        expect(grenze({ b: 'faikout' })).to.contain('ruht (Faikout-Auto)').and.to.contain('>–<');
+        expect(grenze({ b: 'faikout' })).to.contain('ruht (Modul regelt selbst)').and.to.contain('>–<');
         expect(grenze({ b: 'faikout', st: 'previousDay' })).to.contain('>45<').and.not.to.contain('ruht');
         expect(grenze({ a: false })).to.contain('nicht begrenzt');
         expect(muster(dm.regelGrenzeHtml(false).de, { s: 45, a: true, p: false, f: 'yes', b: 'adapter', st: 'curve' })).not.to.contain('Probelauf');

@@ -84,12 +84,12 @@ Die Werksvorgaben der Vorlage: Untergrenze **40 %**, Obergrenze **100 %**, Heizk
 | Betriebsart | Was passiert | Geeignet für |
 | --- | --- | --- |
 | **ioBroker-Adapter regelt** | Der Adapter schaltet nach Wochenplan und Temperaturstufen, begrenzt die Leistung nach Bedarf und greift bei Feuchte ein. Im Modul wird dabei nichts gespeichert. | den Normalfall |
-| **Faikout-Auto** | Das Modul regelt selbst auf die Zieltemperatur (Automatik der Firmware). Der Adapter liefert Ziel, Sensorwert und Wochenplan. | wenn das Modul auch ohne ioBroker weiterregeln soll |
+| **Faikout-Modul regelt selbst** | Das Modul regelt selbst auf die Zieltemperatur (Automatik der Firmware). Der Adapter liefert Ziel, Sensorwert und Wochenplan. | wenn das Modul auch ohne ioBroker weiterregeln soll |
 
-Grenzen von Faikout-Auto:
+Grenzen von „Faikout-Modul regelt selbst“:
 
 - Die Leistungsgrenze wird nur mit der Strategie **Auto** gesetzt. Mit der Strategie „Kennlinie“
-  ruht die Bedarfsregelung; auf der Karte steht dann „ruht (Faikout-Auto)“.
+  ruht die Bedarfsregelung; auf der Karte steht dann „ruht (Modul regelt selbst)“.
 - **Jede Zieländerung wird im Modul gespeichert (Flash-Speicher).** Ändert der Wochenplan das Ziel
   an einem Tag sechsmal oder öfter, warnen der Reiter und der Wochenplan-Dialog. Für Pläne mit
   vielen Schaltpunkten ist „ioBroker-Adapter regelt“ die bessere Wahl.
@@ -194,7 +194,8 @@ Die Karte zeigt den laufenden Betrieb und bietet die Bedienung des Alltags:
 - **Regelung:** Zustand (aktiv, Handeingriff, nicht eingerichtet, gestört, keine Verbindung,
   ausgeschaltet) mit der Begründung in Klartext. „Nicht eingerichtet“ heißt: Der Wochenplan ist
   eingeschaltet, aber noch keiner hinterlegt (dann erscheint oben der Knopf „Plan anlegen“), oder
-  Faikout-Auto ist im Modul noch aus. Rot („gestört“) steht nur bei echten Störungen.
+  die Automatik des Moduls ist bei „Faikout-Modul regelt selbst“ noch aus. Rot („gestört“) steht nur
+  bei echten Störungen.
 - **Solltemperatur:** Schieber für große Schritte, die Knöpfe − und + daneben für je einen Schritt
   der Anlage (meist 0,5 K).
 - **Sensoren:** Fehlt ein gewählter Datenpunkt, nennt die Karte ihn mit Namen und sagt, welcher

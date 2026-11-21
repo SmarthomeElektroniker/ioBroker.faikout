@@ -500,8 +500,8 @@ interface AnsichtProps {
     werte: Partial<Record<keyof Grenzen, unknown>>;
     /** regelFeuchteMassnahme - nur fuer die erklaerenden Zeilen je Betriebsart */
     massnahme: unknown;
-    /** Name der Wahl "Faikout-Auto" auf der Seite (Text der Auswahl "Wer regelt") */
-    nameFaikoutAuto?: string;
+    /** Name der Wahl "Faikout-Modul regelt selbst" auf der Seite (Text der Auswahl "Wer regelt") */
+    nameModulRegelt: string;
     /** Messwerte der Geraete oder null (Adapter laeuft nicht / noch keine Antwort) */
     geraete: LiveGeraet[] | null;
     sprache: string;
@@ -806,7 +806,7 @@ export function FeuchteAnsicht(props: AnsichtProps): React.JSX.Element {
                     className="fk-f-ausnahmen"
                     sx={{ color: 'text.secondary', fontSize: '0.8rem', mt: 0.5 }}
                 >
-                    {t('ausnahmen', props.nameFaikoutAuto || 'Faikout-Auto', stufenText(sprache, 'feuchte'))} {t('massWo')}
+                    {t('ausnahmen', props.nameModulRegelt, stufenText(sprache, 'feuchte'))} {t('massWo')}
                 </Typography>
             </div>
             <div className="fk-f-block">
@@ -1011,7 +1011,7 @@ function FeuchteFeld(
                 rhAus: data[ATTR.rhAus],
             }}
             massnahme={data.regelFeuchteMassnahme}
-            nameFaikoutAuto={I18n.t('optBetriebFaikout')}
+            nameModulRegelt={I18n.t('optBetriebFaikout')}
             geraete={geraete}
             sprache={I18n.getLanguage()}
             dunkel={(props.oContext?.themeType || palette?.mode) === 'dark'}

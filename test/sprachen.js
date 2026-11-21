@@ -258,6 +258,71 @@ describe('Sprachen: Regeln fuer alle Quellen', () => {
         expect(VERBOTEN.test('Raumsensor, Sensorquelle, Sensor der Anlage')).to.equal(false);
     });
 
+    it('"Faikout-Auto" ist veraltet: die Wahl heisst "Faikout-Modul regelt selbst" (Kurzform "Modul regelt selbst")', () => {
+        // Nutzerentscheid 21.11.2026. Interne Werte (regulation.mode = faikout, betrieb 'faikoutAuto') und der Kanal
+        // "Faikout-Automatik" der Modul-Einstellungen (autoe/autor/autot) bleiben, wie sie sind.
+        const VERALTET = /faikout[-  ](auto(?![a-zäöü])|авто(?![а-яіїє])|automático|自动)/i;
+        const fehler = [];
+        for (const [ort, t] of texte) {
+            for (const s of SPRACHEN) {
+                if (VERALTET.test(t[s])) {
+                    fehler.push(`${ort}: ${s} "${String(t[s]).slice(0, 60)}"`);
+                }
+            }
+        }
+        // Anleitung, Schema und Seiten: dort steht der alte Name auch nicht mehr
+        for (const datei of ['README.md', 'docs/de/README.md', 'docs/en/README.md', 'admin/jsonConfig.json', 'admin/wochenplan.html', 'admin/verbrauch.html', 'widgets/faikout.html']) {
+            lies(datei)
+                .split('\n')
+                .forEach((zeile, nr) => {
+                    if (VERALTET.test(zeile)) {
+                        fehler.push(`${datei}:${nr + 1}: "${zeile.trim().slice(0, 60)}"`);
+                    }
+                });
+        }
+        expect(fehler).to.eql([]);
+        expect(['Faikout-Auto', 'Faikout auto', 'ruht (Faikout-Auto)', 'Faikout-авто', 'Faikout automático', 'Faikout 自动'].every(w => VERALTET.test(w))).to.equal(true);
+        expect(['Faikout-Automatik (Zeit- und Temperaturschaltung)', 'Faikout automation', 'Faikout-Modul regelt selbst'].some(w => VERALTET.test(w))).to.equal(false);
+
+        // das Paar der Auswahl "Wer regelt": Einstellungsseite und Details-Dialog nennen beide Wahlen wortgleich
+        const i18n = k => Object.fromEntries(SPRACHEN.map(s => [s, JSON.parse(lies(`admin/i18n/${s}.json`))[k]]));
+        const o = require('../lib/oberflaeche').TEXTE;
+        const regel = require('../lib/regel/texte').TEXTE;
+        const marke = komponentenTexte('Geraete.texte.ts').faikoutAuto;
+        const paar = [];
+        for (const s of SPRACHEN) {
+            const modul = i18n('optBetriebFaikout')[s];
+            const adapter = i18n('optBetriebAdapter')[s];
+            const kurz = marke[s].toLowerCase();
+            if (o.betriebFaikout[s] !== modul || o.betriebAdapter[s] !== adapter) {
+                paar.push(`${s}: Details-Dialog weicht von der Einstellungsseite ab`);
+            }
+            if (!modul.includes('Faikout') || !adapter.includes('ioBroker')) {
+                paar.push(`${s}: Paar nennt Faikout/ioBroker nicht`);
+            }
+            // die Kurzform (Marke der Geraetekarte) steht wortgleich auf Karte/VIS und in der Begruendung
+            for (const [wo, text] of [
+                ['oberflaeche.ruht', o.ruht[s]],
+                ['regel index.ruhtAuto', regel['index.ruhtAuto'][s]],
+                ['helpBand', i18n('helpBand')[s]],
+                ['textRuht', i18n('textRuht')[s]],
+                ['kFaikoutPlan', o.kFaikoutPlan[s]],
+            ]) {
+                const erwartet = wo === 'oberflaeche.ruht' || wo.startsWith('regel') ? kurz : modul.toLowerCase();
+                if (!text.toLowerCase().includes(erwartet)) {
+                    paar.push(`${s}: ${wo} ohne "${erwartet}"`);
+                }
+            }
+            if (!o.kFaikoutPlan[s].includes(adapter)) {
+                paar.push(`${s}: kFaikoutPlan empfiehlt nicht "${adapter}"`);
+            }
+        }
+        expect(paar).to.eql([]);
+        expect(marke.de).to.equal('Modul regelt selbst');
+        expect(o.betriebFaikout.de).to.equal('Faikout-Modul regelt selbst');
+        expect(o.betriebFaikout.en).to.equal('Faikout module controls itself');
+    });
+
     it('Gedankenstrich statt " - ", keine geraden doppelten Anfuehrungszeichen', () => {
         const fehler = [];
         for (const [ort, t] of texte) {
@@ -369,10 +434,10 @@ describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englisch
         // Woerter, die in der Sprache wirklich so heissen ("sprache:Text")
         const GLEICH = new Set([
             ...['Auto', 'Total', 'Turbo'].map(w => `es:${w}`),
-            ...['Absence', 'Auto', 'Faikout auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'Turbo', 'active'].map(w => `fr:${w}`),
-            ...['Auto', 'Comfort', 'Faikout auto', 'Turbo'].map(w => `it:${w}`),
-            ...['ioBroker-Adapter regelt', 'Sensoren', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
-            ...['Auto', 'Faikout-Auto', 'Komfort', 'Port', 'Punkt %s', 'Status', 'Turbo'].map(w => `pl:${w}`),
+            ...['Absence', 'Auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'Turbo', 'active'].map(w => `fr:${w}`),
+            ...['Auto', 'Comfort', 'Turbo'].map(w => `it:${w}`),
+            ...['Sensoren', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
+            ...['Auto', 'Komfort', 'Port', 'Punkt %s', 'Status', 'Turbo'].map(w => `pl:${w}`),
             ...['Auto', 'Compressor', 'Total', 'Turbo'].map(w => `pt:${w}`),
         ]);
         const texte = alleTexte();

@@ -85,12 +85,12 @@ The factory defaults of the template: lower limit **40 %**, upper limit **100 %*
 | Mode | What happens | Suited for |
 | --- | --- | --- |
 | **ioBroker adapter controls** | The adapter switches by weekly schedule and temperature levels, limits the power by demand and steps in on humidity. Nothing is stored in the module. | the normal case |
-| **Faikout auto** | The module itself controls to the target temperature (automatic mode of the firmware). The adapter supplies target, sensor value and schedule. | when the module should keep controlling without ioBroker |
+| **Faikout module controls itself** | The module itself controls to the target temperature (automatic mode of the firmware). The adapter supplies target, sensor value and schedule. | when the module should keep controlling without ioBroker |
 
-Limits of Faikout auto:
+Limits of "Faikout module controls itself":
 
 - The power limit is only set with the strategy **Auto**. With the strategy "curve", demand control
-  rests; the card then says "rests (Faikout auto)".
+  rests; the card then says "rests (module controls itself)".
 - **Every change of the target is stored in the module (flash memory).** If the schedule changes
   the target six or more times on one day, the tab and the schedule dialog warn. For schedules
   with many switching times "ioBroker adapter controls" is the better choice.
@@ -195,7 +195,8 @@ The card shows the running operation and offers everyday control:
 
 - **Control:** state (active, manual override, not set up, fault, no connection, switched off) with
   the reason in plain text. "Not set up" means: the weekly schedule is switched on but none is stored
-  yet (the button "Create schedule" appears at the top), or Faikout-Auto is still off in the module.
+  yet (the button "Create schedule" appears at the top), or the
+  module's automatic mode is still off although "Faikout module controls itself" is chosen.
   Red ("fault") is shown for real faults only.
 - **Target temperature:** slider for large steps, the buttons − and + next to it for one step of the
   unit (usually 0.5 K).

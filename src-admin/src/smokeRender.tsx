@@ -149,6 +149,7 @@ export function renderAll(): Record<string, string> {
             <FeuchteAnsicht
                 werte={{ dtpEin: 4, dtpAus: 6, rhEin: 65, rhAus: 58 }}
                 massnahme="entfeuchten"
+                nameModulRegelt="Faikout-Modul regelt selbst"
                 geraete={[{ id: 'a', name: 'Wohnzimmer', raum: 21, feuchte: 55, taupunkt: 11.6 } as any]}
                 sprache="de"
                 dunkel={false}
@@ -160,6 +161,7 @@ export function renderAll(): Record<string, string> {
             <FeuchteAnsicht
                 werte={{ dtpEin: 4, dtpAus: 6, rhEin: 65, rhAus: 58 }}
                 massnahme="zielSenken"
+                nameModulRegelt="Faikout-Modul regelt selbst"
                 geraete={[{ id: 'a', name: 'Wohnzimmer', raum: 21, feuchte: 55, taupunkt: 11.6 } as any]}
                 sprache="de"
                 dunkel={false}
@@ -171,6 +173,7 @@ export function renderAll(): Record<string, string> {
             <FeuchteAnsicht
                 werte={{ dtpEin: 4, dtpAus: 6, rhEin: 65, rhAus: 58 }}
                 massnahme="melden"
+                nameModulRegelt="Faikout-Modul regelt selbst"
                 geraete={[{ id: 'a', name: 'Wohnzimmer', raum: 21, feuchte: 55, taupunkt: 11.6 } as any]}
                 sprache="de"
                 dunkel={false}

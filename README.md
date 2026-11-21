@@ -202,8 +202,8 @@ it would do, but sends nothing. Instances from older versions keep their dry run
   curve (or previous day) → room correction → result with the numbers of the control; the strength of
   the room correction and its dead band are dragged in a chart under "For advanced users".
 - **Who controls**: *ioBroker adapter controls* (schedule, temperature levels, power limit, humidity – nothing is stored
-  in the module) or *Faikout auto* (the module controls to the target itself; the adapter supplies
-  target, sensor value and schedule). With Faikout auto the power limit is only set with the
+  in the module) or *Faikout module controls itself* (the module controls to the target itself; the adapter supplies
+  target, sensor value and schedule). While the module controls itself the power limit is only set with the
   strategy "Auto", and every change of the target is stored in the module's flash memory – the
   settings warn when a schedule changes the target six or more times a day.
 - **Demand control** limits the power (`demand`) in 5 % steps, either by a curve over the outside

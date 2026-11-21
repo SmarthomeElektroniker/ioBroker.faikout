@@ -25,7 +25,7 @@ vis.binds.faikout = {
         // ---- wortgleich aus dem Adapter (lib/oberflaeche.js, lib/devicemanager.js, lib/verbrauchbild.js,
         //      src-admin/src/Stufen.texte.ts); test/sprachen.js prueft die Gleichheit je Schluessel
         zOk: ['active', 'aktiv', 'активно', 'ativa', 'actief', 'active', 'attiva', 'activa', 'aktywna', 'активне', '运行中'],
-        zHand: ['manual override', 'Handeingriff', 'ручной режим', 'intervenção manual', 'handmatige ingreep', 'intervention manuelle', 'intervento manuale', 'intervención manual', 'ingerencja ręczna', 'ручне втручання', '手动干预'],
+        zHand: ['manual override', 'Handeingriff', 'ручное вмешательство', 'intervenção manual', 'handmatige ingreep', 'intervention manuelle', 'intervento manuale', 'intervención manual', 'ingerencja ręczna', 'ручне втручання', '手动干预'],
         zEinrichten: ['not set up', 'nicht eingerichtet', 'не настроено', 'não configurada', 'niet ingericht', 'non configurée', 'non configurata', 'sin configurar', 'nieskonfigurowana', 'не налаштовано', '未设置'],
         zGestoert: ['fault', 'gestört', 'неисправность', 'avaria', 'storing', 'en défaut', 'anomalia', 'avería', 'usterka', 'несправність', '故障'],
         zOffline: ['no connection', 'keine Verbindung', 'нет связи', 'sem ligação', 'geen verbinding', 'pas de connexion', 'nessuna connessione', 'sin conexión', 'brak połączenia', 'немає зв’язку', '无连接'],
@@ -33,7 +33,7 @@ vis.binds.faikout = {
         probelauf: ['Dry run', 'Probelauf', 'Пробный режим', 'Modo de teste', 'Proefdraai', 'Marche d’essai', 'Funzionamento di prova', 'Modo de prueba', 'Tryb próbny', 'Пробний режим', '试运行'],
         grenze: ['Power limit', 'Leistungsgrenze', 'Ограничение мощности', 'Limite de potência', 'Vermogensgrens', 'Limite de puissance', 'Limite di potenza', 'Límite de potencia', 'Limit mocy', 'Обмеження потужності', '功率上限'],
         grenzeAus: ['not limited', 'nicht begrenzt', 'без ограничения', 'sem limite', 'niet begrensd', 'non limitée', 'non limitata', 'sin límite', 'bez limitu', 'без обмеження', '不限制'],
-        ruht: ['rests (Faikout auto)', 'ruht (Faikout-Auto)', 'не работает (Faikout-авто)', 'em repouso (Faikout automático)', 'rust (Faikout-auto)', 'au repos (Faikout auto)', 'ferma (Faikout auto)', 'en reposo (Faikout automático)', 'wstrzymana (Faikout-Auto)', 'неактивне (Faikout-авто)', '暂停（Faikout 自动）'],
+        ruht: ['rests (module controls itself)', 'ruht (Modul regelt selbst)', 'не работает (регулирует сам модуль)', 'em repouso (o módulo regula sozinho)', 'rust (module regelt zelf)', 'au repos (le module régule lui-même)', 'ferma (il modulo regola da sé)', 'en reposo (el módulo regula solo)', 'wstrzymana (reguluje sam moduł)', 'неактивне (регулює сам модуль)', '暂停（模块自行调节）'],
         aktWochenplan: ['Weekly schedule', 'Wochenplan', 'Расписание', 'Programa semanal', 'Weekschema', 'Programme hebdo', 'Programma settimanale', 'Programa semanal', 'Harmonogram', 'Розклад', '周计划'],
         mAn: ['on', 'an', 'вкл.', 'ligado', 'aan', 'activé', 'attivo', 'activado', 'wł.', 'увімк.', '开'],
         mAus: ['off', 'aus', 'выкл.', 'desligado', 'uit', 'désactivé', 'disattivo', 'desactivado', 'wył.', 'вимк.', '关'],

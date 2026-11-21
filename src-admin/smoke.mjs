@@ -192,7 +192,7 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
             rueckfallVortag: 'Keine Daten von gestern – zur Sicherheit volle Leistung: 100 %',
             abtauen: 'Abtauen – der Wert bleibt bei 75 %',
             stufeOhne: 'Stufe „Tag“ läuft ohne Leistungsregelung: 100 %',
-            ruhtAuto: 'Das Modul regelt selbst (Faikout-Auto) – der Adapter setzt keine Leistungsgrenze.',
+            ruhtAuto: 'Das Faikout-Modul regelt selbst – der Adapter setzt keine Leistungsgrenze.',
             nichtFaehig: 'Diese Anlage übernimmt keine Leistungsgrenze – der Adapter setzt keine.',
             neutral: 'Die Anlage heizt oder kühlt gerade nicht – kein Wert.',
             neutralHeizen: 'Die Anlage heizt gerade nicht – diese Kennlinie ist nicht im Einsatz.',
@@ -228,7 +228,7 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         for (const name of ['heizen', 'kuehlen', 'entfeuchten']) {
             assert.ok(/nur eine Meldung, kein Eingriff/.test(art(html.feuchteMelden, name)), `nur melden: ${name}`);
         }
-        assert.ok(/Faikout-Auto/.test(html.feuchte) && /Frostschutz/.test(html.feuchte) && /Feuchteregelung darf eingreifen/.test(html.feuchte), 'Ausnahmen genannt');
+        assert.ok(/„Faikout-Modul regelt selbst“ gewählt ist/.test(html.feuchte) && /Frostschutz/.test(html.feuchte) && /Feuchteregelung darf eingreifen/.test(html.feuchte), 'Ausnahmen genannt');
         assert.ok(/Reiter „Zeitpläne“/.test(html.erklaerung) && /Reiter „Regelung“/.test(html.erklaerung), 'Erklaerung nennt die Reiter');
         assert.ok(/Werksplan \(nicht angepasst\)/.test(html.zeitplaeneAus) && /Vorlage bearbeiten/.test(html.zeitplaeneAus), 'Vorlage als eigene Zeile');
         assert.ok(/Die Instanz läuft nicht/.test(html.zeitplaeneAus), 'gestoppte Instanz wird erklaert');
