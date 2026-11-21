@@ -315,11 +315,20 @@ class Geraete extends ConfigGeneric<ConfigGenericProps, Zustand> {
 
     /** Namen der gespeicherten Felder einer Zeile (ohne die reinen Anzeigefelder, die mit "_" beginnen) */
     feldNamen(): Set<string> {
-        return new Set(
+        const namen = new Set(
             this.angaben()
                 .items.map(f => f.attr || '')
                 .filter(a => a && !a.startsWith('_')),
         );
+        // die Grenzen schreibt die Kennlinie in eigene Felder NEBEN ihrem Attribut (siehe Kennlinie.tsx)
+        for (const feld of this.angaben().items) {
+            if (typeof feld.name === 'string' && feld.name.includes('/Kennlinie')) {
+                const eigen = (feld.custom || {}) as Record<string, unknown>;
+                namen.add(typeof eigen.attrUntergrenze === 'string' ? eigen.attrUntergrenze : 'untergrenze');
+                namen.add(typeof eigen.attrObergrenze === 'string' ? eigen.attrObergrenze : 'obergrenze');
+            }
+        }
+        return namen;
     }
 
     /** Geraeteliste als JSON-Datei herunterladen (wie "exportieren" der Standardliste des Admins) */
