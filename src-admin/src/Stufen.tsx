@@ -28,9 +28,19 @@ import {
 import { I18n } from '@iobroker/gui-components';
 import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from '@iobroker/json-config';
 
+import vorlageLib from '../../lib/regel/vorlage.js';
 import Werkzeugleiste from './Werkzeugleiste';
 import { t as text, type Schluessel } from './Stufen.texte';
 import { wt } from './Werkzeugleiste.texte';
+
+/** Ersatzvorschlag beim Zuruecksetzen auf die Vorlage - dieselbe Regel, die der Test des Adapters prueft */
+const { ersatzVorschlag } = vorlageLib as {
+    ersatzVorschlag(
+        eigene: { id: string; name?: string; power?: boolean; soll?: number }[],
+        vorlageStufen: { id: string; name?: string; power?: boolean; soll?: number }[],
+        planIds: string[],
+    ): { id: string; name: string; ersatz: string }[];
+};
 
 export interface Stufe {
     id: string;
@@ -467,7 +477,14 @@ interface AnsichtProps {
     dunkel: boolean;
     farben: Farben;
     /** `planVorlage`: der Plan der Vorlage aendert sich im selben Zug (Stufe mit Ersatz entfernt bzw. Rueckgaengig) */
-    onWert: (stufen: Record<string, unknown>[], planVorlage?: string) => void;
+    onWert: (stufen: Record<string, unknown>[], planVorlage?: string, ersatz?: Record<string, string>) => void;
+    /**
+     * Geraetezeile: IDs der Stufen, die der Wochenplan (und die Abwesenheit) DIESER Anlage nennt. Benutzt er
+     * Stufen, die es in der Vorlage nicht gibt, fragt "Auf die Vorlage zuruecksetzen" vorher nach dem Ersatz.
+     */
+    planStufen?: string[];
+    /** Rueckfrage "Zuruecksetzen mit Ersatzwahl" von Anfang an offen (nur fuer den Rauchtest) */
+    ruecksetzFrageOffen?: boolean;
     /** Plan der Vorlage aus dem Formular (`regelPlanVorlage`) - nur bei den Stufen der Vorlage */
     planVorlage?: unknown;
     /** fragt, wo eine Stufe noch benutzt wird; null = unbekannt (Instanz laeuft nicht) */
@@ -534,13 +551,36 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
     // Rueckfrage "wird noch benutzt - ersetzen durch": erst die Antwort entfernt die Stufe
     const [frage, setFrage] = useState<{ id: string; name: string; benutzt: Benutzung; ersatz: string } | null>(null);
     const [prueft, setPrueft] = useState('');
-    const schreiben = (neu: Record<string, unknown>[], nachEntfernen = false, planVorlage?: string): void => {
+    // Stufen der Vorlage, auf die eine Anlage zurueckfaellt (ohne Vorlage: die Werksstufen)
+    const zielStufen = (vorlageRoh.length ? vorlageRoh : werk).map(lesen);
+    /** Stufen, die der Plan dieser Anlage benutzt und die es in der Vorlage nicht gibt - mit Ersatzvorschlag */
+    const ohneVorlage = (): { id: string; name: string; ersatz: string }[] =>
+        jeGeraet && eigene ? ersatzVorschlag(stufen, zielStufen, props.planStufen || []) : [];
+    // Rueckfrage "Auf die Vorlage zuruecksetzen": erst die Antwort setzt zurueck (Ersatz je betroffener Stufe)
+    const [rueckFrage, setRueckFrage] = useState<{ id: string; name: string; ersatz: string }[] | null>(() =>
+        props.ruecksetzFrageOffen ? ohneVorlage() : null,
+    );
+    const schreiben = (neu: Record<string, unknown>[], nachEntfernen = false, planVorlage?: string, ersatz?: Record<string, string>): void => {
         if (!nachEntfernen) {
             setEntfernt(null);
         }
         setFrage(null);
+        setRueckFrage(null);
         setEntwurf(neu);
-        props.onWert(neu, planVorlage);
+        props.onWert(neu, planVorlage, ersatz);
+    };
+    /** Knopf "Auf die Vorlage zuruecksetzen": sofort - ausser der Plan der Anlage braucht einen Ersatz */
+    const zuruecksetzen = (): void | boolean => {
+        const offen = ohneVorlage();
+        if (offen.length) {
+            setFrage(null);
+            setEntfernt(null);
+            setRueckFrage(offen);
+            // die Leiste meldet noch nichts: zurueckgesetzt wird erst mit der Antwort
+            return false;
+        }
+        schreiben([]);
+        return undefined;
     };
     const aendern = (i: number, teil: Partial<Stufe>): void => {
         const alle = zeilen();
@@ -1263,6 +1303,91 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                     </Box>
                 </Box>
             ) : null}
+            {rueckFrage && rueckFrage.length ? (
+                <Box
+                    className="fk-st-rueckfrage"
+                    role="alertdialog"
+                    aria-label={t('ruecksetzTitel', props.quelle)}
+                    sx={{
+                        mt: 1,
+                        px: 1.5,
+                        py: 1,
+                        maxWidth: 720,
+                        border: '1px solid',
+                        borderColor: 'warning.main',
+                        borderLeftWidth: 4,
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        lineHeight: 1.45,
+                    }}
+                >
+                    <Box sx={{ fontWeight: 600 }}>{t('ruecksetzTitel', props.quelle)}</Box>
+                    {rueckFrage.map((zeile, nr) => (
+                        <Box
+                            key={zeile.id}
+                            component="label"
+                            className="fk-st-rueckfrage-zeile"
+                            data-stufe={zeile.id}
+                            sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mt: 0.75 }}
+                        >
+                            <span>{t('ruecksetzZeile', zeile.name)}</span>
+                            <select
+                                className="fk-st-ersatz"
+                                value={zeile.ersatz}
+                                onChange={e =>
+                                    setRueckFrage(rueckFrage.map((z, i) => (i === nr ? { ...z, ersatz: e.target.value } : z)))
+                                }
+                                style={{
+                                    font: 'inherit',
+                                    color: 'inherit',
+                                    background: farben.flaeche,
+                                    border: '1px solid currentColor',
+                                    borderRadius: 4,
+                                    padding: '3px 6px',
+                                    minWidth: 150,
+                                }}
+                            >
+                                {zielStufen.map(x => (
+                                    <option
+                                        key={x.id}
+                                        value={x.id}
+                                    >
+                                        {x.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </Box>
+                    ))}
+                    <Box
+                        className="fk-st-ersatz-wann"
+                        sx={{ mt: 0.5, color: 'text.secondary' }}
+                    >
+                        {t('ersetzenWannGeraete')}
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                        <Button
+                            className="fk-st-rueckfrage-ja"
+                            size="small"
+                            variant="contained"
+                            color="primary"
+                            disabled={rueckFrage.some(z => !z.ersatz)}
+                            sx={{ textTransform: 'none' }}
+                            onClick={() => schreiben([], false, undefined, Object.fromEntries(rueckFrage.map(z => [z.id, z.ersatz])))}
+                        >
+                            {wt(sprache, 'ja')}
+                        </Button>
+                        <Button
+                            className="fk-st-rueckfrage-nein"
+                            size="small"
+                            variant="outlined"
+                            sx={{ textTransform: 'none' }}
+                            onClick={() => setRueckFrage(null)}
+                        >
+                            {wt(sprache, 'nein')}
+                        </Button>
+                    </Box>
+                </Box>
+            ) : null}
             {entfernt ? (
                 <Box
                     className="fk-st-entfernt"
@@ -1315,7 +1440,7 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                         schreiben(inhalt.map(z => ({ ...(z as object), ...lesen(z) })));
                     }
                 }}
-                onZuruecksetzen={() => schreiben([])}
+                onZuruecksetzen={zuruecksetzen}
                 // "Rueckgaengig" stellt genau den Stand davor wieder her - auch "leer = Werksstufen bzw. Vorlage"
                 stand={eigeneRoh}
                 onRueckgaengig={vorher => schreiben((Array.isArray(vorher) ? vorher : []) as Record<string, unknown>[])}

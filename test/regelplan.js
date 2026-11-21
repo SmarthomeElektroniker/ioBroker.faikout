@@ -1257,6 +1257,30 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         c.werte.set('Plan_G.regulation.schedule.weekJson', { val: planEigen, ack: true });
         await laufen(c, uhrC, new Anlage({ name: 'Plan G', target: 21, mode: 'heat' }), 2);
         expect(c.wert('Plan_G.regulation.schedule.weekJson')).to.equal(planEigen.replace('abend', 'tag'));
+
+        // eigene Stufen auf die Vorlage zurueckgesetzt (Rueckfrage der Einstellungsseite): der Ersatz steht in der
+        // Geraetezeile (stufenErsatz) und gilt nur fuer diese Anlage - eine zweite mit demselben Plan bleibt
+        const planTagNacht = JSON.stringify([[{ t: 0, s: 'nacht' }, { t: 420, s: 'tag' }, { t: 1320, s: 'nacht' }], [], [], [], [], [], []]);
+        const vorlageStufen = ohneAbwesend.map(s => ({ ...s, ersetzt: undefined }));
+        const { a: d, uhr: uhrD } = aufbau(
+            { regelProbelauf: false, regelStufen: vorlageStufen, regelGeraete: [{ geraet: 'Plan H', stufen: [], stufenErsatz: { tag: 'komfort', nacht: 'absenken', komfort: 'aus' } }] },
+            START,
+        );
+        d.werte.set('Plan_H.regulation.schedule.weekJson', { val: planTagNacht, ack: true });
+        d.werte.set('Plan_I.regulation.schedule.weekJson', { val: planTagNacht, ack: true });
+        await laufen(d, uhrD, new Anlage({ name: 'Plan H', target: 21, mode: 'heat' }), 2);
+        await laufen(d, uhrD, new Anlage({ name: 'Plan I', target: 21, mode: 'heat' }), 2);
+        // vorhandene Stufen ("komfort") werden nie ersetzt - auch wenn die Zeile etwas anderes sagt
+        expect(d.wert('Plan_H.regulation.schedule.weekJson')).to.equal(planTagNacht.replace(/nacht/g, 'absenken').replace('tag', 'komfort'));
+        expect(d.wert('Plan_I.regulation.schedule.weekJson')).to.equal(planTagNacht);
+        // hat die Anlage (wieder) eigene Stufen, ist der Ersatz der Zeile hinfaellig
+        const { a: e, uhr: uhrE } = aufbau(
+            { regelProbelauf: false, regelStufen: vorlageStufen, regelGeraete: [{ geraet: 'Plan J', stufen: [{ name: 'Wach', soll: 21 }], stufenErsatz: { tag: 'wach' } }] },
+            START,
+        );
+        e.werte.set('Plan_J.regulation.schedule.weekJson', { val: planTagNacht, ack: true });
+        await laufen(e, uhrE, new Anlage({ name: 'Plan J', target: 21, mode: 'heat' }), 2);
+        expect(e.wert('Plan_J.regulation.schedule.weekJson')).to.equal(planTagNacht);
     });
 
     it('Ersatz entfernter Stufen: Kette, unbekannte ohne Ersatz bleiben, vorhandene Stufen werden nie ersetzt', () => {
@@ -1286,6 +1310,10 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         // ohne Ersatzangaben: leere Zuordnung, `ersetzt` stoert szenenLesen nicht
         expect(wochenplan.ersatzLesen([]).size).to.equal(0);
         expect(wochenplan.ersatzLesen(null).size).to.equal(0);
+        // Ersatz aus der Geraetezeile (eigene Stufen zurueckgesetzt): ergaenzt, die Liste geht vor, Unsinn faellt weg
+        expect([...wochenplan.ersatzLesen(liste, { Tag: 'a', c: 'b', a: 'a', leer: '', zahl: 5 })]).to.eql([['c', 'a'], ['d', 'a'], ['a', 'b'], ['x', 'b'], ['tag', 'a']]);
+        expect([...wochenplan.ersatzLesen([], { tag: 'komfort' })]).to.eql([['tag', 'komfort']]);
+        expect(wochenplan.ersatzLesen([], ['tag']).size).to.equal(0);
         expect([...sz.keys()]).to.eql(['a', 'b']);
     });
 

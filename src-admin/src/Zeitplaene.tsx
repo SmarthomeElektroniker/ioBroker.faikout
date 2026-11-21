@@ -498,7 +498,7 @@ export interface AnsichtProps {
      * Schreibt die eigenen Stufen einer Anlage ins Formular (gilt mit "Speichern" der Instanz); leere Liste =
      * es gilt wieder die Vorlage. Ohne diese Funktion sind die Stufen je Anlage nur Anzeige.
      */
-    onGeraetStufen?: (geraet: { id: string; name: string }, stufen: Record<string, unknown>[]) => void;
+    onGeraetStufen?: (geraet: { id: string; name: string }, stufen: Record<string, unknown>[], ersatz?: Record<string, string>) => void;
     /** meldet eine ungueltige Stufenliste einer Anlage ('' = in Ordnung) */
     onStufenFehler?: (id: string, meldung: string) => void;
     /** Farben des Admin-Themas fuer die Stufenkarten */
@@ -1004,7 +1004,9 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                             sprache={sprache}
                             dunkel={dunkel}
                             farben={props.farben || { flaeche: dunkel ? '#1e1e1e' : '#fff', fokus: '#3399cc', fehler: '#d9534f' }}
-                            onWert={stufen => props.onGeraetStufen?.({ id: g.id, name }, stufen)}
+                            onWert={(stufen, _planVorlage, ersatz) => props.onGeraetStufen?.({ id: g.id, name }, stufen, ersatz)}
+                            // zuruecksetzen, waehrend der Plan eigene Stufen benutzt: vorher nach dem Ersatz fragen
+                            planStufen={Array.isArray(g.planStufen) ? g.planStufen : []}
                             // wird die Stufe im Plan DIESER Anlage noch benutzt? (der Adapter nennt die IDs des Plans)
                             benutzung={id =>
                                 Promise.resolve({
@@ -1348,7 +1350,7 @@ function useSenden(props: ConfigGenericProps, sprache: string): Senden | null {
 function ZeitplaeneFeld(
     props: ConfigGenericProps & {
         onVorlage: (text: string) => void;
-        onGeraetStufen: (geraet: { id: string; name: string }, stufen: Record<string, unknown>[]) => void;
+        onGeraetStufen: (geraet: { id: string; name: string }, stufen: Record<string, unknown>[], ersatz?: Record<string, string>) => void;
         onStufenFehler: (id: string, meldung: string) => void;
     },
 ): React.JSX.Element {
@@ -1393,7 +1395,7 @@ export class Zeitplaene extends ConfigGeneric<ConfigGenericProps, ConfigGenericS
      * Gerätekarte (`custom.neueZeile` im Schema) - eine Anlage ohne Zeile verhaelt sich genau so. Eine leere
      * Liste heisst "es gilt wieder die Vorlage"; die Zeile bleibt stehen.
      */
-    onGeraetStufen = (geraet: { id: string; name: string }, stufen: Record<string, unknown>[]): void => {
+    onGeraetStufen = (geraet: { id: string; name: string }, stufen: Record<string, unknown>[], ersatz?: Record<string, string>): void => {
         const data = (this.props.data || {}) as Record<string, unknown>;
         const zeilen = (
             Array.isArray(data.regelGeraete) ? (JSON.parse(JSON.stringify(data.regelGeraete)) as unknown[]) : []
@@ -1405,6 +1407,12 @@ export class Zeitplaene extends ConfigGeneric<ConfigGenericProps, ConfigGenericS
         const neu = eigen.neueZeile && typeof eigen.neueZeile === 'object' ? (eigen.neueZeile as Record<string, unknown>) : {};
         if (nr >= 0) {
             const zeile: Record<string, unknown> = { ...(zeilen[nr] as Record<string, unknown>), stufen };
+            // Ersatz fuer Stufen, die der Wochenplan der Anlage noch benutzt (Rueckfrage beim Zuruecksetzen): der
+            // Adapter schreibt den Plan damit um, sobald gespeichert ist. Mit eigenen Stufen ist er hinfaellig.
+            delete zeile.stufenErsatz;
+            if (!stufen.length && ersatz && Object.keys(ersatz).length) {
+                zeile.stufenErsatz = ersatz;
+            }
             // Zeile, die erst hier (ungespeichert) fuer die Stufen entstanden ist und sonst nur die Vorgaben traegt:
             // mit "Auf die Vorlage zuruecksetzen" verschwindet sie wieder - das Formular ist dann wie vorher
             const gespeichert = (this.props.originalData || {}) as Record<string, unknown>;

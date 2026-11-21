@@ -148,7 +148,10 @@ dieser Zeit arbeiten. Ohne eigene Stufen gelten vier Werksstufen:
 
 Die Stufen der Vorlage gelten für alle Geräte ohne eigene Stufen. Eigene Stufen eines Geräts stellst
 du im Reiter *Zeitpläne* bei seinem Wochenplan ein („Stufen anpassen“): Sie entstehen, sobald du dort
-eine Stufe änderst, und gelten wie die Vorlage erst mit „Speichern“ der Instanz.
+eine Stufe änderst, und gelten wie die Vorlage erst mit „Speichern“ der Instanz. „Auf die Vorlage
+zurücksetzen“ verwirft sie wieder. Benutzt der Wochenplan des Geräts dabei Stufen, die es in der
+Vorlage nicht gibt, fragt die Seite vorher je Stufe nach dem Ersatz (vorgeschlagen wird die Stufe der
+Vorlage mit der nächstliegenden Temperatur); der Plan wird damit beim „Speichern“ umgeschrieben.
 
 ### Sensorquellen und Frostschutz
 

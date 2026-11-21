@@ -987,7 +987,7 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
             expect(z[a].hidden, a).to.equal(undefined);
         }
         // die Temperaturstufen der Anlage stehen im Reiter Zeitplaene; Export/Import der Geraeteliste kennt das Feld trotzdem
-        expect(r.regelGeraete.custom.zusatzFelder).to.eql(['stufen']);
+        expect(r.regelGeraete.custom.zusatzFelder).to.eql(['stufen', 'stufenErsatz']);
         // "So entsteht der Wert gerade" bei Strategie Vortag (bei Kennlinie steht es am Bild) und der Satz bei der Strategie
         expect(z._rechenweg).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Rechenweg' });
         expect(z._rechenweg.custom).to.eql({ art: 'weg' });

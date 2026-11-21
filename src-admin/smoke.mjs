@@ -172,6 +172,15 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.ok(/data-quelle="eigen"/.test(html.stufenGeraetEigen) && /^Eigene Stufen dieser Anlage/.test(sichtbar(html.stufenGeraetEigen)) && /Auf die Vorlage zurücksetzen/.test(html.stufenGeraetEigen), 'Geraet mit eigenen Stufen');
         assert.ok(!/<button[^>]*fk-wz-zurueck[^>]*disabled/.test(html.stufenGeraetEigen), 'eigene Stufen: Zuruecksetzen frei');
         ok('Rendern Stufen je Geraet: Vorlage direkt anfassbar, eigen/Vorlage als Text');
+        // Zuruecksetzen, waehrend der Plan eigene Stufen benutzt: Rueckfrage im Formular, je Stufe eine Ersatzwahl
+        // mit der naechstliegenden Stufe der Vorlage als Vorgabe (Tag 22 °C -> Komfort, Nacht 18 °C -> Absenken)
+        const frage = (html.stufenRueckfrage.match(/<div class="fk-st-rueckfrage[\s\S]*?fk-st-rueckfrage-nein[\s\S]*?<\/button>/) || [''])[0];
+        assert.ok(/role="alertdialog"/.test(frage) && /Der Wochenplan von Test benutzt Stufen, die es in der Vorlage nicht gibt:/.test(frage), 'Rueckfrage nennt die Anlage');
+        const wahl = [...frage.matchAll(/data-stufe="([^"]*)"[\s\S]*?<span>([^<]*)<\/span>[\s\S]*?<option value="([^"]*)" selected="">([^<]*)</g)].map(m => m.slice(1));
+        assert.deepStrictEqual(wahl, [['nacht', '„Nacht“ ersetzen durch:', 'absenken', 'Absenken'], ['tag', '„Tag“ ersetzen durch:', 'komfort', 'Komfort']], `Ersatzwahl je betroffener Stufe (${JSON.stringify(wahl)})`);
+        assert.ok(/fk-st-rueckfrage-ja[^>]*>Zurücksetzen</.test(frage) && /fk-st-rueckfrage-nein[^>]*>Abbrechen</.test(frage) && /erst, wenn du die Einstellungen speicherst/.test(frage), 'Knoepfe Zuruecksetzen/Abbrechen, Hinweis auf das Speichern');
+        assert.ok(!/fk-st-rueckfrage/.test(html.stufenOhneRueckfrage) && !/fk-st-rueckfrage/.test(html.stufenGeraetEigen), 'Plan nur mit Stufen der Vorlage: keine Rueckfrage');
+        ok('Rendern Rueckfrage beim Zuruecksetzen der Stufen: Ersatzwahl je Stufe, Vorgabe naechste Temperatur');
         // Rechenweg: jeder Fall als Satz
         const WEG = {
             warm: 'Kennlinie 52 % → Raum 1,0 K zu warm: −7 → 45 %',

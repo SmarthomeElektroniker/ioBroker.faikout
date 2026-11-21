@@ -500,6 +500,34 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
     it('vorlage.js: eigene Teile einer Zeile und Umzug einer einzelnen Zeile (auch fuer den Import der Geraeteliste)', () => {
         const v = require('../lib/regel/vorlage');
         expect(v.eigeneTeile(undefined)).to.eql([]);
+        // der Ersatz fuer zurueckgesetzte Stufen macht eine Zeile nicht "eigen"
+        expect(v.eigeneTeile({ geraet: 'A', stufen: [], stufenErsatz: { tag: 'komfort' } })).to.eql([]);
+        // Ersatzvorschlag beim Zuruecksetzen der Stufen: nur Stufen des Plans, die die Vorlage nicht kennt; naechste
+        // Zieltemperatur, "aus" zu "aus"
+        const eigene = [
+            { id: 'tag', name: 'Tag', power: true, soll: 22 },
+            { id: 'nacht', name: 'Nacht', power: true, soll: 18 },
+            { id: 'weg', name: 'Weg', power: false, soll: 30 },
+            { id: 'komfort', name: 'Mein Komfort', power: true, soll: 25 },
+        ];
+        const ziel = [
+            { id: 'komfort', name: 'Komfort', power: true, soll: 21 },
+            { id: 'absenken', name: 'Absenken', power: true, soll: 19 },
+            { id: 'abwesend', name: 'Abwesend', power: true, soll: 17 },
+            { id: 'aus', name: 'Aus', power: false, soll: 17 },
+        ];
+        expect(v.ersatzVorschlag(eigene, ziel, ['nacht', 'tag', 'komfort', 'weg', 'fremd', 'tag'])).to.eql([
+            { id: 'nacht', name: 'Nacht', ersatz: 'absenken' },
+            { id: 'tag', name: 'Tag', ersatz: 'komfort' },
+            { id: 'weg', name: 'Weg', ersatz: 'aus' },
+            { id: 'fremd', name: 'fremd', ersatz: 'komfort' },
+        ]);
+        // der Plan benutzt nur Stufen, die es in der Vorlage auch gibt: keine Rueckfrage
+        expect(v.ersatzVorschlag(eigene, ziel, ['komfort'])).to.eql([]);
+        expect(v.ersatzVorschlag(eigene, ziel, [])).to.eql([]);
+        expect(v.ersatzVorschlag(null, null, null)).to.eql([]);
+        // ohne "Aus"-Stufe in der Vorlage: die naechstliegende eingeschaltete
+        expect(v.ersatzVorschlag(eigene, ziel.slice(0, 3), ['weg'])).to.eql([{ id: 'weg', name: 'Weg', ersatz: 'komfort' }]);
         expect(v.eigeneTeile({ geraet: 'A', betrieb: 'adapter', frostAb: 5, strategie: '', stufen: [], kennlinieHeizen: [], untergrenze: '', obergrenze: null })).to.eql([]);
         expect(v.eigeneTeile({ kennlinieKuehlen: [{ x: 1, y: 2 }], obergrenze: 0, feuchteMassnahme: 'melden' })).to.eql(['kennlinieKuehlen', 'grenzen', 'feuchte']);
         expect(v.eigeneTeile({ vortagReferenzW: 800 })).to.eql(['strategie']);

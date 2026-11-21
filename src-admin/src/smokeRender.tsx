@@ -65,10 +65,12 @@ export function renderAll(): Record<string, string> {
                 {...mehr}
             />,
         );
-    const stufen = (wert: unknown, jeGeraet: boolean, vorlage: unknown[] = []): string =>
+    const stufen = (wert: unknown, jeGeraet: boolean, vorlage: unknown[] = [], planStufen?: string[]): string =>
         mit(
             <StufenAnsicht
                 wert={wert}
+                planStufen={planStufen}
+                ruecksetzFrageOffen={!!planStufen}
                 vorlage={jeGeraet ? vorlage : undefined}
                 jeGeraet={jeGeraet}
                 quelle="Test"
@@ -104,6 +106,18 @@ export function renderAll(): Record<string, string> {
         ),
         stufenGeraet: stufen([], true, [{ id: 'wach', name: 'Wach', power: true, mode: 'heat', soll: 20, fan: 'auto', deckel: 100, bedarf: true, feuchte: true }]),
         stufenGeraetEigen: stufen([{ id: 'tag', name: 'Tag', power: true, mode: 'heat', soll: 22, fan: 'auto', deckel: 90, bedarf: true, feuchte: true }], true),
+        // Zuruecksetzen, waehrend der Plan der Anlage eigene Stufen benutzt: Rueckfrage mit Ersatzwahl
+        stufenRueckfrage: stufen(
+            [
+                { id: 'tag', name: 'Tag', power: true, mode: 'heat', soll: 22, fan: 'auto', deckel: 90, bedarf: true, feuchte: true },
+                { id: 'nacht', name: 'Nacht', power: true, mode: 'heat', soll: 18, fan: 'night', deckel: 60, bedarf: true, feuchte: false },
+            ],
+            true,
+            [],
+            ['nacht', 'tag', 'komfort'],
+        ),
+        // der Plan benutzt nur Stufen der Vorlage: keine Rueckfrage
+        stufenOhneRueckfrage: stufen([{ id: 'komfort', name: 'Komfort', power: true, mode: 'heat', soll: 22, fan: 'auto', deckel: 90, bedarf: true, feuchte: true }], true, [], ['komfort']),
         // Rechenweg: alle Arten als Satz (Schluessel = Fall)
         ...Object.fromEntries(
             Object.entries(WEGE).map(([name, [weg, richtung]]) => [`weg_${name}`, wegText(weg, 'de', richtung)]),

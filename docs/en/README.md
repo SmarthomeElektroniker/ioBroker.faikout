@@ -148,7 +148,10 @@ Without own levels four factory levels apply:
 
 The levels of the template apply to all units without levels of their own. A unit’s own levels are
 set in the tab *Schedules* next to its weekly schedule (“Adjust levels”): they arise as soon as you
-change a level there and, like the template, only apply after “Save” of the instance.
+change a level there and, like the template, only apply after “Save” of the instance. “Reset to the
+template” discards them again. If the unit’s weekly schedule uses levels that do not exist in the
+template, the page first asks for a replacement per level (it suggests the template level with the
+nearest temperature); the schedule is rewritten with it on “Save”.
 
 ### Sensor sources and frost protection
 
