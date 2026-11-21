@@ -192,7 +192,7 @@
   "optMassEntfeuchten": "Включить осушение",
   "optMassZielSenken": "При охлаждении снизить цель на 1 K",
   "optMassMelden": "Только сообщать",
-  "labelFeuchteMinLauf": "Вмешательство по влажности длится не менее (мин)",
+  "labelFeuchteMinLauf": "Вмешательство длится не менее (мин)",
   "labelFeuchtePause": "Пауза после вмешательства по влажности (мин)",
   "headerFeiertage": "Праздничные дни",
   "labelFeiertagSonntag": "В праздничные дни действует воскресное расписание",

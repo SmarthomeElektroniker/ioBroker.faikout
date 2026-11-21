@@ -192,7 +192,7 @@
   "optMassEntfeuchten": "Увімкнути осушення",
   "optMassZielSenken": "Під час охолодження знизити ціль на 1 K",
   "optMassMelden": "Лише повідомляти",
-  "labelFeuchteMinLauf": "Втручання за вологістю триває щонайменше (хв)",
+  "labelFeuchteMinLauf": "Втручання триває щонайменше (хв)",
   "labelFeuchtePause": "Пауза після втручання за вологістю (хв)",
   "headerFeiertage": "Святкові дні",
   "labelFeiertagSonntag": "У святкові дні діє недільний розклад",

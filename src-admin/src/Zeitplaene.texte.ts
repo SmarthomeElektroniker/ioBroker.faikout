@@ -21,7 +21,7 @@ const en = {
     jetztStufe: 'Now: %s',
     naechste: 'Next switch: %s → %s',
     keinPlan: 'No plan yet',
-    keinPlanText: 'Create a plan or apply the template.',
+    keinPlanText: 'Create a plan or use the template.',
     planUngueltig: 'Plan does not match the temperature levels',
     planUngueltigText:
         'The stored plan uses a level that does not exist (any more) for this unit – it is not running. Create the plan again or use the template.',
@@ -35,7 +35,7 @@ const en = {
     einschaltenFrage: 'The plan is saved, but the weekly schedule for %s is switched off. Switch the weekly schedule on now?',
     einschalten: 'Switch on',
     nurSpeichern: 'Save only',
-    vorlageUebernehmen: 'Apply template',
+    vorlageUebernehmen: 'Use template',
     werksvorgabe: 'Factory default',
     vorlageBearbeiten: 'Edit template',
     dialogHinweisVorlage: '“Apply plan” puts the plan into the form – it applies with “Save” of the instance.',
