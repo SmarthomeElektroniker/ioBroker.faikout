@@ -173,3 +173,25 @@ describe('Externer MQTT-Broker', function () {
         expect(a.brokerZiel()).to.include({ extern: false, adresse: '192.0.2.5', port: 1888, user: 'intern' });
     });
 });
+
+describe('Client-ID am externen Broker: einstellbar, Standard einmal erzeugt', () => {
+    const b = require('../lib/brokerextern');
+    const o = require('../lib/oberflaeche');
+    it('neueClientId: Instanz plus fester Zufallsteil, jedes Mal anders', () => {
+        expect(b.neueClientId(0)).to.match(/^iobroker-faikout-0-[0-9a-f]{6}$/);
+        expect(b.neueClientId(1)).to.not.equal(b.neueClientId(1));
+    });
+    it('Knopf "Standard wiederherstellen" liefert den gespeicherten Standardwert der Instanz', async () => {
+        const gesendet = [];
+        const a = { config: { externClientIdStandard: 'iobroker-faikout-0-abc123' }, instance: 0, log: { warn() {} }, sendTo: (an, befehl, antwort) => gesendet.push(antwort) };
+        await o.nachricht(a, { command: 'clientIdStandard', message: {}, from: 'admin', callback: {} });
+        await o.nachricht(a, { command: 'clientIdStandard', message: { standard: 'aus-dem-formular' }, from: 'admin', callback: {} });
+        expect(gesendet).to.eql([{ native: { externClientId: 'iobroker-faikout-0-abc123' } }, { native: { externClientId: 'aus-dem-formular' } }]);
+    });
+    it('Einstellungsseite: Feld und Knopf nur beim externen Broker, Vorgabe in io-package', () => {
+        const B = require('../admin/jsonConfig.json').items.tabBroker.items;
+        expect(B.externClientId.hidden).to.equal("data.brokerModus !== 'extern'");
+        expect(B._clientIdStandard).to.include({ type: 'sendTo', command: 'clientIdStandard', hidden: "data.brokerModus !== 'extern'" });
+        expect(require('../io-package.json').native).to.have.property('externClientIdStandard', '');
+    });
+});
