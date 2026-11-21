@@ -606,22 +606,28 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         expect(kalt.demand).to.equal(60);
     });
 
-    it('Ueberheizschutz: 1,5 K ueber dem Ziel -> Mindeststufe 30 %, auch unter der Untergrenze und dem Deckel', () => {
+    it('Ueberheizschutz: 1,5 K ueber dem Ziel -> Mindeststufe, aber nicht unter die Untergrenze der Anlage (40 %)', () => {
         const warm = koordinator.koordinieren(
             eingang({ fuehler: { aussen: m(5), raum: m(22.6), feuchte: m(50) } }),
             k,
             null,
             T,
         );
-        expect(warm.demand).to.equal(30);
-        expect(warm.gruende.join(' ')).to.match(/Überheizschutz/);
+        expect(warm.demand).to.equal(40);
+        expect(warm.gruende.join(' ')).to.match(/Überheizschutz/).and.to.match(/begrenzt auf die Untergrenze 40 %/);
+        // mit Untergrenze 30 % gilt die Mindeststufe 30 %
+        const tief = { ...k, bedarf: bedarf.konfigPruefen({ untergrenze: 30 }).konfig };
+        expect(
+            koordinator.koordinieren(eingang({ fuehler: { aussen: m(5), raum: m(22.6), feuchte: m(50) } }), tief, null, T)
+                .demand,
+        ).to.equal(30);
         const knapp = koordinator.koordinieren(
             eingang({ fuehler: { aussen: m(5), raum: m(22.3), feuchte: m(50) } }),
             k,
             null,
             T,
         );
-        expect(knapp.demand).to.be.above(30);
+        expect(knapp.demand).to.be.above(40);
         const aus = { ...k, bedarf: bedarf.konfigPruefen({ ueberAbK: 0 }).konfig };
         expect(
             koordinator.koordinieren(eingang({ fuehler: { aussen: m(5), raum: m(23), feuchte: m(50) } }), aus, null, T)

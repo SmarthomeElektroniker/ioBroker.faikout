@@ -129,11 +129,23 @@ describe('Regelung: Rechenkern', () => {
         expect(mit(22).grund).to.contain('→ 75 %').and.to.contain('Korrektur -7 Pkt.');
         // volle Leistung und Ueberheizschutz mit ihrer Schwelle
         expect(mit(19).weg).to.include({ art: 'voll', schwelle: 2, sollwert: 100, abweichung: 2 });
-        expect(mit(22.6).weg).to.include({ art: 'ueber', schwelle: 1.5, sollwert: 30, abweichung: -1.6 });
+        // Ueberheizschutz: Mindeststufe, aber nie unter die Untergrenze der Anlage (hier 40 %)
+        expect(mit(22.6).weg).to.include({ art: 'ueber', schwelle: 1.5, sollwert: 40, abweichung: -1.6, grenze: 'unter' });
+        expect(mit(22.6).grund).to.match(/Überheizschutz.*begrenzt auf die Untergrenze 40 %/);
         // Grenzen: unten (warm draussen, Raum drueber) und oben (Obergrenze 80)
         expect(mit(21.9, { aussen: { wert: 15, zeit: T0 } }).weg).to.include({ basis: 40, korrektur: -6, grenze: 'unter', sollwert: 40 });
         const eng = bedarf.konfigPruefen({ obergrenze: 80 }).konfig;
         expect(mit(20, { aussen: { wert: -10, zeit: T0 } }, eng).weg).to.include({ basis: 100, korrektur: 7, grenze: 'ober', sollwert: 80 });
+        // greift eine Grenze, steht das auch in der Begruendung (wie in der Zeile der Einstellungsseite)
+        expect(mit(21.9, { aussen: { wert: 15, zeit: T0 } }).grund).to.contain('Untergrenze 40 % greift');
+        expect(mit(20, { aussen: { wert: -10, zeit: T0 } }, eng).grund).to.contain('Obergrenze 80 % greift');
+        expect(mit(20.8).grund).not.to.match(/grenze \d+ % greift/);
+        // Strategie Auto (Vortag): deren eigene Obergrenze 95 % wird als solche benannt, nicht als Obergrenze der Anlage
+        const vt = bedarf.konfigPruefen({ strategie: 'vortag' }).konfig;
+        const voll = mit(21, { vortag: { spitzeW: 1300, mittelW: 900, stunden: 20 } }, vt);
+        expect(voll.weg).to.include({ strategie: 'vortag', grenze: 'ober', grenzeVortag: true, sollwert: 95 });
+        expect(voll.grund).to.contain('Obergrenze der Strategie „Auto“ 95 % greift');
+        expect(mit(20, { aussen: { wert: -10, zeit: T0 } }, eng).weg.grenzeVortag).to.equal(false);
         // ohne Raumsensor: keine Abweichung, keine Korrektur
         expect(mit(null).weg).to.include({ raum: null, abweichung: null, korrektur: 0, sollwert: 75 });
         // Kuehlen: > 0 heisst "Raum zu warm"
