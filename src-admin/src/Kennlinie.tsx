@@ -6,7 +6,9 @@
  *
  * Bedienung im Bild: Punkt ziehen (oder Pfeiltasten), Doppelklick in die Flaeche = Punkt hinzufuegen,
  * Rechtsklick auf einen Punkt oder Entf = entfernen (zwei bleiben). Die Grenzlinien lassen sich am
- * Griff, an der Linie und mit den Pfeiltasten verschieben; daneben steht ihr Wert als kleines Feld.
+ * Griff, an der Linie und mit den Pfeiltasten verschieben. Ihr Wert steht als Schrift an der Linie;
+ * Doppelklick darauf (Finger: antippen; Tastatur: Enter oder F2 am Griff) oeffnet an Ort und Stelle
+ * eine Zahleneingabe - Enter uebernimmt, Esc verwirft, Unzulaessiges wird mit Begruendung abgelehnt.
  *
  * Der Jetzt-Marker (Aussentemperatur des Geraets) ist bewusst zurueckhaltend: duenne blasse Linie,
  * kleiner Kreis auf der Kurve, ein Etikett. Er liegt UNTER den Griffen, nimmt keine Mausereignisse an
@@ -189,76 +191,6 @@ function Zahlfeld(props: {
     );
 }
 
-/**
- * Der Wert einer Grenzlinie als kleines Feld. Anders als die Tabelle schreibt es nur zulaessige Werte
- * ins Formular - ein halb getippter Wert ("4" auf dem Weg zu "45") bleibt im Feld und wird rot.
- * Am Geraet heisst ein leeres Feld "Wert der Vorlage"; der steht dann blass im Feld.
- */
-function Grenzfeld(props: {
-    welche: Grenze;
-    name: string;
-    /** eigener Wert des Formulars; '' = es gilt die Vorlage */
-    eigen: number | '';
-    /** Wert, der gilt (eigener oder der der Vorlage) */
-    gilt: number;
-    bereich: { min: number; max: number };
-    /** leer ist erlaubt (Geraet): es gilt dann die Vorlage */
-    leerErlaubt: boolean;
-    hinweis: string;
-    onWert: (wert: number | '') => void;
-}): React.JSX.Element {
-    const aussen = props.eigen === '' ? (props.leerErlaubt ? '' : String(props.gilt)) : String(props.eigen);
-    const [text, setText] = useState(aussen);
-    const [drin, setDrin] = useState(false);
-    useEffect(() => {
-        if (!drin) {
-            setText(aussen);
-        }
-    }, [aussen, drin]);
-    const lesen = (roh: string): number | '' | null => {
-        if (roh.trim() === '') {
-            return props.leerErlaubt ? '' : null;
-        }
-        const n = Number(roh.replace(',', '.'));
-        return Number.isFinite(n) && n >= props.bereich.min && n <= props.bereich.max ? n : null;
-    };
-    const falsch = lesen(text) === null;
-    return (
-        <label
-            className="fk-grenzfeld"
-            title={props.hinweis || undefined}
-        >
-            <span>{props.name}</span>
-            <input
-                className="fk-zahl fk-grenzwert"
-                data-grenze={props.welche}
-                type="number"
-                inputMode="numeric"
-                aria-invalid={falsch}
-                min={props.bereich.min}
-                max={props.bereich.max}
-                step={zug.GRENZLINIE.raster}
-                placeholder={String(props.gilt)}
-                value={text}
-                onFocus={() => setDrin(true)}
-                onBlur={() => {
-                    setDrin(false);
-                    setText(aussen);
-                }}
-                onChange={e => {
-                    const neu = e.target.value;
-                    setText(neu);
-                    const wert = lesen(neu);
-                    if (wert !== null && wert !== props.eigen) {
-                        props.onWert(wert);
-                    }
-                }}
-            />
-            <span>%</span>
-        </label>
-    );
-}
-
 interface AnsichtProps {
     richtung: Richtung;
     /** Ueberschrift (uebersetzt) */
@@ -340,6 +272,12 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
     const grenzZieht = useRef<{ welche: Grenze; zeiger: number; x: number } | null>(null);
     const [grenzZug, setGrenzZug] = useState<{ welche: Grenze; wert: number } | null>(null);
     const [grenzNah, setGrenzNah] = useState<Grenze | null>(null);
+    // Zahleneingabe an der Schrift einer Grenzlinie (Doppelklick, Antippen, Enter/F2 am Griff)
+    const [eingabe, setEingabe] = useState<{ welche: Grenze; text: string; grund: string } | null>(null);
+    const eingabeFeld = useRef<HTMLInputElement | null>(null);
+    const eingabeOffen = useRef(false);
+    const zeigerArt = useRef('mouse');
+    const grundId = `fk-grund-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
     const grenzText = `${props.untergrenze}/${props.obergrenze}`;
     useEffect(() => {
         if (!grenzZieht.current) {
@@ -605,6 +543,11 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
         if (!grenzenZiehbar) {
             return;
         }
+        if (e.key === 'Enter' || e.key === 'F2') {
+            e.preventDefault();
+            eingabeOeffnen(welche);
+            return;
+        }
         const b = zug.grenzBereich(welche, grenzen);
         const schritte: Record<string, number> = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 2, PageDown: -2 };
         let ziel: number | null = null;
@@ -622,6 +565,85 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
         setzeGrenze(welche, ziel);
     };
     const grenzeZiehtGerade = !!grenzZug && !!grenzZieht.current;
+
+    // ---- Grenzlinien: Zahl direkt eingeben
+    const eingabeOeffnen = (welche: Grenze): void => {
+        // nicht waehrend des Ziehens (Punkt oder Linie)
+        if (!grenzenZiehbar || grenzZieht.current || zieht.current) {
+            return;
+        }
+        eingabeOffen.current = true;
+        setEingabe({ welche, text: String(welche === 'ober' ? ober : unter), grund: '' });
+    };
+    /** zulaessig ist, was auch das Ziehen erreicht: im Bereich der Linie und auf dem Raster */
+    const eingabePruefen = (welche: Grenze, roh: string): { wert: number; grund: '' } | { wert: null; grund: string } => {
+        const b = zug.grenzBereich(welche, grenzen);
+        const r = zug.GRENZLINIE.raster;
+        const kurz = roh.trim().replace(/\s*%$/, '').replace(',', '.');
+        const n = kurz === '' ? NaN : Number(kurz);
+        if (!Number.isFinite(n)) {
+            return { wert: null, grund: k('eingabeZahl', zahl(b.min), zahl(b.max)) };
+        }
+        if (n === (welche === 'ober' ? ober : unter)) {
+            return { wert: n, grund: '' };
+        }
+        if (n < b.min || n > b.max) {
+            return { wert: null, grund: k('eingabeBereich', zahl(b.min), zahl(b.max)) };
+        }
+        if (n % r !== 0) {
+            return { wert: null, grund: k('eingabeRaster', zahl(r), zahl(b.min), zahl(b.max)) };
+        }
+        return { wert: n, grund: '' };
+    };
+    const eingabeZu = (zumGriff: boolean): void => {
+        const welche = eingabe?.welche;
+        eingabeOffen.current = false;
+        setEingabe(null);
+        if (zumGriff && welche) {
+            svg.current?.querySelector<SVGGElement>(`.fk-greifer[data-grenze="${welche}"]`)?.focus({ preventScroll: true });
+        }
+    };
+    const eingabeTaste = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+        if (!eingabe) {
+            return;
+        }
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            eingabeZu(true);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            const p = eingabePruefen(eingabe.welche, eingabe.text);
+            if (p.wert === null) {
+                setEingabe({ ...eingabe, grund: p.grund });
+                eingabeFeld.current?.select();
+                return;
+            }
+            eingabeZu(true);
+            setzeGrenze(eingabe.welche, p.wert);
+        }
+    };
+    /** Feld verlassen: Gueltiges gilt, Ungueltiges faellt weg (mit Begruendung in der Statuszeile) */
+    const eingabeVerlassen = (): void => {
+        if (!eingabe || !eingabeOffen.current) {
+            return;
+        }
+        const p = eingabePruefen(eingabe.welche, eingabe.text);
+        eingabeZu(false);
+        if (p.wert !== null) {
+            setzeGrenze(eingabe.welche, p.wert);
+        } else if (eingabe.text.trim() !== '') {
+            melde(p.grund);
+        }
+    };
+    const eingabeWelche = eingabe ? eingabe.welche : null;
+    useEffect(() => {
+        if (eingabeWelche && eingabeFeld.current) {
+            eingabeFeld.current.focus({ preventScroll: true });
+            eingabeFeld.current.select();
+        }
+    }, [eingabeWelche]);
 
     // ---- Tabelle
     const feld = (i: number, achse: 'x' | 'y', wert: number | ''): void => {
@@ -941,7 +963,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                     fontSize: '0.9rem',
                     color: 'text.secondary',
                 },
-                '& .fk-bild': { width: '100%', minWidth: 0 },
+                '& .fk-bild': { position: 'relative', width: '100%', minWidth: 0 },
                 '& .fk-zeichnung': { display: 'block', width: '100%', height: 'auto', userSelect: 'none' },
                 '& .fk-zeichnung.fk-zieht, & .fk-zeichnung.fk-zieht .fk-griff': { cursor: 'grabbing' },
                 '& .fk-zeichnung.fk-zieht-grenze, & .fk-zeichnung.fk-zieht-grenze .fk-griff': { cursor: 'ns-resize' },
@@ -976,9 +998,40 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                 },
                 '& .fk-legende': { display: 'flex', flexWrap: 'wrap', columnGap: 2, rowGap: 0.25, mr: 'auto' },
                 '& .fk-legende span': { display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' },
-                '& .fk-grenzfelder': { display: 'flex', flexWrap: 'wrap', columnGap: 2, rowGap: 0.25 },
-                '& .fk-grenzfeld': { display: 'inline-flex', alignItems: 'baseline', gap: '4px', whiteSpace: 'nowrap' },
-                '& .fk-grenzwert': { width: 52, minWidth: 0, textAlign: 'right' },
+                '& .fk-grenzwahl': { cursor: 'text' },
+                '& .fk-grenzeingabe': {
+                    position: 'absolute',
+                    zIndex: 2,
+                    boxSizing: 'border-box',
+                    maxWidth: 'min(250px, 100%)',
+                    padding: '2px 6px 3px',
+                    fontSize: '0.75rem',
+                    lineHeight: 1.35,
+                    color: 'text.primary',
+                    backgroundColor: farben.flaeche,
+                    border: `1px solid ${farben.fokus}`,
+                    borderRadius: '6px',
+                    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.25)',
+                },
+                '& .fk-grenzeingabe[data-falsch="1"]': { borderColor: farben.fehler },
+                '& .fk-grenzeingabe label': { display: 'inline-flex', alignItems: 'baseline', gap: '4px', whiteSpace: 'nowrap' },
+                '& .fk-grenzeingabe input': {
+                    width: '3.2em',
+                    font: 'inherit',
+                    // unter 16 px zoomt iOS beim Antippen in das Feld
+                    fontSize: TOUCH ? '16px' : 'inherit',
+                    color: 'inherit',
+                    background: 'transparent',
+                    border: 0,
+                    borderBottom: `1px solid ${farben.fokus}`,
+                    borderRadius: 0,
+                    padding: '1px 2px',
+                    margin: 0,
+                    outline: 'none',
+                    textAlign: 'right',
+                },
+                '& .fk-grenzeingabe input[aria-invalid="true"]': { borderBottomColor: farben.fehler },
+                '& .fk-grenzgrund': { color: farben.fehler, whiteSpace: 'normal', overflowWrap: 'anywhere' },
                 '& .fk-zahl': {
                     width: '100%',
                     minWidth: 56,
@@ -991,7 +1044,6 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                     padding: '4px 2px',
                     outline: 'none',
                 },
-                '& .fk-zahl.fk-grenzwert': { width: 52, minWidth: 0, padding: '1px 2px', color: 'text.primary' },
                 '& .fk-zahl:focus': { borderBottomColor: farben.fokus, boxShadow: `0 1px 0 0 ${farben.fokus}` },
                 '& .fk-zahl[aria-invalid="true"]': { borderBottomColor: farben.fehler, color: farben.fehler },
                 '& .fk-jetzt-text, & .fk-notiz': { mt: 0.5, fontSize: '0.8125rem', color: 'text.secondary' },
@@ -1209,6 +1261,41 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                 </text>
                             )}
                             {jetztBild}
+                            {/* Flaeche unter der Schrift jeder Grenze: Doppelklick (Finger: antippen) oeffnet die Zahleneingabe.
+                                Sie liegt UNTER den Greifflaechen der Linien, den Griffen und den Punkten - Ziehen hat Vorrang. */}
+                            {grenzenZiehbar
+                                ? linien.map(welche => {
+                                      const b = beschriftung(welche);
+                                      const breite = textBreite(b.text) + 8;
+                                      return eingabeWelche === welche ? null : (
+                                          <rect
+                                              key={welche}
+                                              className="fk-grenzwahl"
+                                              data-grenze={welche}
+                                              x={b.anker === 'start' ? b.x - 4 : b.x - breite + 4}
+                                              y={b.y - 11}
+                                              width={breite}
+                                              height="16"
+                                              fill="transparent"
+                                              onPointerDown={e => {
+                                                  zeigerArt.current = e.pointerType;
+                                              }}
+                                              onClick={e => {
+                                                  if (zeigerArt.current !== 'mouse') {
+                                                      e.stopPropagation();
+                                                      eingabeOeffnen(welche);
+                                                  }
+                                              }}
+                                              onDoubleClick={e => {
+                                                  e.stopPropagation();
+                                                  eingabeOeffnen(welche);
+                                              }}
+                                          >
+                                              <title>{k(TOUCH ? 'eingabeTippTouch' : 'eingabeTipp')}</title>
+                                          </rect>
+                                      );
+                                  })
+                                : null}
                             {/* Grenzlinien: erst beide Linien mit ihrer Greifflaeche, dann die Griffe - so bleibt jeder Griff erreichbar */}
                             {linien.map(welche => {
                                 const wert = welche === 'ober' ? ober : unter;
@@ -1242,6 +1329,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                             strokeLinejoin="round"
                                             paintOrder="stroke"
                                             pointerEvents="none"
+                                            visibility={eingabeWelche === welche ? 'hidden' : undefined}
                                         >
                                             {b.text}
                                         </text>
@@ -1285,6 +1373,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                               aria-valuemax={b.max}
                                               aria-valuenow={wert}
                                               aria-valuetext={`${zahl(wert)} %`}
+                                              aria-keyshortcuts="Enter F2"
                                               onPointerDown={grenzeGreifen(welche, true)}
                                               onPointerMove={grenzeBewegen}
                                               onPointerUp={grenzeLoslassen}
@@ -1423,6 +1512,52 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                             {leerEtikett}
                             {etikett}
                         </svg>
+                        {eingabe && grenzenZiehbar
+                            ? (() => {
+                                  const b = beschriftung(eingabe.welche);
+                                  const name = k(eingabe.welche === 'ober' ? 'nameOber' : 'nameUnter');
+                                  // an der Stelle der Schrift: gleiche Seite, gleiche Grundlinie (die Zeichnung ist nicht skaliert)
+                                  const ort: React.CSSProperties =
+                                      b.anker === 'start'
+                                          ? { left: `${(Math.max(0, b.x - 7) / B) * 100}%`, top: `${((b.y - 17) / H) * 100}%` }
+                                          : { right: `${(Math.max(0, B - b.x - 7) / B) * 100}%`, top: `${((b.y - 17) / H) * 100}%` };
+                                  return (
+                                      <div
+                                          className="fk-grenzeingabe"
+                                          data-grenze={eingabe.welche}
+                                          data-falsch={eingabe.grund ? '1' : '0'}
+                                          style={ort}
+                                      >
+                                          <label>
+                                              <span>{name}</span>
+                                              <input
+                                                  ref={eingabeFeld}
+                                                  type="text"
+                                                  inputMode="numeric"
+                                                  autoComplete="off"
+                                                  enterKeyHint="done"
+                                                  aria-invalid={!!eingabe.grund}
+                                                  aria-describedby={eingabe.grund ? grundId : undefined}
+                                                  value={eingabe.text}
+                                                  onChange={e => setEingabe({ welche: eingabe.welche, text: e.target.value, grund: '' })}
+                                                  onKeyDown={eingabeTaste}
+                                                  onBlur={eingabeVerlassen}
+                                              />
+                                              <span>%</span>
+                                          </label>
+                                          {eingabe.grund ? (
+                                              <div
+                                                  className="fk-grenzgrund"
+                                                  id={grundId}
+                                                  role="alert"
+                                              >
+                                                  {eingabe.grund}
+                                              </div>
+                                          ) : null}
+                                      </div>
+                                  );
+                              })()
+                            : null}
                     </div>
                     <div className="fk-unten">
                         <div
@@ -1490,30 +1625,6 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                 </span>
                             ) : null}
                         </div>
-                        {grenzenZiehbar ? (
-                            <div className="fk-grenzfelder">
-                                {linien.map(welche => (
-                                    <Grenzfeld
-                                        key={welche}
-                                        welche={welche}
-                                        name={k(welche === 'ober' ? 'nameOber' : 'nameUnter')}
-                                        eigen={welche === 'ober' ? grenzenEigen.obergrenze : grenzenEigen.untergrenze}
-                                        gilt={welche === 'ober' ? ober : unter}
-                                        bereich={zug.grenzBereich(welche, grenzen)}
-                                        leerErlaubt={!istVorlage}
-                                        hinweis={
-                                            !istVorlage && (welche === 'ober' ? grenzenEigen.obergrenze : grenzenEigen.untergrenze) === ''
-                                                ? k('geerbt', zahl(welche === 'ober' ? ober : unter))
-                                                : ''
-                                        }
-                                        onWert={wert => {
-                                            setGrenzZug(null);
-                                            props.onGrenze?.(welche, wert);
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        ) : null}
                     </div>
                     {jetztText ? <div className="fk-jetzt-text">{jetztText}</div> : null}
                     <div
@@ -1655,16 +1766,18 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                             {m}
                         </Box>
                     ))}
-                    {ziehbar ? (
+                    {ziehbar || grenzenZiehbar ? (
                         <Typography
                             variant="caption"
                             color="text.secondary"
                             className="fk-hinweis"
                             sx={{ display: 'block', mt: 0.5 }}
                         >
-                            {k('hinweis')}
+                            {ziehbar ? k('hinweis') : ''}
                             {/* ohne Maus gibt es weder Doppel- noch Rechtsklick: auf die Tabelle verweisen */}
-                            {TOUCH ? ` ${k('hinweisTouch')}` : ''}
+                            {ziehbar && TOUCH ? ` ${k('hinweisTouch')}` : ''}
+                            {/* die Grenzen haben keine Felder mehr: sagen, wie man sie stellt */}
+                            {grenzenZiehbar ? `${ziehbar ? ' ' : ''}${k(TOUCH ? 'hinweisGrenzenTouch' : 'hinweisGrenzen')}` : ''}
                         </Typography>
                     ) : null}
                 </>

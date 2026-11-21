@@ -305,24 +305,6 @@
                     "lg": 12,
                     "xl": 12
                 },
-                "_erklaerung": {
-                    "type": "custom",
-                    "url": "custom/customComponents.js",
-                    "name": "ConfigCustomFaikoutSet/Components/Erklaerung",
-                    "i18n": true,
-                    "guiApi": 2,
-                    "bundlerType": "module",
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12,
-                    "custom": {
-                        "reiterZeitplaene": "tabZeitplaene",
-                        "reiterRegelung": "tabRegelung"
-                    }
-                },
                 "_pPlanFein": {
                     "type": "panel",
                     "label": "headerPlanFein",
@@ -480,31 +462,23 @@
                         "backgroundColor": "rgba(217,138,0,0.12)"
                     }
                 },
-                "_probeAus": {
-                    "type": "staticText",
-                    "text": "textProbeAus",
+                "_erklaerung": {
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/Erklaerung",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "newLine": true,
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
                     "xl": 12,
-                    "hidden": "data.regelProbelauf !== false",
-                    "style": {
-                        "border": "1px solid #3d9a50",
-                        "borderRadius": 6,
-                        "padding": "8px 12px",
-                        "backgroundColor": "rgba(61,154,80,0.12)"
+                    "custom": {
+                        "reiterZeitplaene": "tabZeitplaene",
+                        "reiterRegelung": "tabRegelung"
                     }
-                },
-                "regelProbelauf": {
-                    "type": "checkbox",
-                    "label": "labelRegelProbelauf",
-                    "default": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
                 },
                 "_hVorlage": {
                     "type": "header",
@@ -583,8 +557,8 @@
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
-                    "lg": 12,
-                    "xl": 12,
+                    "lg": 6,
+                    "xl": 6,
                     "default": [
                         {
                             "x": -10,
@@ -613,12 +587,12 @@
                     "bundlerType": "module",
                     "label": "labelTabKuehlenVorgabe",
                     "hidden": "data.regelStrategie === 'vortag'",
-                    "newLine": true,
+                    "newLine": false,
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
-                    "lg": 12,
-                    "xl": 12,
+                    "lg": 6,
+                    "xl": 6,
                     "default": [
                         {
                             "x": 25,
@@ -632,10 +606,7 @@
                             "x": 35,
                             "y": 95
                         }
-                    ],
-                    "custom": {
-                        "eingeklappt": true
-                    }
+                    ]
                 },
                 "_tVortag": {
                     "type": "staticText",
@@ -793,694 +764,697 @@
                     }
                 },
                 "regelGeraete": {
-                    "type": "accordion",
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/Geraete",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
                     "label": "labelRegelGeraete",
-                    "titleAttr": "geraet",
-                    "clone": true,
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
                     "xl": 12,
-                    "items": [
-                        {
-                            "attr": "geraet",
-                            "type": "selectSendTo",
-                            "command": "regelGeraeteListe",
-                            "label": "labelGeraet",
-                            "noTranslation": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 6,
-                            "lg": 6,
-                            "xl": 6
-                        },
-                        {
-                            "attr": "betrieb",
-                            "type": "select",
-                            "label": "labelBetrieb",
-                            "options": [
-                                {
-                                    "label": "optBetriebAdapter",
-                                    "value": "adapter"
-                                },
-                                {
-                                    "label": "optBetriebFaikout",
-                                    "value": "faikout"
-                                }
-                            ],
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 6,
-                            "lg": 6,
-                            "xl": 6,
-                            "default": "adapter"
-                        },
-                        {
-                            "attr": "_tAdapter",
-                            "type": "staticText",
-                            "text": "textBetriebAdapter",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "data.betrieb === 'faikout'",
-                            "style": {
-                                "opacity": 0.8
-                            }
-                        },
-                        {
-                            "attr": "_tFaikout",
-                            "type": "staticText",
-                            "text": "textBetriebFaikout",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "data.betrieb !== 'faikout'",
-                            "style": {
-                                "opacity": 0.8
-                            }
-                        },
-                        {
-                            "type": "checkbox",
-                            "label": "labelIndividuell",
-                            "default": false,
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "attr": "individuell"
-                        },
-                        {
-                            "type": "staticText",
-                            "text": "textFolgtVorlage",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "data.individuell === true",
-                            "style": {
-                                "border": "1px solid #3d9a50",
-                                "borderRadius": 6,
-                                "padding": "8px 12px",
-                                "backgroundColor": "rgba(61,154,80,0.12)"
+                    "custom": {
+                        "titleAttr": "geraet",
+                        "items": [
+                            {
+                                "attr": "geraet",
+                                "type": "selectSendTo",
+                                "command": "regelGeraeteListe",
+                                "label": "labelGeraet",
+                                "noTranslation": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 6,
+                                "lg": 6,
+                                "xl": 6
                             },
-                            "attr": "_tFolgt"
-                        },
-                        {
-                            "attr": "_tFolgtStufen",
-                            "type": "staticText",
-                            "text": "textFolgtEigeneStufen",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "data.individuell === true || !(Array.isArray(data.stufen) && data.stufen.length)",
-                            "style": {
-                                "border": "1px solid #d98a00",
-                                "borderRadius": 6,
-                                "padding": "8px 12px",
-                                "backgroundColor": "rgba(217,138,0,0.12)"
-                            }
-                        },
-                        {
-                            "type": "staticText",
-                            "text": "textIstIndividuell",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "data.individuell !== true",
-                            "style": {
-                                "border": "1px solid #3399cc",
-                                "borderRadius": 6,
-                                "padding": "8px 12px",
-                                "backgroundColor": "rgba(51,153,204,0.12)"
+                            {
+                                "attr": "betrieb",
+                                "type": "select",
+                                "label": "labelBetrieb",
+                                "options": [
+                                    {
+                                        "label": "optBetriebAdapter",
+                                        "value": "adapter"
+                                    },
+                                    {
+                                        "label": "optBetriebFaikout",
+                                        "value": "faikout"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 6,
+                                "lg": 6,
+                                "xl": 6,
+                                "default": "adapter"
                             },
-                            "attr": "_tIndividuell"
-                        },
-                        {
-                            "attr": "_tRuht",
-                            "type": "staticText",
-                            "text": "textRuht",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "data.betrieb !== 'faikout' || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
-                            "style": {
-                                "border": "1px solid #d98a00",
-                                "borderRadius": 6,
-                                "padding": "8px 12px",
-                                "backgroundColor": "rgba(217,138,0,0.12)"
-                            }
-                        },
-                        {
-                            "attr": "_hKann",
-                            "type": "header",
-                            "size": 4,
-                            "text": "headerKann",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        {
-                            "attr": "_kann",
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "regelKann",
-                            "jsonData": "{\"geraet\":${JSON.stringify(data.geraet ?? \"\")},\"betrieb\":${JSON.stringify(data.betrieb ?? \"adapter\")}}",
-                            "alsoDependsOn": [
-                                "geraet",
-                                "betrieb"
-                            ],
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        {
-                            "attr": "_hBedarf",
-                            "type": "header",
-                            "size": 4,
-                            "text": "headerBedarf",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "!data.individuell"
-                        },
-                        {
-                            "attr": "strategie",
-                            "type": "select",
-                            "label": "labelRegelStrategie",
-                            "options": [
-                                {
-                                    "label": "optWieVorgabe",
-                                    "value": ""
-                                },
-                                {
-                                    "label": "optKennlinie",
-                                    "value": "kennlinie"
-                                },
-                                {
-                                    "label": "optVortag",
-                                    "value": "vortag"
+                            {
+                                "attr": "_tAdapter",
+                                "type": "staticText",
+                                "text": "textBetriebAdapter",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "data.betrieb === 'faikout'",
+                                "style": {
+                                    "opacity": 0.8
                                 }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": "",
-                            "hidden": "!data.individuell",
-                            "newLine": true
-                        },
-                        {
-                            "attr": "kennlinieHeizen",
-                            "type": "custom",
-                            "url": "custom/customComponents.js",
-                            "name": "ConfigCustomFaikoutSet/Components/KennlinieHeizen",
-                            "i18n": true,
-                            "guiApi": 2,
-                            "bundlerType": "module",
-                            "label": "labelTabHeizenGeraet",
-                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        {
-                            "attr": "kennlinieKuehlen",
-                            "type": "custom",
-                            "url": "custom/customComponents.js",
-                            "name": "ConfigCustomFaikoutSet/Components/KennlinieKuehlen",
-                            "i18n": true,
-                            "guiApi": 2,
-                            "bundlerType": "module",
-                            "label": "labelTabKuehlenGeraet",
-                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "custom": {
-                                "eingeklappt": true
-                            }
-                        },
-                        {
-                            "attr": "_tVortag",
-                            "type": "staticText",
-                            "text": "textVortag",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "newLine": true,
-                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
-                            "style": {
-                                "opacity": 0.8
-                            }
-                        },
-                        {
-                            "attr": "vortagBezug",
-                            "type": "select",
-                            "label": "labelVortagBezug",
-                            "options": [
-                                {
-                                    "label": "optWieVorgabe",
-                                    "value": ""
-                                },
-                                {
-                                    "label": "optSpitze",
-                                    "value": "spitze"
-                                },
-                                {
-                                    "label": "optMittel",
-                                    "value": "mittel"
-                                }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": "",
-                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'"
-                        },
-                        {
-                            "attr": "vortagZuschlag",
-                            "type": "number",
-                            "label": "labelVortagZuschlag",
-                            "min": 0,
-                            "max": 60,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
-                            "help": "helpLeerVorgabe"
-                        },
-                        {
-                            "attr": "vortagReferenzW",
-                            "type": "number",
-                            "label": "labelVortagReferenz",
-                            "min": 100,
-                            "max": 10000,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
-                            "help": "helpLeerVorgabe"
-                        },
-                        {
-                            "attr": "feuchteMassnahme",
-                            "type": "select",
-                            "label": "labelFeuchteMassnahmeGeraet",
-                            "options": [
-                                {
-                                    "label": "optWieVorgabe",
-                                    "value": ""
-                                },
-                                {
-                                    "label": "optMassEntfeuchten",
-                                    "value": "entfeuchten"
-                                },
-                                {
-                                    "label": "optMassZielSenken",
-                                    "value": "zielSenken"
-                                },
-                                {
-                                    "label": "optMassMelden",
-                                    "value": "melden"
-                                }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": "",
-                            "newLine": true,
-                            "hidden": "!data.individuell"
-                        },
-                        {
-                            "type": "header",
-                            "size": 4,
-                            "text": "headerStufenGeraet",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "!data.individuell",
-                            "attr": "_hStufen"
-                        },
-                        {
-                            "type": "staticText",
-                            "text": "textStufenGeraet",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "!data.individuell",
-                            "style": {
-                                "opacity": 0.8
                             },
-                            "attr": "_tStufen"
-                        },
-                        {
-                            "type": "custom",
-                            "url": "custom/customComponents.js",
-                            "name": "ConfigCustomFaikoutSet/Components/Stufen",
-                            "i18n": true,
-                            "guiApi": 2,
-                            "bundlerType": "module",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "!data.individuell",
-                            "attr": "stufen"
-                        },
-                        {
-                            "attr": "_hFuehler",
-                            "type": "header",
-                            "size": 4,
-                            "text": "headerGeraetFuehler",
-                            "newLine": true,
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        {
-                            "attr": "_tFuehler",
-                            "type": "staticText",
-                            "text": "textFuehler",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "style": {
-                                "opacity": 0.8
-                            }
-                        },
-                        {
-                            "attr": "aussenQuelle",
-                            "type": "select",
-                            "label": "labelAussenQuelle",
-                            "options": [
-                                {
-                                    "label": "optQuelleAuto",
-                                    "value": "auto"
-                                },
-                                {
-                                    "label": "optQuelleIntern",
-                                    "value": "intern"
-                                },
-                                {
-                                    "label": "optQuelleDp",
-                                    "value": "dp"
+                            {
+                                "attr": "_tFaikout",
+                                "type": "staticText",
+                                "text": "textBetriebFaikout",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "data.betrieb !== 'faikout'",
+                                "style": {
+                                    "opacity": 0.8
                                 }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": "auto",
-                            "newLine": true
-                        },
-                        {
-                            "attr": "aussenDp",
-                            "type": "objectId",
-                            "label": "labelAussenDp",
-                            "hidden": "data.aussenQuelle !== 'dp'",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 5,
-                            "lg": 5,
-                            "xl": 5
-                        },
-                        {
-                            "attr": "_aussenDpWert",
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "fuehlerWert",
-                            "jsonData": "{\"id\":${JSON.stringify(data.aussenDp ?? \"\")},\"art\":\"aussen\"}",
-                            "alsoDependsOn": [
-                                "aussenDp"
-                            ],
-                            "hidden": "data.aussenQuelle !== 'dp'",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 3,
-                            "lg": 3,
-                            "xl": 3
-                        },
-                        {
-                            "attr": "raumQuelle",
-                            "type": "select",
-                            "label": "labelRaumQuelle",
-                            "options": [
-                                {
-                                    "label": "optQuelleAuto",
-                                    "value": "auto"
-                                },
-                                {
-                                    "label": "optQuelleIntern",
-                                    "value": "intern"
-                                },
-                                {
-                                    "label": "optQuelleBle",
-                                    "value": "ble"
-                                },
-                                {
-                                    "label": "optQuelleDp",
-                                    "value": "dp"
-                                }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": "auto",
-                            "newLine": true
-                        },
-                        {
-                            "attr": "raumDp",
-                            "type": "objectId",
-                            "label": "labelRaumDp",
-                            "hidden": "data.raumQuelle !== 'dp'",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 5,
-                            "lg": 5,
-                            "xl": 5
-                        },
-                        {
-                            "attr": "_raumDpWert",
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "fuehlerWert",
-                            "jsonData": "{\"id\":${JSON.stringify(data.raumDp ?? \"\")},\"art\":\"raum\"}",
-                            "alsoDependsOn": [
-                                "raumDp"
-                            ],
-                            "hidden": "data.raumQuelle !== 'dp'",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 3,
-                            "lg": 3,
-                            "xl": 3
-                        },
-                        {
-                            "attr": "fuehlerWeg",
-                            "type": "select",
-                            "label": "labelFuehlerWeg",
-                            "options": [
-                                {
-                                    "label": "optWegSollwert",
-                                    "value": "sollwert"
-                                },
-                                {
-                                    "label": "optWegModul",
-                                    "value": "modul"
-                                }
-                            ],
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 6,
-                            "lg": 6,
-                            "xl": 6,
-                            "default": "sollwert",
-                            "hidden": "data.raumQuelle !== 'dp'",
-                            "newLine": true
-                        },
-                        {
-                            "attr": "_tWegWahl",
-                            "type": "staticText",
-                            "text": "textWegWahl",
-                            "hidden": "data.raumQuelle !== 'dp'",
-                            "style": {
-                                "opacity": 0.75
                             },
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12
-                        },
-                        {
-                            "attr": "korrAbstandMin",
-                            "type": "number",
-                            "label": "labelKorrAbstand",
-                            "min": 10,
-                            "max": 180,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "hidden": "data.raumQuelle !== 'dp' || data.fuehlerWeg === 'modul'",
-                            "help": "helpKorrAbstand"
-                        },
-                        {
-                            "attr": "_tWeg",
-                            "type": "staticText",
-                            "text": "textWegSollwert",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 12,
-                            "lg": 12,
-                            "xl": 12,
-                            "hidden": "data.raumQuelle !== 'dp' || data.fuehlerWeg === 'modul'",
-                            "style": {
-                                "opacity": 0.8
-                            }
-                        },
-                        {
-                            "attr": "raumTraegeMin",
-                            "type": "number",
-                            "label": "labelRaumTraege",
-                            "min": 0,
-                            "max": 240,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "hidden": "data.raumQuelle !== 'dp'",
-                            "help": "helpRaumTraege",
-                            "newLine": true
-                        },
-                        {
-                            "attr": "feuchteQuelle",
-                            "type": "select",
-                            "label": "labelFeuchteQuelle",
-                            "options": [
-                                {
-                                    "label": "optQuelleAuto",
-                                    "value": "auto"
+                            {
+                                "type": "checkbox",
+                                "label": "labelIndividuell",
+                                "default": false,
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "attr": "individuell"
+                            },
+                            {
+                                "type": "staticText",
+                                "text": "textFolgtVorlage",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "data.individuell === true",
+                                "style": {
+                                    "border": "1px solid #3d9a50",
+                                    "borderRadius": 6,
+                                    "padding": "8px 12px",
+                                    "backgroundColor": "rgba(61,154,80,0.12)"
                                 },
-                                {
-                                    "label": "optQuelleIntern",
-                                    "value": "intern"
-                                },
-                                {
-                                    "label": "optQuelleBle",
-                                    "value": "ble"
-                                },
-                                {
-                                    "label": "optQuelleDp",
-                                    "value": "dp"
+                                "attr": "_tFolgt"
+                            },
+                            {
+                                "attr": "_tFolgtStufen",
+                                "type": "staticText",
+                                "text": "textFolgtEigeneStufen",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "data.individuell === true || !(Array.isArray(data.stufen) && data.stufen.length)",
+                                "style": {
+                                    "border": "1px solid #d98a00",
+                                    "borderRadius": 6,
+                                    "padding": "8px 12px",
+                                    "backgroundColor": "rgba(217,138,0,0.12)"
                                 }
-                            ],
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": "auto",
-                            "newLine": true
-                        },
-                        {
-                            "attr": "feuchteDp",
-                            "type": "objectId",
-                            "label": "labelFeuchteDp",
-                            "hidden": "data.feuchteQuelle !== 'dp'",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 5,
-                            "lg": 5,
-                            "xl": 5
-                        },
-                        {
-                            "attr": "_feuchteDpWert",
-                            "type": "textSendTo",
-                            "container": "html",
-                            "command": "fuehlerWert",
-                            "jsonData": "{\"id\":${JSON.stringify(data.feuchteDp ?? \"\")},\"art\":\"feuchte\"}",
-                            "alsoDependsOn": [
-                                "feuchteDp"
-                            ],
-                            "hidden": "data.feuchteQuelle !== 'dp'",
-                            "xs": 12,
-                            "sm": 12,
-                            "md": 3,
-                            "lg": 3,
-                            "xl": 3
-                        },
-                        {
-                            "attr": "frostAb",
-                            "type": "number",
-                            "label": "labelFrostAb",
-                            "min": 0,
-                            "max": 15,
-                            "xs": 12,
-                            "sm": 6,
-                            "md": 4,
-                            "lg": 4,
-                            "xl": 4,
-                            "default": 0,
-                            "help": "helpFrostAb",
-                            "newLine": true
-                        }
-                    ]
+                            },
+                            {
+                                "type": "staticText",
+                                "text": "textIstIndividuell",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "data.individuell !== true",
+                                "style": {
+                                    "border": "1px solid #3399cc",
+                                    "borderRadius": 6,
+                                    "padding": "8px 12px",
+                                    "backgroundColor": "rgba(51,153,204,0.12)"
+                                },
+                                "attr": "_tIndividuell"
+                            },
+                            {
+                                "attr": "_tRuht",
+                                "type": "staticText",
+                                "text": "textRuht",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "data.betrieb !== 'faikout' || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
+                                "style": {
+                                    "border": "1px solid #d98a00",
+                                    "borderRadius": 6,
+                                    "padding": "8px 12px",
+                                    "backgroundColor": "rgba(217,138,0,0.12)"
+                                }
+                            },
+                            {
+                                "attr": "_hKann",
+                                "type": "header",
+                                "size": 4,
+                                "text": "headerKann",
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12
+                            },
+                            {
+                                "attr": "_kann",
+                                "type": "textSendTo",
+                                "container": "html",
+                                "command": "regelKann",
+                                "jsonData": "{\"geraet\":${JSON.stringify(data.geraet ?? \"\")},\"betrieb\":${JSON.stringify(data.betrieb ?? \"adapter\")}}",
+                                "alsoDependsOn": [
+                                    "geraet",
+                                    "betrieb"
+                                ],
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12
+                            },
+                            {
+                                "attr": "_hBedarf",
+                                "type": "header",
+                                "size": 4,
+                                "text": "headerBedarf",
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "!data.individuell"
+                            },
+                            {
+                                "attr": "strategie",
+                                "type": "select",
+                                "label": "labelRegelStrategie",
+                                "options": [
+                                    {
+                                        "label": "optWieVorgabe",
+                                        "value": ""
+                                    },
+                                    {
+                                        "label": "optKennlinie",
+                                        "value": "kennlinie"
+                                    },
+                                    {
+                                        "label": "optVortag",
+                                        "value": "vortag"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": "",
+                                "hidden": "!data.individuell",
+                                "newLine": true
+                            },
+                            {
+                                "attr": "kennlinieHeizen",
+                                "type": "custom",
+                                "url": "custom/customComponents.js",
+                                "name": "ConfigCustomFaikoutSet/Components/KennlinieHeizen",
+                                "i18n": true,
+                                "guiApi": 2,
+                                "bundlerType": "module",
+                                "label": "labelTabHeizenGeraet",
+                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 6,
+                                "xl": 6
+                            },
+                            {
+                                "attr": "kennlinieKuehlen",
+                                "type": "custom",
+                                "url": "custom/customComponents.js",
+                                "name": "ConfigCustomFaikoutSet/Components/KennlinieKuehlen",
+                                "i18n": true,
+                                "guiApi": 2,
+                                "bundlerType": "module",
+                                "label": "labelTabKuehlenGeraet",
+                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) === 'vortag'",
+                                "newLine": false,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 6,
+                                "xl": 6
+                            },
+                            {
+                                "attr": "_tVortag",
+                                "type": "staticText",
+                                "text": "textVortag",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "newLine": true,
+                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
+                                "style": {
+                                    "opacity": 0.8
+                                }
+                            },
+                            {
+                                "attr": "vortagBezug",
+                                "type": "select",
+                                "label": "labelVortagBezug",
+                                "options": [
+                                    {
+                                        "label": "optWieVorgabe",
+                                        "value": ""
+                                    },
+                                    {
+                                        "label": "optSpitze",
+                                        "value": "spitze"
+                                    },
+                                    {
+                                        "label": "optMittel",
+                                        "value": "mittel"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": "",
+                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'"
+                            },
+                            {
+                                "attr": "vortagZuschlag",
+                                "type": "number",
+                                "label": "labelVortagZuschlag",
+                                "min": 0,
+                                "max": 60,
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
+                                "help": "helpLeerVorgabe"
+                            },
+                            {
+                                "attr": "vortagReferenzW",
+                                "type": "number",
+                                "label": "labelVortagReferenz",
+                                "min": 100,
+                                "max": 10000,
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "hidden": "!data.individuell || ((data.individuell && data.strategie) || globalData.regelStrategie) !== 'vortag'",
+                                "help": "helpLeerVorgabe"
+                            },
+                            {
+                                "attr": "feuchteMassnahme",
+                                "type": "select",
+                                "label": "labelFeuchteMassnahmeGeraet",
+                                "options": [
+                                    {
+                                        "label": "optWieVorgabe",
+                                        "value": ""
+                                    },
+                                    {
+                                        "label": "optMassEntfeuchten",
+                                        "value": "entfeuchten"
+                                    },
+                                    {
+                                        "label": "optMassZielSenken",
+                                        "value": "zielSenken"
+                                    },
+                                    {
+                                        "label": "optMassMelden",
+                                        "value": "melden"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": "",
+                                "newLine": true,
+                                "hidden": "!data.individuell"
+                            },
+                            {
+                                "type": "header",
+                                "size": 4,
+                                "text": "headerStufenGeraet",
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "!data.individuell",
+                                "attr": "_hStufen"
+                            },
+                            {
+                                "type": "staticText",
+                                "text": "textStufenGeraet",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "!data.individuell",
+                                "style": {
+                                    "opacity": 0.8
+                                },
+                                "attr": "_tStufen"
+                            },
+                            {
+                                "type": "custom",
+                                "url": "custom/customComponents.js",
+                                "name": "ConfigCustomFaikoutSet/Components/Stufen",
+                                "i18n": true,
+                                "guiApi": 2,
+                                "bundlerType": "module",
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "!data.individuell",
+                                "attr": "stufen"
+                            },
+                            {
+                                "attr": "_hFuehler",
+                                "type": "header",
+                                "size": 4,
+                                "text": "headerGeraetFuehler",
+                                "newLine": true,
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12
+                            },
+                            {
+                                "attr": "_tFuehler",
+                                "type": "staticText",
+                                "text": "textFuehler",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "style": {
+                                    "opacity": 0.8
+                                }
+                            },
+                            {
+                                "attr": "aussenQuelle",
+                                "type": "select",
+                                "label": "labelAussenQuelle",
+                                "options": [
+                                    {
+                                        "label": "optQuelleAuto",
+                                        "value": "auto"
+                                    },
+                                    {
+                                        "label": "optQuelleIntern",
+                                        "value": "intern"
+                                    },
+                                    {
+                                        "label": "optQuelleDp",
+                                        "value": "dp"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": "auto",
+                                "newLine": true
+                            },
+                            {
+                                "attr": "aussenDp",
+                                "type": "objectId",
+                                "label": "labelAussenDp",
+                                "hidden": "data.aussenQuelle !== 'dp'",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 5,
+                                "lg": 5,
+                                "xl": 5
+                            },
+                            {
+                                "attr": "_aussenDpWert",
+                                "type": "textSendTo",
+                                "container": "html",
+                                "command": "fuehlerWert",
+                                "jsonData": "{\"id\":${JSON.stringify(data.aussenDp ?? \"\")},\"art\":\"aussen\"}",
+                                "alsoDependsOn": [
+                                    "aussenDp"
+                                ],
+                                "hidden": "data.aussenQuelle !== 'dp'",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 3,
+                                "lg": 3,
+                                "xl": 3
+                            },
+                            {
+                                "attr": "raumQuelle",
+                                "type": "select",
+                                "label": "labelRaumQuelle",
+                                "options": [
+                                    {
+                                        "label": "optQuelleAuto",
+                                        "value": "auto"
+                                    },
+                                    {
+                                        "label": "optQuelleIntern",
+                                        "value": "intern"
+                                    },
+                                    {
+                                        "label": "optQuelleBle",
+                                        "value": "ble"
+                                    },
+                                    {
+                                        "label": "optQuelleDp",
+                                        "value": "dp"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": "auto",
+                                "newLine": true
+                            },
+                            {
+                                "attr": "raumDp",
+                                "type": "objectId",
+                                "label": "labelRaumDp",
+                                "hidden": "data.raumQuelle !== 'dp'",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 5,
+                                "lg": 5,
+                                "xl": 5
+                            },
+                            {
+                                "attr": "_raumDpWert",
+                                "type": "textSendTo",
+                                "container": "html",
+                                "command": "fuehlerWert",
+                                "jsonData": "{\"id\":${JSON.stringify(data.raumDp ?? \"\")},\"art\":\"raum\"}",
+                                "alsoDependsOn": [
+                                    "raumDp"
+                                ],
+                                "hidden": "data.raumQuelle !== 'dp'",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 3,
+                                "lg": 3,
+                                "xl": 3
+                            },
+                            {
+                                "attr": "fuehlerWeg",
+                                "type": "select",
+                                "label": "labelFuehlerWeg",
+                                "options": [
+                                    {
+                                        "label": "optWegSollwert",
+                                        "value": "sollwert"
+                                    },
+                                    {
+                                        "label": "optWegModul",
+                                        "value": "modul"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 6,
+                                "lg": 6,
+                                "xl": 6,
+                                "default": "sollwert",
+                                "hidden": "data.raumQuelle !== 'dp'",
+                                "newLine": true
+                            },
+                            {
+                                "attr": "_tWegWahl",
+                                "type": "staticText",
+                                "text": "textWegWahl",
+                                "hidden": "data.raumQuelle !== 'dp'",
+                                "style": {
+                                    "opacity": 0.75
+                                },
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12
+                            },
+                            {
+                                "attr": "korrAbstandMin",
+                                "type": "number",
+                                "label": "labelKorrAbstand",
+                                "min": 10,
+                                "max": 180,
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "hidden": "data.raumQuelle !== 'dp' || data.fuehlerWeg === 'modul'",
+                                "help": "helpKorrAbstand"
+                            },
+                            {
+                                "attr": "_tWeg",
+                                "type": "staticText",
+                                "text": "textWegSollwert",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 12,
+                                "lg": 12,
+                                "xl": 12,
+                                "hidden": "data.raumQuelle !== 'dp' || data.fuehlerWeg === 'modul'",
+                                "style": {
+                                    "opacity": 0.8
+                                }
+                            },
+                            {
+                                "attr": "raumTraegeMin",
+                                "type": "number",
+                                "label": "labelRaumTraege",
+                                "min": 0,
+                                "max": 240,
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "hidden": "data.raumQuelle !== 'dp'",
+                                "help": "helpRaumTraege",
+                                "newLine": true
+                            },
+                            {
+                                "attr": "feuchteQuelle",
+                                "type": "select",
+                                "label": "labelFeuchteQuelle",
+                                "options": [
+                                    {
+                                        "label": "optQuelleAuto",
+                                        "value": "auto"
+                                    },
+                                    {
+                                        "label": "optQuelleIntern",
+                                        "value": "intern"
+                                    },
+                                    {
+                                        "label": "optQuelleBle",
+                                        "value": "ble"
+                                    },
+                                    {
+                                        "label": "optQuelleDp",
+                                        "value": "dp"
+                                    }
+                                ],
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": "auto",
+                                "newLine": true
+                            },
+                            {
+                                "attr": "feuchteDp",
+                                "type": "objectId",
+                                "label": "labelFeuchteDp",
+                                "hidden": "data.feuchteQuelle !== 'dp'",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 5,
+                                "lg": 5,
+                                "xl": 5
+                            },
+                            {
+                                "attr": "_feuchteDpWert",
+                                "type": "textSendTo",
+                                "container": "html",
+                                "command": "fuehlerWert",
+                                "jsonData": "{\"id\":${JSON.stringify(data.feuchteDp ?? \"\")},\"art\":\"feuchte\"}",
+                                "alsoDependsOn": [
+                                    "feuchteDp"
+                                ],
+                                "hidden": "data.feuchteQuelle !== 'dp'",
+                                "xs": 12,
+                                "sm": 12,
+                                "md": 3,
+                                "lg": 3,
+                                "xl": 3
+                            },
+                            {
+                                "attr": "frostAb",
+                                "type": "number",
+                                "label": "labelFrostAb",
+                                "min": 0,
+                                "max": 15,
+                                "xs": 12,
+                                "sm": 6,
+                                "md": 4,
+                                "lg": 4,
+                                "xl": 4,
+                                "default": 0,
+                                "help": "helpFrostAb",
+                                "newLine": true
+                            }
+                        ]
+                    }
                 },
                 "_pFein": {
                     "type": "panel",
@@ -1493,6 +1467,16 @@
                     "lg": 12,
                     "xl": 12,
                     "items": {
+                        "regelProbelauf": {
+                            "type": "checkbox",
+                            "label": "labelRegelProbelauf",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12,
+                            "help": "helpRegelProbelauf"
+                        },
                         "regelTotband": {
                             "type": "number",
                             "label": "labelTotband",
@@ -1505,7 +1489,8 @@
                             "xl": 4,
                             "step": 0.1,
                             "default": 0.3,
-                            "help": "helpTotband"
+                            "help": "helpTotband",
+                            "newLine": true
                         },
                         "regelProzentProK": {
                             "type": "number",

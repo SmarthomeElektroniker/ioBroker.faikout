@@ -931,13 +931,15 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
 
     it('jsonConfig: Reiter Regelung ist geraeteweise aufgebaut, regelQuellen ist verschwunden', () => {
         const r = konfig.items.tabRegelung.items;
-        expect(r.regelGeraete.type).to.equal('accordion');
-        const attrs = r.regelGeraete.items.map(i => i.attr);
+        // die Geraeteliste zeichnet die Komponente "Geraete" als Karten; die Felder der Zeile stehen unter custom.items
+        expect(r.regelGeraete).to.include({ type: 'custom', url: 'custom/customComponents.js', name: 'ConfigCustomFaikoutSet/Components/Geraete', i18n: true, guiApi: 2, label: 'labelRegelGeraete' });
+        expect(r.regelGeraete.items).to.equal(undefined);
+        const attrs = r.regelGeraete.custom.items.map(i => i.attr);
         expect(attrs).to.include.members(['geraet', 'betrieb', 'individuell', 'strategie', 'kennlinieHeizen', 'kennlinieKuehlen', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'stufen', 'aussenQuelle', 'aussenDp', 'raumQuelle', 'raumDp', 'feuchteQuelle', 'feuchteDp', 'feuchteMassnahme', 'frostAb']);
         expect(attrs).not.to.include('eigeneKennlinie');
         // die Grenzen zieht man in der Kennlinie, die Temperaturstufen sind eine Komponente - keine Zahlenfelder, keine Tabelle
         expect(attrs).not.to.include.members(['untergrenze', 'obergrenze', 'szenen']);
-        const z = Object.fromEntries(r.regelGeraete.items.map(i => [i.attr, i]));
+        const z = Object.fromEntries(r.regelGeraete.custom.items.map(i => [i.attr, i]));
         expect(z.individuell).to.include({ type: 'checkbox', label: 'labelIndividuell', default: false });
         // nur mit dem Haken sichtbar: alles, was sonst aus der Vorlage kommt; immer sichtbar: Fuehler und Frostschutz
         for (const a of ['strategie', 'kennlinieHeizen', 'kennlinieKuehlen', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'feuchteMassnahme', 'stufen', '_hStufen']) {
@@ -951,13 +953,36 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(z._tIndividuell).to.include({ text: 'textIstIndividuell', hidden: 'data.individuell !== true' });
         expect(z.stufen).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Stufen' });
         expect(JSON.stringify(konfig)).not.to.contain('regelQuellen');
-        // ganz oben nur der Hinweis "Adapter laeuft nicht" (sichtbar bei gestoppter Instanz), dann der farbige
-        // Statuskasten zum Probelauf mit seinem Schalter, dann die globale Vorlage, dann die Geraete
-        expect(Object.keys(r).slice(0, 5)).to.eql(['_nichtAktiv', '_probeAn', '_probeAus', 'regelProbelauf', '_hVorlage']);
+        // ganz oben nur der Hinweis "Adapter laeuft nicht" (sichtbar bei gestoppter Instanz), dann - NUR bei
+        // eingeschaltetem Probelauf - der farbige Kasten, die Erklaergrafik, die globale Vorlage, dann die Geraete
+        expect(Object.keys(r).slice(0, 4)).to.eql(['_nichtAktiv', '_probeAn', '_erklaerung', '_hVorlage']);
+        expect(r._probeAn).to.include({ type: 'staticText', text: 'textProbeAn', hidden: 'data.regelProbelauf === false' });
+        expect(r._probeAus).to.equal(undefined);
+        // der Schalter selbst steht eingeklappt unter "Fuer Fortgeschrittene", ohne default (ein fehlender Wert
+        // bleibt beim Speichern fehlend - der Adapter wertet ihn als AN und schreibt das fest)
+        expect(r.regelProbelauf).to.equal(undefined);
+        expect(Object.keys(r._pFein.items)[0]).to.equal('regelProbelauf');
+        expect(r._pFein).to.include({ type: 'panel', collapsable: true, label: 'headerFein' });
+        expect(r._pFein.items.regelProbelauf).to.eql({ type: 'checkbox', label: 'labelRegelProbelauf', xs: 12, sm: 12, md: 12, lg: 12, xl: 12, help: 'helpRegelProbelauf' });
+        expect(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'io-package.json'), 'utf8')).native.regelProbelauf).to.equal(false);
+        for (const l of o.SPRACHEN) {
+            expect(admin(l).textProbeAus, l).to.equal(undefined);
+            expect(admin(l).helpRegelProbelauf, l).to.contain('regulation.demand.dryRun');
+        }
+        expect(admin('de').textProbeAn).to.match(/^Probelauf ist an – der Adapter sendet nichts an die Anlagen\./).and.to.contain('Für Fortgeschrittene');
+        expect(admin('de').labelRegelProbelauf).to.contain('nur rechnen und anzeigen, nichts an die Anlagen senden');
+        expect(admin('de').textSchritt3).to.not.contain('Probelauf');
         const namen = Object.keys(r);
         expect(namen.indexOf('regelKennlinieHeizen')).to.be.below(namen.indexOf('regelGeraete'));
         expect(namen.indexOf('_feuchteGrafik')).to.be.below(namen.indexOf('regelGeraete'));
-        expect(r.regelKennlinieKuehlen.custom).to.eql({ eingeklappt: true });
+        // Heizen und Kuehlen gleichrangig: beide dauerhaft sichtbar, ab 1200 px nebeneinander - Vorlage und Geraet
+        const gz = Object.fromEntries(r.regelGeraete.custom.items.map(i => [i.attr, i]));
+        for (const [heizen, kuehlen] of [[r.regelKennlinieHeizen, r.regelKennlinieKuehlen], [gz.kennlinieHeizen, gz.kennlinieKuehlen]]) {
+            expect(kuehlen.custom).to.equal(undefined);
+            expect(heizen).to.include({ xs: 12, md: 12, lg: 6, xl: 6, newLine: true });
+            expect(kuehlen).to.include({ xs: 12, md: 12, lg: 6, xl: 6, newLine: false });
+            expect(kuehlen.hidden).to.equal(heizen.hidden);
+        }
         expect(r._pKopie).to.equal(undefined);
         expect(r._nichtAktiv).to.include({ type: 'staticText', hidden: '_alive' });
     });
@@ -976,7 +1001,7 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(admin('de').textRegelAufklappen).to.contain('aufzuklappen');
         // Temperaturstufen sind eine Komponente (sie erklaert Hoechstleistung und Schalter selbst); die alten
         // Tabellen samt Spaltenerklaerung sind weg, und kein Text der Seite spricht mehr von Szenen
-        const g = r.regelGeraete.items;
+        const g = r.regelGeraete.custom.items;
         expect(JSON.stringify(konfig)).to.not.match(/[sS]zenen|textSzenenSpalten/);
         for (const l of o.SPRACHEN) {
             const benutzt = new Set(JSON.stringify(konfig).match(/"[a-zA-Z0-9_]+"/g).map(x => x.slice(1, -1)));
@@ -1009,22 +1034,24 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(klein).to.eql([]);
     });
 
-    it('jsonConfig: Reiter Zeitplaene - zuerst die Wochenplaene, dann Temperaturstufen der Vorlage und die Erklaerung; Handeingriff und Feiertage eingeklappt', () => {
+    it('jsonConfig: Reiter Zeitplaene - zuerst die Wochenplaene, dann Temperaturstufen der Vorlage; Handeingriff und Feiertage eingeklappt', () => {
         const zp = konfig.items[o.REITER_ZEITPLAENE];
         expect(zp).to.include({ type: 'panel', label: 'tabZeitplaene' });
         const namen = Object.keys(zp.items);
         // der Wochenplan steht oben: ein Klick auf den Reiter genuegt, um ihn zu sehen (Volltest 21.11.2026)
-        expect(namen).to.eql(['_nichtAktiv', '_tZeitplaene', '_hPlaene', 'regelPlanVorlage', '_hStufen', '_tStufen', 'regelStufen', '_erklaerung', '_pPlanFein']);
+        // die Erklaergrafik "So arbeitet die Regelung" steht im Reiter Regelung (Nutzerwunsch 21.11.2026); hier bleibt, was den Plan betrifft
+        expect(namen).to.eql(['_nichtAktiv', '_tZeitplaene', '_hPlaene', 'regelPlanVorlage', '_hStufen', '_tStufen', 'regelStufen', '_pPlanFein']);
+        expect(admin('de').textZeitplaene).to.contain('Reiter „Regelung“');
         // Geraet ohne Haken "Individuell", aber mit eigenen Stufen: Warnung, dass sein Wochenplan sie nicht mehr findet
-        const zeile = Object.fromEntries(konfig.items.tabRegelung.items.regelGeraete.items.map(x => [x.attr, x]));
+        const zeile = Object.fromEntries(konfig.items.tabRegelung.items.regelGeraete.custom.items.map(x => [x.attr, x]));
         expect(zeile._tFolgtStufen).to.include({ type: 'staticText', text: 'textFolgtEigeneStufen' });
         expect(zeile._tFolgtStufen.hidden).to.equal('data.individuell === true || !(Array.isArray(data.stufen) && data.stufen.length)');
         for (const l of o.SPRACHEN) {
             expect(admin(l).textFolgtEigeneStufen, l).to.be.a('string').and.to.have.length.above(40);
         }
         const k = name => ({ type: 'custom', url: 'custom/customComponents.js', name: `ConfigCustomFaikoutSet/Components/${name}`, i18n: true, xs: 12, xl: 12 });
-        expect(zp.items._erklaerung).to.include(k('Erklaerung'));
-        expect(zp.items._erklaerung.custom).to.eql({ reiterZeitplaene: 'tabZeitplaene', reiterRegelung: 'tabRegelung' });
+        expect(konfig.items.tabRegelung.items._erklaerung).to.include(k('Erklaerung'));
+        expect(konfig.items.tabRegelung.items._erklaerung.custom).to.eql({ reiterZeitplaene: 'tabZeitplaene', reiterRegelung: 'tabRegelung' });
         expect(zp.items.regelStufen).to.include(k('Stufen'));
         expect(zp.items.regelPlanVorlage).to.include(k('Zeitplaene'));
         expect(zp.items._pPlanFein).to.include({ type: 'panel', collapsable: true, label: 'headerPlanFein' });
@@ -1069,13 +1096,13 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
     });
 
     it('jsonConfig: Kennlinien je Geraet sind die ziehbare Komponente am Tabellen-Attribut, das reine Bild ist weg', () => {
-        const g = konfig.items.tabRegelung.items.regelGeraete.items;
+        const g = konfig.items.tabRegelung.items.regelGeraete.custom.items;
         const zeile = Object.fromEntries(g.map(i => [i.attr, i]));
         for (const [attr, name] of [['kennlinieHeizen', 'KennlinieHeizen'], ['kennlinieKuehlen', 'KennlinieKuehlen']]) {
             expect(zeile[attr]).to.include({ type: 'custom', url: 'custom/customComponents.js', name: `ConfigCustomFaikoutSet/Components/${name}`, i18n: true, guiApi: 2 });
-            // wie bisher: bei Strategie "Vortag" ausgeblendet, eigene Zeile, volle Breite
+            // wie bisher: bei Strategie "Vortag" ausgeblendet; schmal volle Breite, ab 1200 px Heizen und Kuehlen nebeneinander
             expect(zeile[attr].hidden).to.contain("=== 'vortag'");
-            expect(zeile[attr]).to.include({ newLine: true, xs: 12, xl: 12 });
+            expect(zeile[attr]).to.include({ newLine: attr === 'kennlinieHeizen', xs: 12, md: 12, lg: 6, xl: 6 });
         }
         expect(zeile._bildHeizen).to.equal(undefined);
         expect(zeile._bildKuehlen).to.equal(undefined);
@@ -1137,7 +1164,7 @@ describe('VIS-Baustein "Regelung" und gemeinsame Zeichenfunktion', () => {
 describe('Einstellungsseite: neue Felder je Geraet und Modul-Reiter', () => {
     const konfig = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'admin', 'jsonConfig.json'), 'utf8'));
     it('Fuehlerweg, traeger Fuehler und Nachstellabstand nur bei Raumquelle = Datenpunkt', () => {
-        const zeile = Object.fromEntries(konfig.items.tabRegelung.items.regelGeraete.items.map(i => [i.attr, i]));
+        const zeile = Object.fromEntries(konfig.items.tabRegelung.items.regelGeraete.custom.items.map(i => [i.attr, i]));
         expect(zeile.fuehlerWeg.options.map(x => x.value)).to.eql(['sollwert', 'modul']);
         expect(zeile.fuehlerWeg.default).to.equal('sollwert');
         expect(zeile.fuehlerWeg.hidden).to.equal("data.raumQuelle !== 'dp'");
@@ -1149,7 +1176,7 @@ describe('Einstellungsseite: neue Felder je Geraet und Modul-Reiter', () => {
         expect(zeile.korrAbstandMin).to.not.have.property('default');
         expect(zeile.korrAbstandMin.hidden).to.contain("data.fuehlerWeg === 'modul'");
         // der Titel des Eintrags ist der Geraetename (Wert der Auswahl)
-        expect(konfig.items.tabRegelung.items.regelGeraete.titleAttr).to.equal('geraet');
+        expect(konfig.items.tabRegelung.items.regelGeraete.custom.titleAttr).to.equal('geraet');
     });
     it('Modul-Reiter: jedes Formularfeld der festen Liste, nichts wird in der Instanz gespeichert', () => {
         const m = konfig.items.tabModule.items;
@@ -1555,7 +1582,7 @@ describe('UX-Funde 21.11.2026', () => {
         expect(io.native.regelKennlinieKuehlen).to.eql(v.regelKennlinieKuehlen.default);
         expect(io.native.regelKennlinieHeizen[0]).to.eql({ x: -10, y: 100 });
         expect(io.native.regelObergrenze).to.equal(100);
-        const g = konfig.items.tabRegelung.items.regelGeraete.items;
+        const g = konfig.items.tabRegelung.items.regelGeraete.custom.items;
         for (const [dp, art] of [['aussenDp', 'aussen'], ['raumDp', 'raum'], ['feuchteDp', 'feuchte']]) {
             const i = g.findIndex(x => x.attr === dp);
             expect(g[i + 1]).to.include({ type: 'textSendTo', command: 'fuehlerWert' });

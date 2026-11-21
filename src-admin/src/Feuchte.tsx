@@ -9,7 +9,7 @@
  * Ende, wenn Abstand > dtpAus UND Feuchte < rhAus (und die Mindestlaufzeit um ist).
  *
  * Geschrieben wird nur ins Formular (regelFeuchteDtpEin/-Aus, regelFeuchteRhEin/-Aus); die Massnahme
- * (regelFeuchteMassnahme) wird nur gelesen und als Satz gezeigt. Die Punkte sind die Messwerte der
+ * (regelFeuchteMassnahme) wird nur gelesen und je Betriebsart erklaert (Heizen/Kuehlen/Entfeuchten/aus). Die Punkte sind die Messwerte der
  * Geraete (sendTo regelUebersicht, alle 15 s).
  */
 import React, { useEffect, useId, useRef, useState } from 'react';
@@ -19,6 +19,7 @@ import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from 
 
 import Werkzeugleiste from './Werkzeugleiste';
 import { Wertfeld, wertfeldStil, zahl } from './Stufen';
+import { t as stufenText } from './Stufen.texte';
 import { t as text, type Schluessel } from './Feuchte.texte';
 
 export interface Grenzen {
@@ -497,8 +498,10 @@ function Skala(props: SkalaProps): React.JSX.Element {
 interface AnsichtProps {
     /** die vier Grenzen des Formulars (leer/ungueltig = Werksvorgabe) */
     werte: Partial<Record<keyof Grenzen, unknown>>;
-    /** regelFeuchteMassnahme - nur fuer den erklaerenden Satz */
+    /** regelFeuchteMassnahme - nur fuer die erklaerenden Zeilen je Betriebsart */
     massnahme: unknown;
+    /** Name der Wahl "Faikout-Auto" auf der Seite (Text der Auswahl "Wer regelt") */
+    nameFaikoutAuto?: string;
     /** Messwerte der Geraete oder null (Adapter laeuft nicht / noch keine Antwort) */
     geraete: LiveGeraet[] | null;
     sprache: string;
@@ -507,6 +510,39 @@ interface AnsichtProps {
     onWert: (teil: Partial<Grenzen>) => void;
     /** meldet dem Formular ungueltige Grenzen ('' = in Ordnung) */
     onFehler?: (meldung: string) => void;
+}
+
+/** Kleines Symbol je Betriebsart: Flamme, Schneeflocke, Tropfen, Ein/Aus. */
+function ArtSymbol(props: { art: 'heizen' | 'kuehlen' | 'entfeuchten' | 'aus' }): React.JSX.Element {
+    const strich = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+    return (
+        <svg
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+        >
+            {props.art === 'heizen' ? (
+                <path
+                    {...strich}
+                    d="M10 2.5c.6 3-3.8 4.6-3.8 8.6a3.9 3.9 0 0 0 7.8 0c0-1.6-.8-2.7-1.6-3.6-.3 1.2-.9 1.8-1.6 2.1.5-2.6-.1-5.3-.8-7.1z"
+                />
+            ) : props.art === 'kuehlen' ? (
+                <path
+                    {...strich}
+                    d="M10 2.5v15M3.5 6.25l13 7.5M16.5 6.25l-13 7.5M8 3.6l2 1.7 2-1.7M8 16.4l2-1.7 2 1.7"
+                />
+            ) : props.art === 'entfeuchten' ? (
+                <path
+                    {...strich}
+                    d="M10 2.8c2.6 3.3 4.6 5.7 4.6 8.4a4.6 4.6 0 0 1-9.2 0c0-2.7 2-5.1 4.6-8.4z"
+                />
+            ) : (
+                <path
+                    {...strich}
+                    d="M10 3v6.5M6.2 5.4a6 6 0 1 0 7.6 0"
+                />
+            )}
+        </svg>
+    );
 }
 
 /** Die Grafik - ohne jsonConfig, damit sie sich einzeln rendern und pruefen laesst. */
@@ -575,8 +611,25 @@ export function FeuchteAnsicht(props: AnsichtProps): React.JSX.Element {
     });
 
     const mass = String(props.massnahme || 'entfeuchten');
-    const massText =
-        mass === 'zielSenken' ? t('massZielSenken') : mass === 'melden' ? t('massMelden') : t('massEntfeuchten');
+    // Was je Betriebsart geschieht - wie lib/regel/feuchte.js (Massnahme waehlen) und koordinator.js
+    const nurMelden = mass === 'melden';
+    const zielSenken = mass === 'zielSenken';
+    const arten: { art: 'heizen' | 'kuehlen' | 'entfeuchten' | 'aus'; name: string; text: string; greift: boolean }[] = [
+        { art: 'heizen', name: t('artHeizen'), text: nurMelden ? t('nurMelden') : t('heizenNichts'), greift: false },
+        {
+            art: 'kuehlen',
+            name: t('artKuehlen'),
+            text: nurMelden ? t('nurMelden') : zielSenken ? t('kuehlenZiel') : t('kuehlenEntfeuchten'),
+            greift: !nurMelden,
+        },
+        {
+            art: 'entfeuchten',
+            name: t('artEntfeuchten'),
+            text: nurMelden ? t('nurMelden') : zielSenken ? t('entfZiel') : t('entfEntfeuchten'),
+            greift: false,
+        },
+        { art: 'aus', name: t('artAus'), text: t('ausSatz'), greift: false },
+    ];
     const zonen: [string, string, string] = [t('trocken'), t('band'), t('feucht')];
     const zustandText: Record<Zustand, string> = { feucht: t('feucht'), trocken: t('trocken'), band: t('band') };
     const zustandFarbe: Record<Zustand, string> = { feucht: farbeEin, trocken: farbeAus, band: farbeBand };
@@ -652,6 +705,16 @@ export function FeuchteAnsicht(props: AnsichtProps): React.JSX.Element {
                     padding: '10px 10px 8px',
                     mb: 1.25,
                 },
+                '& .fk-f-massnahme': { mb: 1.25 },
+                '& .fk-f-arten': { listStyle: 'none', m: 0, p: 0, display: 'grid', gap: '3px', fontSize: '0.875rem' },
+                '& .fk-f-art': { display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.4 },
+                '& .fk-f-art svg': { flex: '0 0 auto', width: 18, height: 18, mt: '1px' },
+                '& .fk-f-art-heizen svg': { color: props.dunkel ? '#f0a27a' : '#b4532a' },
+                '& .fk-f-art-kuehlen svg': { color: props.dunkel ? '#7fbbe6' : '#1f6fa8' },
+                '& .fk-f-art-entfeuchten svg': { color: props.dunkel ? '#7fd0c4' : '#1d7a70' },
+                '& .fk-f-art-aus svg': { color: 'text.secondary' },
+                '& .fk-f-art:not(.fk-f-greift) > span': { color: 'text.secondary' },
+                '& .fk-f-art:not(.fk-f-greift) b': { color: 'text.primary' },
                 '& .fk-f-titel': { fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.3 },
                 '& .fk-f-unter': { fontSize: '0.8rem', color: 'text.secondary', mb: 0.5 },
                 '& .fk-f-zeichnung': {
@@ -714,20 +777,38 @@ export function FeuchteAnsicht(props: AnsichtProps): React.JSX.Element {
             >
                 {t('einleitung')}
             </Typography>
-            <Typography
-                variant="body2"
+            <div
                 className="fk-f-massnahme"
                 data-massnahme={mass}
-                sx={{ mb: 1.25 }}
             >
-                {massText}{' '}
-                <Box
-                    component="span"
-                    sx={{ color: 'text.secondary' }}
+                <Typography
+                    variant="body2"
+                    sx={{ mb: 0.5 }}
                 >
-                    {t('massWo')}
-                </Box>
-            </Typography>
+                    {t('wasTitel')}
+                </Typography>
+                <ul className="fk-f-arten">
+                    {arten.map(a => (
+                        <li
+                            key={a.art}
+                            className={`fk-f-art fk-f-art-${a.art}${a.greift ? ' fk-f-greift' : ''}`}
+                            data-art={a.art}
+                        >
+                            <ArtSymbol art={a.art} />
+                            <span>
+                                <b>{a.name}:</b> {a.text}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+                <Typography
+                    variant="body2"
+                    className="fk-f-ausnahmen"
+                    sx={{ color: 'text.secondary', fontSize: '0.8rem', mt: 0.5 }}
+                >
+                    {t('ausnahmen', props.nameFaikoutAuto || 'Faikout-Auto', stufenText(sprache, 'feuchte'))} {t('massWo')}
+                </Typography>
+            </div>
             <div className="fk-f-block">
                 <div className="fk-f-titel">{t('dtpTitel')}</div>
                 <div className="fk-f-unter">{t('dtpKurz')}</div>
@@ -930,6 +1011,7 @@ function FeuchteFeld(
                 rhAus: data[ATTR.rhAus],
             }}
             massnahme={data.regelFeuchteMassnahme}
+            nameFaikoutAuto={I18n.t('optBetriebFaikout')}
             geraete={geraete}
             sprache={I18n.getLanguage()}
             dunkel={(props.oContext?.themeType || palette?.mode) === 'dark'}

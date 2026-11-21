@@ -4,15 +4,18 @@ Diese Anleitung beschreibt die eingebaute Klimaregelung des Adapters: die Einste
 **Regelung**, die Gerätekarten, den Wochenplan und das Ändern von Einstellungen im Modul.
 [English version](../en/README.md) · [Zurück zur Übersicht](../../README.md)
 
-## 1. Erst einmal nur zusehen: der Probelauf
+## 1. Wer mag: erst einmal nur zusehen (Probelauf)
 
-Nach der Installation steht die Regelung im **Probelauf**. Der Adapter rechnet alles mit und zeigt,
-was er senden würde – er sendet aber keinen einzigen Befehl an die Anlagen. So lässt sich in Ruhe
-prüfen, ob Kennlinie, Temperaturstufen und Wochenplan passen.
+Eine neue Instanz sendet nichts von selbst: Leistungsgrenze, Wochenplan und Feuchteregelung schaltest
+du je Anlage ein. Wer vorher in Ruhe prüfen will, ob Kennlinie, Temperaturstufen und Wochenplan passen,
+schaltet den **Probelauf** ein: Der Adapter rechnet dann alles mit und zeigt, was er senden würde – er
+sendet aber keinen einzigen Befehl an die Anlagen.
 
-Scharf geschaltet wird in zwei Stufen: der Haken **Probelauf** oben im Reiter *Regelung* (für alle
-Geräte) und je Gerät der Datenpunkt `<Gerät>.regulation.demand.dryRun`. Gesendet wird nur, wenn beide
-aus sind. Auf der Gerätekarte steht solange das Etikett „Probelauf“.
+Der Haken steht im Reiter *Regelung* ganz unten unter **Für Fortgeschrittene** (für alle Geräte). Ist
+er an, steht oben im Reiter ein farbiger Hinweis und auf der Gerätekarte das Etikett „Probelauf“. Je
+Gerät gibt es zusätzlich den Datenpunkt `<Gerät>.regulation.demand.dryRun`; gesendet wird nur, wenn
+beide aus sind. Instanzen aus älteren Versionen behalten ihren Stand: Dort ist der Probelauf an und der
+Datenpunkt der schon bekannten Geräte ebenfalls, bis du beides ausschaltest.
 
 ![Reiter Regelung](../img/einstellungen_regelung.png)
 
@@ -21,8 +24,8 @@ aus sind. Auf der Gerätekarte steht solange das Etikett „Probelauf“.
 | Reiter | Was dort steht |
 |---|---|
 | **Einrichtung** | Schrittliste mit Haken: Broker, Modul verbinden, Regelung, Zeitplan |
-| **Zeitpläne** | WANN welche Temperatur gilt: Schaubild der Regelung, Temperaturstufen der Vorlage (Regler zum Ziehen), Wochenplan der Vorlage und je Gerät Vorschau, Schalter und „Wochenplan bearbeiten“. Eingeklappt: Handeingriff und Feiertage |
-| **Regelung** | WIE die Anlage gefahren wird: Probelauf, die globale Vorlage (Strategie, Kennlinien und Grenzen im Bild, Feuchte-Grenzen im Bild), darunter die Geräte. Eingeklappt: Feinabstimmung |
+| **Zeitpläne** | WANN welche Temperatur gilt: Temperaturstufen der Vorlage (Regler zum Ziehen), Wochenplan der Vorlage und je Gerät Vorschau, Schalter und „Wochenplan bearbeiten“. Eingeklappt: Handeingriff und Feiertage |
+| **Regelung** | WIE die Anlage gefahren wird: Schaubild der Regelung, die globale Vorlage (Strategie, Heiz- und Kühlkennlinie mit Grenzen im Bild, Feuchte-Grenzen im Bild), darunter die Geräte als Karten. Eingeklappt: Probelauf und Feinabstimmung |
 | **Verbrauch** | Diagramm und Aufzeichnung |
 | **Module suchen**, **MQTT-Broker (Technik)**, **Moduleinstellungen (Technik)** | Anbinden und Technik |
 

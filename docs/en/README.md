@@ -4,15 +4,18 @@ This guide describes the built-in climate control of the adapter: the settings i
 **Climate control**, the device cards, the weekly schedule and changing settings in the module.
 [Deutsche Fassung](../de/README.md) · [Back to the overview](../../README.md)
 
-## 1. Watch first: the dry run
+## 1. If you like: watch first (dry run)
 
-After installation the control is in **dry run**. The adapter calculates everything and shows what
-it would send – but it does not send a single command to the units. That leaves time to check
-whether curve, temperature levels and schedule fit.
+A new instance sends nothing on its own: power limit, weekly schedule and humidity control are switched
+on per unit. If you want to check first whether curve, temperature levels and schedule fit, switch on
+the **dry run**: the adapter then calculates everything and shows what it would send – but it does not
+send a single command to the units.
 
-Going live takes two steps: the checkbox **Dry run** at the top of the tab *Climate control* (for
-all units) and, per unit, the data point `<unit>.regulation.demand.dryRun`. Commands are only sent
-when both are off. Until then the device card carries the label "Dry run".
+The checkbox is at the bottom of the tab *Climate control* under **For advanced users** (for all
+units). While it is on, a coloured note appears at the top of the tab and the device card carries the
+label "Dry run". Per unit there is also the data point `<unit>.regulation.demand.dryRun`; commands are
+only sent when both are off. Instances from older versions keep their state: there the dry run is on,
+and so is the data point of the units already known, until you switch both off.
 
 ![Tab Climate control](../img/einstellungen_regelung.png)
 
@@ -21,8 +24,8 @@ when both are off. Until then the device card carries the label "Dry run".
 | Tab | What it holds |
 |---|---|
 | **Setup** | step list with ticks: broker, connect module, climate control, schedule |
-| **Schedules** | WHEN which temperature applies: diagram of the control, temperature levels of the template (sliders to drag), weekly schedule of the template and per unit preview, switch and “Edit weekly schedule”. Collapsed: manual override and public holidays |
-| **Climate control** | HOW the unit is run: dry run, the global template (strategy, curves and limits in the chart, humidity limits in the chart), below it the units. Collapsed: fine tuning |
+| **Schedules** | WHEN which temperature applies: temperature levels of the template (sliders to drag), weekly schedule of the template and per unit preview, switch and “Edit weekly schedule”. Collapsed: manual override and public holidays |
+| **Climate control** | HOW the unit is run: diagram of the control, the global template (strategy, heating and cooling curve with limits in the chart, humidity limits in the chart), below it the units as cards. Collapsed: dry run and fine tuning |
 | **Consumption** | chart and recording |
 | **Find modules**, **MQTT broker (advanced)**, **Module settings (advanced)** | connecting and technical settings |
 

@@ -92,8 +92,8 @@ walk(jsonConfig);
 const zahl = name => used.filter(u => u.name.endsWith(`/${name}`)).length;
 assert.deepStrictEqual(
     Object.fromEntries(names.map(n => [n, zahl(n)])),
-    { KennlinieHeizen: 2, KennlinieKuehlen: 2, Stufen: 2, Feuchte: 1, Erklaerung: 1, Zeitplaene: 1 },
-    'Kennlinien und Temperaturstufen je Geraet und in der Vorlage, dazu Feuchte, Erklaerung und Zeitplaene',
+    { KennlinieHeizen: 2, KennlinieKuehlen: 2, Stufen: 2, Feuchte: 1, Erklaerung: 1, Zeitplaene: 1, Geraete: 1 },
+    'Kennlinien und Temperaturstufen je Geraet und in der Vorlage, dazu Feuchte, Erklaerung, Zeitplaene und die Geraeteliste',
 );
 for (const u of used) {
     const [set, file, comp] = u.name.split('/');
@@ -129,6 +129,13 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.ok(/Jetzt: außen −4,9 °C → 95 %/.test(html.eigene), 'Jetzt-Marker beschriftet');
         assert.ok(/Obergrenze 95 % –/.test(html.eigene) && /Untergrenze 40 % –/.test(html.eigene), 'Grenzen beschriftet');
         assert.ok(/Werte als Tabelle/.test(html.eigene), 'Tabelle nur eingeklappt');
+        // die Grenzen haben keine Eingabefelder mehr: Schrift an der Linie, Zahleneingabe erst auf Doppelklick/Enter
+        for (const [name, h] of Object.entries({ eigene: html.eigene, leer: html.leer })) {
+            assert.ok(!/fk-grenzfeld|fk-grenzwert/.test(h), `${name}: keine Grenzfelder unter dem Bild`);
+            assert.ok(!/<input/.test(h), `${name}: kein Eingabefeld, solange nichts geoeffnet ist`);
+            assert.strictEqual((h.match(/class="fk-grenzwahl"/g) || []).length, 2, `${name}: beide Grenzwerte lassen sich per Doppelklick oeffnen`);
+            assert.ok(/doppelt auf die Zahl klicken/.test(h), `${name}: Hinweis nennt Ziehen, Pfeiltasten und Doppelklick`);
+        }
         assert.ok(/Kopieren/.test(html.eigene) && /Einfügen/.test(html.eigene) && /Vorlage übernehmen/.test(html.eigene), 'Werkzeugleiste');
         assert.strictEqual(griffe(html.leer), 2, 'leere Liste: nur die Grenzlinien sind ziehbar');
         assert.ok(/Vorlage \(nicht angepasst\)/.test(html.leer) && /Eigene Kennlinie anlegen/.test(html.leer), 'leer: Vorlage + Knopf');
@@ -143,6 +150,18 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         // Feuchte, Erklaerung, Zeitplaene
         assert.strictEqual(griffe(html.feuchte), 4, 'vier ziehbare Feuchte-Grenzen');
         assert.ok(/Wohnzimmer/.test(html.feuchte) && /Abstand 9,4 K/.test(html.feuchte), 'Live-Werte');
+        // je Betriebsart steht da, was geschieht - abhaengig von der gewaehlten Massnahme (wie lib/regel/feuchte.js)
+        const art = (h, name) => (h.match(new RegExp(`data-art="${name}"[^>]*>.*?</li>`)) || [''])[0].replace(/<[^>]+>/g, '');
+        assert.ok(/Heizen: bewusst kein Eingriff, nur eine Meldung/.test(art(html.feuchte, 'heizen')), 'Heizen: bewusst nichts');
+        assert.ok(/Kühlen: schaltet auf Entfeuchten und danach wieder zurück/.test(art(html.feuchte, 'kuehlen')), 'Kuehlen: Entfeuchten');
+        assert.ok(/Entfeuchten: läuft schon/.test(art(html.feuchte, 'entfeuchten')), 'Entfeuchten laeuft schon');
+        assert.ok(/Anlage aus: nur eine Meldung – der Adapter schaltet die Anlage dafür nicht ein/.test(art(html.feuchte, 'aus')), 'Anlage aus');
+        assert.ok(/Kühlen: senkt die Zieltemperatur um 1 K und stellt sie danach wieder zurück/.test(art(html.feuchteZiel, 'kuehlen')), 'Ziel senken');
+        assert.ok(/Entfeuchten: kein Eingriff/.test(art(html.feuchteZiel, 'entfeuchten')) && /bewusst kein Eingriff/.test(art(html.feuchteZiel, 'heizen')), 'Ziel senken wirkt nur beim Kuehlen');
+        for (const name of ['heizen', 'kuehlen', 'entfeuchten']) {
+            assert.ok(/nur eine Meldung, kein Eingriff/.test(art(html.feuchteMelden, name)), `nur melden: ${name}`);
+        }
+        assert.ok(/Faikout-Auto/.test(html.feuchte) && /Frostschutz/.test(html.feuchte) && /Feuchteregelung darf eingreifen/.test(html.feuchte), 'Ausnahmen genannt');
         assert.ok(/Reiter „Zeitpläne“/.test(html.erklaerung) && /Reiter „Regelung“/.test(html.erklaerung), 'Erklaerung nennt die Reiter');
         assert.ok(/Werksplan \(nicht angepasst\)/.test(html.zeitplaeneAus) && /Vorlage bearbeiten/.test(html.zeitplaeneAus), 'Vorlage als eigene Zeile');
         assert.ok(/Die Instanz läuft nicht/.test(html.zeitplaeneAus), 'gestoppte Instanz wird erklaert');

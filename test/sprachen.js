@@ -99,12 +99,12 @@ function alleTexte() {
 describe('Sprachen: Komponententexte src-admin/src/*.texte.ts', () => {
     const dateien = fs.readdirSync(path.join(WURZEL, 'src-admin', 'src')).filter(d => d.endsWith('.texte.ts'));
 
-    it('alle sechs Komponenten werden gefunden', () => {
-        expect(dateien.sort()).to.eql(['Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Kennlinie.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
+    it('alle sieben Komponenten werden gefunden', () => {
+        expect(dateien.sort()).to.eql(['Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Geraete.texte.ts', 'Kennlinie.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
     });
 
     // Woerter, die in einer Sprache wirklich wie im Englischen heissen ("Datei:schluessel:sprache")
-    const GLEICH = new Set(['Stufen.texte.ts:komfort:nl', 'Stufen.texte.ts:komfort:it', 'Stufen.texte.ts:betriebsart:fr']);
+    const GLEICH = new Set(['Stufen.texte.ts:komfort:nl', 'Stufen.texte.ts:komfort:it', 'Stufen.texte.ts:betriebsart:fr', 'Geraete.texte.ts:individuell:pt', 'Geraete.texte.ts:individuell:es']);
 
     for (const datei of dateien) {
         it(`${datei}: jeder Schluessel in elf Sprachen, nicht leer, gleiche Platzhalter, uebersetzt`, () => {

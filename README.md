@@ -189,9 +189,9 @@ run) of the instance settings, the device cards (admin, device manager) and the 
 "Climate control" operate the built-in control. A step-by-step guide with pictures:
 [English](docs/en/README.md) · [Deutsch](docs/de/README.md).
 
-Everything starts in **dry run**: the adapter calculates and shows what it would do, but sends
-nothing until the dry run is switched off – in the settings and, per unit, in the data point
-`regulation.demand.dryRun`.
+Nothing is sent until you switch a function on per unit. To try things out first there is a
+**dry run** (tab "Climate control", "For advanced users"): the adapter then calculates and shows what
+it would do, but sends nothing. Instances from older versions keep their dry run switched on.
 
 - **Global template and per unit**: the template holds strategy, curves, limits (factory default
   40 % to 100 %), temperature levels and a template schedule and applies to all units. Each unit
@@ -275,7 +275,7 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 ### 1.0.0 (2026-11-21)
 - Climate control per unit: power limit by outdoor curve or "Auto" (previous day plus margin),
   weekly schedule with temperature levels, public holidays and absence, humidity and dew point control, manual
-  override, frost protection, dry run as default. Every decision is shown with its reason.
+  override, frost protection, optional dry run. Every decision is shown with its reason.
 - Two levels only: a global template and, per unit, the checkbox "Individual instead of global
   template". "Scenes" are now called temperature levels and live in the tab "Schedules" together
   with the weekly schedules (also reachable from the device card, button "Weekly schedule").

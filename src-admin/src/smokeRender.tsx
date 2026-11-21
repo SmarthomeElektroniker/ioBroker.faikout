@@ -74,6 +74,28 @@ export function renderAll(): Record<string, string> {
                 onWert={() => {}}
             />,
         ),
+        feuchteZiel: mit(
+            <FeuchteAnsicht
+                werte={{ dtpEin: 4, dtpAus: 6, rhEin: 65, rhAus: 58 }}
+                massnahme="zielSenken"
+                geraete={[{ id: 'a', name: 'Wohnzimmer', raum: 21, feuchte: 55, taupunkt: 11.6 } as any]}
+                sprache="de"
+                dunkel={false}
+                farben={farben as any}
+                onWert={() => {}}
+            />,
+        ),
+        feuchteMelden: mit(
+            <FeuchteAnsicht
+                werte={{ dtpEin: 4, dtpAus: 6, rhEin: 65, rhAus: 58 }}
+                massnahme="melden"
+                geraete={[{ id: 'a', name: 'Wohnzimmer', raum: 21, feuchte: 55, taupunkt: 11.6 } as any]}
+                sprache="de"
+                dunkel={false}
+                farben={farben as any}
+                onWert={() => {}}
+            />,
+        ),
         erklaerung: mit(
             <ErklaerungAnsicht
                 sprache="de"
