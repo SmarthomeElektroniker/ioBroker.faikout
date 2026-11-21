@@ -141,8 +141,8 @@ der Plan „Aus“ vorsieht. 0 schaltet den Frostschutz ab.
 
 Unter jeder Grafik (Kennlinie, Temperaturstufen, Feuchte, Wochenplan) stehen drei Knöpfe:
 **Kopieren** merkt den Inhalt, **Einfügen** setzt ihn bei einem anderen Gerät oder in der Vorlage ein
-(grau, solange nichts Passendes kopiert ist), **Vorlage übernehmen** bzw. **Werksvorgabe** setzt
-zurück. Nach dem Einfügen oder Zurücksetzen erscheint kurz **Rückgängig**. Kennlinien, Stufen und
+(grau, solange nichts Passendes kopiert ist), **Vorlage übernehmen** bzw. **Auf die Werksvorgabe
+zurücksetzen** setzt zurück. Nach dem Einfügen oder Zurücksetzen erscheint kurz **Rückgängig**. Kennlinien, Stufen und
 Feuchte-Grenzen gelten erst mit „Speichern“; ein Wochenplan am Gerät wirkt sofort.
 
 ## 3. Für alle Geräte

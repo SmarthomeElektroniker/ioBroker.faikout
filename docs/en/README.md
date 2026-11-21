@@ -142,7 +142,8 @@ the schedule says off. 0 switches frost protection off.
 
 Below every chart (curve, temperature levels, humidity, weekly schedule) there are three buttons:
 **Copy** remembers the content, **Paste** inserts it at another unit or in the template (grey as
-long as nothing suitable has been copied), **Apply template** or **Factory default** resets. After
+long as nothing suitable has been copied), **Use template** or **Reset to the factory default**
+resets. After
 pasting or resetting, **Undo** is offered for a short time. Curves, levels and humidity limits only
 apply with “Save”; a weekly schedule at a unit takes effect at once.
 
