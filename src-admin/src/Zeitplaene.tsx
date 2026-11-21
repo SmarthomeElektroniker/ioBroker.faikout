@@ -568,6 +568,8 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                     .map((z: Record<string, unknown>) => ({
                         geraet: z.geraet,
                         stufen: Array.isArray(z.stufen) ? z.stufen : [],
+                        // Ersatzwahl beim Zuruecksetzen der eigenen Stufen: damit rechnet die Vorschau des Adapters
+                        ...(z.stufenErsatz && typeof z.stufenErsatz === 'object' ? { stufenErsatz: z.stufenErsatz } : {}),
                     })),
             }),
         [props.stufenFormular, props.geraeteFormular],

@@ -180,6 +180,8 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.deepStrictEqual(wahl, [['nacht', '„Nacht“ ersetzen durch:', 'absenken', 'Absenken'], ['tag', '„Tag“ ersetzen durch:', 'komfort', 'Komfort']], `Ersatzwahl je betroffener Stufe (${JSON.stringify(wahl)})`);
         assert.ok(/fk-st-rueckfrage-ja[^>]*>Zurücksetzen</.test(frage) && /fk-st-rueckfrage-nein[^>]*>Abbrechen</.test(frage) && /erst, wenn du die Einstellungen speicherst/.test(frage), 'Knoepfe Zuruecksetzen/Abbrechen, Hinweis auf das Speichern');
         assert.ok(!/fk-st-rueckfrage/.test(html.stufenOhneRueckfrage) && !/fk-st-rueckfrage/.test(html.stufenGeraetEigen), 'Plan nur mit Stufen der Vorlage: keine Rueckfrage');
+        // die Ersatzwahl reist im Formularauszug zum Adapter (zeitplaeneListe) - sonst meldet die Vorschau "Stufe gibt es nicht"
+        assert.ok(/stufenErsatz: z\.stufenErsatz/.test(fs.readFileSync(path.join(here, 'src', 'Zeitplaene.tsx'), 'utf8')), 'Zeitplaene schickt stufenErsatz mit');
         ok('Rendern Rueckfrage beim Zuruecksetzen der Stufen: Ersatzwahl je Stufe, Vorgabe naechste Temperatur');
         // Rechenweg: jeder Fall als Satz
         const WEG = {
