@@ -354,9 +354,9 @@ describe('Client-ID am externen Broker: einstellbar, Standard einmal erzeugt', (
         // Client-ID und Knopf stehen im eingeklappten Abschnitt "Fuer Fortgeschrittene", den es nur
         // beim externen Broker gibt
         const P = B._pFortgeschritten;
-        expect(P).to.include({ type: 'panel', collapsable: true, hidden: "data.brokerModus !== 'extern'" });
-        expect(P.items.externClientId.type).to.equal('text');
-        expect(P.items._clientIdStandard).to.include({ type: 'sendTo', command: 'clientIdStandard' });
+        expect(P).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Abschnitt', hidden: "data.brokerModus !== 'extern'" });
+        expect(P.custom.items.externClientId.type).to.equal('text');
+        expect(P.custom.items._clientIdStandard).to.include({ type: 'sendTo', command: 'clientIdStandard' });
         expect(require('../io-package.json').native).to.have.property('externClientIdStandard', '');
     });
 });

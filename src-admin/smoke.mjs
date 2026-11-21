@@ -92,8 +92,8 @@ walk(jsonConfig);
 const zahl = name => used.filter(u => u.name.endsWith(`/${name}`)).length;
 assert.deepStrictEqual(
     Object.fromEntries(names.map(n => [n, zahl(n)])),
-    { KennlinieHeizen: 2, KennlinieKuehlen: 2, Stufen: 2, Feuchte: 1, Erklaerung: 1, Zeitplaene: 1, Geraete: 1 },
-    'Kennlinien und Temperaturstufen je Geraet und in der Vorlage, dazu Feuchte, Erklaerung, Zeitplaene und die Geraeteliste',
+    { KennlinieHeizen: 2, KennlinieKuehlen: 2, Stufen: 2, Feuchte: 1, Erklaerung: 1, Zeitplaene: 1, Geraete: 1, Abschnitt: 7 },
+    'Kennlinien und Temperaturstufen je Geraet und in der Vorlage, dazu Feuchte, Erklaerung, Zeitplaene, die Geraeteliste und die sieben aufklappbaren Abschnitte',
 );
 for (const u of used) {
     const [set, file, comp] = u.name.split('/');
@@ -137,8 +137,15 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
             assert.ok(/doppelt auf die Zahl klicken/.test(h), `${name}: Hinweis nennt Ziehen, Pfeiltasten und Doppelklick`);
         }
         assert.ok(/Kopieren/.test(html.eigene) && /Einfügen/.test(html.eigene) && /Vorlage übernehmen/.test(html.eigene), 'Werkzeugleiste');
-        assert.strictEqual(griffe(html.leer), 2, 'leere Liste: nur die Grenzlinien sind ziehbar');
-        assert.ok(/Vorlage \(nicht angepasst\)/.test(html.leer) && /Eigene Kennlinie anlegen/.test(html.leer), 'leer: Vorlage + Knopf');
+        // Geraet ohne eigene Punkte: die Punkte der Vorlage sind direkt ziehbar, kein Hinweisblock, kein Knopf -
+        // die Ueberschrift sagt in der Klammer, was gilt
+        assert.strictEqual(griffe(html.leer), 4, 'Geraet, leere Liste: Grenzlinien und die zwei Punkte der Vorlage sind ziehbar');
+        assert.ok(/Kennlinie \(globale Kennlinie\)/.test(html.leer) && /Vorlage \(nicht angepasst\)/.test(html.leer), 'Geraet leer: Klammer "globale Kennlinie"');
+        assert.ok(!/Eigene Kennlinie anlegen|fk-leer"|gilt die Kennlinie der Vorlage/.test(html.leer), 'Geraet leer: kein Hinweis, kein Knopf');
+        assert.ok(/Kennlinie \(eigene Kennlinie\)/.test(html.eigene), 'Geraet mit eigenen Punkten: Klammer "eigene Kennlinie"');
+        // die Vorlage selbst bleibt, wie sie war: Werksvorgabe blass, Hinweis und Knopf
+        assert.strictEqual(griffe(html.werk), 2, 'Vorlage, leere Liste: nur die Grenzlinien sind ziehbar');
+        assert.ok(/Es gilt die Werksvorgabe/.test(html.werk) && /Eigene Kennlinie anlegen/.test(html.werk) && !/\(globale Kennlinie\)/.test(html.werk), 'Vorlage leer: Werksvorgabe + Knopf, keine Klammer');
         assert.strictEqual(griffe(html.eingeklappt), 0, 'eingeklappt: nur die Titelzeile');
         assert.ok(/Die Heizkennlinie muss fallen/.test(html.falsch), 'Fehler im Klartext');
         ok('Rendern Kennlinie: eigene Punkte, leere Liste (Vorlage), eingeklappt und ungueltig');

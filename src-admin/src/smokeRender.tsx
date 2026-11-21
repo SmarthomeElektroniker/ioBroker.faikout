@@ -52,6 +52,7 @@ export function renderAll(): Record<string, string> {
             arbeitspunkt: { x: -4.9, wert: 95, text: 'Jetzt: außen −4,9 °C → 95 %', unterzeile: 'roh 99,4 %' },
         }),
         leer: bild('kuehlen', []),
+        werk: bild('kuehlen', [], { mitVorgabe: false }),
         eingeklappt: bild('kuehlen', [], { eingeklappt: true }),
         falsch: bild('heizen', [{ x: 0, y: 50 }, { x: 5, y: 70 }]),
         stufenWerk: stufen([], false),

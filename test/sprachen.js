@@ -99,8 +99,8 @@ function alleTexte() {
 describe('Sprachen: Komponententexte src-admin/src/*.texte.ts', () => {
     const dateien = fs.readdirSync(path.join(WURZEL, 'src-admin', 'src')).filter(d => d.endsWith('.texte.ts'));
 
-    it('alle sieben Komponenten werden gefunden', () => {
-        expect(dateien.sort()).to.eql(['Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Geraete.texte.ts', 'Kennlinie.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
+    it('alle acht Komponenten werden gefunden', () => {
+        expect(dateien.sort()).to.eql(['Abschnitt.texte.ts', 'Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Geraete.texte.ts', 'Kennlinie.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
     });
 
     // Woerter, die in einer Sprache wirklich wie im Englischen heissen ("Datei:schluessel:sprache")
@@ -109,7 +109,8 @@ describe('Sprachen: Komponententexte src-admin/src/*.texte.ts', () => {
     for (const datei of dateien) {
         it(`${datei}: jeder Schluessel in elf Sprachen, nicht leer, gleiche Platzhalter, uebersetzt`, () => {
             const texte = komponentenTexte(datei);
-            expect(Object.keys(texte).length, datei).to.be.greaterThan(10);
+            // der Abschnitt ist nur eine Huelle mit vier Texten
+            expect(Object.keys(texte).length, datei).to.be.greaterThan(datei === 'Abschnitt.texte.ts' ? 3 : 10);
             const fehler = [];
             for (const [k, t] of Object.entries(texte)) {
                 if (Object.keys(t).sort().join() !== [...SPRACHEN].sort().join()) {

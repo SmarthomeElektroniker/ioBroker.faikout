@@ -258,15 +258,25 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
         }
     }, [wertText]);
 
-    const roh: unknown[] = entwurf || (Array.isArray(props.wert) ? props.wert : []);
-    const eigene = roh.length > 0;
+    const eigenRoh: unknown[] = entwurf || (Array.isArray(props.wert) ? props.wert : []);
+    const eigene = eigenRoh.length > 0;
+    // Am Geraet ohne eigene Punkte ist die Kennlinie der Vorlage die Arbeitsgrundlage: ihre Punkte sind direkt
+    // anfassbar, und die erste Aenderung schreibt Vorlage + Aenderung in EINEM Zug als eigene Kennlinie.
+    const vorlageText = JSON.stringify(props.vorgabe);
+    const roh: unknown[] = useMemo(
+        () => (eigene || istVorlage ? eigenRoh : props.vorgabe.map(p => ({ x: p.x, y: p.y }))),
+        [eigene, istVorlage, JSON.stringify(eigenRoh), vorlageText],
+    );
     const zeilen = useMemo(() => zug.punkte(roh), [JSON.stringify(roh)]);
     const fehler = eigene ? zug.pruefen(zeilen, richtung) : null;
     // gezeichnet wird, was gilt: die eigenen Punkte oder - bei leerer Liste - die Vorgabe
     const punkte: Punkt[] = eigene ? zeilen : props.vorgabe;
     const gueltig = !fehler && !zug.pruefen(punkte, richtung);
-    /** anfassbar sind nur eigene, gueltige Punkte - die Vorlage wird erst mit "Eigene Kennlinie anlegen" zur eigenen */
-    const ziehbar = eigene && gueltig;
+    /**
+     * anfassbar sind gueltige Punkte: die eigenen - und am Geraet auch die der Vorlage (das erste Anfassen macht
+     * daraus die eigene Kennlinie). In der Vorlage selbst wird die Werksvorgabe erst mit dem Knopf zur eigenen.
+     */
+    const ziehbar = (eigene || !istVorlage) && gueltig;
 
     // Grenzlinien: waehrend des Ziehens gilt der gezogene Wert, sonst der des Formulars
     const grenzZieht = useRef<{ welche: Grenze; zeiger: number; x: number } | null>(null);
@@ -655,7 +665,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
     };
     const anlegen = (): void => schreiben(props.vorgabe.map(p => ({ x: p.x, y: p.y })));
     const dazu = (): void => {
-        if (!eigene) {
+        if (!eigene && istVorlage) {
             anlegen();
             return;
         }
@@ -917,6 +927,13 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
         });
     }
     const linien: Grenze[] = ['unter', 'ober'];
+    // Am Geraet sagt die Ueberschrift, was gilt: die globale Kennlinie oder eine eigene (eigene Punkte ODER eine
+    // eigene Grenze) - der Wechsel aendert nur den Text in der Klammer, nichts am Aufbau darunter.
+    const eigenStand =
+        eigene ||
+        (!istVorlage && !!grenzZug) ||
+        (!!props.grenzenEigen && (!istLeer(grenzenEigen.untergrenze) || !istLeer(grenzenEigen.obergrenze)));
+    const titelText = istVorlage ? props.titel : `${props.titel} (${k(eigenStand ? 'klammerEigen' : 'klammerGlobal')})`;
     const kopfZeile = !eigene
         ? k(istVorlage ? 'etikettWerk' : 'etikettVorlage')
         : fehler
@@ -1076,7 +1093,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                         variant="h6"
                         component="div"
                     >
-                        {props.titel}
+                        {titelText}
                     </Typography>
                 ) : (
                     <button
@@ -1086,7 +1103,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                         onClick={() => setOffenWahl(!offen)}
                     >
                         {offen ? <AufIcon /> : <ZuIcon />}
-                        {props.titel}
+                        {titelText}
                     </button>
                 )}
                 {offen ? (
@@ -1111,9 +1128,9 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
             </div>
             {offen ? (
                 <>
-                    {blass ? (
+                    {blass && istVorlage ? (
                         <div className="fk-leer">
-                            <span>{k(istVorlage ? 'hinweisWerk' : 'hinweisVorlage')}</span>
+                            <span>{k('hinweisWerk')}</span>
                             <Button
                                 className="fk-anlegen"
                                 size="small"
@@ -1657,12 +1674,12 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                             padding="none"
                                             sx={{ whiteSpace: 'nowrap', pr: 0.5 }}
                                         >
-                                            <Tooltip title={eigene ? t('punktDazu') : k('anlegen')}>
+                                            <Tooltip title={eigene || !istVorlage ? t('punktDazu') : k('anlegen')}>
                                                 <IconButton
                                                     size="small"
                                                     color="primary"
                                                     className="fk-dazu"
-                                                    aria-label={eigene ? t('punktDazu') : k('anlegen')}
+                                                    aria-label={eigene || !istVorlage ? t('punktDazu') : k('anlegen')}
                                                     onClick={dazu}
                                                 >
                                                     <AddIcon />
@@ -1732,14 +1749,14 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                             </TableRow>
                                         );
                                     })}
-                                    {!eigene ? (
+                                    {!eigene && istVorlage ? (
                                         <TableRow>
                                             <TableCell
                                                 colSpan={3}
                                                 className="fk-leerzeile"
                                                 sx={{ color: 'text.secondary' }}
                                             >
-                                                {k(istVorlage ? 'hinweisWerk' : 'hinweisVorlage')}
+                                                {k('hinweisWerk')}
                                             </TableCell>
                                         </TableRow>
                                     ) : null}

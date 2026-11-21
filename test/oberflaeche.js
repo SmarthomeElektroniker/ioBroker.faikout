@@ -961,9 +961,9 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         // der Schalter selbst steht eingeklappt unter "Fuer Fortgeschrittene", ohne default (ein fehlender Wert
         // bleibt beim Speichern fehlend - der Adapter wertet ihn als AN und schreibt das fest)
         expect(r.regelProbelauf).to.equal(undefined);
-        expect(Object.keys(r._pFein.items)[0]).to.equal('regelProbelauf');
-        expect(r._pFein).to.include({ type: 'panel', collapsable: true, label: 'headerFein' });
-        expect(r._pFein.items.regelProbelauf).to.eql({ type: 'checkbox', label: 'labelRegelProbelauf', xs: 12, sm: 12, md: 12, lg: 12, xl: 12, help: 'helpRegelProbelauf' });
+        expect(Object.keys(r._pFein.custom.items)[0]).to.equal('regelProbelauf');
+        expect(r._pFein).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Abschnitt', label: 'headerFein' });
+        expect(r._pFein.custom.items.regelProbelauf).to.eql({ type: 'checkbox', label: 'labelRegelProbelauf', xs: 12, sm: 12, md: 12, lg: 12, xl: 12, help: 'helpRegelProbelauf' });
         expect(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'io-package.json'), 'utf8')).native.regelProbelauf).to.equal(false);
         for (const l of o.SPRACHEN) {
             expect(admin(l).textProbeAus, l).to.equal(undefined);
@@ -1021,9 +1021,9 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
             }
         }
         // Feinabstimmung und "Fruehestens alle ... Minuten" erklaeren sich
-        expect(r._pFein.items.regelTotband.help).to.equal('helpTotband');
-        expect(r._pFein.items.regelProzentProK.help).to.equal('helpProzentProK');
-        expect(r._pFein.items.regelBand.help).to.equal('helpBand');
+        expect(r._pFein.custom.items.regelTotband.help).to.equal('helpTotband');
+        expect(r._pFein.custom.items.regelProzentProK.help).to.equal('helpProzentProK');
+        expect(r._pFein.custom.items.regelBand.help).to.equal('helpBand');
         expect(g.find(i => i.attr === 'korrAbstandMin').help).to.equal('helpKorrAbstand');
         // "Pruefen" grau ohne Adresse: der Grund steht daneben
         expect(konfig.items.tabSearch.items._bindAdresseFehlt.hidden).to.contain('data.moduleAddress');
@@ -1063,8 +1063,8 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(konfig.items.tabRegelung.items._erklaerung.custom).to.eql({ reiterZeitplaene: 'tabZeitplaene', reiterRegelung: 'tabRegelung' });
         expect(zp.items.regelStufen).to.include(k('Stufen'));
         expect(zp.items.regelPlanVorlage).to.include(k('Zeitplaene'));
-        expect(zp.items._pPlanFein).to.include({ type: 'panel', collapsable: true, label: 'headerPlanFein' });
-        expect(Object.keys(zp.items._pPlanFein.items)).to.include.members(['regelHandModus', 'regelHandStunden', 'regelFeiertagSonntag', 'regelFeiertageDE', 'regelFeiertage']);
+        expect(zp.items._pPlanFein).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Abschnitt', label: 'headerPlanFein' });
+        expect(Object.keys(zp.items._pPlanFein.custom.items)).to.include.members(['regelHandModus', 'regelHandStunden', 'regelFeiertagSonntag', 'regelFeiertageDE', 'regelFeiertage']);
         for (const l of o.SPRACHEN) {
             expect(admin(l).tabZeitplaene, l).to.equal(o.t('reiterZeitplaene', l));
             expect(admin(l).headerSchritte, l).to.not.match(/drei|three|три|três|drie|trois|tre |tres|trzy|三/i);
@@ -1211,7 +1211,7 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
     const abschnitt = konfig.items.tabBroker.items._pFortgeschritten;
     const b = {
         ...konfig.items.tabBroker.items,
-        ...Object.fromEntries(Object.entries(abschnitt.items).map(([k, v]) => [k, { ...v, hidden: abschnitt.hidden }])),
+        ...Object.fromEntries(Object.entries(abschnitt.custom.items).map(([k, v]) => [k, { ...v, hidden: abschnitt.hidden }])),
     };
 
     it('Wahl intern/extern; je Betriebsart nur die eigenen Felder sichtbar', () => {
@@ -1252,15 +1252,15 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
         const de = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'admin', 'i18n', 'de.json'), 'utf8'));
         expect([de.tabBroker, de.tabModule]).to.eql(['MQTT-Broker (Technik)', 'Moduleinstellungen (Technik)']);
         // Fortgeschrittenes ist eingeklappt und so benannt
-        expect(abschnitt).to.include({ type: 'panel', collapsable: true, label: 'headerBrokerFortgeschritten' });
+        expect(abschnitt).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Abschnitt', label: 'headerBrokerFortgeschritten' });
         expect(de.headerBrokerFortgeschritten).to.match(/^Für Fortgeschrittene: /);
         const fein = konfig.items.tabRegelung.items._pFein;
-        expect(fein).to.include({ type: 'panel', collapsable: true });
+        expect(fein).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Abschnitt' });
         expect(de.headerFein).to.match(/^Für Fortgeschrittene: /);
-        expect(Object.keys(fein.items)).to.include('regelFeuchteMinLauf').and.to.include('regelFeuchtePause');
+        expect(Object.keys(fein.custom.items)).to.include('regelFeuchteMinLauf').and.to.include('regelFeuchtePause');
         expect(Object.keys(konfig.items.tabRegelung.items).pop()).to.equal('_pFein'); // ganz unten
-        expect(konfig.items.tabModule.items._pTabelle).to.include({ type: 'panel', collapsable: true, label: 'headerModule' });
-        expect(konfig.items.tabSearch.items._pHand.items._mqtthostValue.type).to.equal('textSendTo');
+        expect(konfig.items.tabModule.items._pTabelle).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Abschnitt', label: 'headerModule' });
+        expect(konfig.items.tabSearch.items._pHand.custom.items._mqtthostValue.type).to.equal('textSendTo');
         // ein altes Testergebnis verschwindet, sobald Adresse/Port/TLS/Benutzer geaendert werden
         for (const k of ['_tTestOk', '_tTestAnmeldung', '_tTestNicht', '_tTestZeit', '_tTestEingabe', '_tTestFehler']) {
             expect(b[k].hidden, k).to.contain('data._brokerTestZiel !== ');
