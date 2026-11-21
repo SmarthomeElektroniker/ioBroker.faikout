@@ -10,6 +10,7 @@ const quellen = require('../lib/regel/quellen');
 const sender = require('../lib/regel/sender');
 const koordinator = require('../lib/regel/koordinator');
 const bedarf = require('../lib/regel/bedarf');
+const kennlinie = require('../lib/regel/kennlinie');
 const zustand = require('../lib/regel/zustand');
 
 const ort = (j, mo, t, h = 0, mi = 0) => new Date(j, mo - 1, t, h, mi).getTime();
@@ -20,13 +21,24 @@ describe('Regelung: Szenen und Wochenplan', () => {
     it('Vorgabe-Szenen; fehlerhafte Szenen werden mit Klartext abgelehnt', () => {
         expect([...szenen.keys()]).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
         expect(wochenplan.szenenLesen([{ name: 'A', soll: 45 }]).fehler).to.match(/außerhalb 10\.\.32/);
-        expect(wochenplan.szenenLesen([{ name: 'A', soll: 20, deckel: 10 }]).fehler).to.match(/Deckel/);
+        expect(wochenplan.szenenLesen([{ name: 'A', soll: 20, deckel: 10 }]).fehler).to.match(/Höchstleistung 10 außerhalb 30\.\.100/);
         expect(
             wochenplan.szenenLesen([
                 { name: 'A', soll: 20 },
                 { name: 'a', soll: 21 },
             ]).fehler,
         ).to.match(/doppelt/);
+        // die Einstellungsseite schreibt `id` in den Eintrag: sie gilt (Umbenennen bricht den Plan nicht,
+        // "Comfort" wird nicht zu `comfort`); nur ohne `id` entsteht die ID aus dem Namen
+        const mitId = wochenplan.szenenLesen([
+            { id: 'komfort', name: 'Comfort', soll: 21 },
+            { id: 'stufe_5', name: 'Gäste', soll: 22 },
+            { name: 'Spät Abends', soll: 20 },
+        ]).szenen;
+        expect([...mitId.keys()]).to.eql(['komfort', 'stufe_5', 'sp_t_abends']);
+        expect(mitId.get('komfort').name).to.equal('Comfort');
+        expect(wochenplan.planLesen([[{ t: 0, s: 'stufe_5' }], [], [], [], [], [], []], mitId).fehler).to.equal(null);
+        expect(wochenplan.szenenLesen([{ id: 'a', name: 'X', soll: 20 }, { id: 'a', name: 'Y', soll: 20 }]).fehler).to.match(/doppelt/);
         const eigen = wochenplan.szenenLesen([{ name: 'Nacht kühl', soll: 24, mode: 'cool', fan: 'quatsch' }]).szenen;
         expect(eigen.get('nacht_k_hl')).to.include({ mode: 'cool', fan: 'auto', deckel: 100, power: true });
     });
@@ -567,6 +579,15 @@ describe('Regelung: Koordinator (Vorrang)', () => {
             T,
         );
         expect(weit.demand).to.equal(100);
+        // 100 % aus der Kennlinie allein (Obergrenze 100, -10 °C, Raum am Ziel) ist KEINE volle Freigabe:
+        // die Hoechstleistung der Temperaturstufe gilt weiter
+        const kalt = koordinator.koordinieren(
+            eingang({ fuehler: { aussen: m(-15), raum: m(19), feuchte: m(50) }, szene: szenen.get('absenken') }),
+            k,
+            null,
+            T,
+        );
+        expect(kalt.demand).to.equal(60);
     });
 
     it('Ueberheizschutz: 1,5 K ueber dem Ziel -> Mindeststufe 30 %, auch unter der Untergrenze und dem Deckel', () => {
@@ -903,15 +924,23 @@ describe('Regelung: Koordinator (Vorrang)', () => {
 describe('Regelung: Einstellungen je Geraet', () => {
     const { konfigAusInstanz } = require('../lib/regel');
 
-    it('Kennlinie, Grenzen und Szenen je Geraet; leer faellt auf Instanz- und Werksvorgabe zurueck', () => {
+    it('individuell: Kennlinie, Grenzen und Temperaturstufen je Geraet; leer faellt auf Vorlage und Werksvorgabe zurueck', () => {
         const e = konfigAusInstanz({
             regelUntergrenze: 45,
             regelKennlinieHeizen: '-10:90, 15:45',
             regelGeraete: [
-                { geraet: 'A', kennlinieHeizen: '-5:80, 10:50', obergrenze: 85, szenen: [{ name: 'Tag', soll: 22 }] },
-                { geraet: 'B', strategie: 'vortag', vortagZuschlag: 15 },
+                {
+                    geraet: 'A',
+                    individuell: true,
+                    kennlinieHeizen: '-5:80, 10:50',
+                    obergrenze: 85,
+                    stufen: [{ name: 'Tag', soll: 22 }],
+                },
+                { geraet: 'B', individuell: true, strategie: 'vortag', vortagZuschlag: 15 },
             ],
         });
+        expect(e.fuer('A', 'A').konfig.individuell).to.equal(true);
+        expect(e.fuer('C', 'C').konfig.individuell).to.equal(false);
         const a = e.fuer('A', 'A').konfig;
         expect(a.bedarf.heizen).to.eql([
             [-5, 80],
@@ -927,14 +956,69 @@ describe('Regelung: Einstellungen je Geraet', () => {
         expect(b.bedarf.strategie).to.equal('vortag');
         expect(b.bedarf.vortag.zuschlag).to.equal(15);
         expect([...b.szenen.keys()]).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
-        expect(e.fuer('C', 'C').konfig.bedarf.obergrenze).to.equal(95);
+        expect(e.fuer('C', 'C').konfig.bedarf.obergrenze).to.equal(100);
+    });
+
+    it('ohne Haken "individuell" gelten ALLE Vorlagenwerte; die Geraetefelder bleiben stehen, zaehlen aber nicht', () => {
+        const zeile = {
+            geraet: 'A',
+            betrieb: 'faikout',
+            frostAb: 8,
+            raumQuelle: 'dp',
+            raumDp: 'x.0.raum',
+            strategie: 'vortag',
+            kennlinieHeizen: '-5:80, 10:50',
+            kennlinieKuehlen: '20:50, 30:90',
+            untergrenze: 50,
+            obergrenze: 85,
+            vortagBezug: 'mittel',
+            vortagZuschlag: 25,
+            vortagReferenzW: 700,
+            stufen: [{ name: 'Tag', soll: 22 }],
+            feuchteMassnahme: 'melden',
+        };
+        const c = {
+            regelUntergrenze: 45,
+            regelKennlinieHeizen: '-10:90, 15:45',
+            regelStufen: [{ name: 'Wach', soll: 20 }],
+            regelFeuchteMassnahme: 'entfeuchten',
+        };
+        for (const individuell of [false, undefined, 'true', 1]) {
+            const k = konfigAusInstanz({ ...c, regelGeraete: [{ ...zeile, individuell }] }).fuer('A', 'A').konfig;
+            expect(k.individuell, String(individuell)).to.equal(false);
+            expect(k.bedarf.strategie).to.equal('kennlinie');
+            expect(k.bedarf.heizen).to.eql([
+                [-10, 90],
+                [15, 45],
+            ]);
+            expect(k.bedarf.kuehlen).to.eql(kennlinie.VORGABE_KUEHLEN);
+            expect([k.bedarf.untergrenze, k.bedarf.obergrenze]).to.eql([45, 100]);
+            expect(k.bedarf.vortag).to.include({ bezug: 'spitze', zuschlag: 10, referenzW: 1000 });
+            expect([...k.szenen.keys()]).to.eql(['wach']);
+            expect(k.feuchte.massnahme).to.equal('entfeuchten');
+            // immer geraetebezogen: Betrieb, Fuehler, Frostschutz
+            expect(k.betrieb).to.equal('faikout');
+            expect(k.frostAb).to.equal(8);
+            expect(k.quellen.raum).to.eql({ wahl: 'dp', dp: 'x.0.raum' });
+        }
+        const mit = konfigAusInstanz({ ...c, regelGeraete: [{ ...zeile, individuell: true }] }).fuer('A', 'A').konfig;
+        expect(mit.bedarf.strategie).to.equal('vortag');
+        expect([mit.bedarf.untergrenze, mit.bedarf.obergrenze]).to.eql([50, 85]);
+        expect(mit.bedarf.vortag).to.include({ bezug: 'mittel', zuschlag: 25, referenzW: 700 });
+        expect([...mit.szenen.keys()]).to.eql(['tag']);
+        expect(mit.feuchte.massnahme).to.equal('melden');
+        // die Zeile selbst wird nie veraendert (nichts geloescht)
+        expect(zeile.stufen).to.eql([{ name: 'Tag', soll: 22 }]);
+        // alte Feldnamen (szenen, regelSzenen) liest die Regelung nicht mehr - der Umzug beim Start setzt sie um
+        const alt = konfigAusInstanz({ regelSzenen: [{ name: 'Alt', soll: 20 }], regelGeraete: [{ geraet: 'A', individuell: true, szenen: [{ name: 'Alt2', soll: 20 }] }] });
+        expect([...alt.fuer('A', 'A').konfig.szenen.keys()]).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
     });
 
     it('fehlerhafte Szene oder Kennlinie stoert nur das eine Geraet', () => {
         const e = konfigAusInstanz({
             regelGeraete: [
-                { geraet: 'A', szenen: [{ name: 'X', soll: 99 }] },
-                { geraet: 'B', kennlinieHeizen: '0:50, 10:90' },
+                { geraet: 'A', individuell: true, stufen: [{ name: 'X', soll: 99 }] },
+                { geraet: 'B', individuell: true, kennlinieHeizen: '0:50, 10:90' },
             ],
         });
         expect(e.fuer('A', 'A').fehler).to.match(/Zieltemperatur/);
@@ -961,14 +1045,14 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await scharf(a, 'Plan_A');
         await laufen(a, uhr, anlage, 20);
         expect(anlage.befehle).to.eql([]); // Komfort passt schon
-        expect(a.wert('Plan_A.regulation.schedule.scene')).to.equal('Komfort');
+        expect(a.wert('Plan_A.regulation.schedule.level')).to.equal('Komfort');
         expect(a.wert('Plan_A.regulation.schedule.next')).to.equal(ort(2026, 11, 20, 22, 0));
         await laufen(a, uhr, anlage, 30); // ueber 22:00
         expect(themen(anlage, 'temp')).to.eql(['19']);
         expect(themen(anlage, 'fan')).to.eql(['night']);
         expect(themen(anlage, 'mode')).to.eql([]);
         expect(anlage.target).to.equal(19);
-        expect(a.wert('Plan_A.regulation.schedule.scene')).to.equal('Absenken');
+        expect(a.wert('Plan_A.regulation.schedule.level')).to.equal('Absenken');
         expect(a.wert('Plan_A.regulation.manual.locked')).to.equal(false);
         expect(a.wert('Plan_A.regulation.state')).to.equal('ok');
     });
@@ -1146,7 +1230,7 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
     it('Neustart mitten im Entfeuchten: Eingriff laeuft weiter, kein Handeingriff, kein zweiter Befehl', async () => {
         const sommer = ort(2026, 7, 15, 14, 0);
         const kuehlSzenen = [{ name: 'Tag', mode: 'cool', soll: 24 }];
-        const konfig = { regelProbelauf: false, regelSzenen: kuehlSzenen };
+        const konfig = { regelProbelauf: false, regelStufen: kuehlSzenen };
         const woche = JSON.stringify([0, 1, 2, 3, 4, 5, 6].map(() => [{ t: 0, s: 'tag' }]));
         const { a, uhr } = aufbau(konfig, sommer);
         const anlage = new Anlage({ name: 'Plan H', target: 24, mode: 'cool', outside: 30, temp: 25, hum: 75 });

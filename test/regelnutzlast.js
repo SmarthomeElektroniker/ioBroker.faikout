@@ -29,7 +29,7 @@ describe('Regelung: JSON-Nutzlasten englisch', () => {
             '{"heating":[[-10,95],[0,80],[8,60],[15,40]],"cooling":[[25,40],[30,65],[35,95]],"lowerLimit":45,"upperLimit":95}',
         'demand.wouldSend': '{"value":85,"time":"2026-11-21T12:14:38.489Z","action":"send","current":100}',
         lastCommand: '{"fields":{"target":22,"fan":"auto"},"time":"2026-11-21T11:38:19.361Z","action":"would"}',
-        'schedule.absenceJson': '{"from":1798326000000,"to":1798930800000,"scene":"abwesend"}',
+        'schedule.absenceJson': '{"from":1798326000000,"to":1798930800000,"level":"abwesend"}',
     };
 
     it('jeder JSON-Datenpunkt mit Schluesseln hat eine Art; alt -> neu je Datenpunkt', () => {
@@ -59,15 +59,22 @@ describe('Regelung: JSON-Nutzlasten englisch', () => {
         }
         expect(nutzlast.lesen('befehl', NEU.lastCommand).aktion).to.equal('wuerde');
         // stehen beide Schreibweisen in einem Objekt, gewinnt die englische
-        expect(nutzlast.lesen('abwesenheit', { von: 1, from: 2, to: 3, scene: 'aus' })).to.eql({
+        expect(nutzlast.lesen('abwesenheit', { von: 1, from: 2, to: 3, level: 'aus' })).to.eql({
             von: 2,
             bis: 3,
             szene: 'aus',
         });
+        // Zwischenstand `scene` (vor der Umbenennung in Temperaturstufen): wird gelesen, `level` gewinnt
+        const zwischen = '{"from":1798326000000,"to":1798930800000,"scene":"abwesend"}';
+        expect(nutzlast.lesen('abwesenheit', zwischen)).to.eql(nutzlast.lesen('abwesenheit', NEU['schedule.absenceJson']));
+        expect(nutzlast.umschreiben('schedule.absenceJson', zwischen)).to.equal(NEU['schedule.absenceJson']);
+        expect(nutzlast.lesen('abwesenheit', { szene: 'a', scene: 'b', level: 'c' }).szene).to.equal('c');
+        expect(nutzlast.lesen('abwesenheit', { szene: 'a', scene: 'b' }).szene).to.equal('b');
+        expect(Object.keys(nutzlast.schreiben('abwesenheit', { von: 1, bis: 2, szene: 'aus' }))).to.eql(['from', 'to', 'level']);
     });
 
     it('in den geschriebenen Nutzlasten steht kein deutscher Schluessel und kein deutscher Wert mehr', () => {
-        const deutsch = /heizen|kuehlen|grenze|felder|zeit|aktion|wert|"ist"|"von"|"bis"|szene"|wuerde|senden/;
+        const deutsch = /heizen|kuehlen|grenze|felder|zeit|aktion|wert|"ist"|"von"|"bis"|szene"|scene"|wuerde|senden/;
         for (const [pfad, text] of Object.entries(NEU)) {
             expect(text, pfad).to.not.match(deutsch);
         }
@@ -77,7 +84,7 @@ describe('Regelung: JSON-Nutzlasten englisch', () => {
         const erwartet = { von: 1798326000000, bis: 1798930800000, szene: 'abwesend' };
         expect(wochenplan.abwesenheitLesen(ALT['schedule.absenceJson'], szenen)).to.eql(erwartet);
         expect(wochenplan.abwesenheitLesen(NEU['schedule.absenceJson'], szenen)).to.eql(erwartet);
-        expect(wochenplan.abwesenheitLesen('{"from":5,"to":3,"scene":"aus"}', szenen)).to.equal(null);
+        expect(wochenplan.abwesenheitLesen('{"from":5,"to":3,"level":"aus"}', szenen)).to.equal(null);
     });
 
     describe('im Adapter (main.js + Anlage)', function () {
@@ -98,7 +105,7 @@ describe('Regelung: JSON-Nutzlasten englisch', () => {
             expect(JSON.parse(a.wert('Alt_N.regulation.schedule.absenceJson'))).to.eql({
                 from: abw.von,
                 to: abw.bis,
-                scene: 'abwesend',
+                level: 'abwesend',
             });
             expect(Object.keys(JSON.parse(a.wert('Alt_N.regulation.demand.curveJson')))).to.eql([
                 'heating',
@@ -106,7 +113,7 @@ describe('Regelung: JSON-Nutzlasten englisch', () => {
                 'lowerLimit',
                 'upperLimit',
             ]);
-            const zeilen = a.zeilen.filter(z => /rewritten to English/.test(z.text));
+            const zeilen = a.zeilen.filter(z => /rewritten to the current format/.test(z.text));
             expect(zeilen.length).to.be.within(3, 4);
             // die gelesene Abwesenheit gilt in der Regelung
             expect(a.regelung.geraete.get('Alt_N').abwesenheit).to.eql(abw);
@@ -121,7 +128,7 @@ describe('Regelung: JSON-Nutzlasten englisch', () => {
             expect(JSON.parse(a.wert('Alt_S.regulation.schedule.absenceJson'))).to.eql({
                 from: abw.von,
                 to: abw.bis,
-                scene: 'aus',
+                level: 'aus',
             });
             expect(a.regelung.geraete.get('Alt_S').abwesenheit).to.eql(abw);
         });

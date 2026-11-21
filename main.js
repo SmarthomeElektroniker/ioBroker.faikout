@@ -1616,12 +1616,111 @@ class Faikout extends utils.Adapter {
             neu.externClientId = this.config.externClientIdStandard;
             this.config.externClientId = neu.externClientId;
         }
+        Object.assign(neu, this.regelKonfigUmziehen());
         if (!Object.keys(neu).length || typeof this.extendForeignObjectAsync !== 'function') {
             return false;
         }
         this.log.info(`Settings completed (${Object.keys(neu).join(', ')}). The instance restarts once.`);
-        await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, { native: neu });
+        const objektId = `system.adapter.${this.namespace}`;
+        // Ganz schreiben statt erweitern: extendObject fuehrt Listen elementweise zusammen - ein aus einer
+        // Geraetezeile entferntes Feld (szenen) bliebe stehen und der Umzug liefe bei jedem Start erneut.
+        // Gelesen wird das gespeicherte Objekt (Passwoerter bleiben verschluesselt, wie sie sind).
+        const objekt =
+            typeof this.getForeignObjectAsync === 'function' && typeof this.setForeignObjectAsync === 'function'
+                ? await this.getForeignObjectAsync(objektId)
+                : null;
+        if (objekt && objekt.native) {
+            for (const [feld, wert] of Object.entries(neu)) {
+                if (wert === null) {
+                    delete objekt.native[feld];
+                } else {
+                    objekt.native[feld] = wert;
+                }
+            }
+            await this.setForeignObjectAsync(objektId, objekt);
+        } else {
+            await this.extendForeignObjectAsync(objektId, { native: neu });
+        }
         return true;
+    }
+
+    /**
+     * Umzug der Einstellungen auf den Stand von 1.0.0 (Teil von konfigUmziehen; aendert this.config und
+     * nennt, was in die Instanzkonfiguration zu schreiben ist):
+     *   - `User` -> `user`: der Vorabstand 0.5.0-alpha fuehrte den Benutzernamen des eigenen Brokers als
+     *     `User`. 1.0.0 liest nur `user` - ohne Umzug verloeren die Module ihre Anmeldung.
+     *   - `regelSzenen` -> `regelStufen`, je Geraet `szenen` -> `stufen` ("Szenen" heissen Temperaturstufen).
+     *   - einmalig (Merker `regelUmzugStand`): vorhandene Geraeteeintraege bekommen `individuell: true`
+     *     (ihr Verhalten bleibt gleich); die Obergrenze 95 und die Heizkennlinie der alten Werksvorgabe
+     *     werden auf die neue Werksvorgabe (100 bzw. -10 °C: 100 %) gehoben - nur bei exakter
+     *     Uebereinstimmung, eigene Werte bleiben. Der Merker verhindert, dass ein spaeter ohne Haken
+     *     angelegter Eintrag oder eine bewusst wieder auf 95 gestellte Obergrenze erneut angefasst wird.
+     *
+     * @returns {Record<string, unknown>} geaenderte Felder der Instanzkonfiguration (leer = nichts zu tun)
+     */
+    regelKonfigUmziehen() {
+        const kennlinie = require('./lib/regel/kennlinie');
+        const c = this.config;
+        const neu = {};
+        const leer = v => v === undefined || v === null || String(v).trim() === '';
+        if (leer(c.user) && !leer(c.User)) {
+            neu.user = String(c.User);
+            neu.User = '';
+            c.user = neu.user;
+            c.User = '';
+        }
+        const gefuellt = v => Array.isArray(v) && v.length > 0;
+        if (gefuellt(c.regelSzenen)) {
+            if (!gefuellt(c.regelStufen)) {
+                neu.regelStufen = c.regelSzenen;
+                c.regelStufen = neu.regelStufen;
+            }
+            // null: konfigUmziehen entfernt das alte Feld aus der Instanzkonfiguration
+            neu.regelSzenen = null;
+            delete c.regelSzenen;
+        }
+        const erster = !(Number(c.regelUmzugStand) >= 1);
+        let geraeteNeu = false;
+        const geraete = (Array.isArray(c.regelGeraete) ? c.regelGeraete : []).map(g => {
+            if (!g || typeof g !== 'object') {
+                return g;
+            }
+            const z = { ...g };
+            if (gefuellt(z.szenen)) {
+                if (!gefuellt(z.stufen)) {
+                    z.stufen = z.szenen;
+                }
+                delete z.szenen;
+                geraeteNeu = true;
+            }
+            if (erster && typeof z.individuell !== 'boolean') {
+                z.individuell = true;
+                geraeteNeu = true;
+            }
+            return z;
+        });
+        if (geraeteNeu) {
+            neu.regelGeraete = geraete;
+            c.regelGeraete = geraete;
+        }
+        if (erster) {
+            if (Number(c.regelObergrenze) === 95) {
+                neu.regelObergrenze = 100;
+                c.regelObergrenze = 100;
+            }
+            const punkte = Array.isArray(c.regelKennlinieHeizen) ? c.regelKennlinieHeizen : [];
+            const alt = kennlinie.VORGABE_HEIZEN_ALT;
+            if (
+                punkte.length === alt.length &&
+                punkte.every((p, i) => p && Number(p.x) === alt[i][0] && Number(p.y) === alt[i][1])
+            ) {
+                neu.regelKennlinieHeizen = kennlinie.VORGABE_HEIZEN.map(([x, y]) => ({ x, y }));
+                c.regelKennlinieHeizen = neu.regelKennlinieHeizen;
+            }
+            neu.regelUmzugStand = 1;
+            c.regelUmzugStand = 1;
+        }
+        return neu;
     }
 
     /**

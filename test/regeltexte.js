@@ -163,7 +163,7 @@ describe('Regeltexte (mehrsprachig)', () => {
         expect(q.text).to.equal('Fühler der Anlage (Rückfall: Datenpunkt veraltet (60 min))');
         expect(wochenplan.szenenLesen(null).szenen.get('absenken').name).to.equal('Absenken');
         expect(wochenplan.szenenLesen([{ name: 'A', soll: 45 }]).fehler).to.equal(
-            'Szene "A": Zieltemperatur 45 außerhalb 10..32 °C',
+            'Temperaturstufe "A": Zieltemperatur 45 außerhalb 10..32 °C',
         );
         expect(bedarf.konfigPruefen({ heizen: '0:50, 5:60' }).fehler).to.equal(
             'Heizkennlinie: Kennlinie nicht fallend (0 °C: 50 % → 5 °C: 60 %)',
@@ -285,9 +285,9 @@ describe('Regeltexte (mehrsprachig)', () => {
                 expect(zeile, zeile).to.not.match(DEUTSCH);
                 expect(zeile, zeile).to.not.match(/\{\w+\}/); // kein offener Platzhalter
             }
-            expect(text.join('\n')).to.match(/Schedule: scene Evening/);
+            expect(text.join('\n')).to.match(/Schedule: level Evening/);
             expect(text.join('\n')).to.match(/Heating curve at 3 °C/);
-            expect(text.join('\n')).to.match(/cap of scene Evening: 50%/);
+            expect(text.join('\n')).to.match(/cap of level Evening: 50%/);
             expect(text.join('\n')).to.match(/Manual override/);
             expect(text.join('\n')).to.match(/Frost protection/);
             expect(text.join('\n')).to.match(/fallback/);
@@ -297,7 +297,7 @@ describe('Regeltexte (mehrsprachig)', () => {
             expect(texte.sprache()).to.equal('de');
             const erg = koordinator.koordinieren(eingang(), k, zustandSpeicher.leer(), JETZT);
             expect(erg.gruende.join(' · '))
-                .to.match(/Plan: Szene Evening/)
+                .to.match(/Plan: Stufe Evening/)
                 .and.to.match(/Kennlinie Heizen bei 3 °C/);
         });
     });
@@ -439,21 +439,21 @@ describe('Regelung: Vorgabe-Szenen in der Systemsprache, Plan haengt an der ID',
         await a.regelung.schalter('Sprach_A', 'schedule.weekJson', planText);
         await a.regelung.schalter('Sprach_A', 'schedule.active', true);
         await laufen(a, uhr, anlage, 5);
-        expect(a.wert('Sprach_A.regulation.schedule.scene')).to.equal('Komfort');
+        expect(a.wert('Sprach_A.regulation.schedule.level')).to.equal('Komfort');
 
         language = 'en';
         a.onObjectChange('system.config', { common: { language } });
         await new Promise(r => setTimeout(r, 30));
         expect(texte.sprache()).to.equal('en');
-        expect(a.wert('Sprach_A.regulation.schedule.scene')).to.equal('Comfort');
-        expect(a.wert('Sprach_A.regulation.schedule.nextScene')).to.equal('Setback');
+        expect(a.wert('Sprach_A.regulation.schedule.level')).to.equal('Comfort');
+        expect(a.wert('Sprach_A.regulation.schedule.nextLevel')).to.equal('Setback');
         // der gespeicherte Plan ist unveraendert und gilt weiter
         expect(a.wert('Sprach_A.regulation.schedule.weekJson')).to.equal(planText);
         expect(a.regelung.geraete.get('Sprach_A').planFehler).to.equal(null);
         expect(a.wert('Sprach_A.regulation.state')).to.equal('ok');
         await laufen(a, uhr, anlage, 40); // ueber 22:00: der Plan schaltet auf Absenken
         expect(anlage.target).to.equal(19);
-        expect(a.wert('Sprach_A.regulation.schedule.scene')).to.equal('Setback');
+        expect(a.wert('Sprach_A.regulation.schedule.level')).to.equal('Setback');
         expect(a.zeilen.some(z => /System language changed to "en"/.test(z.text))).to.equal(true);
     });
 });

@@ -32,9 +32,11 @@ const eingang = (x = {}) => ({
 describe('Regelung: Kennlinie', () => {
     it('rechnet stueckweise linear und haelt die Enden', () => {
         const p = kennlinie.VORGABE_HEIZEN;
-        expect(kennlinie.wert(p, -20)).to.equal(95);
-        expect(kennlinie.wert(p, -10)).to.equal(95);
-        expect(kennlinie.wert(p, -5)).to.equal(85);
+        // Werksvorgabe seit 21.11.2026: oberster Punkt -10 °C -> 100 % (vorher 95)
+        expect(kennlinie.wert(p, -20)).to.equal(100);
+        expect(kennlinie.wert(p, -10)).to.equal(100);
+        expect(kennlinie.wert(p, -5)).to.equal(87.5);
+        expect(kennlinie.VORGABE_HEIZEN_ALT[0]).to.eql([-10, 95]);
         expect(kennlinie.wert(p, 0)).to.equal(75);
         expect(kennlinie.wert(p, 3.5)).to.equal(65);
         expect(kennlinie.wert(p, 11)).to.equal(47.5);
@@ -96,7 +98,12 @@ describe('Regelung: Rechenkern', () => {
         expect(erg.sollwert % 5).to.equal(0);
         expect(erg.sollwert).to.be.within(55, 75);
         const kalt = bedarf.berechnen(eingang({ aussen: { wert: -30, zeit: T0 } }), K, null, T0).ergebnis;
-        expect(kalt.sollwert).to.equal(95);
+        // Vorgabe-Obergrenze 100: die Kennlinie darf die volle Leistung selbst erreichen - das ist
+        // aber keine "volle Freigabe" (voll), die an der Hoechstleistung einer Temperaturstufe vorbeigeht
+        expect(kalt.sollwert).to.equal(100);
+        expect(kalt.voll).to.equal(false);
+        const begrenzt = bedarf.berechnen(eingang({ aussen: { wert: -30, zeit: T0 } }), { ...K, obergrenze: 95 }, null, T0).ergebnis;
+        expect(begrenzt.sollwert).to.equal(95);
         const warm = bedarf.berechnen(eingang({ aussen: { wert: 20, zeit: T0 } }), K, null, T0).ergebnis;
         expect(warm.sollwert).to.equal(40);
     });

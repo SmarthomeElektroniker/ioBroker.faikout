@@ -191,10 +191,241 @@ describe('Regelung: Umzug regel.* -> regulation.*', () => {
         await umzug.umziehen(a);
         const anlage = new Anlage({ name: 'Plan U', target: 21, mode: 'heat' });
         await laufen(a, uhr, anlage, 60); // ueber 22:00: Komfort -> Absenken
-        expect(a.wert('Plan_U.regulation.schedule.scene')).to.equal('Absenken');
+        expect(a.wert('Plan_U.regulation.schedule.level')).to.equal('Absenken');
         expect(anlage.target).to.equal(19);
         expect(a.wert('Plan_U.regulation.demand.dryRun')).to.equal(false);
         expect(alteIds(a)).to.eql([]);
         expect([...a.werte.keys()].filter(k => k.includes('.regel.'))).to.eql([]);
     });
 });
+
+describe('Regelung: Umzug schedule.scene -> schedule.level (Zwischenstand vor "Temperaturstufen")', () => {
+    /** Legt die beiden Datenpunkte des Zwischenstands an, wie sie der Adapter bis 21.11.2026 fuehrte. */
+    const zwischenstand = (a, id, custom) => {
+        a.objekte.set(id, { type: 'device', common: { name: id }, native: {} });
+        for (const [alt, wert] of [
+            ['regulation.schedule.scene', 'Komfort'],
+            ['regulation.schedule.nextScene', 'Absenken'],
+        ]) {
+            a.objekte.set(`${id}.${alt}`, { type: 'state', common: { name: alt, ...(custom ? { custom } : {}) }, native: {} });
+            a.werte.set(`${id}.${alt}`, { val: wert, ack: true });
+        }
+    };
+
+    it('Zuordnung: beide alten IDs, die neuen stehen in den Definitionen; regel.plan.szene zieht direkt nach level', () => {
+        expect(umzug.PFADE_ZWISCHEN).to.eql({
+            'regulation.schedule.scene': 'regulation.schedule.level',
+            'regulation.schedule.nextScene': 'regulation.schedule.nextLevel',
+        });
+        expect(umzug.PFADE['regel.plan.szene']).to.equal('regulation.schedule.level');
+        expect(umzug.PFADE['regel.plan.naechsteSzene']).to.equal('regulation.schedule.nextLevel');
+        expect(regel.DATENPUNKTE_REGEL).to.include.keys('schedule.level', 'schedule.nextLevel');
+        expect(regel.DATENPUNKTE_REGEL).to.not.have.any.keys('schedule.scene', 'schedule.nextScene');
+    });
+
+    it('Wert und eigene Einstellungen (History) ziehen um, die alten Objekte sind weg; ein zweiter Lauf tut nichts', async () => {
+        const { a } = aufbau({}, START);
+        zwischenstand(a, 'Zw_A', { 'history.0': { enabled: true } });
+        expect(await umzug.geraetUmziehen(a, 'Zw_A')).to.eql({ umgezogen: 2, geloescht: false, umbenannt: 2 });
+        expect(a.objekte.has('Zw_A.regulation.schedule.scene')).to.equal(false);
+        expect(a.objekte.has('Zw_A.regulation.schedule.nextScene')).to.equal(false);
+        expect(a.werte.has('Zw_A.regulation.schedule.scene')).to.equal(false);
+        expect(a.wert('Zw_A.regulation.schedule.level')).to.equal('Komfort');
+        expect(a.wert('Zw_A.regulation.schedule.nextLevel')).to.equal('Absenken');
+        expect(a.objekte.get('Zw_A.regulation.schedule.level').common.custom).to.eql({ 'history.0': { enabled: true } });
+        expect(a.objekte.get('Zw_A.regulation.schedule.level').common.name.de).to.equal('Aktuelle Temperaturstufe');
+        expect(a.zeilen.filter(z => /renamed/.test(z.text))).to.have.length(0); // geloggt wird in umziehen()
+        expect(await umzug.geraetUmziehen(a, 'Zw_A')).to.eql({ umgezogen: 0, geloescht: false, umbenannt: 0 });
+    });
+
+    it('gibt es level schon, bleibt sein Wert; umziehen() meldet die Umbenennung im Log', async () => {
+        const { a } = aufbau({}, START);
+        zwischenstand(a, 'Zw_B');
+        await regel.objekteAnlegen(a, 'Zw_B', false);
+        a.werte.set('Zw_B.regulation.schedule.level', { val: 'Abwesend', ack: true });
+        await umzug.umziehen(a);
+        expect(a.wert('Zw_B.regulation.schedule.level')).to.equal('Abwesend');
+        expect(a.objekte.has('Zw_B.regulation.schedule.scene')).to.equal(false);
+        expect(a.zeilen.filter(z => /2 control states renamed/.test(z.text))).to.have.length(1);
+    });
+
+    it('Vorabstand regel.plan.szene: landet in einem Schritt unter level', async () => {
+        const { a } = aufbau({}, START);
+        altbestand(a, 'Alt_L', { 'regel.plan.szene': 'Komfort', 'regel.plan.naechsteSzene': 'Absenken' });
+        await umzug.umziehen(a);
+        expect(a.wert('Alt_L.regulation.schedule.level')).to.equal('Komfort');
+        expect(a.wert('Alt_L.regulation.schedule.nextLevel')).to.equal('Absenken');
+        expect([...a.objekte.keys()].filter(k => /scene|Scene|szene|Szene/.test(k))).to.eql([]);
+    });
+});
+
+describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
+    const kennlinie = require('../lib/regel/kennlinie');
+    const HEIZEN_ALT = [
+        { x: -10, y: 95 },
+        { x: 0, y: 75 },
+        { x: 7, y: 55 },
+        { x: 15, y: 40 },
+    ];
+    const HEIZEN_NEU = [{ x: -10, y: 100 }, ...HEIZEN_ALT.slice(1)];
+    /** Stand "schon umgezogen" - damit ein Test genau EINE Regel zeigt. */
+    const FERTIG = { externClientIdStandard: 'iobroker-faikout-0-abc', externClientId: 'iobroker-faikout-0-abc', regelUmzugStand: 1 };
+
+    /**
+     * Adapter mit einer gespeicherten Instanzkonfiguration; konfigUmziehen schreibt sie ganz zurueck.
+     *
+     * @param {object} native  gespeicherte Einstellungen
+     * @returns {object} Adapter mit `gespeichert` (Objekt der Instanz) und `geschrieben` (Zahl der Schreibvorgaenge)
+     */
+    const instanz = native => {
+        const { a } = aufbau(JSON.parse(JSON.stringify(native)), START);
+        a.instance = 0;
+        a.gespeichert = { _id: 'system.adapter.faikout.0', type: 'instance', common: {}, native: JSON.parse(JSON.stringify(native)) };
+        a.geschrieben = 0;
+        a.getForeignObjectAsync = async id => (id === 'system.adapter.faikout.0' ? JSON.parse(JSON.stringify(a.gespeichert)) : null);
+        a.setForeignObjectAsync = async (id, obj) => {
+            a.geschrieben++;
+            a.gespeichert = JSON.parse(JSON.stringify(obj));
+        };
+        a.extendForeignObjectAsync = async () => {
+            throw new Error('konfigUmziehen muss das Objekt ganz schreiben');
+        };
+        return a;
+    };
+    /** Zweiter Start mit dem, was der erste gespeichert hat: nichts mehr zu tun. */
+    const zweiterStart = async a => {
+        const b = instanz(a.gespeichert.native);
+        expect(await b.konfigUmziehen(), 'zweiter Start').to.equal(false);
+        expect(b.geschrieben).to.equal(0);
+    };
+
+    it('ist alles auf dem Stand, schreibt der Start nichts', async () => {
+        const a = instanz({ ...FERTIG, user: 'u', regelObergrenze: 95, regelKennlinieHeizen: HEIZEN_ALT, regelGeraete: [{ geraet: 'A' }] });
+        expect(await a.konfigUmziehen()).to.equal(false);
+        expect(a.geschrieben).to.equal(0);
+    });
+
+    it('User -> user: der Benutzername des eigenen Brokers aus dem Vorabstand 0.5.0-alpha bleibt erhalten, pass bleibt verschluesselt wie es ist', async () => {
+        const a = instanz({ ...FERTIG, User: 'klima', pass: 'VERSCHLUESSELT' });
+        a.config.pass = 'geheim'; // der Adapter sieht das entschluesselte Passwort - gespeichert bleibt das verschluesselte
+        expect(await a.konfigUmziehen()).to.equal(true);
+        expect(a.gespeichert.native).to.include({ user: 'klima', User: '', pass: 'VERSCHLUESSELT' });
+        expect(a.config.user).to.equal('klima'); // gilt schon in diesem Lauf (bis zum Neustart)
+        expect(a.zeilen.some(z => z.stufe === 'info' && /Settings completed \(.*user.*\)/.test(z.text))).to.equal(true);
+        await zweiterStart(a);
+        // leeres user-Feld als '' gespeichert (Formular): zaehlt wie leer
+        const leer = instanz({ ...FERTIG, user: '  ', User: 'klima' });
+        await leer.konfigUmziehen();
+        expect(leer.gespeichert.native.user).to.equal('klima');
+        // ein gesetztes user gewinnt, User wird nicht angefasst; ohne User nichts zu tun
+        for (const native of [{ ...FERTIG, user: 'neu', User: 'alt' }, { ...FERTIG, user: '' }, { ...FERTIG, User: '' }]) {
+            const b = instanz(native);
+            expect(await b.konfigUmziehen(), JSON.stringify(native)).to.equal(false);
+        }
+    });
+
+    it('regelSzenen -> regelStufen, je Geraet szenen -> stufen; die alten Felder sind danach weg', async () => {
+        const stufen = [{ name: 'Tag', soll: 22 }];
+        const a = instanz({ ...FERTIG, regelSzenen: stufen, regelGeraete: [{ geraet: 'A', individuell: false, szenen: stufen, frostAb: 8 }, { geraet: 'B', individuell: true }] });
+        expect(await a.konfigUmziehen()).to.equal(true);
+        expect(a.gespeichert.native.regelStufen).to.eql(stufen);
+        expect('regelSzenen' in a.gespeichert.native).to.equal(false);
+        expect(a.gespeichert.native.regelGeraete).to.eql([{ geraet: 'A', individuell: false, stufen, frostAb: 8 }, { geraet: 'B', individuell: true }]);
+        expect(regel.konfigAusInstanz(a.config).szenen.has('tag')).to.equal(true);
+        await zweiterStart(a);
+        // schon gefuellte neue Felder werden nie ueberschrieben; leere alte Listen loesen nichts aus
+        const beide = instanz({ ...FERTIG, regelSzenen: stufen, regelStufen: [{ name: 'Neu', soll: 20 }], regelGeraete: [{ geraet: 'A', individuell: true, szenen: stufen, stufen: [{ name: 'Eigen', soll: 19 }] }] });
+        await beide.konfigUmziehen();
+        expect(beide.gespeichert.native.regelStufen).to.eql([{ name: 'Neu', soll: 20 }]);
+        expect(beide.gespeichert.native.regelGeraete[0]).to.eql({ geraet: 'A', individuell: true, stufen: [{ name: 'Eigen', soll: 19 }] });
+        const leer = instanz({ ...FERTIG, regelSzenen: [], regelGeraete: [{ geraet: 'A', individuell: true, szenen: [] }] });
+        expect(await leer.konfigUmziehen()).to.equal(false);
+    });
+
+    it('einmalig: vorhandene Geraeteeintraege bekommen individuell = true (Verhalten bleibt gleich); spaeter angelegte nicht', async () => {
+        const geraete = [{ geraet: 'A', obergrenze: 85 }, { geraet: 'B', individuell: false }, { geraet: 'C', individuell: true }];
+        const a = instanz({ externClientIdStandard: 'x', externClientId: 'x', regelGeraete: geraete });
+        const vorher = regel.geraeteKonfig(a.config, { ...geraete[0], individuell: true }).konfig.bedarf.obergrenze;
+        expect(await a.konfigUmziehen()).to.equal(true);
+        expect(a.gespeichert.native.regelGeraete).to.eql([
+            { geraet: 'A', obergrenze: 85, individuell: true },
+            { geraet: 'B', individuell: false },
+            { geraet: 'C', individuell: true },
+        ]);
+        expect(a.gespeichert.native.regelUmzugStand).to.equal(1);
+        expect(regel.konfigAusInstanz(a.config).fuer('A', 'A').konfig.bedarf.obergrenze).to.equal(vorher).and.to.equal(85);
+        await zweiterStart(a);
+        // nach dem Umzug ohne Haken angelegt: bleibt ohne Haken (= Vorlage)
+        const spaeter = instanz({ ...a.gespeichert.native, regelGeraete: [...a.gespeichert.native.regelGeraete, { geraet: 'D', obergrenze: 70 }] });
+        expect(await spaeter.konfigUmziehen()).to.equal(false);
+        expect(regel.konfigAusInstanz(spaeter.config).fuer('D', 'D').konfig.bedarf.obergrenze).to.equal(100);
+    });
+
+    it('einmalig: Obergrenze 95 -> 100 und Heizkennlinie -10:95 -> -10:100 nur bei exakt der alten Werksvorgabe', async () => {
+        const basis = { externClientIdStandard: 'x', externClientId: 'x' };
+        const a = instanz({ ...basis, regelObergrenze: 95, regelKennlinieHeizen: HEIZEN_ALT });
+        expect(await a.konfigUmziehen()).to.equal(true);
+        expect(a.gespeichert.native.regelObergrenze).to.equal(100);
+        expect(a.gespeichert.native.regelKennlinieHeizen).to.eql(HEIZEN_NEU);
+        expect(HEIZEN_NEU.map(p => [p.x, p.y])).to.eql(kennlinie.VORGABE_HEIZEN);
+        await zweiterStart(a);
+        // Text des ganz alten Stands "-10:95, 0:75, ..." wird erst Tabelle, dann gehoben
+        const text = instanz({ ...basis, regelObergrenze: '95', regelKennlinieHeizen: '-10:95, 0:75, 7:55, 15:40' });
+        await text.konfigUmziehen();
+        expect(text.gespeichert.native.regelKennlinieHeizen).to.eql(HEIZEN_NEU);
+        expect(text.gespeichert.native.regelObergrenze).to.equal(100);
+        // eigene Werte bleiben: andere Obergrenze, ein verschobener Punkt, ein Punkt mehr, -10:95 mit anderem Rest
+        for (const [ober, punkte] of [
+            [90, [{ x: -10, y: 95 }, { x: 0, y: 70 }, { x: 7, y: 55 }, { x: 15, y: 40 }]],
+            [85, [...HEIZEN_ALT, { x: 20, y: 40 }]],
+            [100, [{ x: -12, y: 95 }, ...HEIZEN_ALT.slice(1)]],
+            [96, HEIZEN_ALT.slice(0, 3)],
+        ]) {
+            const eigen = instanz({ ...basis, regelObergrenze: ober, regelKennlinieHeizen: punkte });
+            await eigen.konfigUmziehen();
+            expect(eigen.gespeichert.native.regelObergrenze, String(ober)).to.equal(ober);
+            expect(eigen.gespeichert.native.regelKennlinieHeizen, String(ober)).to.eql(punkte);
+            expect(eigen.gespeichert.native.regelUmzugStand).to.equal(1);
+        }
+        // Werte je Geraet sind eigene Werte und bleiben
+        const geraet = instanz({ ...basis, regelGeraete: [{ geraet: 'A', obergrenze: 95, kennlinieHeizen: HEIZEN_ALT }] });
+        await geraet.konfigUmziehen();
+        expect(geraet.gespeichert.native.regelGeraete[0]).to.eql({ geraet: 'A', obergrenze: 95, kennlinieHeizen: HEIZEN_ALT, individuell: true });
+        // nach dem Umzug bewusst wieder auf 95 gestellt: bleibt
+        const bewusst = instanz({ ...FERTIG, regelObergrenze: 95, regelKennlinieHeizen: HEIZEN_ALT });
+        expect(await bewusst.konfigUmziehen()).to.equal(false);
+    });
+
+    it('Neuinstallation (Vorgaben aus io-package): ein Schreibvorgang, danach Ruhe; Vorgaben 40/100 und -10:100', async () => {
+        const io = require('../io-package.json');
+        expect(io.native).to.include({ regelUntergrenze: 40, regelObergrenze: 100, regelPlanVorlage: '', regelUmzugStand: 0 });
+        expect(io.native.regelStufen).to.eql([]);
+        expect(io.native.regelKennlinieHeizen).to.eql(HEIZEN_NEU);
+        expect(io.native).to.not.have.any.keys('regelSzenen', 'User');
+        const a = instanz(io.native);
+        expect(await a.konfigUmziehen()).to.equal(true);
+        expect(a.geschrieben).to.equal(1);
+        expect(a.gespeichert.native).to.include({ regelObergrenze: 100, regelUmzugStand: 1 });
+        await zweiterStart(a);
+    });
+
+    it('alles zusammen: der Altbestand einer Vorab-Instanz in einem Start', async () => {
+        const stufen = [{ name: 'Tag', soll: 22 }];
+        const a = instanz({
+            User: 'klima',
+            pass: 'X',
+            regelObergrenze: 95,
+            regelKennlinieHeizen: HEIZEN_ALT,
+            regelSzenen: stufen,
+            regelGeraete: [{ geraet: 'A', szenen: stufen, kennlinieHeizen: [{ x: -5, y: 80 }, { x: 10, y: 50 }] }],
+        });
+        expect(await a.konfigUmziehen()).to.equal(true);
+        expect(a.geschrieben).to.equal(1);
+        const n = a.gespeichert.native;
+        expect(n).to.include({ user: 'klima', User: '', pass: 'X', regelObergrenze: 100, regelUmzugStand: 1 });
+        expect(n.regelGeraete).to.eql([{ geraet: 'A', kennlinieHeizen: [{ x: -5, y: 80 }, { x: 10, y: 50 }], stufen, individuell: true }]);
+        expect(n.externClientId).to.be.a('string').and.not.equal('');
+        await zweiterStart(a);
+    });
+});
+
