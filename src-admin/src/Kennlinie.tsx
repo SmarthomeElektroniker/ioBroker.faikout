@@ -970,7 +970,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                 '& .fk-klapp:hover': { backgroundColor: 'action.hover' },
                 '& .fk-klapp:focus-visible, & .fk-tabknopf:focus-visible': { outline: `2px solid ${farben.fokus}`, outlineOffset: '1px' },
                 '& .fk-kurz': { color: 'text.secondary', fontSize: '0.875rem' },
-                '& .fk-kennlinie-werkzeug': { flex: '0 1 auto', minWidth: 0 },
+                '& .fk-kennlinie-werkzeug': { minWidth: 0, mt: 0.5 },
                 '& .fk-leer': {
                     display: 'flex',
                     flexWrap: 'wrap',
@@ -1106,25 +1106,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                         {titelText}
                     </button>
                 )}
-                {offen ? (
-                    <div className="fk-kennlinie-werkzeug">
-                        <Werkzeugleiste
-                            art={kuehlen ? 'kennlinieKuehlen' : 'kennlinieHeizen'}
-                            inhalt={{ punkte: gueltig ? punkte : [], untergrenze: unter, obergrenze: ober }}
-                            onEinfuegen={einfuegen}
-                            onZuruecksetzen={zuruecksetzen}
-                            zuruecksetzenText={istVorlage ? undefined : k('tipVorlage')}
-                            frageText={istVorlage ? k('frageWerk') : undefined}
-                            istVorlage={istVorlage}
-                            quelle={props.quelle || (istVorlage ? k('quelleVorlage') : '')}
-                            sprache={sprache}
-                            stand={standJetzt}
-                            onRueckgaengig={s => alles(s as Stand)}
-                        />
-                    </div>
-                ) : (
-                    <span className="fk-kurz">{kopfZeile}</span>
-                )}
+                {offen ? null : <span className="fk-kurz">{kopfZeile}</span>}
             </div>
             {offen ? (
                 <>
@@ -1575,6 +1557,22 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                   );
                               })()
                             : null}
+                    </div>
+                    {/* unter dem Bild: ein Knopf mehr ("Rueckgaengig") oder die Rueckfrage verschieben das Diagramm nicht */}
+                    <div className="fk-kennlinie-werkzeug">
+                        <Werkzeugleiste
+                            art={kuehlen ? 'kennlinieKuehlen' : 'kennlinieHeizen'}
+                            inhalt={{ punkte: gueltig ? punkte : [], untergrenze: unter, obergrenze: ober }}
+                            onEinfuegen={einfuegen}
+                            onZuruecksetzen={zuruecksetzen}
+                            zuruecksetzenText={istVorlage ? undefined : k('tipVorlage')}
+                            frageText={istVorlage ? k('frageWerk') : undefined}
+                            istVorlage={istVorlage}
+                            quelle={props.quelle || (istVorlage ? k('quelleVorlage') : '')}
+                            sprache={sprache}
+                            stand={standJetzt}
+                            onRueckgaengig={s => alles(s as Stand)}
+                        />
                     </div>
                     <div className="fk-unten">
                         <div
