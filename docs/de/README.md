@@ -11,7 +11,7 @@ was er senden würde – er sendet aber keinen einzigen Befehl an die Anlagen. S
 prüfen, ob Kennlinie, Szenen und Wochenplan passen.
 
 Scharf geschaltet wird in zwei Stufen: der Haken **Probelauf** oben im Reiter *Regelung* (für alle
-Geräte) und je Gerät der Datenpunkt `<Gerät>.regel.bedarf.probelauf`. Gesendet wird nur, wenn beide
+Geräte) und je Gerät der Datenpunkt `<Gerät>.regulation.demand.dryRun`. Gesendet wird nur, wenn beide
 aus sind. Auf der Gerätekarte steht solange das Etikett „Probelauf“.
 
 ![Reiter Regelung](../img/einstellungen_regelung.png)
@@ -223,9 +223,36 @@ Geräteobjekt, z. B. `faikout.0.Wohnzimmer`.
 
 ## 8. Datenpunkte
 
-Alles, was die Oberfläche zeigt, steht auch als Datenpunkt unter `<Gerät>.regel.*` bereit, unter
-anderem `zustand`, `grund`, `bedarf.sollwert`, `plan.szene`, `plan.naechster`, `hand.gesperrt`,
-`fuehler.*` sowie die Schalter `bedarf.aktiv`, `feuchte.aktiv` und `plan.aktiv`.
+Alles, was die Oberfläche zeigt, steht auch als Datenpunkt unter `<Gerät>.regulation.*` bereit, unter
+den Kanälen `demand` (Leistungsgrenze), `schedule` (Wochenplan), `humidity` (Feuchte), `manual`
+(Handeingriff), `target` (Tasten wärmer/kühler) und `sensors` (Fühler). Ob die Anlage eine
+Leistungsgrenze annimmt, steht in `<Gerät>.info.demandCapable` (`unknown`, `yes`, `no`).
+
+| Datenpunkt unter `regulation.` | Werte | Bedeutung |
+|---|---|---|
+| `state` | ok · manual · setup · fault · offline · off | Zustand der Regelung insgesamt |
+| `reason` |  | Begründung im Klartext |
+| `mode` | adapter · faikout | wer regelt |
+| `lastCommand` |  | letzter Befehl (JSON; im Probelauf: würde senden) |
+| `historyJson` |  | Leistungsgrenze der letzten 24 Stunden |
+| `demand.active` · `demand.dryRun` |  | Schalter Leistungsgrenze, Probelauf je Anlage |
+| `demand.setpoint` · `rawValue` · `outsideMean` |  | berechnete Grenze, Rohwert, Außenmittel (30 min) |
+| `demand.state` · `demand.reason` | ok · fault · notCapable · neutral · off | Zustand und Begründung der Leistungsgrenze |
+| `demand.strategy` | curve · previousDay | Strategie |
+| `demand.wouldSend` · `commandsPerHour` |  | letzter demand-Befehl, Befehle der letzten Stunde |
+| `demand.curveJson` · `capableReason` · `stateJson` |  | Kennlinie der Anlage, Begründung der Fähigkeit, interner Zustand (neustartfest) |
+| `schedule.active` · `weekJson` · `absenceJson` |  | Schalter, Wochenplan und Abwesenheit |
+| `schedule.scene` · `next` · `nextScene` · `missing` |  | aktuelle Szene, nächster Schaltpunkt, „noch kein Plan hinterlegt“ |
+| `humidity.active` · `dewPoint` · `margin` · `intervention` · `reason` |  | Feuchteregelung: Schalter, Taupunkt, Abstand, Eingriff, Begründung |
+| `manual.locked` · `until` · `resume` |  | Handeingriff: Automatik wartet, bis wann, Taste „fortsetzen“ |
+| `target.up` · `target.down` |  | Tasten: Solltemperatur einen Schritt wärmer/kühler |
+| `sensors.outside` · `room` · `humidity` |  | verwendete Fühlerwerte |
+| `sensors.…Source` · `…Status` · `…Kind` | Status: ok · fallback · missing; Kind: ble · dp · internal | Quelle im Klartext, Stand und Art je Fühler |
+| `sensors.correction` · `target` · `note` |  | Fühlerkorrektur, Ziel am Raumfühler, Hinweis auf fehlenden Datenpunkt |
+
+Vorabstände von 1.0.0 führten diese Datenpunkte unter `<Gerät>.regel.*`. Der Adapter zieht sie beim
+Start einmal um (Schalter, Wochenplan, Abwesenheit, Verlauf und eigene History-Einstellungen bleiben
+erhalten) und löscht die alten Objekte.
 
 ## 9. Verbrauch
 

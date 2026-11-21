@@ -190,7 +190,7 @@ the vis widget "Climate control" operate the built-in control. A step-by-step gu
 
 Everything starts in **dry run**: the adapter calculates and shows what it would do, but sends
 nothing until the dry run is switched off – in the settings and, per unit, in the data point
-`regel.bedarf.probelauf`.
+`regulation.demand.dryRun`.
 
 - **Per unit** (one entry per air conditioner, shown with its name): who controls, the demand
   strategy with curve and limits, the scenes, sensor sources and frost protection. Empty values
@@ -264,6 +264,8 @@ one detail page per unit with controls, energy history and a phone view. They us
 - Sensor sources with fallback (BLE sensor at the module, any data point, sensor of the unit);
   external or slow room sensors are handled by a slow correction of the unit's setpoint.
 - Device cards with control state, weekly schedule dialog and details dialog; new VIS widget.
+- The control data points live below `<unit>.regulation.*` with English IDs and state values;
+  data points of pre-release builds (`regel.*`) are moved once at start.
 - Module settings can be read and written (with preview, backup and read-back).
 - The reason why a unit does not accept the power limit is explained (Daikin Wi-Fi module and app).
 - New tab "Find modules" in the instance settings: one-off mDNS search or check of a single

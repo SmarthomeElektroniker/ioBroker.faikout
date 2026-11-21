@@ -11,7 +11,7 @@ it would send – but it does not send a single command to the units. That leave
 whether curve, scenes and schedule fit.
 
 Going live takes two steps: the checkbox **Dry run** at the top of the tab *Climate control* (for
-all units) and, per unit, the data point `<unit>.regel.bedarf.probelauf`. Commands are only sent
+all units) and, per unit, the data point `<unit>.regulation.demand.dryRun`. Commands are only sent
 when both are off. Until then the device card carries the label "Dry run".
 
 ![Tab Climate control](../img/einstellungen_regelung.png)
@@ -217,9 +217,36 @@ device object, e.g. `faikout.0.Livingroom`.
 
 ## 8. Data points
 
-Everything the interface shows is also available as data points below `<unit>.regel.*`, among
-them `zustand`, `grund`, `bedarf.sollwert`, `plan.szene`, `plan.naechster`, `hand.gesperrt`,
-`fuehler.*` and the switches `bedarf.aktiv`, `feuchte.aktiv` and `plan.aktiv`.
+Everything the interface shows is also available as data points below `<unit>.regulation.*`, among
+them the channels `demand` (demand limit), `schedule` (weekly schedule), `humidity`, `manual`
+(manual override), `target` (buttons warmer/cooler) and `sensors`. Whether the unit accepts a demand
+limit is shown in `<unit>.info.demandCapable` (`unknown`, `yes`, `no`).
+
+| Data point below `regulation.` | Values | Meaning |
+|---|---|---|
+| `state` | ok · manual · setup · fault · offline · off | overall state of the control |
+| `reason` |  | reason in plain text |
+| `mode` | adapter · faikout | who controls |
+| `lastCommand` |  | last command (JSON; in dry run: would send) |
+| `historyJson` |  | demand limit of the last 24 hours |
+| `demand.active` · `demand.dryRun` |  | switches: demand limit, dry run per unit |
+| `demand.setpoint` · `rawValue` · `outsideMean` |  | calculated limit, raw value, outside mean (30 min) |
+| `demand.state` · `demand.reason` | ok · fault · notCapable · neutral · off | state and reason of the demand limit |
+| `demand.strategy` | curve · previousDay | strategy |
+| `demand.wouldSend` · `commandsPerHour` |  | last demand command, commands in the last hour |
+| `demand.curveJson` · `capableReason` · `stateJson` |  | curve of the unit, reason of the capability, internal state (restart-safe) |
+| `schedule.active` · `weekJson` · `absenceJson` |  | switch, weekly schedule and absence |
+| `schedule.scene` · `next` · `nextScene` · `missing` |  | current scene, next switching time, "no schedule stored yet" |
+| `humidity.active` · `dewPoint` · `margin` · `intervention` · `reason` |  | humidity control: switch, dew point, spread, intervention, reason |
+| `manual.locked` · `until` · `resume` |  | manual override: automation waits, until when, button "resume" |
+| `target.up` · `target.down` |  | buttons: target temperature one step warmer/cooler |
+| `sensors.outside` · `room` · `humidity` |  | sensor values in use |
+| `sensors.…Source` · `…Status` · `…Kind` | Status: ok · fallback · missing; Kind: ble · dp · internal | source in plain text, status and kind per sensor |
+| `sensors.correction` · `target` · `note` |  | sensor correction, target at the room sensor, note on a missing data point |
+
+Pre-release builds of 1.0.0 kept these data points below `<unit>.regel.*`. The adapter moves them
+once at start (switches, weekly schedule, absence, history and your own history settings are kept)
+and removes the old objects.
 
 ## 9. Consumption
 
