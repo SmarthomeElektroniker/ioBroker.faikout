@@ -269,7 +269,7 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
     ];
     const HEIZEN_NEU = [{ x: -10, y: 100 }, ...HEIZEN_ALT.slice(1)];
     /** Stand "schon umgezogen" - damit ein Test genau EINE Regel zeigt. */
-    const FERTIG = { externClientIdStandard: 'iobroker-faikout-0-abc', externClientId: 'iobroker-faikout-0-abc', regelUmzugStand: 1 };
+    const FERTIG = { externClientIdStandard: 'iobroker-faikout-0-abc', externClientId: 'iobroker-faikout-0-abc', regelUmzugStand: 1, regelProbelauf: true };
 
     /**
      * Adapter mit einer gespeicherten Instanzkonfiguration; konfigUmziehen schreibt sie ganz zurueck.
@@ -413,6 +413,40 @@ describe('Einstellungen: Umzug beim Start (konfigUmziehen in main.js)', () => {
         // nach dem Umzug bewusst wieder auf 95 gestellt: bleibt
         const bewusst = instanz({ ...FERTIG, regelObergrenze: 95, regelKennlinieHeizen: HEIZEN_ALT });
         expect(await bewusst.konfigUmziehen()).to.equal(false);
+    });
+
+    it('Probelauf: neue Instanz startet AUS; ein gespeicherter Wert bleibt; ein fehlender (Bestand) wird als AN festgeschrieben', async () => {
+        const io = require('../io-package.json');
+        // neue Instanz: false aus der io-package, der Start laesst es stehen
+        const neu = instanz(io.native);
+        await neu.konfigUmziehen();
+        expect(neu.gespeichert.native.regelProbelauf).to.equal(false);
+        expect(regel.konfigAusInstanz(neu.config).probelaufGlobal).to.equal(false);
+        // Bestand mit gespeichertem Wert: nie angefasst (auch nicht beim allerersten Umzug)
+        for (const wert of [true, false]) {
+            for (const stand of [{}, { regelUmzugStand: 1 }]) {
+                const a = instanz({ externClientIdStandard: 'x', externClientId: 'x', ...stand, regelProbelauf: wert, regelGeraete: [{ geraet: 'A', fuehlerWeg: 'sollwert', individuell: true }] });
+                expect(await a.konfigUmziehen(), JSON.stringify([wert, stand])).to.equal(!stand.regelUmzugStand);
+                expect(a.gespeichert.native.regelProbelauf).to.equal(wert);
+                expect(regel.konfigAusInstanz(a.config).probelaufGlobal).to.equal(wert);
+            }
+        }
+        // Bestand ohne den Schluessel (galt bisher als AN): wird einmal ausdruecklich true - mit und ohne Geraete,
+        // vor und nach dem Umzug auf 1.0.0; auch null zaehlt als fehlend
+        for (const native of [
+            { regelUmzugStand: 1, regelGeraete: [{ geraet: 'A', fuehlerWeg: 'sollwert' }] },
+            { regelUmzugStand: 1 },
+            { regelGeraete: [{ geraet: 'A' }] },
+            { regelProbelauf: null, regelUmzugStand: 1 },
+            {},
+        ]) {
+            const a = instanz({ externClientIdStandard: 'x', externClientId: 'x', ...native });
+            expect(regel.konfigAusInstanz(a.config).probelaufGlobal, JSON.stringify(native)).to.equal(true);
+            expect(await a.konfigUmziehen(), JSON.stringify(native)).to.equal(true);
+            expect(a.gespeichert.native.regelProbelauf, JSON.stringify(native)).to.equal(true);
+            expect(a.config.regelProbelauf).to.equal(true);
+            await zweiterStart(a);
+        }
     });
 
     it('Neuinstallation (Vorgaben aus io-package): ein Schreibvorgang, danach Ruhe; Vorgaben 40/100 und -10:100', async () => {

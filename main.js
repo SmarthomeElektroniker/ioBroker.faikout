@@ -1741,6 +1741,8 @@ class Faikout extends utils.Adapter {
      *   - `User` -> `user`: der Vorabstand 0.5.0-alpha fuehrte den Benutzernamen des eigenen Brokers als
      *     `User`. 1.0.0 liest nur `user` - ohne Umzug verloeren die Module ihre Anmeldung.
      *   - `regelSzenen` -> `regelStufen`, je Geraet `szenen` -> `stufen` ("Szenen" heissen Temperaturstufen).
+     *   - fehlendes `regelProbelauf` -> true: neue Instanzen starten seit 1.0.0 mit Probelauf AUS (io-package);
+     *     ein gespeicherter Wert wird nie geaendert, ein fehlender (Bestand) galt als AN und bleibt es.
      *   - je Geraet fehlendes `fuehlerWeg` -> 'sollwert' (die Vorgabe, mit der die Regelung ohnehin rechnet).
      *   - einmalig (Merker `regelUmzugStand`): vorhandene Geraeteeintraege bekommen `individuell: true`
      *     (ihr Verhalten bleibt gleich); die Obergrenze 95 und die Heizkennlinie der alten Werksvorgabe
@@ -1760,6 +1762,13 @@ class Faikout extends utils.Adapter {
             neu.User = '';
             c.user = neu.user;
             c.User = '';
+        }
+        if (typeof c.regelProbelauf !== 'boolean') {
+            // Der Schluessel fehlt: das ist nie eine neue Instanz (die bringt `false` aus der io-package mit),
+            // sondern Bestand - dort galt "alles ausser ausdruecklich false = Probelauf AN". Das wird einmal
+            // ausdruecklich festgeschrieben, damit die neue Vorgabe AUS nie still scharf schaltet.
+            neu.regelProbelauf = true;
+            c.regelProbelauf = true;
         }
         const gefuellt = v => Array.isArray(v) && v.length > 0;
         if (c.regelSzenen !== undefined) {

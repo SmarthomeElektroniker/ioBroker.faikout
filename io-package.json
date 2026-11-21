@@ -187,7 +187,7 @@
     "historyRegister": true,
     "historyInstance": "history.0",
     "moduleAddress": "",
-    "regelProbelauf": true,
+    "regelProbelauf": false,
     "regelAktiv": false,
     "regelStrategie": "kennlinie",
     "regelUntergrenze": 40,
