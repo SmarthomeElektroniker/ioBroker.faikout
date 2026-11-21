@@ -8,18 +8,19 @@
         />
         <title>Faikout weekly schedule</title>
         <!--
-            Wochenraster des Wochenplans (Dialog der Geraetekarte von faikout, als iframe geladen).
-            Eine Zeile je Wochentag, 0-24 h; jeder Block ist ein Zeitraum mit seiner Szene. Die Linien
+            Wochenraster des Wochenplans (Dialog der Geraetekarte und Reiter "Zeitplaene" der Einstellungsseite
+            von faikout, als iframe geladen).
+            Eine Zeile je Wochentag, 0-24 h; jeder Block ist ein Zeitraum mit seiner Temperaturstufe. Die Linien
             zwischen den Bloecken sind die Schaltpunkte.
             - in einen Block klicken (oder "Neuer Schaltpunkt" im Menue): neuer Schaltpunkt an dieser Stelle;
-              danach oeffnet sich an der neuen Linie die Auswahl der Szene
-            - Linie ziehen: Schaltzeit verschieben (15-Minuten-Schritte); Linie anklicken: Szene aendern oder loeschen
+              danach oeffnet sich an der neuen Linie die Auswahl der Temperaturstufe
+            - Linie ziehen: Schaltzeit verschieben (15-Minuten-Schritte); Linie anklicken: Stufe aendern oder loeschen
             - "+ Schaltpunkt" je Zeile; einen ganzen Tag kopieren und einfuegen; Vorgabeplan laden
-            - Abwesenheit: von/bis und die Szene, die in dieser Zeit gilt
-            - Tastatur: Tab zu Block oder Linie; Eingabe = Szene waehlen, Einfg oder "+" = neuer Schaltpunkt,
+            - Abwesenheit: von/bis und die Temperaturstufe, die in dieser Zeit gilt
+            - Tastatur: Tab zu Block oder Linie; Eingabe = Stufe waehlen, Einfg oder "+" = neuer Schaltpunkt,
               Pfeiltasten verschieben eine Linie (Umschalt = 1 h), Entf loescht sie
-            Die Seite fragt den Adapter nach Plan und Szenen (sendTo wochenplanInfo) und schickt jede Aenderung
-            als Entwurf (sendTo wochenplanEntwurf); erst das "OK" des Dialogs schreibt ihn.
+            Die Seite fragt den Adapter nach Plan und Temperaturstufen (sendTo wochenplanInfo) und schickt jede Aenderung
+            als Entwurf (sendTo wochenplanEntwurf); erst "Plan uebernehmen" schreibt ihn (lib/zeitplaene.js).
             Kein fremder Code: reines HTML, CSS und JavaScript; der Socket kommt vom Admin (/lib/js/socket.io.js).
         -->
         <script src="../../lib/js/socket.io.js"></script>
@@ -609,7 +610,10 @@
                 ></button>
                 <div id="notes"></div>
             </div>
-            <div class="box">
+            <div
+                class="box"
+                id="absBox"
+            >
                 <label class="switch">
                     <input
                         type="checkbox"
@@ -633,8 +637,8 @@
                         />
                     </label>
                     <label>
-                        <span id="absSceneLabel"></span>
-                        <select id="absScene"></select>
+                        <span id="absLevelLabel"></span>
+                        <select id="absLevel"></select>
                     </label>
                 </div>
             </div>
@@ -909,7 +913,7 @@
                     b.addEventListener('click', fn);
                     return b;
                 }
-                /** Kopfzeile: je Szene ein farbiges Etikett "Komfort 21 °C · max. 95 %" (nur Anzeige). */
+                /** Kopfzeile: je Temperaturstufe ein farbiges Etikett "Komfort 21 °C · max. 95 %" (nur Anzeige). */
                 function legend() {
                     const el = $('legend');
                     el.innerHTML = '';
@@ -930,7 +934,7 @@
                         el.appendChild(c);
                     }
                 }
-                /** Farben der Szenen (vom Adapter, je Thema) als CSS-Variablen --c-<Szene>. */
+                /** Farben der Temperaturstufen (vom Adapter, je Thema) als CSS-Variablen --c-<Stufe>. */
                 function applyColors() {
                     if (!info || !info.farben) {
                         return;
@@ -962,11 +966,13 @@
                     $('notes').textContent = notes.join(' ');
                     flashHint();
                     absence = { ...absence, ...(info.abwesenheit || {}) };
+                    // Plan der Vorlage: die Abwesenheit gehoert zum Geraet, nicht zur Vorlage
+                    $('absBox').hidden = !!info.ohneAbwesenheit;
                     $('absLabel').textContent = info.texts.pAbwesenheit;
                     $('absFromLabel').textContent = info.texts.pVon;
                     $('absToLabel').textContent = info.texts.pBis;
-                    $('absSceneLabel').textContent = info.texts.pSzeneInZeit;
-                    const sel = $('absScene');
+                    $('absLevelLabel').textContent = info.texts.pSzeneInZeit;
+                    const sel = $('absLevel');
                     sel.innerHTML = '';
                     for (const { type } of info.types) {
                         const o = document.createElement('option');
@@ -980,7 +986,7 @@
                         $('absTo').value = absence.bis || '';
                         sel.value = absence.szene || '';
                         $('absFields').classList.toggle('off', !absence.aktiv);
-                        for (const id of ['absFrom', 'absTo', 'absScene']) {
+                        for (const id of ['absFrom', 'absTo', 'absLevel']) {
                             $(id).disabled = !absence.aktiv;
                         }
                     };
@@ -994,7 +1000,7 @@
                         show();
                         changed();
                     };
-                    for (const id of ['absOn', 'absFrom', 'absTo', 'absScene']) {
+                    for (const id of ['absOn', 'absFrom', 'absTo', 'absLevel']) {
                         $(id).onchange = take;
                     }
                     show();
@@ -1362,7 +1368,7 @@
                     const menuEl = document.createElement('div');
                     menuEl.className = 'menu';
                     menuEl.setAttribute('role', 'menu');
-                    // title: which period this menu changes ("Scene from Mon 08:30") - the time of the line
+                    // title: which period this menu changes ("Level from Mon 08:30") - the time of the line
                     const title = document.createElement('div');
                     title.className = 'title';
                     title.textContent = info.texts.pSzeneAb.replace('{time}', `${dayName(d, 'short')} ${hhmm(bl.a)}`);
@@ -1390,7 +1396,7 @@
                             first = b;
                         }
                     }
-                    // "New switching time at ...": only in the menu of a block, below the scenes
+                    // "New switching time at ...": only in the menu of a block, below the levels
                     const splitAt = splitOffer(
                         bl,
                         at,

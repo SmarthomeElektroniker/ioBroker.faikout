@@ -245,12 +245,12 @@ describe('Oberflaeche: Nachrichten der Einstellungsseite', () => {
             {
                 geraet: 'wz',
                 betrieb: 'adapter',
-                szenen: [{ name: 'Tag', soll: 22 }],
+                stufen: [{ name: 'Tag', soll: 22 }],
                 strategie: 'vortag',
                 untergrenze: 50,
                 kennlinieHeizen: [{ x: 0, y: 80 }],
             },
-            { geraet: 'og', betrieb: 'faikout', szenen: [], frostAb: 8, obergrenze: 90 },
+            { geraet: 'og', betrieb: 'faikout', stufen: [], frostAb: 8, obergrenze: 90 },
         ];
         const lauf = async was => {
             const a = adapter();
@@ -259,22 +259,24 @@ describe('Oberflaeche: Nachrichten der Einstellungsseite', () => {
             const antwort = (await frage(a, 'regelUebernehmen', { zeilen, von: 'wz', nach: 'og', was })).antwort;
             return { a, antwort, ziel: a.gespeichert.length ? a.gespeichert[0].obj.native.regelGeraete[1] : null };
         };
+        // 'stufen' kopiert die Temperaturstufen; der alte Name 'szenen' der Auswahl wird weiter verstanden
+        expect((await lauf('stufen')).ziel).to.eql((await lauf('szenen')).ziel);
         const s = await lauf('szenen');
         expect(s.antwort).to.eql({ reloadBrowser: true });
         expect(s.a.gespeichert[0].id).to.equal('system.adapter.faikout.0');
-        expect(s.ziel.szenen).to.eql([{ name: 'Tag', soll: 22 }]);
+        expect(s.ziel.stufen).to.eql([{ name: 'Tag', soll: 22 }]);
         expect(s.ziel).to.include({ betrieb: 'faikout', frostAb: 8, obergrenze: 90 });
         expect(s.ziel.strategie).to.equal(undefined);
         const k = await lauf('kennlinie');
         expect(k.ziel).to.include({ strategie: 'vortag', untergrenze: 50, betrieb: 'faikout' });
         // was die Quelle nicht hat, faellt im Ziel auf die Vorgabe zurueck
         expect('obergrenze' in k.ziel).to.equal(false);
-        expect(k.ziel.szenen).to.eql([]);
+        expect(k.ziel.stufen).to.eql([]);
         const b = await lauf('beides');
-        expect(b.ziel.szenen).to.eql([{ name: 'Tag', soll: 22 }]);
+        expect(b.ziel.stufen).to.eql([{ name: 'Tag', soll: 22 }]);
         expect(b.ziel.kennlinieHeizen).to.eql([{ x: 0, y: 80 }]);
         // die uebergebene Liste selbst bleibt unveraendert
-        expect(zeilen[1].szenen).to.eql([]);
+        expect(zeilen[1].stufen).to.eql([]);
         // Quelle = Ziel: Fehlermeldung, nichts gespeichert
         const a = adapter();
         a.extendForeignObjectAsync = async () => {
@@ -284,8 +286,12 @@ describe('Oberflaeche: Nachrichten der Einstellungsseite', () => {
         expect(gleich.error).to.equal(o.TEXTE.kopieFehlt.de);
     });
 
-    it('Szenen je Geraet: eigene Szenen der Zeile, sonst Vorgabe; szenenVon der Regelung hat Vorrang', () => {
-        const a = adapter({}, { regelGeraete: [{ geraet: 'Wohnzimmer AC', szenen: [{ name: 'Tag', soll: 22 }] }] });
+    it('Temperaturstufen je Geraet: mit Haken "individuell" die der Zeile, sonst die Vorlage; szenenVon der Regelung hat Vorrang', () => {
+        const stufen = [{ name: 'Tag', soll: 22 }];
+        const ohne = adapter({}, { regelStufen: [{ name: 'Wach', soll: 20 }], regelGeraete: [{ geraet: 'Wohnzimmer AC', stufen }] });
+        expect([...o.szenen(ohne, 'wz').keys()]).to.eql(['wach']);
+        expect([...o.szenen(ohne, '').keys()]).to.eql(['wach']);
+        const a = adapter({}, { regelGeraete: [{ geraet: 'Wohnzimmer AC', individuell: true, stufen }] });
         expect([...o.szenen(a, 'wz').keys()]).to.eql(['tag']);
         expect([...o.szenen(a, 'og').keys()]).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
         a.regelung = { szenenVon: id => new Map(id === 'og' ? [['x', { id: 'x' }]] : []) };
@@ -351,7 +357,7 @@ describe('Oberflaeche: Wochenplan-Umrechnung', () => {
         expect(o.programmZuPlan(zeilen, sz)).to.eql({ plan, fehler: null });
     });
     it('Fehler im Klartext: unbekannte Szene, kaputte Zeit, leer', () => {
-        expect(o.programmZuPlan([{ day: 'Mon', time: '06:00', type: 'party' }], sz).fehler).to.contain('Szene "party" gibt es nicht');
+        expect(o.programmZuPlan([{ day: 'Mon', time: '06:00', type: 'party' }], sz).fehler).to.contain('Temperaturstufe "party" gibt es nicht');
         expect(o.programmZuPlan([{ day: 'Mon', time: '6 Uhr', type: 'komfort' }], sz).fehler).to.contain('ungültig');
         expect(o.programmZuPlan([], sz).fehler).to.equal('Wochenplan ist leer');
     });
@@ -1316,8 +1322,8 @@ describe('UX-Funde 21.11.2026', () => {
         const zeilen = h => h.split('<div data-schritt="').slice(1);
         const klar = h => h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
         const z = zeilen(html);
-        expect(z).to.have.length(3);
-        // alle drei erledigt: Haken in der Ampelfarbe "gut", Ueberschrift und Stand in derselben Zeile
+        expect(z).to.have.length(4);
+        // die ersten drei erledigt: Haken in der Ampelfarbe "gut", Ueberschrift und Stand in derselben Zeile
         for (const [i, titel, stand] of [
             [0, '1 · MQTT-Broker', 'Eigener MQTT-Broker läuft auf Port 1888'],
             [1, '2 · Modul verbinden', 'Module, die sich gemeldet haben: 2 (Wohnzimmer AC, OG)'],
@@ -1328,7 +1334,30 @@ describe('UX-Funde 21.11.2026', () => {
             expect(klar(z[i]), titel).to.contain(titel).and.to.contain(stand);
         }
         // erledigte Schritte nennen keinen Reiter mehr, keine getrennte Aufzaehlung "So weit bist du"
-        expect(html).to.not.contain('→').and.to.not.contain('So weit bist du');
+        expect(z.slice(0, 3).join('')).to.not.contain('→');
+        expect(html).to.not.contain('So weit bist du');
+        // 4 · Zeitplan anlegen: offen, solange kein Geraet einen Wochenplan hat - mit Anweisung und dem Reiter "Zeitplaene"
+        expect(z[3].startsWith('offen"')).to.equal(true);
+        expect(klar(z[3]))
+            .to.contain('4 · Zeitplan anlegen (freiwillig)')
+            .and.to.contain('Noch kein Wochenplan hinterlegt')
+            .and.to.contain('Reiter „Zeitpläne“: Temperaturstufen')
+            .and.to.contain('Reiter „Zeitpläne“ öffnen');
+        expect(z[3]).to.contain(`#tab-instances/config/system.adapter.faikout.0/${o.REITER_ZEITPLAENE}`);
+        // gruener Haken, sobald EIN Geraet einen lesbaren Plan hat; ein unlesbarer zaehlt nicht
+        const plan = JSON.stringify(wochenplan.vorgabePlan(wochenplan.szenenLesen([]).szenen));
+        const mitPlan = adapter({ 'og.regulation.schedule.weekJson': plan, 'wz.regulation.schedule.weekJson': '{kaputt' }, {});
+        mitPlan.broker = {};
+        mitPlan.brokerZiel = () => ({ extern: false, port: 1888 });
+        const p = zeilen((await frage(mitPlan, 'einrichtungStand', {})).antwort)[3];
+        expect(p.startsWith('erledigt"')).to.equal(true);
+        expect(klar(p)).to.contain('Wochenplan für 1 von 2 Anlagen hinterlegt');
+        expect(p).to.contain('✓').and.to.not.contain('→');
+        for (const l of o.SPRACHEN) {
+            for (const k of ['esPlanTitel', 'esPlan', 'esPlanKeiner', 'esPlanText', 'reiterZeitplaene']) {
+                expect(o.TEXTE[k][l], `${k} ${l}`).to.be.a('string').and.not.equal('');
+            }
+        }
         // offen: neutraler Kreis, Handlungsanweisung und der Reiter, in dem es weitergeht
         a.geraete = new Map();
         a.broker = { verbunden: false };
@@ -1433,7 +1462,15 @@ describe('UX-Funde 21.11.2026', () => {
         expect(v._bildH).to.equal(undefined);
         expect(v._bildK).to.equal(undefined);
         const io = require('../io-package.json');
-        expect(io.native.regelKennlinieHeizen).to.eql(v.regelKennlinieHeizen.default);
+        // INTEGRATION: bis die jsonConfig umgebaut ist, traegt sie noch die alte Werksvorgabe (-10 °C: 95 %).
+        // Danach wieder schaerfen: expect(io.native.regelKennlinieHeizen).to.eql(v.regelKennlinieHeizen.default)
+        expect(io.native.regelKennlinieHeizen).to.eql([
+            { x: -10, y: 100 },
+            { x: 0, y: 75 },
+            { x: 7, y: 55 },
+            { x: 15, y: 40 },
+        ]);
+        expect(io.native.regelObergrenze).to.equal(100);
         const g = konfig.items.tabRegelung.items.regelGeraete.items;
         for (const [dp, art] of [['aussenDp', 'aussen'], ['raumDp', 'raum'], ['feuchteDp', 'feuchte']]) {
             const i = g.findIndex(x => x.attr === dp);

@@ -823,9 +823,9 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             'regulation.schedule.active': true,
             'regulation.schedule.weekJson': '',
             'regulation.schedule.absenceJson': '',
-            'regulation.schedule.scene': 'Komfort',
+            'regulation.schedule.level': 'Komfort',
             'regulation.schedule.next': Date.now() + 3600000,
-            'regulation.schedule.nextScene': 'Absenken',
+            'regulation.schedule.nextLevel': 'Absenken',
             'regulation.humidity.active': false,
             'regulation.manual.locked': false,
             'regulation.manual.until': null,
@@ -896,6 +896,13 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         // "Wochenplan bearbeiten" traegt den Kalender, der Schalter des Wochenplans die Uhr: zwei
         // verschiedene Symbole - und der Einrichtungstext nennt den "Knopf mit dem Kalender"
         const svgVon = url => Buffer.from(url.split(',')[1], 'base64').toString();
+        // der Wochenplan-Knopf ist beschriftet (Symbol UND Wort), nicht nur ein Kalendersymbol
+        const knopf = k.actions.find(x => x.id === dm.WOCHENPLAN);
+        expect(knopf.title).to.equal(oberflaeche.TEXTE.aktWochenplan);
+        expect(knopf.title.de).to.equal('Wochenplan');
+        expect(knopf).to.include({ variant: 'outlined' });
+        expect(knopf.description.de).to.equal('Wochenplan dieser Anlage öffnen und bearbeiten');
+        expect(k.actions.find(x => x.id === dm.DETAILS).title).to.equal(undefined);
         const aktion = svgVon(k.actions.find(x => x.id === dm.WOCHENPLAN).icon);
         expect(aktion).to.contain(dm.REGEL_SYMBOL.kalender).and.to.not.contain(dm.REGEL_SYMBOL.plan);
         expect(dm.REGEL_SYMBOL.kalender).to.contain('<rect').and.to.not.equal(dm.REGEL_SYMBOL.plan);
@@ -964,6 +971,9 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         const plan = muster(dm.regelPlanHtml().de, { s: 'Komfort', n: new Date(new Date().setHours(22, 0, 0, 0)).getTime(), ns: 'Absenken' });
         expect(plan).to.contain('Komfort').and.to.contain('22:00 Absenken');
         expect(muster(dm.regelPlanHtml().de, { s: '', n: null, ns: '' })).to.contain('kein Wochenplan');
+        // neben Stufe und naechster Schaltung: der Verweis, wo die Zeiten geaendert werden (mit Kalendersymbol)
+        expect(plan).to.contain('Temperaturstufe').and.to.contain('<svg').and.to.contain('Zeiten ändern: Knopf „Wochenplan“ unten auf der Karte');
+        expect(muster(dm.regelPlanHtml().en, { s: '', n: null, ns: '' })).to.contain('button “Weekly schedule”');
 
         const f = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Fühler der Anlage', rv: 20.6, rq: 'Fühler der Anlage (Rückfall: Datenpunkt zu alt)', fv: null, fq: '', fa: false });
         expect(f).to.contain('Außen 4,5 °C').and.to.contain('Raum 20,6 °C · Rückfall').and.not.to.contain('Feuchte');
@@ -1011,7 +1021,8 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             expect(k.formulare[0].opt.title.de).to.equal('Wochenplan von Wohnzimmer AC');
             expect(info.program).to.eql([]);
             expect(info.types.map(t => t.type)).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
-            expect(info.types[0].info).to.equal('21 °C · max. 95 %');
+            expect(info.types[0].info).to.equal('21 °C');
+            expect(info.types[1].info).to.equal('19 °C · max. 60 %');
             expect(info.types[3].info).to.equal('Anlage aus');
             expect(info.farben.hell.komfort).to.be.a('string');
             expect(info.texts.pVorgabe).to.equal('Vorgabeplan laden');
@@ -1041,7 +1052,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             expect(JSON.parse(plan.wert.val)).to.have.length(7);
             expect(JSON.parse(plan.wert.val)[0][1]).to.eql({ t: 360, s: 'komfort' });
             const abw = JSON.parse(a.gesetzt.find(g => g.id === `${ID}.regulation.schedule.absenceJson`).wert.val);
-            expect(abw).to.eql({ from: new Date(2026, 11, 27).getTime(), to: new Date(2027, 0, 3).getTime(), scene: 'abwesend' });
+            expect(abw).to.eql({ from: new Date(2026, 11, 27).getTime(), to: new Date(2027, 0, 3).getTime(), level: 'abwesend' });
             // Wochenplan war schon an: keine zweite Rueckfrage
             expect(k.formulare).to.have.length(1);
         });
@@ -1075,7 +1086,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 const token = kennung(schema);
                 const n = (program, abwesenheit) =>
                     a.deviceManagement.wochenplanNachricht('wochenplanEntwurf', { device: ID, token, program, abwesenheit });
-                expect((await n([{ day: 'Mon', time: '06:00', type: 'party' }])).error).to.contain('Szene "party" gibt es nicht');
+                expect((await n([{ day: 'Mon', time: '06:00', type: 'party' }])).error).to.contain('Temperaturstufe "party" gibt es nicht');
                 const falsch = { aktiv: true, von: '2026-12-27T00:00', bis: '2026-12-26T00:00', szene: 'abwesend' };
                 expect((await n([{ day: 'Mon', time: '06:00', type: 'komfort' }], falsch)).error).to.equal(oberflaeche.TEXTE.pAbwFehler.de);
                 expect(await n([])).to.eql({ ok: true, count: 0 });
@@ -1125,7 +1136,278 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         it('fremde oder abgelaufene Kennung wird abgewiesen', async () => {
             const { a } = await mitRegelung();
             const r = await a.deviceManagement.wochenplanNachricht('wochenplanInfo', { device: ID, token: 'falsch' });
-            expect(r.error).to.equal('unknown or expired dialog');
+            expect(r.error).to.equal(oberflaeche.TEXTE.zpKeinEntwurf.de);
+        });
+
+        describe('Befehle der Einstellungsseite (Reiter "Zeitplaene") - dieselbe Logik wie der Karten-Dialog', () => {
+            const zeitplaene = require('../lib/zeitplaene');
+            const wochenplan = require('../lib/regel/wochenplan');
+            const werk = JSON.stringify(wochenplan.vorgabePlan(wochenplan.szenenLesen([]).szenen));
+            /** sendTo an den Adapter wie von der Einstellungsseite. */
+            const frage = async (a, command, message = {}) => {
+                let antwort;
+                a.sendTo = (an, befehl, wert) => (antwort = wert);
+                expect(await oberflaeche.nachricht(a, { command, message, from: 'admin', callback: {} })).to.equal(true);
+                return antwort;
+            };
+            const geschrieben = (a, rel) => a.gesetzt.filter(g => g.id === `${ID}.${rel}`).map(g => g.wert);
+
+            it('alle Befehle sind angemeldet', () => {
+                for (const b of ['regelUebersicht', 'zeitplaeneListe', 'wochenplanOeffnen', 'wochenplanSpeichern', 'wochenplanSchalten', 'wochenplanKopie', 'wochenplanEinfuegen']) {
+                    expect(oberflaeche.BEFEHLE.has(b), b).to.equal(true);
+                    expect(zeitplaene.BEFEHLE, b).to.include(b);
+                }
+            });
+
+            it('wochenplanOeffnen: Adresse der Seite mit frischer Kennung; die Seite arbeitet damit wie im Karten-Dialog', async () => {
+                const { a } = await mitRegelung();
+                const r = await frage(a, 'wochenplanOeffnen', { device: 'Wohnzimmer AC' }); // Name oder ID
+                expect(Object.keys(r)).to.eql(['url', 'token']);
+                expect(r.url).to.equal(`adapter/faikout/wochenplan.html?instance=faikout.0&device=${ID}&token=${r.token}`);
+                expect(r.token).to.match(/^[0-9a-f]{24}$/);
+                expect((await frage(a, 'wochenplanOeffnen', { device: ID })).token).to.not.equal(r.token);
+                const info = await frage(a, 'wochenplanInfo', { device: ID, token: r.token });
+                expect(info.types.map(t => t.type)).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
+                expect(info.ohneAbwesenheit).to.equal(false);
+                // derselbe Entwurf wie im Karten-Dialog
+                expect(a.deviceManagement.planEntwuerfe.get(r.token).id).to.equal(ID);
+                expect((await frage(a, 'wochenplanOeffnen', { device: 'gibtsnicht' })).error).to.equal('Unbekannte Anlage „gibtsnicht“.');
+                a.objekte.delete(`${ID}.regulation.schedule.weekJson`);
+                expect((await frage(a, 'wochenplanOeffnen', { device: ID })).error).to.contain('noch keine Datenpunkte der Regelung');
+            });
+
+            it('wochenplanSpeichern: schreibt den Entwurf ohne ack, meldet "einschalten noetig", verbraucht die Kennung', async () => {
+                const { a } = await mitRegelung({ 'regulation.schedule.active': false });
+                const { token } = await frage(a, 'wochenplanOeffnen', { device: ID });
+                // ohne Aenderung: nichts schreiben, trotzdem ok
+                const leer = await frage(a, 'wochenplanOeffnen', { device: ID });
+                expect(await frage(a, 'wochenplanSpeichern', { device: ID, token: leer.token })).to.eql({ ok: true, einschaltenNoetig: false });
+                expect(geschrieben(a, 'regulation.schedule.weekJson')).to.eql([]);
+                const v = await frage(a, 'wochenplanVorgabe', { device: ID, token });
+                await frage(a, 'wochenplanEntwurf', {
+                    device: ID,
+                    token,
+                    program: v.program,
+                    abwesenheit: { aktiv: true, von: '2026-12-27T00:00', bis: '2027-01-03T00:00', szene: 'abwesend' },
+                });
+                expect(await frage(a, 'wochenplanSpeichern', { device: ID, token })).to.eql({ ok: true, einschaltenNoetig: true });
+                expect(geschrieben(a, 'regulation.schedule.weekJson')).to.eql([{ val: werk, ack: false }]);
+                expect(JSON.parse(geschrieben(a, 'regulation.schedule.absenceJson')[0].val)).to.eql({
+                    from: new Date(2026, 11, 27).getTime(),
+                    to: new Date(2027, 0, 3).getTime(),
+                    level: 'abwesend',
+                });
+                // die Kennung ist verbraucht
+                expect((await frage(a, 'wochenplanSpeichern', { device: ID, token })).error).to.equal(oberflaeche.TEXTE.zpKeinEntwurf.de);
+                // Plan schon an: keine Rueckfrage noetig
+                a.werte.set(`${ID}.regulation.schedule.active`, { val: true, ack: true });
+                const zwei = await frage(a, 'wochenplanOeffnen', { device: ID });
+                await frage(a, 'wochenplanEntwurf', { device: ID, token: zwei.token, program: v.program });
+                expect(await frage(a, 'wochenplanSpeichern', { device: ID, token: zwei.token })).to.eql({ ok: true, einschaltenNoetig: false });
+            });
+
+            it('wochenplanSpeichern: Fehler des Entwurfs als {error} in Systemsprache, der Entwurf bleibt offen', async () => {
+                const { a } = await mitRegelung();
+                const { token } = await frage(a, 'wochenplanOeffnen', { device: ID });
+                const plan = [{ day: 'Mon', time: '06:00', type: 'komfort' }];
+                await frage(a, 'wochenplanEntwurf', { device: ID, token, program: plan, abwesenheit: { aktiv: true, von: '2026-12-27T00:00', bis: '2026-12-26T00:00', szene: 'abwesend' } });
+                expect(await frage(a, 'wochenplanSpeichern', { device: ID, token })).to.eql({
+                    error: 'Der Wochenplan wurde nicht gespeichert: Abwesenheit: Das Ende muss nach dem Beginn liegen.',
+                });
+                a.sprache = async () => 'en';
+                expect((await frage(a, 'wochenplanSpeichern', { device: ID, token })).error).to.equal(
+                    'The weekly schedule was not saved: Absence: the end must be later than the start.',
+                );
+                a.sprache = async () => 'de';
+                expect(a.gesetzt).to.eql([]);
+                // leerer Plan
+                await frage(a, 'wochenplanEntwurf', { device: ID, token, program: [] });
+                expect((await frage(a, 'wochenplanSpeichern', { device: ID, token })).error).to.contain('der Plan hat keinen Schaltpunkt');
+                // Kennung eines anderen Geraets
+                expect((await frage(a, 'wochenplanSpeichern', { device: 'anderes', token })).error).to.equal(oberflaeche.TEXTE.zpKeinEntwurf.de);
+                // korrigiert: wird gespeichert
+                await frage(a, 'wochenplanEntwurf', { device: ID, token, program: plan });
+                expect((await frage(a, 'wochenplanSpeichern', { device: ID, token })).ok).to.equal(true);
+            });
+
+            it('wochenplanSchalten schaltet schedule.active ohne ack', async () => {
+                const { a } = await mitRegelung({ 'regulation.schedule.active': false });
+                expect(await frage(a, 'wochenplanSchalten', { device: ID, aktiv: true })).to.eql({ ok: true, aktiv: true });
+                expect(await frage(a, 'wochenplanSchalten', { device: ID, aktiv: false })).to.eql({ ok: true, aktiv: false });
+                expect(geschrieben(a, 'regulation.schedule.active')).to.eql([{ val: true, ack: false }, { val: false, ack: false }]);
+                expect((await frage(a, 'wochenplanSchalten', { device: 'x', aktiv: true })).error).to.be.a('string');
+            });
+
+            it('wochenplanKopie / wochenplanEinfuegen: Text hin und zurueck, geprueft; leer leert den Plan; die Vorlage geht nicht ueber Befehle', async () => {
+                const alt = '{"von":1798326000000,"bis":1798930800000,"szene":"abwesend"}';
+                const { a } = await mitRegelung({ 'regulation.schedule.weekJson': werk, 'regulation.schedule.absenceJson': alt, 'regulation.schedule.active': false });
+                const kopie = await frage(a, 'wochenplanKopie', { device: ID });
+                // altes JSON der Abwesenheit wird gelesen, heraus geht nur `level`
+                expect(kopie).to.eql({ week: werk, absence: '{"from":1798326000000,"to":1798930800000,"level":"abwesend"}' });
+                expect(await frage(a, 'wochenplanEinfuegen', { device: ID, week: kopie.week })).to.eql({ ok: true, einschaltenNoetig: true });
+                expect(geschrieben(a, 'regulation.schedule.weekJson')).to.eql([{ val: werk, ack: false }]);
+                // unbekannte Stufe, kein JSON: Fehler im Klartext, nichts geschrieben
+                const fremd = JSON.stringify([[{ t: 0, s: 'party' }], [], [], [], [], [], []]);
+                expect((await frage(a, 'wochenplanEinfuegen', { device: ID, week: fremd })).error).to.equal(
+                    'Der Wochenplan wurde nicht gespeichert: Tag 1: Temperaturstufe "party" gibt es nicht',
+                );
+                expect((await frage(a, 'wochenplanEinfuegen', { device: ID, week: '{kaputt' })).error).to.contain('nicht gespeichert');
+                expect((await frage(a, 'wochenplanEinfuegen', { device: ID })).error).to.contain('nicht gespeichert');
+                expect(geschrieben(a, 'regulation.schedule.weekJson')).to.have.length(1);
+                // leerer Text leert den Plan
+                expect(await frage(a, 'wochenplanEinfuegen', { device: ID, week: '' })).to.eql({ ok: true, einschaltenNoetig: false });
+                expect(geschrieben(a, 'regulation.schedule.weekJson')[1]).to.eql({ val: '', ack: false });
+                // ohne Plan: leere Texte
+                const { a: ohne } = await mitRegelung();
+                expect(await frage(ohne, 'wochenplanKopie', { device: ID })).to.eql({ week: '', absence: '' });
+                for (const b of ['wochenplanKopie', 'wochenplanEinfuegen', 'wochenplanSchalten']) {
+                    expect(await frage(a, b, { device: 'vorlage', week: werk }), b).to.eql({ error: oberflaeche.TEXTE.zpVorlageNicht.de });
+                }
+            });
+
+            it('Plan der Vorlage: Editor ohne Geraet - nichts wird geschrieben, der gepruefte Plan kommt als Text zurueck', async () => {
+                const { a } = await mitRegelung();
+                a.config.regelStufen = [{ name: 'Wach', soll: 20 }, { name: 'Ruhe', soll: 17 }];
+                const eigen = JSON.stringify([[{ t: 0, s: 'ruhe' }, { t: 420, s: 'wach' }], [], [], [], [], [], []]);
+                const r = await frage(a, 'wochenplanOeffnen', { device: 'vorlage', week: eigen });
+                expect(r.url).to.contain('device=vorlage&token=');
+                const info = await frage(a, 'wochenplanInfo', { device: 'vorlage', token: r.token });
+                expect(info.types.map(t => t.type)).to.eql(['wach', 'ruhe']);
+                expect(info.program).to.eql([{ day: 'Mon', time: '00:00', type: 'ruhe' }, { day: 'Mon', time: '07:00', type: 'wach' }]);
+                expect(info).to.include({ ohneAbwesenheit: true, planAktiv: true, faikoutAuto: false });
+                const neu = [{ day: 'Tue', time: '06:00', type: 'wach' }];
+                await frage(a, 'wochenplanEntwurf', { device: 'vorlage', token: r.token, program: neu, abwesenheit: { aktiv: true, von: 'x', bis: 'y' } });
+                expect(await frage(a, 'wochenplanSpeichern', { device: 'vorlage', token: r.token })).to.eql({
+                    ok: true,
+                    einschaltenNoetig: false,
+                    week: JSON.stringify([[], [{ t: 360, s: 'wach' }], [], [], [], [], []]),
+                });
+                expect(a.gesetzt).to.eql([]);
+                // ungespeicherte Stufen aus dem Formular gelten fuer diesen Entwurf
+                const f = await frage(a, 'wochenplanOeffnen', { device: 'vorlage', week: '', stufen: [{ name: 'Neu', soll: 23 }] });
+                expect((await frage(a, 'wochenplanInfo', { device: 'vorlage', token: f.token })).types.map(t => t.type)).to.eql(['neu']);
+            });
+
+            it('"Vorgabeplan laden" nimmt den Plan der Vorlage (regelPlanVorlage), sonst den Werksplan', async () => {
+                const { a } = await mitRegelung();
+                const { token } = await frage(a, 'wochenplanOeffnen', { device: ID });
+                const programm = async () => (await frage(a, 'wochenplanVorgabe', { device: ID, token })).program;
+                const werksprogramm = oberflaeche.planZuProgramm(JSON.parse(werk));
+                expect(await programm()).to.eql(werksprogramm);
+                a.config.regelPlanVorlage = JSON.stringify([[{ t: 300, s: 'komfort' }], [], [], [], [], [], [{ t: 600, s: 'aus' }]]);
+                expect(await programm()).to.eql([
+                    { day: 'Mon', time: '05:00', type: 'komfort' },
+                    { day: 'Sun', time: '10:00', type: 'aus' },
+                ]);
+                // passt die Vorlage nicht zu den Stufen dieses Geraets (oder ist sie kaputt): Werksplan
+                for (const kaputt of [JSON.stringify([[{ t: 0, s: 'gibtsnicht' }], [], [], [], [], [], []]), '{kaputt', '   ']) {
+                    a.config.regelPlanVorlage = kaputt;
+                    expect(await programm(), kaputt).to.eql(werksprogramm);
+                }
+            });
+
+            it('zeitplaeneListe: Stufen (Vorlage und je Geraet) mit Farben, je Geraet Stand und Wochenbalken', async () => {
+                const montagMittag = new Date(2026, 10, 23, 12, 0).getTime();
+                const { a } = await mitRegelung({ 'regulation.schedule.weekJson': werk });
+                a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', individuell: true, stufen: [] }];
+                const r = await zeitplaene.liste(a, { jetzt: montagMittag });
+                expect(Object.keys(r)).to.eql(['sprache', 'stufen', 'geraete', 'werksplan']);
+                expect(r.sprache).to.equal('de');
+                expect(Object.keys(r.stufen)).to.eql(['vorlage', ID]);
+                expect(r.stufen.vorlage[0]).to.eql({
+                    id: 'komfort',
+                    name: 'Komfort',
+                    farbe: { hell: '#a3492f', dunkel: '#d4896b' },
+                    soll: 21,
+                    power: true,
+                    mode: 'heat',
+                    fan: 'auto',
+                    deckel: 100,
+                });
+                expect(r.geraete).to.be.an('array').with.length(1);
+                const g = r.geraete[0];
+                expect(g).to.include({
+                    id: ID,
+                    name: 'Wohnzimmer AC',
+                    individuell: true,
+                    planAktiv: true,
+                    planFehlt: false,
+                    planFehler: '',
+                    naechster: new Date(2026, 10, 23, 16, 30).getTime(),
+                    naechsteStufe: 'komfort',
+                    naechsteStufeName: 'Komfort',
+                    stufe: 'absenken',
+                    stufeName: 'Absenken',
+                });
+                expect(g.woche).to.have.length(7);
+                expect(g.woche[0]).to.eql([
+                    { von: 0, bis: 360, stufe: 'absenken' },
+                    { von: 360, bis: 510, stufe: 'komfort' },
+                    { von: 510, bis: 990, stufe: 'absenken' },
+                    { von: 990, bis: 1320, stufe: 'komfort' },
+                    { von: 1320, bis: 1440, stufe: 'absenken' },
+                ]);
+                expect(g.woche[6]).to.eql([
+                    { von: 0, bis: 450, stufe: 'absenken' },
+                    { von: 450, bis: 1380, stufe: 'komfort' },
+                    { von: 1380, bis: 1440, stufe: 'absenken' },
+                ]);
+                expect(r.werksplan).to.eql({ week: werk, woche: g.woche });
+                // ueber sendTo dieselbe Form
+                expect((await frage(a, 'zeitplaeneListe', {})).geraete[0].woche).to.eql(g.woche);
+                // ohne Plan: planFehlt, leere Tage (immer Arrays), kein Stand
+                const { a: ohne } = await mitRegelung();
+                const o1 = (await frage(ohne, 'zeitplaeneListe', {})).geraete[0];
+                expect(o1).to.include({ planFehlt: true, naechster: null, naechsteStufe: '', stufe: '', individuell: false });
+                expect(o1.woche).to.eql([[], [], [], [], [], [], []]);
+                // ohne Geraete: leere Liste, keine Ausnahme
+                ohne.geraete = new Map();
+                expect((await frage(ohne, 'zeitplaeneListe', {})).geraete).to.eql([]);
+            });
+
+            it('Balken: ein Tag ohne Schaltpunkt traegt die Stufe des Vortags, ueber die Wochengrenze hinweg', () => {
+                const b = zeitplaene.balken([[], [{ t: 480, s: 'a' }], [], [], [{ t: 0, s: 'b' }, { t: 600, s: 'b' }], [], []]);
+                expect(b[0]).to.eql([{ von: 0, bis: 1440, stufe: 'b' }]); // Montag: gilt noch vom Freitag
+                expect(b[1]).to.eql([{ von: 0, bis: 480, stufe: 'b' }, { von: 480, bis: 1440, stufe: 'a' }]);
+                expect(b[2]).to.eql([{ von: 0, bis: 1440, stufe: 'a' }]);
+                expect(b[4]).to.eql([{ von: 0, bis: 1440, stufe: 'b' }]); // Schaltpunkt ohne Wechsel: ein Balken
+                expect(zeitplaene.balken(null)).to.eql([[], [], [], [], [], [], []]);
+            });
+
+            it('regelUebersicht: Kurzstand und Live-Werte je Geraet', async () => {
+                const { a } = await mitRegelung({ 'regulation.humidity.dewPoint': 10.4 });
+                a.config.regelGeraete = [{ geraet: ID, individuell: true, betrieb: 'faikout' }];
+                const r = await frage(a, 'regelUebersicht', {});
+                expect(Object.keys(r)).to.eql(['sprache', 'geraete']);
+                expect(r.geraete).to.eql([
+                    {
+                        id: ID,
+                        name: 'Wohnzimmer AC',
+                        online: true,
+                        eintrag: true,
+                        individuell: true,
+                        betrieb: 'faikout',
+                        kuehlt: false,
+                        heizt: true,
+                        raum: 21.5,
+                        aussen: 5,
+                        feuchte: 50,
+                        taupunkt: 10.4,
+                    },
+                ]);
+                a.config.regelGeraete = [];
+                a.werte.delete(`${ID}.regulation.sensors.room`);
+                const ohne = (await frage(a, 'regelUebersicht', {})).geraete[0];
+                expect(ohne).to.include({ eintrag: false, individuell: false, betrieb: 'adapter', raum: null });
+            });
+
+            it('Texte der Befehle in allen Sprachen', () => {
+                for (const k of ['zpUnbekannt', 'zpKeinEntwurf', 'zpVorlageNicht', 'zpKeinDatenpunkt', 'zpSchaltpunkt', 'planVerweis', 'tipWochenplan']) {
+                    for (const l of SPRACHEN) {
+                        expect(oberflaeche.TEXTE[k][l], `${k} ${l}`).to.be.a('string').and.not.equal('');
+                    }
+                }
+            });
         });
 
         it('die Wochenplan-Seite liegt im Paket und spricht die richtigen Befehle', () => {

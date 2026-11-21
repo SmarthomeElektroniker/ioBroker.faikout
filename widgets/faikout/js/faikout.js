@@ -813,14 +813,14 @@ vis.binds.faikout = {
                 $wurzel.find('.fk-regel-probe').text(probe && zustand !== 'off' ? b.t('Probelauf') : '');
                 // Szene und naechste Schaltung
                 var planAn = ctx.wert('regulation.schedule.active') === true;
-                var szene = planAn ? ctx.wert('regulation.schedule.scene') : '';
+                var szene = planAn ? ctx.wert('regulation.schedule.level') : '';
                 var ziel = b.zahl(ctx.wert('control.target'), 1);
                 $wurzel.find('.fk-regel-szene').text((szene ? szene + ' · ' : '') + (ziel !== null ? b.t('Soll') + ' ' + ziel + ' °C' : ''));
                 var naechster = Number(ctx.wert('regulation.schedule.next'));
                 var text = '';
                 if (planAn && naechster > 0) {
                     var d = new Date(naechster);
-                    text = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' ' + (ctx.wert('regulation.schedule.nextScene') || '');
+                    text = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' ' + (ctx.wert('regulation.schedule.nextLevel') || '');
                     if (d.toDateString() !== new Date().toDateString()) text = d.toLocaleDateString(b.sprache(), { weekday: 'short' }) + ' ' + text;
                 }
                 $wurzel.find('.fk-regel-naechste').text(text ? '→ ' + text : '');
