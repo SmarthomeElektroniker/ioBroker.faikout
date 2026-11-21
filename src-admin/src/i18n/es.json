@@ -1,5 +1,5 @@
 {
-    "fk_hinweis": "Arrastre los puntos o cambie los valores en la tabla. Las teclas de flecha mueven el punto seleccionado.",
+    "fk_hinweis": "Arrastra los puntos o cambia los valores en la tabla. Las teclas de flecha mueven el punto seleccionado.",
     "fk_vorgabeGilt": "Sin puntos propios: se aplica el valor predeterminado. Arrastrar o «+» lo adopta como valor inicial.",
     "fk_punkt": "Punto %s",
     "fk_punktDazu": "Añadir punto",

@@ -37,7 +37,7 @@ The control knows exactly two levels:
 - the **global template** – strategy, lower and upper limit, heating and cooling curve, previous
   day, temperature levels, humidity action and the weekly schedule of the template. It applies to
   all units.
-- **per unit** an entry under **Units** with the checkbox **"Individual instead of the global
+- **per unit** an entry under **Units** with the checkbox **"Individual instead of global
   template"**.
 
 | Checkbox "Individual" | What applies to the unit |
@@ -275,8 +275,8 @@ device object, e.g. `faikout.0.Livingroom`.
 ## 8. Data points
 
 Everything the interface shows is also available as data points below `<unit>.regulation.*`, among
-them the channels `demand` (demand limit), `schedule` (weekly schedule), `humidity`, `manual`
-(manual override), `target` (buttons warmer/cooler) and `sensors`. Whether the unit accepts a demand
+them the channels `demand` (power limit), `schedule` (weekly schedule), `humidity`, `manual`
+(manual override), `target` (buttons warmer/cooler) and `sensors`. Whether the unit accepts a power
 limit is shown in `<unit>.info.demandCapable` (`unknown`, `yes`, `no`).
 
 | Data point below `regulation.` | Values | Meaning |
@@ -285,10 +285,10 @@ limit is shown in `<unit>.info.demandCapable` (`unknown`, `yes`, `no`).
 | `reason` |  | reason in plain text |
 | `mode` | adapter · faikout | who controls |
 | `lastCommand` |  | last command (JSON; in dry run: would send) |
-| `historyJson` |  | demand limit of the last 24 hours |
-| `demand.active` · `demand.dryRun` |  | switches: demand limit, dry run per unit |
+| `historyJson` |  | power limit of the last 24 hours |
+| `demand.active` · `demand.dryRun` |  | switches: power limit, dry run per unit |
 | `demand.setpoint` · `rawValue` · `outsideMean` |  | calculated limit, raw value, outside mean (30 min) |
-| `demand.state` · `demand.reason` | ok · fault · notCapable · neutral · off | state and reason of the demand limit |
+| `demand.state` · `demand.reason` | ok · fault · notCapable · neutral · off | state and reason of the power limit |
 | `demand.strategy` | curve · previousDay | strategy |
 | `demand.wouldSend` · `commandsPerHour` |  | last demand command, commands in the last hour |
 | `demand.curveJson` · `capableReason` · `stateJson` |  | curve of the unit, reason of the capability, internal state (restart-safe) |
@@ -358,4 +358,12 @@ unit in its own, permanently assigned colour; the bar height is the total. The c
 legend – a click hides a unit. The tooltip lists the value per unit and the total; you can switch
 between "All", "Heating only" and "Cooling only" and between chart and table. The data come from the
 adapter's own counters (48 hours, 62 days, 24 months); no history adapter is needed.
+
+## 10. Languages
+
+The interface exists in eleven languages (en, de, ru, pt, nl, fr, it, es, pl, uk, zh-cn) and follows
+the system language of ioBroker; numbers use the decimal separator of the language. German and English
+are maintained by the author. All other translations are machine-assisted and have not been reviewed by
+native speakers – corrections are welcome. The vis widgets show their own texts in German or English
+only (attribute names are translated); this guide exists in English and German.
 

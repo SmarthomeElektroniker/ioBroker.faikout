@@ -184,8 +184,9 @@ The twins are created with the first report of a module after the update.
 
 ## Climate control
 
-The tab **Climate control** of the instance settings, the device cards (admin, device manager) and
-the vis widget "Climate control" operate the built-in control. A step-by-step guide with pictures:
+The tabs **Schedules** (when which temperature applies) and **Climate control** (how the unit is
+run) of the instance settings, the device cards (admin, device manager) and the vis widget
+"Climate control" operate the built-in control. A step-by-step guide with pictures:
 [English](docs/en/README.md) · [Deutsch](docs/de/README.md).
 
 Everything starts in **dry run**: the adapter calculates and shows what it would do, but sends
@@ -195,7 +196,7 @@ nothing until the dry run is switched off – in the settings and, per unit, in 
 - **Global template and per unit**: the template holds strategy, curves, limits (factory default
   40 % to 100 %), temperature levels and a template schedule and applies to all units. Each unit
   has an entry with who controls, sensor sources and frost protection – and the checkbox
-  "Individual instead of the global template": without it all template values apply, with it the
+  "Individual instead of global template": without it all template values apply, with it the
   values of the unit (a single empty field still takes the template).
 - **Who controls**: *Adapter controls* (schedule, temperature levels, power limit, humidity – nothing is stored
   in the module) or *Faikout auto* (the module controls to the target itself; the adapter supplies
@@ -216,6 +217,9 @@ nothing until the dry run is switched off – in the settings and, per unit, in 
 - **Humidity and dew point**, **manual override** (schedule and temperature levels wait after someone used the
   remote control; "End manual override" on the card ends the wait) and **public holidays** are set
   once for all units.
+- **Copy, paste, reset**: below every chart of the settings (curve, temperature levels, humidity,
+  weekly schedule) the content can be copied, pasted at another unit or in the template, and reset
+  to the template or the factory default – with a short-lived "Undo".
 - **Device card**: state and reason, power limit, temperature level and next switching time, three symbol
   buttons for demand control, humidity control and weekly schedule, sensors with a warning when a
   fallback sensor is used. The chart button explains the current decision (curve with operating
@@ -253,6 +257,15 @@ one detail page per unit with controls, energy history and a phone view. They us
 `faikout.0` and the widgets of this adapter – no scripts, no other adapters. Import instructions:
 [vis-templates/README.md](vis-templates/README.md).
 
+## Languages
+
+The adapter, its settings page, device cards and data point names are available in English, German,
+Russian, Portuguese, Dutch, French, Italian, Spanish, Polish, Ukrainian and Simplified Chinese. German
+and English are maintained by the author; the other translations are machine-assisted and have not been
+reviewed by native speakers – corrections are welcome (issue or pull request). The vis widgets
+show their own texts in German or English only; their attribute names are translated. The step-by-step
+guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
+
 ## Changelog
 
 <!--
@@ -260,10 +273,10 @@ one detail page per unit with controls, energy history and a phone view. They us
 	### **WORK IN PROGRESS**
 -->
 ### 1.0.0 (2026-11-21)
-- Climate control per unit: demand limit by outdoor curve or "Auto" (previous day plus margin),
+- Climate control per unit: power limit by outdoor curve or "Auto" (previous day plus margin),
   weekly schedule with temperature levels, public holidays and absence, humidity and dew point control, manual
   override, frost protection, dry run as default. Every decision is shown with its reason.
-- Two levels only: a global template and, per unit, the checkbox "Individual instead of the global
+- Two levels only: a global template and, per unit, the checkbox "Individual instead of global
   template". "Scenes" are now called temperature levels and live in the tab "Schedules" together
   with the weekly schedules (also reachable from the device card, button "Weekly schedule").
   Factory defaults: lower limit 40 %, upper limit 100 % (was 95 %), top point of the heating curve
@@ -278,7 +291,7 @@ one detail page per unit with controls, energy history and a phone view. They us
 - The control data points live below `<unit>.regulation.*` with English IDs, state values and JSON
   keys; data points and JSON values of pre-release builds (`regel.*`, German keys) are moved or
   rewritten once at start.
-- Instance settings ordered by importance: Setup, Climate control, Consumption, Find modules,
+- Instance settings ordered by importance: Setup, Schedules, Climate control, Consumption, Find modules,
   then the technical tabs (MQTT broker, Module settings); details for advanced users are collapsed.
   The setup tab lists the steps as a checklist that ticks off what is already done.
 - Module settings can be read and written (with preview, backup and read-back).
@@ -291,7 +304,7 @@ one detail page per unit with controls, energy history and a phone view. They us
   confirmation, verifies that it reports within 90 s, and can restore the previous MQTT host.
 - Optional external MQTT broker (for example Mosquitto) instead of the built-in one, with a
   connection test in the settings.
-- Settings: setup guide as the first tab in three numbered steps with a live status; module
+- Settings: setup guide as the first tab in numbered steps with a live status; module
   selection lists all units; sensor data points are checked while typing and show their live value;
   default curve as a table; consumption chart (stacked bars per unit, day/week/month/year).
 - Device cards: "not set up" with a "Create schedule" button instead of "fault" while no schedule
