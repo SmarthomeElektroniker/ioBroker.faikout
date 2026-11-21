@@ -263,7 +263,8 @@ The adapter, its settings page, device cards and data point names are available 
 Russian, Portuguese, Dutch, French, Italian, Spanish, Polish, Ukrainian and Simplified Chinese. German
 and English are maintained by the author; the other translations are machine-assisted and have not been
 reviewed by native speakers – corrections are welcome (issue or pull request). The vis widgets
-show their own texts in German or English only; their attribute names are translated. The step-by-step
+show their texts in the same eleven languages (they follow the language of vis and fall back to English);
+their attribute names are translated too. The step-by-step
 guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 
 ## Changelog

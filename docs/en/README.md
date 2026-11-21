@@ -381,6 +381,7 @@ adapter's own counters (48 hours, 62 days, 24 months); no history adapter is nee
 The interface exists in eleven languages (en, de, ru, pt, nl, fr, it, es, pl, uk, zh-cn) and follows
 the system language of ioBroker; numbers use the decimal separator of the language. German and English
 are maintained by the author. All other translations are machine-assisted and have not been reviewed by
-native speakers – corrections are welcome. The vis widgets show their own texts in German or English
-only (attribute names are translated); this guide exists in English and German.
+native speakers – corrections are welcome. The vis widgets show their texts in the same eleven
+languages – they follow the language of vis and fall back to English (attribute names are translated
+too); this guide exists in English and German.
 
