@@ -281,9 +281,9 @@ describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englisch
             ...['Individual', 'Total'].map(w => `es:${w}`),
             ...['Absence', 'Faikout auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'active'].map(w => `fr:${w}`),
             ...['Comfort', 'Faikout auto'].map(w => `it:${w}`),
-            ...['Adapter regelt', 'Alles', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
+            ...['Adapter regelt', 'Alles', 'Automatisch', 'Client-ID', 'Comfort', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Week', 'morgen'].map(w => `nl:${w}`),
             ...['Faikout-Auto', 'Komfort', 'Port', 'Punkt %s', 'Status'].map(w => `pl:${w}`),
-            ...['Compressor', 'Individual', 'Total'].map(w => `pt:${w}`),
+            ...['Individual', 'Total'].map(w => `pt:${w}`),
         ]);
         const texte = alleTexte();
         const fehler = [];
