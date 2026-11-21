@@ -2,7 +2,7 @@
 // 1. die gebauten Dateien in admin/custom sind vollstaendig (Einstieg, Manifest, jeder verwiesene Teil)
 // 2. die Texte der Komponenten gibt es in allen 11 Sprachen mit denselben Platzhaltern
 // 3. jede in admin/jsonConfig.json genannte Komponente wird exportiert
-// 4. die Kennlinie rendert in ihren Zustaenden ohne Fehler (braucht src-admin/node_modules)
+// 4. alle Komponenten rendern in ihren Zustaenden ohne Fehler (braucht src-admin/node_modules)
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert';
@@ -89,7 +89,12 @@ const walk = o => {
     }
 };
 walk(jsonConfig);
-assert.strictEqual(used.length, 4, 'vier Kennlinien: je Geraet und in der Vorgabe, Heizen und Kuehlen');
+const zahl = name => used.filter(u => u.name.endsWith(`/${name}`)).length;
+assert.deepStrictEqual(
+    Object.fromEntries(names.map(n => [n, zahl(n)])),
+    { KennlinieHeizen: 2, KennlinieKuehlen: 2, Stufen: 2, Feuchte: 1, Erklaerung: 1, Zeitplaene: 1 },
+    'Kennlinien und Temperaturstufen je Geraet und in der Vorlage, dazu Feuchte, Erklaerung und Zeitplaene',
+);
 for (const u of used) {
     const [set, file, comp] = u.name.split('/');
     assert.strictEqual(set, 'ConfigCustomFaikoutSet');
@@ -119,16 +124,29 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         // React trennt benachbarte Textstuecke mit leeren Kommentaren
         const html = Object.fromEntries(Object.entries(mod.renderAll()).map(([k, h]) => [k, h.replace(/<!-- -->/g, '')]));
         const griffe = h => (h.match(/role="slider"/g) || []).length;
-        assert.strictEqual(griffe(html.eigene), 4, 'vier ziehbare Punkte');
-        assert.ok(/Leistungsgrenze 95 %/.test(html.eigene), 'Arbeitspunkt beschriftet');
-        assert.ok(/Obergrenze 95 %/.test(html.eigene) && /Untergrenze 40 %/.test(html.eigene), 'Grenzen beschriftet');
-        assert.strictEqual((html.eigene.match(/type="number"/g) || []).length, 8, 'Tabelle: vier Zeilen');
-        assert.strictEqual(griffe(html.leer), 2, 'leere Liste: Punkte der Vorgabe, ziehbar');
-        assert.ok(/es gilt die Vorgabe/.test(html.leer), 'Hinweis auf die Vorgabe');
-        assert.strictEqual(griffe(html.falsch), 0, 'ungueltige Kennlinie: nichts zu ziehen');
+        // Kennlinie: vier Stuetzpunkte und die beiden Grenzlinien sind ziehbar
+        assert.strictEqual(griffe(html.eigene), 6, 'vier ziehbare Punkte und zwei Grenzlinien');
+        assert.ok(/Jetzt: außen −4,9 °C → 95 %/.test(html.eigene), 'Jetzt-Marker beschriftet');
+        assert.ok(/Obergrenze 95 % –/.test(html.eigene) && /Untergrenze 40 % –/.test(html.eigene), 'Grenzen beschriftet');
+        assert.ok(/Werte als Tabelle/.test(html.eigene), 'Tabelle nur eingeklappt');
+        assert.ok(/Kopieren/.test(html.eigene) && /Einfügen/.test(html.eigene) && /Vorlage übernehmen/.test(html.eigene), 'Werkzeugleiste');
+        assert.strictEqual(griffe(html.leer), 2, 'leere Liste: nur die Grenzlinien sind ziehbar');
+        assert.ok(/Vorlage \(nicht angepasst\)/.test(html.leer) && /Eigene Kennlinie anlegen/.test(html.leer), 'leer: Vorlage + Knopf');
+        assert.strictEqual(griffe(html.eingeklappt), 0, 'eingeklappt: nur die Titelzeile');
         assert.ok(/Die Heizkennlinie muss fallen/.test(html.falsch), 'Fehler im Klartext');
-        assert.ok(/Punkte ziehen oder Werte in der Tabelle/.test(html.eigene), 'Hinweistext');
-        ok('Rendern: eigene Punkte, leere Liste (Vorgabe) und ungueltige Kennlinie');
+        ok('Rendern Kennlinie: eigene Punkte, leere Liste (Vorlage), eingeklappt und ungueltig');
+        // Temperaturstufen
+        assert.strictEqual(griffe(html.stufenEigen), 2, 'eine eingeschaltete Stufe: Ziel und Hoechstleistung ziehbar');
+        assert.ok(/Werksvorgabe/.test(html.stufenEigen) && /Temperaturstufe hinzufügen/.test(html.stufenEigen), 'Stufen der Vorlage');
+        assert.ok(griffe(html.stufenWerk) >= 6, 'leere Liste: die Werksstufen');
+        assert.ok(/Es gilt die Vorlage/.test(html.stufenGeraet) && /Eigene Temperaturstufen anlegen/.test(html.stufenGeraet), 'Geraet ohne eigene Stufen');
+        // Feuchte, Erklaerung, Zeitplaene
+        assert.strictEqual(griffe(html.feuchte), 4, 'vier ziehbare Feuchte-Grenzen');
+        assert.ok(/Wohnzimmer/.test(html.feuchte) && /Abstand 9,4 K/.test(html.feuchte), 'Live-Werte');
+        assert.ok(/Reiter „Zeitpläne“/.test(html.erklaerung) && /Reiter „Regelung“/.test(html.erklaerung), 'Erklaerung nennt die Reiter');
+        assert.ok(/Werksplan \(nicht angepasst\)/.test(html.zeitplaeneAus) && /Vorlage bearbeiten/.test(html.zeitplaeneAus), 'Vorlage als eigene Zeile');
+        assert.ok(/Die Instanz läuft nicht/.test(html.zeitplaeneAus), 'gestoppte Instanz wird erklaert');
+        ok('Rendern Stufen, Feuchte, Erklaerung und Zeitplaene');
     } finally {
         await GlobalRegistrator.unregister();
         await server.close();

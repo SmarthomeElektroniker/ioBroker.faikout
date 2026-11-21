@@ -515,7 +515,9 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
     });
 
     it('Auswahlfelder (selectSendTo) bekommen IMMER ein Array von {label, value} - auch bei Fehlern und ohne Angaben', async () => {
+        // regelZeilenListe gehoerte zur alten Kopierfunktion - der Adapter beantwortet sie weiter, die Seite fragt nicht mehr
         const LISTEN = ['regelGeraeteListe', 'regelZeilenListe', 'modulEinstellungenListe', 'modulAuswahlListe', 'modulEinstellungenSicherungen'];
+        const IN_SEITE = LISTEN.filter(x => x !== 'regelZeilenListe');
         const jsonConfig = fs.readFileSync(path.join(__dirname, '..', 'admin', 'jsonConfig.json'), 'utf8');
         const inSeite = new Set();
         JSON.parse(jsonConfig, (k, v) => {
@@ -524,7 +526,7 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
             }
             return v;
         });
-        expect([...inSeite].sort()).to.eql([...LISTEN].sort());
+        expect([...inSeite].sort()).to.eql([...IN_SEITE].sort());
         const pruefe = (antwort, wo) => {
             expect(Array.isArray(antwort), wo).to.equal(true);
             for (const x of antwort) {
@@ -931,11 +933,32 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         const r = konfig.items.tabRegelung.items;
         expect(r.regelGeraete.type).to.equal('accordion');
         const attrs = r.regelGeraete.items.map(i => i.attr);
-        expect(attrs).to.include.members(['geraet', 'betrieb', 'strategie', 'kennlinieHeizen', 'kennlinieKuehlen', 'untergrenze', 'obergrenze', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'szenen', 'aussenQuelle', 'aussenDp', 'raumQuelle', 'raumDp', 'feuchteQuelle', 'feuchteDp', 'feuchteMassnahme', 'frostAb']);
+        expect(attrs).to.include.members(['geraet', 'betrieb', 'individuell', 'strategie', 'kennlinieHeizen', 'kennlinieKuehlen', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'stufen', 'aussenQuelle', 'aussenDp', 'raumQuelle', 'raumDp', 'feuchteQuelle', 'feuchteDp', 'feuchteMassnahme', 'frostAb']);
         expect(attrs).not.to.include('eigeneKennlinie');
+        // die Grenzen zieht man in der Kennlinie, die Temperaturstufen sind eine Komponente - keine Zahlenfelder, keine Tabelle
+        expect(attrs).not.to.include.members(['untergrenze', 'obergrenze', 'szenen']);
+        const z = Object.fromEntries(r.regelGeraete.items.map(i => [i.attr, i]));
+        expect(z.individuell).to.include({ type: 'checkbox', label: 'labelIndividuell', default: false });
+        // nur mit dem Haken sichtbar: alles, was sonst aus der Vorlage kommt; immer sichtbar: Fuehler und Frostschutz
+        for (const a of ['strategie', 'kennlinieHeizen', 'kennlinieKuehlen', 'vortagBezug', 'vortagZuschlag', 'vortagReferenzW', 'feuchteMassnahme', 'stufen', '_hStufen']) {
+            expect(z[a].hidden, a).to.match(/^!data\.individuell/);
+        }
+        for (const a of ['aussenQuelle', 'raumQuelle', 'feuchteQuelle', 'frostAb', 'betrieb']) {
+            expect(String(z[a].hidden || ''), a).to.not.contain('individuell');
+        }
+        // was gilt, steht da
+        expect(z._tFolgt).to.include({ text: 'textFolgtVorlage', hidden: 'data.individuell === true' });
+        expect(z._tIndividuell).to.include({ text: 'textIstIndividuell', hidden: 'data.individuell !== true' });
+        expect(z.stufen).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/Stufen' });
         expect(JSON.stringify(konfig)).not.to.contain('regelQuellen');
-        // ganz oben nur der Hinweis "Adapter laeuft nicht" (sichtbar bei gestoppter Instanz), dann der Probelauf
-        expect(Object.keys(r).slice(0, 2)).to.eql(['_nichtAktiv', 'regelProbelauf']);
+        // ganz oben nur der Hinweis "Adapter laeuft nicht" (sichtbar bei gestoppter Instanz), dann der farbige
+        // Statuskasten zum Probelauf mit seinem Schalter, dann die globale Vorlage, dann die Geraete
+        expect(Object.keys(r).slice(0, 5)).to.eql(['_nichtAktiv', '_probeAn', '_probeAus', 'regelProbelauf', '_hVorlage']);
+        const namen = Object.keys(r);
+        expect(namen.indexOf('regelKennlinieHeizen')).to.be.below(namen.indexOf('regelGeraete'));
+        expect(namen.indexOf('_feuchteGrafik')).to.be.below(namen.indexOf('regelGeraete'));
+        expect(r.regelKennlinieKuehlen.custom).to.eql({ eingeklappt: true });
+        expect(r._pKopie).to.equal(undefined);
         expect(r._nichtAktiv).to.include({ type: 'staticText', hidden: '_alive' });
     });
 
@@ -951,14 +974,16 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         const namen = Object.keys(r);
         expect(namen[namen.indexOf('regelGeraete') - 1]).to.equal('_tAufklappen');
         expect(admin('de').textRegelAufklappen).to.contain('aufzuklappen');
-        // Szenen: was Hoechstleistung, "Bedarf regeln" und "Feuchte regeln" bewirken - je Geraet und in der Vorgabe
+        // Temperaturstufen sind eine Komponente (sie erklaert Hoechstleistung und Schalter selbst); die alten
+        // Tabellen samt Spaltenerklaerung sind weg, und kein Text der Seite spricht mehr von Szenen
         const g = r.regelGeraete.items;
-        expect(g[g.findIndex(i => i.attr === 'szenen') + 1]).to.include({ type: 'staticText', text: 'textSzenenSpalten' });
-        expect(r._pVorgabe.items._tSzenenSpalten.text).to.equal('textSzenenSpalten');
+        expect(JSON.stringify(konfig)).to.not.match(/[sS]zenen|textSzenenSpalten/);
         for (const l of o.SPRACHEN) {
-            const t = admin(l);
-            for (const spalte of ['colSzDeckel', 'colSzBedarf', 'colSzFeuchte']) {
-                expect(t.textSzenenSpalten, `${l} ${spalte}`).to.contain(t[spalte]);
+            const benutzt = new Set(JSON.stringify(konfig).match(/"[a-zA-Z0-9_]+"/g).map(x => x.slice(1, -1)));
+            for (const [k, v] of Object.entries(admin(l))) {
+                if (benutzt.has(k)) {
+                    expect(v, `${l} ${k}`).to.not.match(/szene|scene|scène|cenário|escena|scenari|сцен|场景/i);
+                }
             }
         }
         // Feinabstimmung und "Fruehestens alle ... Minuten" erklaeren sich
@@ -966,9 +991,6 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         expect(r._pFein.items.regelProzentProK.help).to.equal('helpProzentProK');
         expect(r._pFein.items.regelBand.help).to.equal('helpBand');
         expect(g.find(i => i.attr === 'korrAbstandMin').help).to.equal('helpKorrAbstand');
-        // Kopieren: Erklaerung, Knopf mit Verb und Objekt
-        expect(Object.keys(r._pKopie.items)[0]).to.equal('_tKopie');
-        expect(admin('de').btnKopie).to.equal('Werte übernehmen');
         // "Pruefen" grau ohne Adresse: der Grund steht daneben
         expect(konfig.items.tabSearch.items._bindAdresseFehlt.hidden).to.contain('data.moduleAddress');
         // Moduleinstellungen wirken sofort - das steht da
@@ -985,6 +1007,57 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
         };
         lauf(konfig);
         expect(klein).to.eql([]);
+    });
+
+    it('jsonConfig: Reiter Zeitplaene - Erklaerung, Temperaturstufen der Vorlage, Wochenplaene; Handeingriff und Feiertage eingeklappt', () => {
+        const zp = konfig.items[o.REITER_ZEITPLAENE];
+        expect(zp).to.include({ type: 'panel', label: 'tabZeitplaene' });
+        const namen = Object.keys(zp.items);
+        expect(namen).to.eql(['_nichtAktiv', '_tZeitplaene', '_erklaerung', '_hStufen', '_tStufen', 'regelStufen', '_hPlaene', 'regelPlanVorlage', '_pPlanFein']);
+        const k = name => ({ type: 'custom', url: 'custom/customComponents.js', name: `ConfigCustomFaikoutSet/Components/${name}`, i18n: true, xs: 12, xl: 12 });
+        expect(zp.items._erklaerung).to.include(k('Erklaerung'));
+        expect(zp.items._erklaerung.custom).to.eql({ reiterZeitplaene: 'tabZeitplaene', reiterRegelung: 'tabRegelung' });
+        expect(zp.items.regelStufen).to.include(k('Stufen'));
+        expect(zp.items.regelPlanVorlage).to.include(k('Zeitplaene'));
+        expect(zp.items._pPlanFein).to.include({ type: 'panel', collapsable: true, label: 'headerPlanFein' });
+        expect(Object.keys(zp.items._pPlanFein.items)).to.include.members(['regelHandModus', 'regelHandStunden', 'regelFeiertagSonntag', 'regelFeiertageDE', 'regelFeiertage']);
+        for (const l of o.SPRACHEN) {
+            expect(admin(l).tabZeitplaene, l).to.equal(o.t('reiterZeitplaene', l));
+            expect(admin(l).headerSchritte, l).to.not.match(/drei|three|три|três|drie|trois|tre |tres|trzy|三/i);
+        }
+    });
+
+    it('jsonConfig: jede Einstellung der Instanz hat ein Feld oder gehoert einer Komponente; kein default an _-Feldern', () => {
+        const io = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'io-package.json'), 'utf8'));
+        const felder = new Set();
+        const mitVorgabe = [];
+        const lauf = (x, schluessel) => {
+            if (Array.isArray(x)) {
+                x.forEach(y => lauf(y, y && y.attr));
+            } else if (x && typeof x === 'object') {
+                if (typeof x.type === 'string' && typeof schluessel === 'string') {
+                    felder.add(schluessel);
+                    if (schluessel.startsWith('_') && 'default' in x) {
+                        mitVorgabe.push(schluessel);
+                    }
+                }
+                Object.entries(x).forEach(([k, v]) => lauf(v, k));
+            }
+        };
+        lauf(konfig.items, '');
+        // diese Werte schreibt eine Komponente (Kennlinie: Grenzen, Feuchte: vier Schwellen) bzw. nur der Adapter
+        const OHNE_FELD = {
+            regelUntergrenze: 'Kennlinie', regelObergrenze: 'Kennlinie',
+            regelFeuchteDtpEin: 'Feuchte', regelFeuchteDtpAus: 'Feuchte', regelFeuchteRhEin: 'Feuchte', regelFeuchteRhAus: 'Feuchte',
+            regelUmzugStand: 'Adapter', externClientIdStandard: 'Adapter', regelQuellen: 'Altbestand',
+        };
+        expect(Object.keys(io.native).filter(k => !felder.has(k) && !OHNE_FELD[k])).to.eql([]);
+        expect(Object.keys(OHNE_FELD).filter(k => felder.has(k))).to.eql([]);
+        expect(felder.has('_feuchteGrafik')).to.equal(true);
+        // ein default an einem _-Feld macht "Speichern" schon beim Oeffnen aktiv
+        expect(mitVorgabe).to.eql([]);
+        // die Werte ohne Feld behalten ihre Vorgaben
+        expect(io.native).to.include({ regelUntergrenze: 40, regelObergrenze: 100, regelFeuchteDtpEin: 4, regelFeuchteDtpAus: 6, regelFeuchteRhEin: 65, regelFeuchteRhAus: 58 });
     });
 
     it('jsonConfig: Kennlinien je Geraet sind die ziehbare Komponente am Tabellen-Attribut, das reine Bild ist weg', () => {
@@ -1078,10 +1151,8 @@ describe('Einstellungsseite: neue Felder je Geraet und Modul-Reiter', () => {
         }
         expect(m._modWrite.confirm.text).to.equal('confirmModText');
         expect(m._modWrite.disabled).to.equal('!data._modPlan');
-        // "Uebernehmen" speichert sofort und laedt neu - mit Rueckfrage
-        const kopie = konfig.items.tabRegelung.items._pKopie.items._kopie;
-        expect(kopie).to.include({ command: 'regelUebernehmen', reloadBrowser: true });
-        expect(kopie.confirm.text).to.equal('confirmKopieText');
+        // die alte Kopierfunktion ist weg - Kopieren/Einfuegen/Zuruecksetzen stehen unter jeder Grafik
+        expect(JSON.stringify(konfig)).to.not.contain('regelUebernehmen');
     });
 });
 
@@ -1116,7 +1187,7 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
         expect(hilfe.tS2.hidden).to.equal("_alive || data.brokerModus === 'extern'");
         expect(hilfe.tS2e).to.include({ text: 'textSchritt2Extern', hidden: "_alive || data.brokerModus !== 'extern'" });
         expect(hilfe._stand).to.include({ type: 'textSendTo', command: 'einrichtungStand', hidden: '!_alive' });
-        for (const k of ['hS1', 'tS1', 'hS2', 'hS3', 'tS3']) {
+        for (const k of ['hS1', 'tS1', 'hS2', 'hS3', 'tS3', 'hS4', 'tS4']) {
             expect(hilfe[k].hidden, k).to.equal('_alive');
         }
         const such = konfig.items.tabSearch.items;
@@ -1125,7 +1196,11 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
         expect(such.moduleAddress.hidden).to.equal("data.brokerModus === 'extern'");
         // Reiter: Wichtiges zuerst (Einrichtung, Regelung, Verbrauch), dahinter Module suchen und die
         // technischen Reiter, die im Namen als solche erkennbar sind
-        expect(Object.keys(konfig.items)).to.eql(['tabHelp', 'tabRegelung', 'tabConsumption', 'tabSearch', 'tabBroker', 'tabModule']);
+        expect(Object.keys(konfig.items)).to.eql(['tabHelp', 'tabZeitplaene', 'tabRegelung', 'tabConsumption', 'tabSearch', 'tabBroker', 'tabModule']);
+        expect(Object.keys(konfig.items)[1]).to.equal(o.REITER_ZEITPLAENE);
+        // Passwort: immer sichtbar, ohne Benutzername gesperrt - und das steht im Hilfetext
+        expect(b.pass).to.include({ hidden: "data.brokerModus === 'extern'", disabled: '!data.user', help: 'helpPass' });
+        expect(b.externPass).to.include({ hidden: "data.brokerModus !== 'extern'", disabled: '!data.externUser', help: 'helpExternPass' });
         const de = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'admin', 'i18n', 'de.json'), 'utf8'));
         expect([de.tabBroker, de.tabModule]).to.eql(['MQTT-Broker (Technik)', 'Moduleinstellungen (Technik)']);
         // Fortgeschrittenes ist eingeklappt und so benannt
@@ -1367,7 +1442,7 @@ describe('UX-Funde 21.11.2026', () => {
         expect(l.every(x => x.startsWith('offen"') && x.includes('○') && !x.includes('✓'))).to.equal(true);
         expect(klar(l[0])).to.contain('Keine Verbindung zum externen Broker mq.lan:1883').and.to.contain('MQTT-Broker (Technik)');
         expect(klar(l[1])).to.contain('Noch hat sich kein Modul gemeldet').and.to.contain('Extern-Betrieb: Die Module müssen auf deinen externen Broker zeigen').and.to.contain('Module suchen');
-        expect(klar(l[2])).to.contain('Noch keine Anlage eingerichtet').and.to.contain('Knopf mit dem Kalender').and.to.contain('Regelung');
+        expect(klar(l[2])).to.contain('Noch keine Anlage eingerichtet').and.to.contain('globalen Vorlage').and.to.contain('Regelung');
         expect(leer).to.contain('→');
         // kein Skript, keine fremden Adressen
         expect(html + leer).to.not.match(/<script|https?:/);
@@ -1455,21 +1530,17 @@ describe('UX-Funde 21.11.2026', () => {
 
     it('Einstellungsseite: Vorgabe-Kennlinie als Tabelle, Live-Wert neben jedem Fuehlerfeld, kein Rohtext helpBindIp', () => {
         const konfig = require('../admin/jsonConfig.json');
-        const v = konfig.items.tabRegelung.items._pVorgabe.items;
+        const v = konfig.items.tabRegelung.items;
         // seit 21.11.2026 Tabelle UND ziehbares Bild in einer Komponente (derselbe Wert: Zeilen {x, y})
         expect(v.regelKennlinieHeizen).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/KennlinieHeizen' });
         expect(v.regelKennlinieKuehlen).to.include({ type: 'custom', name: 'ConfigCustomFaikoutSet/Components/KennlinieKuehlen' });
         expect(v._bildH).to.equal(undefined);
         expect(v._bildK).to.equal(undefined);
         const io = require('../io-package.json');
-        // INTEGRATION: bis die jsonConfig umgebaut ist, traegt sie noch die alte Werksvorgabe (-10 °C: 95 %).
-        // Danach wieder schaerfen: expect(io.native.regelKennlinieHeizen).to.eql(v.regelKennlinieHeizen.default)
-        expect(io.native.regelKennlinieHeizen).to.eql([
-            { x: -10, y: 100 },
-            { x: 0, y: 75 },
-            { x: 7, y: 55 },
-            { x: 15, y: 40 },
-        ]);
+        // die Werksvorgabe steht an zwei Stellen - sie muss dieselbe sein
+        expect(io.native.regelKennlinieHeizen).to.eql(v.regelKennlinieHeizen.default);
+        expect(io.native.regelKennlinieKuehlen).to.eql(v.regelKennlinieKuehlen.default);
+        expect(io.native.regelKennlinieHeizen[0]).to.eql({ x: -10, y: 100 });
         expect(io.native.regelObergrenze).to.equal(100);
         const g = konfig.items.tabRegelung.items.regelGeraete.items;
         for (const [dp, art] of [['aussenDp', 'aussen'], ['raumDp', 'raum'], ['feuchteDp', 'feuchte']]) {

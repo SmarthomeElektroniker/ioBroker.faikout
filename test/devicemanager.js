@@ -909,8 +909,9 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(dm.REGEL_SYMBOL.plan).to.contain('<circle'); // Uhr
         expect(svgVon(items.regelKnoepfe.items.plan ? items.regelKnoepfe.items.plan.labelIcon || '' : ',')).to.not.contain('<rect');
         for (const l of SPRACHEN) {
-            const schritt = JSON.parse(require('node:fs').readFileSync(`${__dirname}/../admin/i18n/${l}.json`, 'utf8')).textSchritt3;
-            expect(schritt, l).to.match(/Kalender|calendar|календар|calendário|kalender|calendrier|calendario|kalendarz|日历/i);
+            // der Wochenplan steht seit dem Umbau im Reiter "Zeitplaene" (Schritt 4) und beschriftet auf der Karte
+            const schritt = JSON.parse(require('node:fs').readFileSync(`${__dirname}/../admin/i18n/${l}.json`, 'utf8')).textSchritt4;
+            expect(schritt, l).to.equal(oberflaeche.t('esPlanText', l));
             expect(schritt, l).to.not.match(/\bUhr\b|clock|часами|relógio|klok|horloge|orologio|reloj|zegar|时钟/i);
         }
         // Szene nur bei eingeschaltetem Wochenplan
