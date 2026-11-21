@@ -1144,6 +1144,10 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 2);
         await scharf(a, 'Plan_U');
         await laufen(a, uhr, anlage, 3);
+        // im Modulbetrieb war schon eine Sperre entstanden (das Modul hatte das Ziel verstellt)
+        anlage.target = 23;
+        await laufen(a, uhr, anlage, 2);
+        expect(a.wert('Plan_U.regulation.manual.locked')).to.equal(true);
         // bis vor zwei Minuten regelte das Modul selbst (Stand aus dem gespeicherten Zustand)
         const r = a.regelung.geraete.get('Plan_U');
         r.zustand.modulBetrieb = uhr.t - 2 * 60000;
@@ -1154,7 +1158,8 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         expect(a.wert('Plan_U.regulation.state')).to.equal('ok');
         // der Adapter hat seine Sollwerte durchgestellt
         expect([anlage.target, anlage.mode]).to.eql([21, 'heat']);
-        expect(a.zeilen.some(z => /manual change detected/.test(z.text))).to.equal(false);
+        expect(a.zeilen.filter(z => /manual change detected/.test(z.text))).to.have.length(1); // nur die vom Anfang
+        expect(a.zeilen.some(z => /handover from module control/.test(z.text))).to.equal(true);
         // nach der Frist (11 min) wird ein echter Handeingriff wieder erkannt
         await laufen(a, uhr, anlage, 10);
         anlage.target = 24;
