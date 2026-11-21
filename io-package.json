@@ -52,6 +52,7 @@
     "mode": "daemon",
     "type": "climate-control",
     "compact": true,
+    "stopTimeout": 3000,
     "connectionType": "local",
     "dataSource": "push",
     "adminUI": {

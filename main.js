@@ -301,6 +301,9 @@ class Faikout extends utils.Adapter {
     }
 
     verbindungPruefen() {
+        if (this.stopping) {
+            return; // beim Beenden nichts mehr schreiben (die Verbindung zur Datenbank schliesst gerade)
+        }
         // Verbunden heisst hier: mindestens ein faikout-Modul haengt am Broker.
         // Am externen Broker zaehlt zusaetzlich die Verbindung zum Broker selbst: faellt er weg, kommt
         // keine Meldung mehr an - "verbunden" waere dann falsch (Brokertest 21.11.2026).
@@ -1903,10 +1906,10 @@ class Faikout extends utils.Adapter {
             for (const [id, g] of this.geraete) {
                 await this.zaehlerstandSichern(id, g);
             }
+            await this.setState('info.connection', { val: false, ack: true });
             if (this.broker) {
                 await this.broker.stop();
             }
-            await this.setState('info.connection', { val: false, ack: true });
         } catch {
             // beim Herunterfahren nicht weiter stoeren
         }
