@@ -2763,7 +2763,6 @@
                             "md": 3,
                             "lg": 3,
                             "xl": 3,
-                            "default": "szenen",
                             "doNotSave": true
                         },
                         "_kopie": {
@@ -2774,7 +2773,7 @@
                             "reloadBrowser": true,
                             "showProcess": true,
                             "jsonData": "{\"von\":${JSON.stringify(data._kopieVon ?? \"\")},\"nach\":${JSON.stringify(data._kopieNach ?? \"\")},\"was\":${JSON.stringify(data._kopieWas ?? \"szenen\")},\"zeilen\":${JSON.stringify(data.regelGeraete || [])}}",
-                            "disabled": "!data._kopieVon || !data._kopieNach || data._kopieVon === data._kopieNach",
+                            "disabled": "!data._kopieVon || !data._kopieNach || !data._kopieWas || data._kopieVon === data._kopieNach",
                             "confirm": {
                                 "title": "confirmKopieTitle",
                                 "text": "confirmKopieText",
