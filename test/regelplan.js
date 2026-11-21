@@ -1166,6 +1166,85 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         expect(b.zeilen.some(z => /weekly schedule cannot be used/.test(z.text))).to.equal(false);
     });
 
+    it('entfernte Temperaturstufe mit Ersatzwahl: beim Start (nach "Speichern") ersetzt der Adapter sie in Plan und Abwesenheit - und nur dann', async () => {
+        const alt = JSON.stringify([[{ t: 0, s: 'abwesend' }, { t: 480, s: 'komfort' }], [], [], [], [{ t: 600, s: 'abwesend' }], [], []]);
+        const neu = JSON.stringify([[{ t: 0, s: 'absenken' }, { t: 480, s: 'komfort' }], [], [], [], [{ t: 600, s: 'absenken' }], [], []]);
+        const abw = JSON.stringify({ from: ort(2030, 1, 1), to: ort(2030, 1, 8), level: 'abwesend' });
+        // gespeichert: "Abwesend" entfernt; die Ersatzstufe "Absenken" nennt, wofuer sie einspringt
+        const ohneAbwesend = [
+            { id: 'komfort', name: 'Komfort', soll: 21 },
+            { id: 'absenken', name: 'Absenken', soll: 19, fan: 'night', ersetzt: ['abwesend'] },
+            { id: 'aus', name: 'Aus', power: false, soll: 17 },
+        ];
+        const { a, uhr } = aufbau({ regelProbelauf: false, regelStufen: ohneAbwesend }, START);
+        a.werte.set('Plan_E.regulation.schedule.weekJson', { val: alt, ack: true });
+        a.werte.set('Plan_E.regulation.schedule.absenceJson', { val: abw, ack: true });
+        a.werte.set('Plan_E.regulation.schedule.active', { val: true, ack: true });
+        await laufen(a, uhr, new Anlage({ name: 'Plan E', target: 21, mode: 'heat' }), 2);
+        expect(a.wert('Plan_E.regulation.schedule.weekJson')).to.equal(neu);
+        expect(JSON.parse(a.wert('Plan_E.regulation.schedule.absenceJson'))).to.eql({ from: ort(2030, 1, 1), to: ort(2030, 1, 8), level: 'absenken' });
+        const meldungen = a.zeilen.filter(z => z.stufe === 'info' && /adapted to the temperature levels/.test(z.text));
+        expect(meldungen.map(z => z.text)).to.eql([
+            'Plan E: weekly schedule adapted to the temperature levels - removed level "abwesend" replaced by "Absenken"',
+            'Plan E: absence adapted to the temperature levels - removed level "abwesend" replaced by "Absenken"',
+        ]);
+        // der Plan laeuft (keine Warnung "cannot be used")
+        expect(a.zeilen.some(z => /weekly schedule cannot be used/.test(z.text))).to.equal(false);
+        expect(a.wert('Plan_E.regulation.schedule.level')).to.equal('Absenken'); // Freitag 21:30: seit 10:00 der Ersatz
+
+        // die Stufe gibt es (noch oder wieder): ein alter Ersatz-Eintrag aendert nichts
+        const mitAbwesend = [...ohneAbwesend, { id: 'abwesend', name: 'Abwesend', soll: 17 }];
+        const { a: b, uhr: uhrB } = aufbau({ regelProbelauf: false, regelStufen: mitAbwesend }, START);
+        b.werte.set('Plan_F.regulation.schedule.weekJson', { val: alt, ack: true });
+        await laufen(b, uhrB, new Anlage({ name: 'Plan F', target: 21, mode: 'heat' }), 2);
+        expect(b.wert('Plan_F.regulation.schedule.weekJson')).to.equal(alt);
+        expect(b.zeilen.some(z => /adapted to the temperature levels/.test(z.text))).to.equal(false);
+
+        // individuelles Geraet: es zaehlt der Ersatz in SEINER Liste, nicht der der Vorlage
+        const eigene = [
+            { name: 'Tag', soll: 22, ersetzt: ['abend'] },
+            { name: 'Nacht', soll: 18 },
+        ];
+        const planEigen = JSON.stringify([[{ t: 360, s: 'tag' }, { t: 1080, s: 'abend' }, { t: 1320, s: 'nacht' }], [], [], [], [], [], []]);
+        const { a: c, uhr: uhrC } = aufbau(
+            { regelProbelauf: false, regelStufen: ohneAbwesend, regelGeraete: [{ geraet: 'Plan G', individuell: true, stufen: eigene }] },
+            START,
+        );
+        c.werte.set('Plan_G.regulation.schedule.weekJson', { val: planEigen, ack: true });
+        await laufen(c, uhrC, new Anlage({ name: 'Plan G', target: 21, mode: 'heat' }), 2);
+        expect(c.wert('Plan_G.regulation.schedule.weekJson')).to.equal(planEigen.replace('abend', 'tag'));
+    });
+
+    it('Ersatz entfernter Stufen: Kette, unbekannte ohne Ersatz bleiben, vorhandene Stufen werden nie ersetzt', () => {
+        const liste = [
+            { name: 'A', soll: 20, ersetzt: ['c', 'd'] }, // d wurde frueher durch c ersetzt, c jetzt durch a
+            { name: 'B', soll: 18, ersetzt: ['b', 'A', 'x'] }, // sich selbst und Vorhandenes: wirkungslos
+        ];
+        const sz = wochenplan.szenenLesen(liste).szenen;
+        const ersatz = wochenplan.ersatzLesen(liste);
+        expect([...ersatz]).to.eql([['c', 'a'], ['d', 'a'], ['a', 'b'], ['x', 'b']]);
+        expect(wochenplan.ersatzZiel('c', ersatz, sz)).to.equal('a');
+        expect(wochenplan.ersatzZiel('gibtsnicht', ersatz, sz)).to.equal(null);
+        // Kette ueber eine Stufe, die es selbst nicht mehr gibt
+        expect(wochenplan.ersatzZiel('q', new Map([['q', 'r'], ['r', 'a']]), sz)).to.equal('a');
+        expect(wochenplan.ersatzZiel('q', new Map([['q', 'r'], ['r', 'q']]), sz)).to.equal(null); // Kreis
+        const roh = JSON.stringify([[{ t: 0, s: 'a' }, { t: 60, s: 'c' }], [{ t: 0, s: 'weg' }], [], [], [], [], [{ t: 5, s: 'd', x: 1 }]]);
+        const r = wochenplan.planErsetzen(roh, ersatz, sz);
+        expect(r.ersetzt).to.eql([{ von: 'c', nach: 'a' }, { von: 'd', nach: 'a' }]);
+        // "a" bleibt "a", obwohl ein Eintrag a -> b existiert; "weg" hat keinen Ersatz und bleibt stehen
+        expect(r.plan).to.eql([[{ t: 0, s: 'a' }, { t: 60, s: 'a' }], [{ t: 0, s: 'weg' }], [], [], [], [], [{ t: 5, s: 'a', x: 1 }]]);
+        expect(wochenplan.planLesen(r.plan, sz).fehler).to.contain('weg');
+        expect(wochenplan.planErsetzen('', ersatz, sz)).to.equal(null);
+        expect(wochenplan.planErsetzen('{kaputt', ersatz, sz)).to.equal(null);
+        expect(wochenplan.planErsetzen([[], []], ersatz, sz)).to.equal(null);
+        expect(wochenplan.planStufen(roh)).to.eql(['a', 'c', 'weg', 'd']);
+        expect(wochenplan.planStufen('')).to.eql([]);
+        // ohne Ersatzangaben: leere Zuordnung, `ersetzt` stoert szenenLesen nicht
+        expect(wochenplan.ersatzLesen([]).size).to.equal(0);
+        expect(wochenplan.ersatzLesen(null).size).to.equal(0);
+        expect([...sz.keys()]).to.eql(['a', 'b']);
+    });
+
     it('Knoepfe +/- auf der Karte: ein Schritt der Anlage vom jetzigen Sollwert, in den Grenzen', async () => {
         const { a, uhr } = aufbau({ regelProbelauf: false }, START);
         const anlage = new Anlage({ name: 'Plan Y', target: 21, mode: 'heat' });

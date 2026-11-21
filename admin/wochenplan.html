@@ -91,6 +91,34 @@
             .chip.plain {
                 padding-right: 12px;
             }
+            /* level that exists in the form only (not saved yet): shown, but not selectable */
+            .chip.unsaved {
+                opacity: 0.7;
+                outline: 2px dashed var(--muted);
+                outline-offset: 1px;
+            }
+            .chip.unsaved .extra::after {
+                content: ' · ' attr(data-mark);
+                font-style: italic;
+            }
+            .menu button[disabled] {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            #source {
+                color: var(--fg);
+                font-size: 13px;
+                font-weight: 600;
+                margin: 0 0 6px 0;
+            }
+            #unsaved {
+                border: 1px solid var(--line);
+                border-left: 4px solid #d98a00;
+                border-radius: 4px;
+                padding: 6px 10px;
+                margin: 0 0 10px 0;
+                font-size: 13px;
+            }
             .chip .name {
                 margin-right: 6px;
             }
@@ -587,7 +615,13 @@
         </style>
     </head>
     <body>
+        <div id="source"></div>
         <div id="legend"></div>
+        <div
+            id="unsaved"
+            role="note"
+            hidden
+        ></div>
         <div id="hint"></div>
         <div
             id="grid"
@@ -915,20 +949,29 @@
                 }
                 /** Kopfzeile: je Temperaturstufe ein farbiges Etikett "Komfort 21 °C · max. 95 %" (nur Anzeige). */
                 function legend() {
+                    // where the levels come from (global template or the unit's own) - the same line as in the tab
+                    $('source').textContent = info.stufenAus || '';
+                    $('unsaved').textContent = info.stufenNeu || '';
+                    $('unsaved').hidden = !info.stufenNeu;
                     const el = $('legend');
                     el.innerHTML = '';
-                    for (const { type, info: extra } of info.types) {
+                    for (const { type, info: extra, neu } of info.types) {
                         const c = document.createElement('div');
-                        c.className = 'chip plain';
+                        c.className = `chip plain${neu ? ' unsaved' : ''}`;
+                        c.dataset.type = type;
                         c.style.setProperty('--chip', `var(--c-${type})`);
                         const name = document.createElement('span');
                         name.className = 'name';
                         name.textContent = label(type);
                         c.appendChild(name);
-                        if (extra) {
+                        if (extra || neu) {
                             const x = document.createElement('span');
                             x.className = 'extra';
-                            x.textContent = extra;
+                            x.textContent = extra || '';
+                            if (neu) {
+                                x.dataset.mark = info.neuMarke || '';
+                                c.title = info.stufenNeu || '';
+                            }
                             c.appendChild(x);
                         }
                         el.appendChild(c);
@@ -974,10 +1017,11 @@
                     $('absLevelLabel').textContent = info.texts.pSzeneInZeit;
                     const sel = $('absLevel');
                     sel.innerHTML = '';
-                    for (const { type } of info.types) {
+                    for (const { type, neu } of info.types) {
                         const o = document.createElement('option');
                         o.value = type;
-                        o.textContent = label(type);
+                        o.textContent = label(type) + (neu ? ` (${info.neuMarke || ''})` : '');
+                        o.disabled = !!neu;
                         sel.appendChild(o);
                     }
                     const show = () => {
@@ -1243,7 +1287,9 @@
                     if (points.some(p => p.m === m) || !checkRoom(1)) {
                         return;
                     }
-                    const types = info.types.map(t => t.type);
+                    // levels that are not saved yet cannot be used in a unit's schedule (it is written at once)
+                    const usable = info.types.filter(t => !t.neu);
+                    const types = (usable.length ? usable : info.types).map(t => t.type);
                     const cur = typeAt(m) || types[0];
                     const p = { m, type: types[(types.indexOf(cur) + 1) % types.length] };
                     points.push(p);
@@ -1274,11 +1320,16 @@
                     menuEl.setAttribute('aria-label', title.textContent);
                     menuEl.appendChild(title);
                     let first = null;
-                    for (const { type } of info.types) {
+                    for (const { type, neu } of info.types) {
                         const b = document.createElement('button');
                         b.setAttribute('role', 'menuitem');
                         b.innerHTML = `<span class="swatch" style="background:var(--c-${type})"></span>`;
                         b.appendChild(document.createTextNode(blockText(type) + (type === p.type ? '  ✓' : '')));
+                        if (neu) {
+                            unsavedItem(b);
+                            menuEl.appendChild(b);
+                            continue;
+                        }
                         b.addEventListener('click', () => {
                             closeMenu();
                             const bl = blocksOf(d).find(x => x.a === p.m);
@@ -1296,7 +1347,15 @@
                         }
                     }
                     placeMenu(menuEl, anchor);
-                    first.focus({ preventScroll: true });
+                    if (first) {
+                        first.focus({ preventScroll: true });
+                    }
+                }
+                /** Menu entry of a level that is not saved yet: visible with its reason, not selectable. */
+                function unsavedItem(b) {
+                    b.disabled = true;
+                    b.title = info.stufenNeu || '';
+                    b.appendChild(document.createTextNode(` (${info.neuMarke || ''})`));
                 }
                 function removePoint(p) {
                     if (points.length <= 1) {
@@ -1386,12 +1445,16 @@
                         return b;
                     };
                     let first = null;
-                    for (const { type } of info.types) {
+                    for (const { type, neu } of info.types) {
                         const b = item(`<span class="swatch" style="background:var(--c-${type})"></span>`, () => {
                             closeMenu();
                             setType(d, bl, type);
                         });
                         b.appendChild(document.createTextNode(blockText(type) + (type === bl.type ? '  ✓' : '')));
+                        if (neu) {
+                            unsavedItem(b);
+                            continue;
+                        }
                         if (type === bl.type || !first) {
                             first = b;
                         }
@@ -1450,7 +1513,9 @@
                         del.appendChild(document.createTextNode(info.texts.pLoeschen));
                     }
                     placeMenu(menuEl, anchor, pointer);
-                    first.focus({ preventScroll: true });
+                    if (first) {
+                        first.focus({ preventScroll: true });
+                    }
                 }
                 /** Keyboard and position of a menu next to its element (below, or above if there is no room) */
                 function placeMenu(menuEl, anchor, pointer) {

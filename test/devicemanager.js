@@ -1402,8 +1402,229 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 expect(ohne).to.include({ eintrag: false, individuell: false, betrieb: 'adapter', raum: null });
             });
 
+            describe('Temperaturstufen: EINE Quelle fuer Reiter, Editor und Geraetekarte', () => {
+                const TAG_NACHT = [
+                    { name: 'Tag', soll: 22, deckel: 90 },
+                    { name: 'Nacht', soll: 18, fan: 'night', deckel: 60 },
+                ];
+                const FUENF = [
+                    { id: 'komfort', name: 'Komfort', soll: 21 },
+                    { id: 'absenken', name: 'Absenken', soll: 19, fan: 'night', deckel: 60 },
+                    { id: 'abwesend', name: 'Abwesend', soll: 17, deckel: 50 },
+                    { id: 'aus', name: 'Aus', power: false, soll: 17, deckel: 95 },
+                    { id: 'stufe_5', name: 'Party', soll: 23 },
+                ];
+                /** Editor wie aus dem Reiter (mit Formular) bzw. von der Karte (ohne) oeffnen und seine Info holen. */
+                const editor = async (a, device, formular) => {
+                    const r = await frage(a, 'wochenplanOeffnen', { device, ...(formular ? { formular } : {}) });
+                    expect(r.error, r.error).to.equal(undefined);
+                    return { token: r.token, info: await frage(a, 'wochenplanInfo', { device, token: r.token }) };
+                };
+                /** Stufen so, wie sie der Editor zeigt: ID, Name, Farbe hell/dunkel - in seiner Reihenfolge. */
+                const ausEditor = info => info.types.map(t => [t.type, t.label, info.farben.hell[t.type], info.farben.dunkel[t.type]]);
+                const ausListe = stufen => stufen.map(e => [e.id, e.name, e.farbe.hell, e.farbe.dunkel]);
+
+                it('Geraet folgt der Vorlage: Editor und Reiter zeigen genau die Stufen der Vorlage (IDs, Namen, Farben, Reihenfolge)', async () => {
+                    const { a } = await mitRegelung({ 'regulation.schedule.weekJson': werk });
+                    a.config.regelStufen = FUENF;
+                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', individuell: false, stufen: TAG_NACHT }]; // ohne Haken zaehlen sie nicht
+                    const liste = await frage(a, 'zeitplaeneListe', {});
+                    const { info } = await editor(a, ID);
+                    expect(info.types.map(t => t.label)).to.eql(['Komfort', 'Absenken', 'Abwesend', 'Aus', 'Party']);
+                    expect(ausEditor(info)).to.eql(ausListe(liste.stufen[ID]));
+                    expect(ausEditor(info)).to.eql(ausListe(liste.stufen.vorlage));
+                    expect(info.stufenQuelle).to.equal('vorlage');
+                    expect(info.stufenAus).to.equal('Temperaturstufen aus: globale Vorlage');
+                    expect(liste.geraete[0]).to.include({ stufenQuelle: 'vorlage', individuell: false });
+                    expect(info.stufenNeu).to.equal('');
+                    expect(info.types.some(t => t.neu)).to.equal(false);
+                    // die Vorlage selbst: dieselbe Liste
+                    expect(ausEditor((await editor(a, 'vorlage')).info)).to.eql(ausListe(liste.stufen.vorlage));
+                });
+
+                it('individuelles Geraet: Editor und Reiter zeigen seine eigenen Stufen und sagen das', async () => {
+                    const { a } = await mitRegelung();
+                    a.config.regelStufen = FUENF;
+                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', individuell: true, stufen: TAG_NACHT }];
+                    const liste = await frage(a, 'zeitplaeneListe', {});
+                    const { info } = await editor(a, ID);
+                    expect(info.types.map(t => t.label)).to.eql(['Tag', 'Nacht']);
+                    expect(ausEditor(info)).to.eql(ausListe(liste.stufen[ID]));
+                    expect(info.stufenQuelle).to.equal('eigen');
+                    expect(info.stufenAus).to.equal('Temperaturstufen aus: eigene Stufen dieser Anlage (individuell)');
+                    expect(liste.geraete[0]).to.include({ stufenQuelle: 'eigen', individuell: true });
+                    expect(liste.stufen.vorlage.map(e => e.name)).to.eql(['Komfort', 'Absenken', 'Abwesend', 'Aus', 'Party']);
+                    // Haken gesetzt, aber keine eigene Liste: es gelten die Stufen der Vorlage - und so steht es da
+                    a.config.regelGeraete = [{ geraet: 'Wohnzimmer AC', individuell: true, stufen: [] }];
+                    const leer = await editor(a, ID);
+                    expect(leer.info.types.map(t => t.type)).to.eql(['komfort', 'absenken', 'abwesend', 'aus', 'stufe_5']);
+                    expect(leer.info.stufenQuelle).to.equal('vorlage');
+                });
+
+                it('aus dem Reiter geoeffnet gelten die Stufen des FORMULARS - neu angelegt, umbenannt, umsortiert, ungespeichert', async () => {
+                    const { a } = await mitRegelung({ 'regulation.schedule.weekJson': werk });
+                    // gespeichert: Werksstufen; im Formular: Komfort umbenannt, Reihenfolge gedreht, fuenfte Stufe neu
+                    const formular = {
+                        regelStufen: [
+                            { id: 'absenken', name: 'Sparen', soll: 18.5 },
+                            { id: 'komfort', name: 'Wohlfühlen', soll: 21.5 },
+                            { id: 'abwesend', name: 'Abwesend', soll: 17 },
+                            { id: 'aus', name: 'Aus', power: false, soll: 17 },
+                            { id: 'stufe_5', name: 'Stufe 5', soll: 20 },
+                        ],
+                        regelGeraete: [],
+                    };
+                    const liste = await frage(a, 'zeitplaeneListe', { formular });
+                    const { info } = await editor(a, ID, formular);
+                    expect(info.types.map(t => t.label)).to.eql(['Sparen', 'Wohlfühlen', 'Abwesend', 'Aus', 'Stufe 5']);
+                    expect(info.types[1].info).to.equal('21,5 °C');
+                    expect(ausEditor(info)).to.eql(ausListe(liste.stufen[ID]));
+                    expect(ausEditor(info)).to.eql(ausListe(liste.stufen.vorlage));
+                    // die neue Stufe ist gekennzeichnet (Editor und Liste), der Plan bleibt lesbar (er haengt an den IDs)
+                    expect(info.types.map(t => !!t.neu)).to.eql([false, false, false, false, true]);
+                    expect(liste.stufen[ID].map(e => !!e.neu)).to.eql([false, false, false, false, true]);
+                    expect(info.stufenNeu).to.contain('„Stufe 5“').and.to.contain('Speichere zuerst die Einstellungen');
+                    expect(info.neuMarke).to.equal('neu – erst speichern');
+                    expect(info.program).to.have.length(31);
+                    expect(liste.geraete[0]).to.include({ planFehlt: false, stufeName: liste.geraete[0].stufe === 'komfort' ? 'Wohlfühlen' : 'Sparen' });
+                    // ohne Formular (Geraetekarte): der gespeicherte Stand
+                    expect((await editor(a, ID)).info.types.map(t => t.label)).to.eql(['Komfort', 'Absenken', 'Abwesend', 'Aus']);
+                    // Formular: Geraet eben erst auf "individuell" gestellt, eigene Stufen noch ungespeichert
+                    const eigen = { regelStufen: [], regelGeraete: [{ geraet: ID, individuell: true, stufen: TAG_NACHT }] };
+                    const e = await editor(a, ID, eigen);
+                    expect(e.info.types.map(t => t.label)).to.eql(['Tag', 'Nacht']);
+                    expect(e.info.stufenQuelle).to.equal('eigen');
+                    expect(e.info.types.every(t => t.neu)).to.equal(true);
+                    expect(e.info.stufenNeu).to.contain('Tag, Nacht');
+                    expect((await frage(a, 'zeitplaeneListe', { formular: eigen })).geraete[0]).to.include({ stufenQuelle: 'eigen', individuell: true });
+                    // leere Liste im Formular = Werksstufen, auch wenn andere gespeichert sind
+                    a.config.regelStufen = FUENF;
+                    const werkF = { regelStufen: [], regelGeraete: [] };
+                    expect((await editor(a, ID, werkF)).info.types.map(t => t.type)).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
+                    expect((await editor(a, 'vorlage', werkF)).info.types.map(t => t.type)).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
+                    expect((await frage(a, 'zeitplaeneListe', { formular: werkF })).stufen.vorlage).to.have.length(4);
+                });
+
+                it('fehlerhafte Stufen im Formular: der Editor oeffnet nicht mit einer anderen Liste, sondern sagt es', async () => {
+                    const { a } = await mitRegelung();
+                    const doppelt = { regelStufen: [{ name: 'A', soll: 20 }, { name: 'A', soll: 21 }], regelGeraete: [] };
+                    const r = await frage(a, 'wochenplanOeffnen', { device: ID, formular: doppelt });
+                    expect(r.error).to.contain('Die Temperaturstufen im Formular sind fehlerhaft').and.to.contain('Berichtige sie zuerst dort');
+                    // die Liste bleibt benutzbar (gespeicherter Stand)
+                    expect((await frage(a, 'zeitplaeneListe', { formular: doppelt })).stufen.vorlage).to.have.length(4);
+                });
+
+                it('Plan mit ungespeicherter Stufe: nichts wird geschrieben, die Meldung sagt, was zu tun ist; mit gespeicherten Stufen wird geschrieben', async () => {
+                    const { a } = await mitRegelung({ 'regulation.schedule.weekJson': werk });
+                    const formular = { regelStufen: [...FUENF.slice(0, 4), { id: 'stufe_5', name: 'Party', soll: 23 }], regelGeraete: [] };
+                    const { token } = await editor(a, ID, formular);
+                    // die Seite laesst die neue Stufe nicht waehlen; kommt sie trotzdem, lehnt der Adapter ab
+                    const mitNeu = [{ day: 'Mon', time: '06:00', type: 'komfort' }, { day: 'Sat', time: '20:00', type: 'stufe_5' }];
+                    expect(await frage(a, 'wochenplanEntwurf', { device: ID, token, program: mitNeu, abwesenheit: {} })).to.eql({ ok: true, count: 2 });
+                    const nein = await frage(a, 'wochenplanSpeichern', { device: ID, token });
+                    expect(nein.error).to.equal(
+                        'Speichere zuerst die Einstellungen – die Temperaturstufe „Party“ ist neu und gilt erst danach. Der Plan wurde nicht geschrieben.',
+                    );
+                    expect(a.gesetzt).to.eql([]);
+                    // der Entwurf lebt weiter: Stufe austauschen, uebernehmen
+                    const ohneNeu = [{ day: 'Mon', time: '06:00', type: 'komfort' }, { day: 'Sat', time: '20:00', type: 'absenken' }];
+                    await frage(a, 'wochenplanEntwurf', { device: ID, token, program: ohneNeu, abwesenheit: {} });
+                    expect(await frage(a, 'wochenplanSpeichern', { device: ID, token })).to.eql({ ok: true, einschaltenNoetig: false });
+                    expect(geschrieben(a, 'regulation.schedule.weekJson')).to.eql([
+                        { val: JSON.stringify([[{ t: 360, s: 'komfort' }], [], [], [], [], [{ t: 1200, s: 'absenken' }], []]), ack: false },
+                    ]);
+                    // auch eine Abwesenheit mit der neuen Stufe wird nicht geschrieben
+                    a.gesetzt = [];
+                    const zwei = await editor(a, ID, formular);
+                    await frage(a, 'wochenplanEntwurf', {
+                        device: ID,
+                        token: zwei.token,
+                        program: ohneNeu,
+                        abwesenheit: { aktiv: true, von: '2030-01-01T00:00', bis: '2030-01-08T00:00', szene: 'stufe_5' },
+                    });
+                    expect((await frage(a, 'wochenplanSpeichern', { device: ID, token: zwei.token })).error).to.contain('„Party“');
+                    expect(a.gesetzt).to.eql([]);
+                    // Plan der Vorlage (Formularwert): die neue Stufe ist erlaubt - beides gilt erst mit "Speichern"
+                    const v = await editor(a, 'vorlage', formular);
+                    expect(v.info.types.some(t => t.neu)).to.equal(false);
+                    await frage(a, 'wochenplanEntwurf', { device: 'vorlage', token: v.token, program: mitNeu });
+                    expect((await frage(a, 'wochenplanSpeichern', { device: 'vorlage', token: v.token })).week).to.contain('stufe_5');
+                    expect(a.gesetzt).to.eql([]);
+                });
+
+                it('entfernte Stufe mit Ersatzwahl: Reiter und Editor zeigen den Plan wie nach dem Speichern, geschrieben wird dabei nichts', async () => {
+                    const plan = JSON.stringify([[{ t: 0, s: 'abwesend' }, { t: 420, s: 'komfort' }], [], [], [], [], [], []]);
+                    const { a } = await mitRegelung({ 'regulation.schedule.weekJson': plan });
+                    // gespeichert: Werksstufen. Formular: "Abwesend" entfernt, Ersatz "Absenken" (steht an der Ersatzstufe)
+                    const formular = {
+                        regelStufen: [
+                            { id: 'komfort', name: 'Komfort', soll: 21 },
+                            { id: 'absenken', name: 'Absenken', soll: 19, ersetzt: ['abwesend'] },
+                            { id: 'aus', name: 'Aus', power: false, soll: 17 },
+                        ],
+                        regelGeraete: [],
+                    };
+                    const liste = await frage(a, 'zeitplaeneListe', { formular });
+                    const g = liste.geraete[0];
+                    expect(g).to.include({ planFehlt: false, planFehler: '' });
+                    expect(g.planStufen).to.eql(['abwesend', 'komfort']); // was der hinterlegte Plan wirklich nennt
+                    expect(g.ersatz).to.eql([{ von: 'abwesend', nach: 'absenken', vonName: 'Abwesend', nachName: 'Absenken' }]);
+                    expect(g.woche[0][0]).to.eql({ von: 0, bis: 420, stufe: 'absenken' });
+                    const { info } = await editor(a, ID, formular);
+                    expect(info.program).to.eql([
+                        { day: 'Mon', time: '00:00', type: 'absenken' },
+                        { day: 'Mon', time: '07:00', type: 'komfort' },
+                    ]);
+                    expect(a.gesetzt).to.eql([]);
+                    // ohne Ersatzwahl bleibt es bei der Meldung "Plan passt nicht"
+                    const ohne = { regelStufen: formular.regelStufen.map(e => ({ ...e, ersetzt: undefined })), regelGeraete: [] };
+                    const o1 = (await frage(a, 'zeitplaeneListe', { formular: ohne })).geraete[0];
+                    expect(o1.planFehlt).to.equal(true);
+                    expect(o1.planFehler).to.contain('abwesend');
+                    expect(o1.ersatz).to.eql([]);
+                    // gespeicherter Stand (ohne Formular): nichts zu ersetzen
+                    expect((await frage(a, 'zeitplaeneListe', {})).geraete[0].ersatz).to.eql([]);
+                });
+
+                it('"Vorgabeplan laden" im Editor nimmt den Plan der Vorlage aus dem Formular', async () => {
+                    const { a } = await mitRegelung();
+                    const eigen = JSON.stringify([[{ t: 300, s: 'aus' }], [], [], [], [], [], []]);
+                    const { token } = await editor(a, ID, { regelStufen: [], regelGeraete: [], regelPlanVorlage: eigen });
+                    expect((await frage(a, 'wochenplanVorgabe', { device: ID, token })).program).to.eql([{ day: 'Mon', time: '05:00', type: 'aus' }]);
+                });
+
+                it('Farben: die Karten der Stufen (Stufen.tsx) und der Reiter (Zeitplaene.tsx) benutzen die Tabelle des Adapters', () => {
+                    const fs = require('node:fs');
+                    const pfad = require('node:path');
+                    const lies = datei => fs.readFileSync(pfad.join(__dirname, '..', 'src-admin', 'src', datei), 'utf8');
+                    const hex = text => (text.match(/#[0-9a-f]{6}/gi) || []).map(x => x.toLowerCase());
+                    const adapter = fs.readFileSync(pfad.join(__dirname, '..', 'lib', 'oberflaeche.js'), 'utf8');
+                    const tabelle = /const SZENEN_FARBEN = \{[\s\S]*?\n\};/.exec(adapter)[0];
+                    const stufen = /const FARBEN = \{[\s\S]*?\n\};/.exec(lies('Stufen.tsx'))[0];
+                    expect(hex(stufen)).to.eql(hex(tabelle));
+                    const paare = /const HELL_ZU_DUNKEL[^=]*= \{[\s\S]*?\n\};/.exec(lies('Zeitplaene.tsx'))[0];
+                    const alle = hex(tabelle);
+                    // hell -> dunkel: komfort..aus (0-3 -> 4-7), weitere (8-12 -> 13-17)
+                    const erwartet = [];
+                    for (let i = 0; i < 4; i++) {
+                        erwartet.push(alle[i], alle[i + 4]);
+                    }
+                    for (let i = 8; i < 13; i++) {
+                        erwartet.push(alle[i], alle[i + 5]);
+                    }
+                    expect(hex(paare)).to.eql(erwartet);
+                });
+
+                it('Wochenplan-Seite zeigt die Herkunft der Stufen und sperrt ungespeicherte', () => {
+                    const html = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'admin', 'wochenplan.html'), 'utf8');
+                    for (const teil of ['id="source"', 'info.stufenAus', 'info.stufenNeu', 'unsavedItem(b)', 'info.neuMarke']) {
+                        expect(html, teil).to.contain(teil);
+                    }
+                });
+            });
+
             it('Texte der Befehle in allen Sprachen', () => {
-                for (const k of ['zpUnbekannt', 'zpKeinEntwurf', 'zpVorlageNicht', 'zpKeinDatenpunkt', 'zpSchaltpunkt', 'planVerweis', 'tipWochenplan']) {
+                for (const k of ['zpUnbekannt', 'zpKeinEntwurf', 'zpVorlageNicht', 'zpKeinDatenpunkt', 'zpSchaltpunkt', 'planVerweis', 'tipWochenplan', 'zpStufeNeu', 'zpStufenFehler', 'pStufenVorlage', 'pStufenEigen', 'pStufenNeu', 'pStufenNeuMehrere', 'pStufeNeuMarke']) {
                     for (const l of SPRACHEN) {
                         expect(oberflaeche.TEXTE[k][l], `${k} ${l}`).to.be.a('string').and.not.equal('');
                     }
