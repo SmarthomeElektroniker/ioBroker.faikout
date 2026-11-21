@@ -123,6 +123,38 @@ function lesen(roh: unknown): Stufe {
 }
 
 const liste = (roh: unknown): unknown[] => (Array.isArray(roh) ? roh : []);
+
+/** Wo eine Stufe noch benutzt wird: im Plan der Vorlage (Formularwert) und in Plaenen von Anlagen (Datenpunkte). */
+export interface Benutzung {
+    vorlage: boolean;
+    geraete: string[];
+}
+
+/** Kommt die Stufe in diesem Plan (JSON-Text, sieben Tage mit {t, s}) vor? */
+export function planBenutzt(roh: unknown, id: string): boolean {
+    try {
+        const p: unknown = typeof roh === 'string' ? (roh.trim() ? JSON.parse(roh) : null) : roh;
+        return Array.isArray(p) && p.some(tag => Array.isArray(tag) && tag.some(e => e && String(e.s) === id));
+    } catch {
+        return false;
+    }
+}
+
+/** Plan (JSON-Text) mit `nach` statt `von`; unveraendert, wenn er sich nicht lesen laesst. */
+export function planErsetzen(roh: unknown, von: string, nach: string): string {
+    const text = typeof roh === 'string' ? roh : roh ? JSON.stringify(roh) : '';
+    try {
+        const p: unknown = JSON.parse(text);
+        if (!Array.isArray(p)) {
+            return text;
+        }
+        return JSON.stringify(
+            p.map(tag => (Array.isArray(tag) ? tag.map(e => (e && String(e.s) === von ? { ...e, s: nach } : e)) : tag)),
+        );
+    } catch {
+        return text;
+    }
+}
 const gleich = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 
 // Symbole als Pfade (Material Icons) - so braucht das Paket keine eigene Kopie der Symbolbibliothek.
@@ -433,7 +465,12 @@ interface AnsichtProps {
     sprache: string;
     dunkel: boolean;
     farben: Farben;
-    onWert: (stufen: Record<string, unknown>[]) => void;
+    /** `planVorlage`: der Plan der Vorlage aendert sich im selben Zug (Stufe mit Ersatz entfernt bzw. Rueckgaengig) */
+    onWert: (stufen: Record<string, unknown>[], planVorlage?: string) => void;
+    /** Plan der Vorlage aus dem Formular (`regelPlanVorlage`) - nur bei den Stufen der Vorlage */
+    planVorlage?: unknown;
+    /** fragt, wo eine Stufe noch benutzt wird; null = unbekannt (Instanz laeuft nicht) */
+    benutzung?: (id: string) => Promise<Benutzung | null>;
     /** meldet dem Formular eine ungueltige Liste ('' = in Ordnung) - der Admin sperrt dann "Speichern" */
     onFehler?: (meldung: string) => void;
 }
@@ -460,17 +497,45 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
         props.dunkel,
     );
 
-    /** Zeilen so, wie sie ins Formular gehoeren: unbekannte Felder bleiben, die ID steht fest drin */
-    const zeilen = (): Record<string, unknown>[] =>
-        roh.map((z, i) => ({ ...(z && typeof z === 'object' ? (z as object) : {}), ...stufen[i] }));
+    /**
+     * Zeilen so, wie sie ins Formular gehoeren: unbekannte Felder bleiben, die ID steht fest drin.
+     * `ersetzt` (IDs entfernter Stufen, fuer die diese Stufe in den Wochenplaenen einspringt) bleibt nur,
+     * solange es die entfernte Stufe nicht wieder gibt.
+     */
+    const zeilen = (): Record<string, unknown>[] => {
+        const ids = new Set(stufen.map(s => s.id));
+        return roh.map((z, i) => {
+            const zeile: Record<string, unknown> = { ...(z && typeof z === 'object' ? (z as object) : {}), ...stufen[i] };
+            if (Array.isArray(zeile.ersetzt)) {
+                const rest = (zeile.ersetzt as unknown[]).map(String).filter(id => !ids.has(id));
+                if (rest.length) {
+                    zeile.ersetzt = rest;
+                } else {
+                    delete zeile.ersetzt;
+                }
+            }
+            return zeile;
+        });
+    };
     // zuletzt entfernte Stufe: Hinweis auf die Wochenplaene, mit "Rueckgaengig" (Stand der Liste davor)
-    const [entfernt, setEntfernt] = useState<{ name: string; vorher: unknown[] } | null>(null);
-    const schreiben = (neu: Record<string, unknown>[], nachEntfernen = false): void => {
+    const [entfernt, setEntfernt] = useState<{
+        name: string;
+        vorher: unknown[];
+        /** Plan der Vorlage vor dem Ersetzen (nur wenn er geaendert wurde) */
+        vorherPlan?: string;
+        /** Name der Ersatzstufe bzw. '' = keine Benutzung gefunden; undefined = nicht bekannt */
+        ersatz?: string;
+    } | null>(null);
+    // Rueckfrage "wird noch benutzt - ersetzen durch": erst die Antwort entfernt die Stufe
+    const [frage, setFrage] = useState<{ id: string; name: string; benutzt: Benutzung; ersatz: string } | null>(null);
+    const [prueft, setPrueft] = useState('');
+    const schreiben = (neu: Record<string, unknown>[], nachEntfernen = false, planVorlage?: string): void => {
         if (!nachEntfernen) {
             setEntfernt(null);
         }
+        setFrage(null);
         setEntwurf(neu);
-        props.onWert(neu);
+        props.onWert(neu, planVorlage);
     };
     const aendern = (i: number, teil: Partial<Stufe>): void => {
         const alle = zeilen();
@@ -497,13 +562,77 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
         };
         schreiben([...alle, { ...neu }]);
     };
-    const weg = (i: number): void => {
-        // der Stand davor so, wie er im Formular steht (leer = Werksstufen bzw. Vorlage)
-        setEntfernt({ name: stufen[i].name, vorher: JSON.parse(JSON.stringify(eigeneRoh)) as unknown[] });
+    const planVorlageText =
+        typeof props.planVorlage === 'string' ? props.planVorlage : props.planVorlage ? JSON.stringify(props.planVorlage) : '';
+    /**
+     * Entfernt die Stufe. Mit `ersatzId` springt diese Stufe in den Wochenplaenen ein: der Plan der Vorlage
+     * (Formularwert) wird im selben Zug umgeschrieben; fuer die Plaene der Anlagen (Datenpunkte, wirken
+     * sofort) merkt sich die Ersatzstufe die entfernte ID (`ersetzt`) - der Adapter ersetzt sie, sobald die
+     * Einstellungen gespeichert sind und die Stufe wirklich entfaellt.
+     */
+    const entfernen = (id: string, ersatzId?: string, benutzt?: Benutzung | null): void => {
+        const i = stufen.findIndex(s => s.id === id);
+        if (i < 0) {
+            setFrage(null);
+            return;
+        }
+        let alle = zeilen();
+        const fort = alle[i];
+        let plan: string | undefined;
+        if (ersatzId) {
+            alle = alle.map(z =>
+                z.id === ersatzId
+                    ? {
+                          ...z,
+                          ersetzt: [
+                              ...new Set([
+                                  ...(Array.isArray(z.ersetzt) ? (z.ersetzt as unknown[]).map(String) : []),
+                                  id,
+                                  ...(Array.isArray(fort.ersetzt) ? (fort.ersetzt as unknown[]).map(String) : []),
+                              ]),
+                          ].filter(x => x !== ersatzId),
+                      }
+                    : z,
+            );
+            if (benutzt && benutzt.vorlage && planBenutzt(planVorlageText, id)) {
+                plan = planErsetzen(planVorlageText, id, ersatzId);
+            }
+        }
+        const ersatzStufe = ersatzId ? stufen.find(s => s.id === ersatzId) : undefined;
+        setEntfernt({
+            name: stufen[i].name,
+            // der Stand davor so, wie er im Formular steht (leer = Werksstufen bzw. Vorlage)
+            vorher: JSON.parse(JSON.stringify(eigeneRoh)) as unknown[],
+            vorherPlan: plan === undefined ? undefined : planVorlageText,
+            ersatz: ersatzStufe ? ersatzStufe.name : benutzt ? '' : undefined,
+        });
         schreiben(
-            zeilen().filter((_z, n) => n !== i),
+            alle.filter((_z, n) => n !== i),
             true,
+            plan,
         );
+    };
+    const weg = async (i: number): Promise<void> => {
+        const s = stufen[i];
+        let benutzt: Benutzung | null = null;
+        if (props.benutzung) {
+            setPrueft(s.id);
+            try {
+                benutzt = await props.benutzung(s.id);
+            } catch {
+                benutzt = null;
+            }
+            setPrueft('');
+        }
+        if (benutzt && (benutzt.vorlage || benutzt.geraete.length)) {
+            // wird noch benutzt: nicht still verschwinden lassen, sondern nach dem Ersatz fragen
+            const andere = stufen.filter(x => x.id !== s.id);
+            const vorschlag = andere.find(x => x.id === 'absenken') || andere[0];
+            setEntfernt(null);
+            setFrage({ id: s.id, name: s.name, benutzt, ersatz: vorschlag ? vorschlag.id : '' });
+            return;
+        }
+        entfernen(s.id, undefined, benutzt);
     };
 
     // Pruefung wie szenenLesen() des Adapters - nur die eigene Liste kann falsch sein
@@ -830,8 +959,8 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                                 size="small"
                                                 className="fk-st-weg"
                                                 aria-label={`${t('entfernen')}: ${s.name}`}
-                                                disabled={stufen.length <= 1}
-                                                onClick={() => weg(i)}
+                                                disabled={stufen.length <= 1 || !!prueft}
+                                                onClick={() => void weg(i)}
                                             >
                                                 <DeleteIcon />
                                             </IconButton>
@@ -1037,6 +1166,106 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                     {fehlerText}
                 </Box>
             ) : null}
+            {frage && !nurLesen ? (
+                <Box
+                    className="fk-st-benutzt"
+                    role="alertdialog"
+                    aria-label={t('benutztTitel', frage.name)}
+                    sx={{
+                        mt: 1,
+                        px: 1.5,
+                        py: 1,
+                        maxWidth: 720,
+                        border: '1px solid',
+                        borderColor: 'warning.main',
+                        borderLeftWidth: 4,
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        lineHeight: 1.45,
+                    }}
+                >
+                    <Box sx={{ fontWeight: 600 }}>{t('benutztTitel', frage.name)}</Box>
+                    <Box
+                        component="ul"
+                        className="fk-st-benutzt-liste"
+                        sx={{ m: 0, mt: 0.25, pl: 2.5 }}
+                    >
+                        {frage.benutzt.vorlage ? <li data-wo="vorlage">{t('benutztVorlage')}</li> : null}
+                        {frage.benutzt.geraete.map(g => (
+                            <li
+                                key={g}
+                                data-wo={g}
+                            >
+                                {t('benutztGeraet', g)}
+                            </li>
+                        ))}
+                    </Box>
+                    <Box
+                        component="label"
+                        sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mt: 0.75 }}
+                    >
+                        <span>{t('ersetzenDurch')}</span>
+                        <select
+                            className="fk-st-ersatz"
+                            value={frage.ersatz}
+                            onChange={e => setFrage({ ...frage, ersatz: e.target.value })}
+                            style={{
+                                font: 'inherit',
+                                color: 'inherit',
+                                background: farben.flaeche,
+                                border: '1px solid currentColor',
+                                borderRadius: 4,
+                                padding: '3px 6px',
+                                minWidth: 150,
+                            }}
+                        >
+                            {stufen
+                                .filter(x => x.id !== frage.id)
+                                .map(x => (
+                                    <option
+                                        key={x.id}
+                                        value={x.id}
+                                    >
+                                        {x.name}
+                                    </option>
+                                ))}
+                        </select>
+                    </Box>
+                    <Box
+                        className="fk-st-ersatz-wann"
+                        sx={{ mt: 0.5, color: 'text.secondary' }}
+                    >
+                        {[
+                            frage.benutzt.vorlage ? t('ersetzenWannVorlage') : '',
+                            frage.benutzt.geraete.length ? t('ersetzenWannGeraete') : '',
+                        ]
+                            .filter(Boolean)
+                            .join(' ')}
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                        <Button
+                            className="fk-st-ersetzen"
+                            size="small"
+                            variant="contained"
+                            color="primary"
+                            disabled={!frage.ersatz}
+                            sx={{ textTransform: 'none' }}
+                            onClick={() => entfernen(frage.id, frage.ersatz, frage.benutzt)}
+                        >
+                            {t('ersetzenKnopf')}
+                        </Button>
+                        <Button
+                            className="fk-st-behalten"
+                            size="small"
+                            variant="outlined"
+                            sx={{ textTransform: 'none' }}
+                            onClick={() => setFrage(null)}
+                        >
+                            {t('ersetzenAbbrechen')}
+                        </Button>
+                    </Box>
+                </Box>
+            ) : null}
             {entfernt && !nurLesen ? (
                 <Box
                     className="fk-st-entfernt"
@@ -1055,12 +1284,18 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                         fontSize: '0.875rem',
                     }}
                 >
-                    <span>{t('entferntHinweis', entfernt.name)}</span>
+                    <span>
+                        {entfernt.ersatz
+                            ? t('ersetztHinweis', entfernt.name, entfernt.ersatz)
+                            : entfernt.ersatz === ''
+                              ? t('unbenutztHinweis', entfernt.name)
+                              : t('entferntHinweis', entfernt.name)}
+                    </span>
                     <Button
                         className="fk-st-entfernt-rueck"
                         size="small"
                         sx={{ textTransform: 'none' }}
-                        onClick={() => schreiben(entfernt.vorher as Record<string, unknown>[])}
+                        onClick={() => schreiben(entfernt.vorher as Record<string, unknown>[], false, entfernt.vorherPlan)}
                     >
                         {wt(sprache, 'rueckgaengig')}
                     </Button>
@@ -1100,10 +1335,55 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
 
 /** jsonConfig-Komponente "Stufen": Attribut `regelStufen` (Vorlage) oder `stufen` (Geraetezeile). */
 class Stufen extends ConfigGeneric<ConfigGenericProps, ConfigGenericState> {
-    onWert = (stufen: Record<string, unknown>[]): void => {
-        if (this.props.attr) {
-            void this.onChange(this.props.attr, stufen);
+    onWert = (stufen: Record<string, unknown>[], planVorlage?: string): void => {
+        if (!this.props.attr) {
+            return;
         }
+        if (planVorlage !== undefined && !this.props.custom && this.props.attr === 'regelStufen') {
+            // Stufen und Plan der Vorlage in EINEM Zug: zwei onChange hintereinander wuerden sich ueberschreiben
+            const data = JSON.parse(JSON.stringify(this.props.data || {})) as Record<string, unknown>;
+            data.regelStufen = stufen;
+            data.regelPlanVorlage = planVorlage;
+            (this.props.onChange as unknown as (daten: Record<string, unknown>) => void)(data);
+            return;
+        }
+        void this.onChange(this.props.attr, stufen);
+    };
+
+    /**
+     * Wo wird die Stufe noch benutzt? Plan der Vorlage: Formularwert. Plaene der Anlagen: Datenpunkte, der
+     * Adapter nennt die IDs (zeitplaeneListe, planStufen) - gezaehlt werden die Anlagen, fuer die DIESE
+     * Stufenliste nach dem Stand des Formulars gilt.
+     */
+    benutzung = async (id: string): Promise<Benutzung | null> => {
+        const props = this.props;
+        const jeGeraet = !!props.attr && !props.attr.startsWith('regel');
+        const data = (props.data || {}) as Record<string, unknown>;
+        const global = ((jeGeraet ? props.globalData : props.data) || {}) as Record<string, unknown>;
+        const vorlage = !jeGeraet && planBenutzt(global.regelPlanVorlage, id);
+        const socket = props.oContext?.socket;
+        if (!props.alive || !socket || typeof socket.sendTo !== 'function') {
+            return vorlage ? { vorlage, geraete: [] } : null;
+        }
+        const ziel = `${props.oContext?.adapterName}.${props.oContext?.instance}`;
+        const antwort: any = await Promise.race([
+            Promise.resolve(socket.sendTo(ziel, 'zeitplaeneListe', {})).catch(() => null),
+            new Promise(fertig => setTimeout(() => fertig(null), 5000)),
+        ]);
+        if (!antwort || !Array.isArray(antwort.geraete)) {
+            return vorlage ? { vorlage, geraete: [] } : null;
+        }
+        const text = (v: unknown): string => String(v ?? '').trim();
+        const zeilen = (Array.isArray(global.regelGeraete) ? global.regelGeraete : []) as Record<string, unknown>[];
+        const eigen = (g: { id: string; name: string }): boolean => {
+            const z = zeilen.find(x => x && (text(x.geraet) === g.id || text(x.geraet) === g.name));
+            return !!z && z.individuell === true && Array.isArray(z.stufen) && z.stufen.length > 0;
+        };
+        const geraete = (antwort.geraete as { id: string; name: string; planStufen?: string[] }[])
+            .filter(g => Array.isArray(g.planStufen) && g.planStufen.includes(id))
+            .filter(g => (jeGeraet ? text(data.geraet) === g.id || text(data.geraet) === g.name : !eigen(g)))
+            .map(g => g.name || g.id);
+        return { vorlage, geraete };
     };
 
     letzterFehler = '';
@@ -1156,6 +1436,8 @@ class Stufen extends ConfigGeneric<ConfigGenericProps, ConfigGenericState> {
                         fehler: palette?.error?.main || '#d9534f',
                     }}
                     onWert={this.onWert}
+                    planVorlage={jeGeraet ? undefined : data.regelPlanVorlage}
+                    benutzung={this.benutzung}
                     onFehler={this.onFehler}
                 />
             </Box>

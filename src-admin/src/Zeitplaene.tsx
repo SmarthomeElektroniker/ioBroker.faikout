@@ -42,6 +42,8 @@ export interface Stufe {
     mode?: string;
     fan?: string;
     deckel?: number;
+    /** steht im Formular, ist aber noch nicht gespeichert */
+    neu?: boolean;
 }
 export interface Balken {
     von: number;
@@ -52,6 +54,10 @@ export interface PlanGeraet {
     id: string;
     name: string;
     individuell?: boolean;
+    /** woher die Temperaturstufen dieser Anlage stammen: eigene (individuell) oder die der Vorlage */
+    stufenQuelle?: 'vorlage' | 'eigen';
+    /** entfernte Stufen, die der Adapter beim "Speichern" der Instanz im Plan ersetzt */
+    ersatz?: { von: string; nach: string; vonName?: string; nachName?: string }[];
     planAktiv: boolean;
     planFehlt: boolean;
     /** Plan hinterlegt, aber nicht lesbar: Klartext des Adapters */
@@ -257,6 +263,8 @@ export function Wochenvorschau(props: {
     /** Marke "jetzt" zeigen (nicht bei der Vorlage) */
     mitJetzt: boolean;
     jetzt: Date;
+    /** Legende mit allen Stufen der Liste, nicht nur den im Plan benutzten (eigene Stufen einer Anlage) */
+    alleStufen?: boolean;
 }): React.JSX.Element {
     const { sprache, dunkel } = props;
     const tx = (s: Schluessel, ...w: (string | number)[]): string => uebersetzt(sprache, s, ...w);
@@ -273,7 +281,10 @@ export function Wochenvorschau(props: {
         }
     }
     // Legende in der Reihenfolge der Stufen, unbekannte IDs hinten
-    const legende = [...props.stufen.map(s => s.id).filter(id => benutzt.includes(id)), ...benutzt.filter(id => !nach.has(id))];
+    const legende = [
+        ...props.stufen.map(s => s.id).filter(id => props.alleStufen || benutzt.includes(id)),
+        ...benutzt.filter(id => !nach.has(id)),
+    ];
     return (
         <Box
             className="fk-zp-vorschau"
@@ -391,6 +402,8 @@ export function Wochenvorschau(props: {
                         <Box
                             key={id}
                             component="span"
+                            className="fk-zp-legende-stufe"
+                            data-stufe={id}
                             sx={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}
                         >
                             <Box
@@ -475,8 +488,10 @@ export interface AnsichtProps {
     /** Formularwert regelPlanVorlage (JSON-Text, leer = Werksplan) */
     vorlage: unknown;
     onVorlage: (text: string) => void;
-    /** ungespeicherte Temperaturstufen der Vorlage aus dem Formular (regelStufen) - fuer den Editor der Vorlage */
+    /** Temperaturstufen der Vorlage, wie sie im Formular stehen (regelStufen) - auch ungespeichert */
     stufenFormular?: unknown;
+    /** Geraetezeilen des Formulars (regelGeraete): Haken "individuell" und eigene Stufen - auch ungespeichert */
+    geraeteFormular?: unknown;
     /** Instanz laeuft */
     alive: boolean;
     senden: Senden | null;
@@ -526,12 +541,32 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
         return () => clearInterval(takt);
     }, []);
 
+    // Die Temperaturstufen, wie sie im Formular stehen (auch ungespeichert): Der Adapter rechnet daraus
+    // Namen, Reihenfolge und Farben - fuer diese Liste UND fuer den Editor. So zeigen die Karten der
+    // Stufen, die Vorschau hier und der Editor immer dasselbe.
+    const formularText = useMemo(
+        () =>
+            JSON.stringify({
+                regelStufen: Array.isArray(props.stufenFormular) ? props.stufenFormular : [],
+                regelGeraete: (Array.isArray(props.geraeteFormular) ? props.geraeteFormular : [])
+                    .filter(z => z && typeof z === 'object')
+                    .map((z: Record<string, unknown>) => ({
+                        geraet: z.geraet,
+                        individuell: z.individuell === true,
+                        stufen: Array.isArray(z.stufen) ? z.stufen : [],
+                    })),
+            }),
+        [props.stufenFormular, props.geraeteFormular],
+    );
+    const formularRef = useRef(formularText);
+    formularRef.current = formularText;
+
     const laden = useCallback(async (): Promise<void> => {
         if (!senden) {
             return;
         }
         try {
-            const antwort = await senden('zeitplaeneListe', {});
+            const antwort = await senden('zeitplaeneListe', { formular: JSON.parse(formularRef.current) });
             if (!antwort || !Array.isArray(antwort.geraete)) {
                 throw new Error(uebersetzt(sprache, 'keineAntwort'));
             }
@@ -560,6 +595,17 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
         const takt = setInterval(() => void ladenRef.current(), ABFRAGE_MS);
         return () => clearInterval(takt);
     }, [alive, senden]);
+    // Stufe angelegt, umbenannt, entfernt oder Haken "individuell" geaendert: gleich neu fragen (kurz
+    // warten, solange gezogen oder getippt wird)
+    const ersterStand = useRef(formularText);
+    useEffect(() => {
+        if (!alive || !senden || ersterStand.current === formularText) {
+            return undefined;
+        }
+        ersterStand.current = '';
+        const uhr = setTimeout(() => void ladenRef.current(), 250);
+        return () => clearTimeout(uhr);
+    }, [formularText, alive, senden]);
     // Nach "Speichern" startet der Adapter neu: bis sich die Module wieder gemeldet haben, ist die Liste
     // leer. Dann in kurzem Takt nachfragen statt eine halbe Minute "Noch keine Geraete" zu zeigen.
     const ohneGeraete = !!alive && !!senden && (!liste || !liste.geraete.length);
@@ -668,14 +714,16 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
         void aktion(g.id, 'wochenplanSchalten', { aktiv: an });
     };
     const oeffnen = async (g: { id: string; name: string }): Promise<void> => {
-        // die Vorlage ist ein Formularwert: der Editor bekommt den ungespeicherten Stand mit
+        // Der Editor bekommt den Stand des Formulars mit (auch ungespeichert): die Temperaturstufen, die
+        // fuer dieses Geraet gelten, und den Plan der Vorlage. Der Adapter waehlt daraus wie fuer die Liste.
+        const formular = { ...JSON.parse(formularRef.current), regelPlanVorlage: vorlageRoh };
         const a = await aktion(
             g.id,
             'wochenplanOeffnen',
             g.id === VORLAGE
                 ? // leer heisst Werksplan: der Editor zeigt, was gilt - nicht eine leere Woche
-                  { week: vorlageText, ...(Array.isArray(props.stufenFormular) ? { stufen: props.stufenFormular } : {}) }
-                : {},
+                  { week: vorlageText, formular }
+                : { formular },
         );
         if (a && lebt.current) {
             if (typeof a.url === 'string' && a.url && typeof a.token === 'string' && a.token) {
@@ -759,6 +807,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
         const stand = g.planFehlt ? '' : JSON.stringify(g.woche);
         const inhalt = g.planFehlt ? null : kopie && kopie.stand === stand ? kopie.week : wocheZuText(g.woche);
         const beschaeftigt = !!arbeitet[g.id];
+        const eigen = g.stufenQuelle ? g.stufenQuelle === 'eigen' : !!g.individuell;
         return (
             <Box
                 key={g.id}
@@ -821,9 +870,15 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                             ) : null}
                         </Box>
                     )}
-                    {g.individuell ? (
-                        <Box sx={{ mt: 0.25, fontSize: '0.9em', color: 'text.secondary' }}>{tx('eigeneStufen')}</Box>
-                    ) : null}
+                    {/* woher die Stufen dieser Anlage stammen - dieselbe Angabe steht im Kopf des Editors */}
+                    <Box
+                        className="fk-zp-stufenquelle"
+                        data-quelle={eigen ? 'eigen' : 'vorlage'}
+                        sx={{ mt: 0.5, fontSize: '0.9em', lineHeight: 1.4, color: 'text.secondary' }}
+                    >
+                        {eigen ? tx('stufenEigen') : tx('stufenVorlage')}
+                        {eigen ? <Box sx={{ fontSize: '0.95em' }}>{tx('stufenEigenWo', name)}</Box> : null}
+                    </Box>
                 </Box>
                 <Wochenvorschau
                     woche={g.planFehlt ? null : g.woche}
@@ -833,6 +888,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                     name={name}
                     mitJetzt={!g.planFehlt}
                     jetzt={jetzt}
+                    alleStufen={eigen}
                 />
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: schmal ? 'stretch' : 'flex-start', gap: 0.75, minWidth: 0 }}>
                     <Button
@@ -887,6 +943,16 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                         sprache={sprache}
                     />
                 </Box>
+                {Array.isArray(g.ersatz) && g.ersatz.length ? (
+                    <Box sx={{ gridColumn: '1 / -1' }}>
+                        <Meldung
+                            art="info"
+                            klasse="fk-zp-ersatz"
+                        >
+                            {g.ersatz.map(e => tx('ersatzOffen', e.vonName || e.von, e.nachName || e.nach)).join(' ')}
+                        </Meldung>
+                    </Box>
+                ) : null}
                 {g.planFehler ? (
                     <Box sx={{ gridColumn: '1 / -1' }}>
                         <Meldung
@@ -1209,6 +1275,7 @@ function ZeitplaeneFeld(props: ConfigGenericProps & { onVorlage: (text: string) 
         <ZeitplaeneAnsicht
             vorlage={ConfigGeneric.getValue(props.data, props.attr as string)}
             stufenFormular={(props.data as Record<string, unknown>)?.regelStufen}
+            geraeteFormular={(props.data as Record<string, unknown>)?.regelGeraete}
             onVorlage={props.onVorlage}
             alive={!!props.alive}
             senden={senden}
