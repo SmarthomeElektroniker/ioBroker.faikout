@@ -49,7 +49,7 @@ export const DECKEL = { min: 30, max: 100, schritt: 5 };
 
 /** wie lib/regel/wochenplan.js VORGABE_SZENEN (die Namen kommen in der Systemsprache dazu) */
 const WERK: Omit<Stufe, 'name'>[] = [
-    { id: 'komfort', power: true, mode: 'heat', soll: 21, fan: 'auto', bedarf: true, feuchte: true, deckel: 95 },
+    { id: 'komfort', power: true, mode: 'heat', soll: 21, fan: 'auto', bedarf: true, feuchte: true, deckel: 100 },
     { id: 'absenken', power: true, mode: 'heat', soll: 19, fan: 'night', bedarf: true, feuchte: true, deckel: 60 },
     { id: 'abwesend', power: true, mode: 'heat', soll: 17, fan: 'auto', bedarf: true, feuchte: false, deckel: 50 },
     { id: 'aus', power: false, mode: 'heat', soll: 17, fan: 'auto', bedarf: false, feuchte: false, deckel: 95 },

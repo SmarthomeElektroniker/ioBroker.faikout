@@ -28,7 +28,7 @@ import {
 import { I18n } from '@iobroker/gui-components';
 import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from '@iobroker/json-config';
 
-import * as werkzeugModul from './Werkzeugleiste';
+import Werkzeugleiste from './Werkzeugleiste';
 import { text as uebersetzt, TEXTE, type Schluessel } from './Zeitplaene.texte';
 
 export interface Stufe {
@@ -54,32 +54,24 @@ export interface PlanGeraet {
     individuell?: boolean;
     planAktiv: boolean;
     planFehlt: boolean;
+    /** Plan hinterlegt, aber nicht lesbar: Klartext des Adapters */
+    planFehler?: string;
     naechster: number | null;
     naechsteStufe: string;
+    naechsteStufeName?: string;
     stufe: string;
+    stufeName?: string;
     woche: Balken[][];
 }
 export interface PlanListe {
     sprache?: string;
     stufen?: Record<string, Stufe[]>;
     geraete: PlanGeraet[];
+    /** Werksplan mit den Stufen der Vorlage, vom Adapter gerechnet */
+    werksplan?: { week?: string; woche?: Balken[][] };
 }
 /** Befehl an den Adapter; lehnt mit Error(Text) ab bei {error}, fehlender Antwort oder Zeitablauf. */
 export type Senden = (befehl: string, nachricht: Record<string, unknown>) => Promise<any>;
-
-interface WerkzeugProps {
-    art: 'wochenplan';
-    inhalt: unknown;
-    onEinfuegen: (inhalt: unknown) => void;
-    onZuruecksetzen: () => void;
-    zuruecksetzenText: string;
-    istVorlage: boolean;
-    quelle: string;
-    sprache: string;
-}
-// die Knopfleiste von Strang B - benannt oder als default exportiert
-const Werkzeugleiste = ((werkzeugModul as any).Werkzeugleiste ||
-    (werkzeugModul as any).default) as React.ComponentType<WerkzeugProps>;
 
 const TAG = 1440;
 const ABFRAGE_MS = 30000;
@@ -105,6 +97,8 @@ const WERK_STUFEN: Stufe[] = [
     { id: 'aus', name: 'Aus', farbe: '#6b6b6b', soll: 17, power: false },
 ];
 const OHNE_FARBE = '#8a8a8a';
+/** Kennung der Vorlage in den sendTo-Befehlen (lib/zeitplaene.js VORLAGE) */
+const VORLAGE = 'vorlage';
 
 type Punkt = { t: number; s: string };
 type Plan = Punkt[][];
@@ -221,9 +215,9 @@ function farbeVon(stufe: Stufe | undefined, dunkel: boolean): string {
     return stufe.farbe;
 }
 
-function stufenText(stufe: Stufe | undefined, id: string, sprache: string): string {
+function stufenText(stufe: Stufe | undefined, id: string, sprache: string, name = ''): string {
     if (!stufe) {
-        return id;
+        return name || id;
     }
     if (stufe.power === false || !Number.isFinite(Number(stufe.soll))) {
         return stufe.name || id;
@@ -479,6 +473,8 @@ export interface AnsichtProps {
     /** Formularwert regelPlanVorlage (JSON-Text, leer = Werksplan) */
     vorlage: unknown;
     onVorlage: (text: string) => void;
+    /** ungespeicherte Temperaturstufen der Vorlage aus dem Formular (regelStufen) - fuer den Editor der Vorlage */
+    stufenFormular?: unknown;
     /** Instanz laeuft */
     alive: boolean;
     senden: Senden | null;
@@ -596,7 +592,11 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
     const vorlageRoh = typeof props.vorlage === 'string' ? props.vorlage : props.vorlage ? JSON.stringify(props.vorlage) : '';
     const vorlageEigen = vorlageRoh.trim() !== '';
     const vorlagePlan = vorlageEigen ? planLesen(vorlageRoh) : null;
-    const werkText = useMemo(() => JSON.stringify(werksplan(stufenVorlage)), [stufenVorlage]);
+    const werkVomAdapter = liste && liste.werksplan && planLesen(liste.werksplan.week) ? String(liste.werksplan.week) : '';
+    const werkText = useMemo(
+        () => JSON.stringify(planLesen(werkVomAdapter) || werksplan(stufenVorlage)),
+        [werkVomAdapter, stufenVorlage],
+    );
     const vorlageText = vorlagePlan ? JSON.stringify(vorlagePlan) : werkText;
     const vorlageWoche = useMemo(() => planZuWoche(planLesen(vorlageText) as Plan), [vorlageText]);
 
@@ -651,8 +651,15 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
         setListe(l => (l ? { ...l, geraete: l.geraete.map(x => (x.id === g.id ? { ...x, planAktiv: an } : x)) } : l));
         void aktion(g.id, 'wochenplanSchalten', { aktiv: an });
     };
-    const oeffnen = async (g: PlanGeraet): Promise<void> => {
-        const a = await aktion(g.id, 'wochenplanOeffnen', {});
+    const oeffnen = async (g: { id: string; name: string }): Promise<void> => {
+        // die Vorlage ist ein Formularwert: der Editor bekommt den ungespeicherten Stand mit
+        const a = await aktion(
+            g.id,
+            'wochenplanOeffnen',
+            g.id === VORLAGE
+                ? { week: vorlagePlan ? vorlageRoh : '', ...(Array.isArray(props.stufenFormular) ? { stufen: props.stufenFormular } : {}) }
+                : {},
+        );
         if (a && lebt.current) {
             if (typeof a.url === 'string' && a.url && typeof a.token === 'string' && a.token) {
                 setDialog({ id: g.id, name: g.name || g.id, url: a.url, token: a.token, phase: 'bearbeiten', laeuft: false, fehler: '' });
@@ -676,7 +683,13 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
             if (!lebt.current) {
                 return;
             }
-            if (a && a.einschaltenNoetig) {
+            if (d.id === VORLAGE) {
+                // nichts geschrieben: der gepruefte Plan geht ins Formular und gilt mit "Speichern" der Instanz
+                if (a && typeof a.week === 'string' && planLesen(a.week)) {
+                    vorlageEinfuegen(a.week);
+                }
+                dialogZu();
+            } else if (a && a.einschaltenNoetig) {
                 setDialog({ ...d, phase: 'frage', laeuft: false, fehler: '' });
                 void laden();
             } else {
@@ -774,7 +787,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                             </Box>
                             {g.planAktiv && g.stufe ? (
                                 <Box sx={{ color: 'text.secondary' }}>
-                                    {tx('jetztStufe', stufenText(nach.get(g.stufe), g.stufe, sprache))}
+                                    {tx('jetztStufe', stufenText(nach.get(g.stufe), g.stufe, sprache, g.stufeName))}
                                 </Box>
                             ) : null}
                             {g.planAktiv && g.naechster ? (
@@ -782,7 +795,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                                     {tx(
                                         'naechste',
                                         zeitText(g.naechster, sprache, tx),
-                                        stufenText(nach.get(g.naechsteStufe), g.naechsteStufe, sprache),
+                                        stufenText(nach.get(g.naechsteStufe), g.naechsteStufe, sprache, g.naechsteStufeName),
                                     ).replace(' → ', '\u00a0→ ')}
                                 </Box>
                             ) : null}
@@ -812,7 +825,10 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                     >
                         {g.planFehlt ? tx('anlegen') : tx('bearbeiten')}
                     </Button>
-                    <Tooltip title={g.planFehlt ? tx('schalterGesperrt') : ''}>
+                    <Tooltip
+                        disableInteractive
+                        title={g.planFehlt && !g.planAktiv ? tx('schalterGesperrt') : ''}
+                    >
                         <Box
                             component="span"
                             sx={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap' }}
@@ -823,8 +839,8 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                                     <Switch
                                         className="fk-zp-schalter"
                                         size="small"
-                                        checked={!!g.planAktiv && !g.planFehlt}
-                                        disabled={g.planFehlt || beschaeftigt}
+                                        checked={!!g.planAktiv}
+                                        disabled={(g.planFehlt && !g.planAktiv) || beschaeftigt}
                                         onChange={e => schalten(g, e.target.checked)}
                                     />
                                 }
@@ -849,6 +865,16 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                         sprache={sprache}
                     />
                 </Box>
+                {g.planFehler ? (
+                    <Box sx={{ gridColumn: '1 / -1' }}>
+                        <Meldung
+                            art="fehler"
+                            klasse="fk-zp-planfehler"
+                        >
+                            {g.planFehler}
+                        </Meldung>
+                    </Box>
+                ) : null}
                 {fehler[g.id] ? (
                     <Box sx={{ gridColumn: '1 / -1' }}>
                         <Meldung
@@ -905,10 +931,35 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                     mitJetzt={false}
                     jetzt={jetzt}
                 />
-                <Box sx={{ minWidth: 0 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: schmal ? 'stretch' : 'flex-start', gap: 0.75, minWidth: 0 }}>
+                    <Tooltip
+                        disableInteractive
+                        title={!alive || !senden ? tx('instanzAus') : ''}
+                    >
+                        <Box
+                            component="span"
+                            sx={{ display: schmal ? 'flex' : 'inline-flex', flexDirection: 'column' }}
+                        >
+                            <Button
+                                className="fk-zp-bearbeiten fk-zp-vorlage-bearbeiten"
+                                variant="outlined"
+                                color="primary"
+                                disabled={!alive || !senden || !!arbeitet[VORLAGE]}
+                                onClick={() => void oeffnen({ id: VORLAGE, name: tx('vorlage') })}
+                                sx={{ textTransform: 'none', fontWeight: 600 }}
+                            >
+                                {tx('vorlageBearbeiten')}
+                            </Button>
+                        </Box>
+                    </Tooltip>
                     <Werkzeugleiste
                         art="wochenplan"
                         inhalt={vorlageText}
+                        stand={vorlageRoh}
+                        onRueckgaengig={vorher => {
+                            setFehler(f => ({ ...f, vorlage: '' }));
+                            props.onVorlage(typeof vorher === 'string' ? vorher : '');
+                        }}
                         onEinfuegen={vorlageEinfuegen}
                         onZuruecksetzen={() => vorlageEinfuegen('')}
                         zuruecksetzenText={tx('werksvorgabe')}
@@ -1045,7 +1096,7 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
                         {dialog.phase === 'bearbeiten' ? (
                             <>
                                 <Box sx={{ flex: '1 1 200px', fontSize: '0.85em', color: 'text.secondary' }}>
-                                    {tx('dialogHinweis')}
+                                    {dialog.id === VORLAGE ? tx('dialogHinweisVorlage') : tx('dialogHinweis')}
                                 </Box>
                                 <Button
                                     className="fk-zp-verwerfen"
@@ -1135,6 +1186,7 @@ function ZeitplaeneFeld(props: ConfigGenericProps & { onVorlage: (text: string) 
     return (
         <ZeitplaeneAnsicht
             vorlage={ConfigGeneric.getValue(props.data, props.attr as string)}
+            stufenFormular={(props.data as Record<string, unknown>)?.regelStufen}
             onVorlage={props.onVorlage}
             alive={!!props.alive}
             senden={senden}

@@ -73,7 +73,7 @@ interface Meldung {
 /** Wie lange die Bestaetigungszeile stehen bleibt (ms): mit Rueckgaengig laenger als ein blosses "Kopiert". */
 const DAUER = { kurz: 3500, lang: 12000 };
 
-function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
+export function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
     const { art, sprache } = props;
     const t = (schluessel: Schluessel, ...werte: (string | number)[]): string => wt(sprache, schluessel, ...werte);
     // die Zwischenablage aendert sich auch von anderen Komponenten aus - neu zeichnen, wenn sie sich meldet
@@ -176,7 +176,9 @@ function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
                 '& .fk-wz-frage': { border: '1px solid', borderColor: 'warning.main' },
             }}
         >
-            <Tooltip title={t('tipKopieren')}>
+            <Tooltip
+                disableInteractive
+                title={t('tipKopieren')}>
                 <Button
                     className="fk-wz-knopf fk-wz-kopieren"
                     size="small"
@@ -187,7 +189,9 @@ function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
                     {t('kopieren')}
                 </Button>
             </Tooltip>
-            <Tooltip title={tipEinfuegen}>
+            <Tooltip
+                disableInteractive
+                title={tipEinfuegen}>
                 {/* ein gesperrter Knopf meldet keine Mausereignisse - der Hinweis haengt deshalb an der Huelle */}
                 <span className="fk-wz-huelle">
                     <Button
@@ -202,7 +206,9 @@ function Werkzeugleiste(props: WerkzeugleisteProps): React.JSX.Element {
                     </Button>
                 </span>
             </Tooltip>
-            <Tooltip title={tipZurueck}>
+            <Tooltip
+                disableInteractive
+                title={tipZurueck}>
                 <Button
                     className="fk-wz-knopf fk-wz-zurueck"
                     size="small"

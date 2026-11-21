@@ -18,3 +18,5 @@ lokal/
 src-admin/node_modules
 src-admin/build/
 src-admin/.__mf__temp/
+# Pruefstaende der Komponenten (nur lokal)
+src-admin/harness*/

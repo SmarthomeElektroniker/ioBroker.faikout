@@ -1,3 +1,7 @@
 import { KennlinieHeizen, KennlinieKuehlen } from './Kennlinie';
+import Stufen from './Stufen';
+import Feuchte from './Feuchte';
+import Erklaerung from './Erklaerung';
+import Zeitplaene from './Zeitplaene';
 
-export default { KennlinieHeizen, KennlinieKuehlen };
+export default { KennlinieHeizen, KennlinieKuehlen, Stufen, Feuchte, Erklaerung, Zeitplaene };
