@@ -408,7 +408,7 @@ let raumWert = z.raum;
     if (eigen) {
         einrichtung.push('Module melden sich am Broker des Adapters: Geräte und Datenpunkte entstehen von selbst');
         einrichtung.push('Regelung in den Instanzeinstellungen einschalten, Probelauf abschalten');
-        for (const id of [...bestand.objekte.keys()].filter(k => k.endsWith('.regel.bedarf.probelauf'))) {
+        for (const id of [...bestand.objekte.keys()].filter(k => k.endsWith('.regulation.demand.dryRun'))) {
             await setze(id, false);
         }
     } else {
@@ -442,13 +442,13 @@ let raumWert = z.raum;
 
     // ---- Wochenplan (nur in den Plan-Szenarien)
     if (eigen && mitPlan) {
-        for (const id of [...bestand.objekte.keys()].filter(k => k.endsWith('.regel.plan.wocheJson'))) {
+        for (const id of [...bestand.objekte.keys()].filter(k => k.endsWith('.regulation.schedule.weekJson'))) {
             await setze(id, JSON.stringify(plan));
             await setze(id.replace('wocheJson', 'aktiv'), true);
         }
     }
     if (eigen && mitFeuchte) {
-        for (const id of [...bestand.objekte.keys()].filter(k => k.endsWith('.regel.feuchte.aktiv'))) {
+        for (const id of [...bestand.objekte.keys()].filter(k => k.endsWith('.regulation.humidity.active'))) {
             await setze(id, true);
         }
     }

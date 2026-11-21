@@ -797,39 +797,39 @@ describe('Device-Manager: Regelung auf der Karte', () => {
     const oberflaeche = require('../lib/oberflaeche');
     const ID = 'Wohnzimmer_AC';
 
-    /** Adapter mit den Datenpunkten regel.* eines Geraets (wie sie lib/regel anlegt). */
+    /** Adapter mit den Datenpunkten regulation.* eines Geraets (wie sie lib/regel anlegt). */
     async function mitRegelung(werte = {}) {
         const a = await adapterMitGeraet({ ...MELDUNG, hum: 50, action: 'heating' });
         const id = [...a.objekte.values()].find(x => x.type === 'device')._id.slice(a.namespace.length + 1);
         const standard = {
-            'regel.zustand': 'ok',
-            'regel.grund': 'Szene Komfort · Bedarf: Kennlinie Heizen bei 5 °C → 61 %',
-            'regel.betrieb': 'adapter',
-            'regel.verlaufJson': JSON.stringify([[Date.now() - 3600000, 60]]),
-            'regel.bedarf.aktiv': true,
-            'regel.bedarf.probelauf': true,
-            'regel.bedarf.sollwert': 60,
-            'regel.bedarf.rohwert': 61.3,
-            'regel.bedarf.aussenMittel': 5,
-            'regel.bedarf.grund': 'Kennlinie Heizen bei 5 °C → 61 %; Raum 21.5 °C / Ziel 21 °C | würde senden',
-            'regel.bedarf.strategie': 'kennlinie',
-            'regel.plan.aktiv': true,
-            'regel.plan.wocheJson': '',
-            'regel.plan.abwesenheitJson': '',
-            'regel.plan.szene': 'Komfort',
-            'regel.plan.naechster': Date.now() + 3600000,
-            'regel.plan.naechsteSzene': 'Absenken',
-            'regel.feuchte.aktiv': false,
-            'regel.hand.gesperrt': false,
-            'regel.hand.bis': null,
-            'regel.hand.aufheben': false,
-            'regel.fuehler.aussen': 5,
-            'regel.fuehler.aussenQuelle': 'Fühler der Anlage',
-            'regel.fuehler.raum': 21.5,
-            'regel.fuehler.raumQuelle': 'Fühler der Anlage',
-            'regel.fuehler.feuchte': 50,
-            'regel.fuehler.feuchteQuelle': 'Fühler der Anlage',
-            'info.demandFaehig': 'ja',
+            'regulation.state': 'ok',
+            'regulation.reason': 'Szene Komfort · Bedarf: Kennlinie Heizen bei 5 °C → 61 %',
+            'regulation.mode': 'adapter',
+            'regulation.historyJson': JSON.stringify([[Date.now() - 3600000, 60]]),
+            'regulation.demand.active': true,
+            'regulation.demand.dryRun': true,
+            'regulation.demand.setpoint': 60,
+            'regulation.demand.rawValue': 61.3,
+            'regulation.demand.outsideMean': 5,
+            'regulation.demand.reason': 'Kennlinie Heizen bei 5 °C → 61 %; Raum 21.5 °C / Ziel 21 °C | würde senden',
+            'regulation.demand.strategy': 'curve',
+            'regulation.schedule.active': true,
+            'regulation.schedule.weekJson': '',
+            'regulation.schedule.absenceJson': '',
+            'regulation.schedule.scene': 'Komfort',
+            'regulation.schedule.next': Date.now() + 3600000,
+            'regulation.schedule.nextScene': 'Absenken',
+            'regulation.humidity.active': false,
+            'regulation.manual.locked': false,
+            'regulation.manual.until': null,
+            'regulation.manual.resume': false,
+            'regulation.sensors.outside': 5,
+            'regulation.sensors.outsideSource': 'Fühler der Anlage',
+            'regulation.sensors.room': 21.5,
+            'regulation.sensors.roomSource': 'Fühler der Anlage',
+            'regulation.sensors.humidity': 50,
+            'regulation.sensors.humiditySource': 'Fühler der Anlage',
+            'info.demandCapable': 'yes',
             ...werte,
         };
         for (const [rel, val] of Object.entries(standard)) {
@@ -852,7 +852,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             Object.fromEntries(Object.entries(werte).map(([k, v]) => [k, { val: v }])),
         );
 
-    it('ohne Datenpunkte regel.* bleibt die Karte wie bisher (kein Abschnitt, keine Aktionen)', async () => {
+    it('ohne Datenpunkte regulation.* bleibt die Karte wie bisher (kein Abschnitt, keine Aktionen)', async () => {
         const a = await adapterMitGeraet();
         const k = (await kartenLaden(a)).karten[0];
         expect(Object.keys(k.customInfo.schema.items).some(x => x.startsWith('regel'))).to.equal(false);
@@ -877,13 +877,13 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(k.controls).to.equal(undefined);
         // alles haengt an den Datenpunkten der Regelung (live, ohne Neuladen)
         expect(items.regelKopf.dependsOnStates).to.eql({
-            z: `faikout.0.${ID}.regel.zustand`,
-            g: `faikout.0.${ID}.regel.grund`,
-            p: `faikout.0.${ID}.regel.bedarf.probelauf`,
+            z: `faikout.0.${ID}.regulation.state`,
+            g: `faikout.0.${ID}.regulation.reason`,
+            p: `faikout.0.${ID}.regulation.demand.dryRun`,
         });
         // Handeingriff: Hinweis und Knopf nur bei Sperre; der Knopf heisst "Freigeben" und schreibt den Knopf-Datenpunkt
         expect(items.regelHand.hidden).to.equal('_states.h?.val !== true');
-        expect(items.regelFortsetzen).to.include({ oid: `faikout.0.${ID}.regel.hand.aufheben`, control: 'button', buttonValue: true });
+        expect(items.regelFortsetzen).to.include({ oid: `faikout.0.${ID}.regulation.manual.resume`, control: 'button', buttonValue: true });
         expect(items.regelFortsetzen.falseText.de).to.equal('Freigeben');
         // Szene nur bei eingeschaltetem Wochenplan
         expect(items.regelPlan.hidden).to.equal('_states.a?.val !== true');
@@ -908,19 +908,19 @@ describe('Device-Manager: Regelung auf der Karte', () => {
     it('Muster der Karte: Zustand, Probelauf, Balken, "ruht (Faikout-Auto)", nicht unterstuetzt, Fuehler-Rueckfall', () => {
         const kopf = muster(dm.regelKopfHtml(true).de, { z: 'ok', g: 'Szene <b>Komfort</b>', p: true });
         expect(kopf).to.contain('>aktiv<').and.to.contain('Probelauf').and.to.contain('Szene &lt;b>Komfort');
-        expect(muster(dm.regelKopfHtml(false).de, { z: 'hand', g: '', p: false })).to.contain('Handeingriff').and.not.to.contain('Probelauf');
-        expect(muster(dm.regelKopfHtml(true).de, { z: 'aus', g: '', p: true })).to.contain('ausgeschaltet').and.not.to.contain('Probelauf');
+        expect(muster(dm.regelKopfHtml(false).de, { z: 'manual', g: '', p: false })).to.contain('Handeingriff').and.not.to.contain('Probelauf');
+        expect(muster(dm.regelKopfHtml(true).de, { z: 'off', g: '', p: true })).to.contain('ausgeschaltet').and.not.to.contain('Probelauf');
 
-        const grenze = w => muster(dm.regelGrenzeHtml(true).de, { s: 45, a: true, p: true, f: 'ja', b: 'adapter', st: 'kennlinie', ...w });
+        const grenze = w => muster(dm.regelGrenzeHtml(true).de, { s: 45, a: true, p: true, f: 'yes', b: 'adapter', st: 'curve', ...w });
         expect(grenze({})).to.contain('>45<').and.to.contain('Probelauf: nicht gesendet');
         expect(grenze({}).match(/opacity:1"/g)).to.have.length(4); // 30, 35, 40, 45 %
-        expect(grenze({ f: 'nein' })).to.contain('nicht unterstützt').and.to.contain('>–<');
+        expect(grenze({ f: 'no' })).to.contain('nicht unterstützt').and.to.contain('>–<');
         // Tooltip am Etikett: warum eine Daikin die Leistungsgrenze nicht uebernimmt
-        expect(grenze({ f: 'nein' })).to.contain('title="Bei Daikin wirkt die Leistungsgrenze nur').and.to.contain('SP 1');
+        expect(grenze({ f: 'no' })).to.contain('title="Bei Daikin wirkt die Leistungsgrenze nur').and.to.contain('SP 1');
         expect(grenze({ b: 'faikout' })).to.contain('ruht (Faikout-Auto)').and.to.contain('>–<');
-        expect(grenze({ b: 'faikout', st: 'vortag' })).to.contain('>45<').and.not.to.contain('ruht');
+        expect(grenze({ b: 'faikout', st: 'previousDay' })).to.contain('>45<').and.not.to.contain('ruht');
         expect(grenze({ a: false })).to.contain('nicht begrenzt');
-        expect(muster(dm.regelGrenzeHtml(false).de, { s: 45, a: true, p: false, f: 'ja', b: 'adapter', st: 'kennlinie' })).not.to.contain('Probelauf');
+        expect(muster(dm.regelGrenzeHtml(false).de, { s: 45, a: true, p: false, f: 'yes', b: 'adapter', st: 'curve' })).not.to.contain('Probelauf');
 
         const plan = muster(dm.regelPlanHtml().de, { s: 'Komfort', n: new Date(new Date().setHours(22, 0, 0, 0)).getTime(), ns: 'Absenken' });
         expect(plan).to.contain('Komfort').and.to.contain('22:00 Absenken');
@@ -930,8 +930,8 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(f).to.contain('Außen 4,5 °C').and.to.contain('Raum 20,6 °C · Rückfall').and.not.to.contain('Feuchte');
         expect(f).to.contain('title="Fühler der Anlage (Rückfall: Datenpunkt zu alt)"');
         expect(muster(dm.regelFuehlerHtml().de, { av: null, fa: true })).to.contain('Außen fehlt').and.to.contain('Feuchte fehlt');
-        // mit dem Datenpunkt regel.fuehler.<art>Stand zaehlt der, nicht mehr das Wort im Quellentext
-        const stand = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Sensor of the unit (fallback)', as: 'rueckfall', rv: 20, rq: 'x (Rückfall: y)', rs: 'ok' });
+        // mit dem Datenpunkt regulation.sensors.<art>Stand zaehlt der, nicht mehr das Wort im Quellentext
+        const stand = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Sensor of the unit (fallback)', as: 'fallback', rv: 20, rq: 'x (Rückfall: y)', rs: 'ok' });
         expect(stand).to.contain('Außen 4,5 °C · Rückfall').and.to.contain('Raum 20 °C<');
         expect(muster(dm.regelHandHtml().de, { h: true, b: new Date(new Date().setHours(22, 0, 0, 0)).getTime() })).to.contain('<b>22:00</b>');
     });
@@ -997,11 +997,11 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 return {};
             });
             await a.deviceManagement.wochenplanDialog(ID, k);
-            const plan = a.gesetzt.find(g => g.id === `${ID}.regel.plan.wocheJson`);
+            const plan = a.gesetzt.find(g => g.id === `${ID}.regulation.schedule.weekJson`);
             expect(plan.wert.ack).to.equal(false);
             expect(JSON.parse(plan.wert.val)).to.have.length(7);
             expect(JSON.parse(plan.wert.val)[0][1]).to.eql({ t: 360, s: 'komfort' });
-            const abw = JSON.parse(a.gesetzt.find(g => g.id === `${ID}.regel.plan.abwesenheitJson`).wert.val);
+            const abw = JSON.parse(a.gesetzt.find(g => g.id === `${ID}.regulation.schedule.absenceJson`).wert.val);
             expect(abw).to.eql({ von: new Date(2026, 11, 27).getTime(), bis: new Date(2027, 0, 3).getTime(), szene: 'abwesend' });
             // Wochenplan war schon an: keine zweite Rueckfrage
             expect(k.formulare).to.have.length(1);
@@ -1009,7 +1009,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
 
         it('Wochenplan aus: fragt nach dem Speichern, ob er eingeschaltet werden soll', async () => {
             for (const antwort of [{}, undefined]) {
-                const { a } = await mitRegelung({ 'regel.plan.aktiv': false });
+                const { a } = await mitRegelung({ 'regulation.schedule.active': false });
                 const k = kontext(async (schema, opt, nr) => {
                     if (nr === 1) {
                         await a.deviceManagement.wochenplanNachricht('wochenplanEntwurf', {
@@ -1024,9 +1024,9 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                     return antwort;
                 });
                 await a.deviceManagement.wochenplanDialog(ID, k);
-                const an = a.gesetzt.find(g => g.id === `${ID}.regel.plan.aktiv`);
+                const an = a.gesetzt.find(g => g.id === `${ID}.regulation.schedule.active`);
                 expect(!!an).to.equal(!!antwort);
-                expect(a.gesetzt.some(g => g.id === `${ID}.regel.plan.wocheJson`)).to.equal(true);
+                expect(a.gesetzt.some(g => g.id === `${ID}.regulation.schedule.weekJson`)).to.equal(true);
             }
         });
 
@@ -1110,7 +1110,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         });
 
         it('Texte aus Datenpunkten werden maskiert (kein HTML, kein Muster)', async () => {
-            const { a } = await mitRegelung({ 'regel.grund': '<img src=x> ${1+1} `x`' });
+            const { a } = await mitRegelung({ 'regulation.reason': '<img src=x> ${1+1} `x`' });
             const f = await a.deviceManagement.detailsFormular(ID, 'de');
             expect(f.items.inhalt.text).to.contain('&lt;img src=x&gt; &#36;{1+1} &#96;x&#96;');
         });
@@ -1143,11 +1143,11 @@ describe('Device-Manager: Regelung auf der Karte', () => {
 });
 
 describe('Device-Manager: Fuehlerkorrektur neben der Solltemperatur', () => {
-    it('Etikett nur mit Datenpunkt regel.fuehler.korrektur und nur bei wirksamer Korrektur', async () => {
+    it('Etikett nur mit Datenpunkt regulation.sensors.correction und nur bei wirksamer Korrektur', async () => {
         const a = await adapterMitGeraet();
         const id = [...a.objekte.values()].find(x => x.type === 'device')._id.slice(a.namespace.length + 1);
         expect((await kartenLaden(a)).karten[0].customInfo.schema.items.regelKorrektur).to.equal(undefined);
-        for (const rel of ['regel.fuehler.korrektur', 'regel.fuehler.ziel']) {
+        for (const rel of ['regulation.sensors.correction', 'regulation.sensors.target']) {
             a.objekte.set(`${id}.${rel}`, { _id: `${a.namespace}.${id}.${rel}`, type: 'state', common: { type: 'number' }, native: {} });
         }
         const items = (await kartenLaden(a)).karten[0].customInfo.schema.items;

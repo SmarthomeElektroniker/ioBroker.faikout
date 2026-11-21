@@ -115,7 +115,7 @@
   "labelVortagMin": "Minimum %",
   "labelVortagMax": "Maximum %",
   "textProbeAn": "Dry run: the adapter only calculates. It shows everything but sends no command to the units. Switch the dry run off to go live.",
-  "textProbeAus": "Live: the adapter sends commands – to every unit whose own dry-run switch (data point regel.bedarf.probelauf) is off as well.",
+  "textProbeAus": "Live: the adapter sends commands – to every unit whose own dry-run switch (data point regulation.demand.dryRun) is off as well.",
   "headerRegelGeraete": "Units",
   "textRegelGeraete": "One entry per air conditioner. A unit without an entry uses the defaults: the adapter controls, sensors on automatic.",
   "labelRegelGeraete": "Settings per unit",
@@ -264,7 +264,7 @@
   "helpExternUser": "Empty = sign in without user name",
   "labelExternPass": "Password at the broker",
   "labelExternClientId": "Client ID",
-  "helpExternClientId": "Empty = iobroker-faikout-adapter-<Nr>-<…>",
+  "helpExternClientId": "Name under which the adapter logs in at the broker. It must be unique: two clients with the same ID throw each other out again and again. The preset value was created once for this instance.",
   "labelExternPraefix": "Topic prefix",
   "helpExternPraefix": "Only if the modules publish below a prefix; usually empty",
   "btnBrokerTest": "Test connection",
@@ -284,5 +284,6 @@
   "textBindExtern": "Switches the MQTT host of ONE module to the external broker (address and port from the tab \"MQTT broker\", plus user and password if entered there). Choose a module, click \"Check\", read the preview, then \"Connect\". The module restarts and has to report via the external broker within 90 s. \"Restore\" writes the previous MQTT host back. Firmware and all other settings stay untouched.",
   "labelTabHeizenVorgabe": "Heating curve: points",
   "labelTabKuehlenVorgabe": "Cooling curve: points",
-  "textWegWahl": "\"Adjust setpoint\": the unit keeps controlling itself, the adapter shifts its setpoint – also suitable for slow sensors in another room. \"Send to module\": the module controls the unit; it may cycle more often."
+  "textWegWahl": "\"Adjust setpoint\": the unit keeps controlling itself, the adapter shifts its setpoint – also suitable for slow sensors in another room. \"Send to module\": the module controls the unit; it may cycle more often.",
+  "btnClientIdStandard": "Restore default"
 }

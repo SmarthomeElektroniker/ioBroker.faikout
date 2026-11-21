@@ -16,6 +16,7 @@ const discovery = require('./lib/discovery');
 const suche = require('./lib/suche');
 const anbinden = require('./lib/anbinden');
 const { Bedarfsregelung } = require('./lib/regel');
+const regelUmzug = require('./lib/regel/umzug');
 
 /** Topics, die der Adapter auswertet. Alles andere wird still verworfen. */
 const BEKANNTE_ARTEN = new Set(['state', 'info', 'error', 'event']);
@@ -184,6 +185,8 @@ class Faikout extends utils.Adapter {
             return; // die Instanz startet mit der umgezogenen Konfiguration neu
         }
         await this.verbrauchUmziehen();
+        // Vorabstand von 1.0.0: Datenpunkte der Regelung von regel.* nach regulation.* (lib/regel/umzug.js)
+        await regelUmzug.umziehen(this);
         await this.objekteAbgleichen();
         // Geloeschte Objekte mitbekommen (Issue #6): sonst schreibt der Adapter weiter in einen
         // Zweig, den er fuer angelegt haelt - "State ... has no existing object".
@@ -249,7 +252,7 @@ class Faikout extends utils.Adapter {
         // darauf gingen bisher ins Leere, weil nur control.* abonniert war).
         this.subscribeStates('*.status.autoe');
         // Schalter der Bedarfsregelung - laufen NICHT ueber den Befehlsweg ans Modul.
-        this.subscribeStates('*.regel.*');
+        this.subscribeStates('*.regulation.*');
         // Zeittakt der Regelung: Schaltpunkte des Wochenplans, Ablauf von Sperren, Fuehleralter.
         this.regelTakt = this.setInterval(() => {
             if (this.regelung) {
@@ -1256,7 +1259,7 @@ class Faikout extends utils.Adapter {
 
         // Schalter der Bedarfsregelung: nie ein Befehl ans Modul.
         const teileR = id.split('.');
-        if (teileR[3] === 'regel') {
+        if (teileR[3] === 'regulation') {
             if (this.regelung) {
                 await this.regelung.schalter(teileR[2], teileR.slice(4).join('.'), state.val);
             }
@@ -1578,10 +1581,21 @@ class Faikout extends utils.Adapter {
             neu[feld] = punkte.map(([x, y]) => ({ x, y }));
             this.config[feld] = neu[feld];
         }
+        // Client-ID fuer den externen Broker: der Standardwert wird EINMAL erzeugt, gespeichert und im
+        // Feld vorbelegt (Nutzervorgabe 21.11.2026) - frei ueberschreibbar, "Standard wiederherstellen"
+        // setzt ihn zurueck.
+        if (!String(this.config.externClientIdStandard || '').trim()) {
+            neu.externClientIdStandard = brokerextern.neueClientId(this.instance);
+            this.config.externClientIdStandard = neu.externClientIdStandard;
+        }
+        if (!String(this.config.externClientId || '').trim()) {
+            neu.externClientId = this.config.externClientIdStandard;
+            this.config.externClientId = neu.externClientId;
+        }
         if (!Object.keys(neu).length || typeof this.extendForeignObjectAsync !== 'function') {
             return false;
         }
-        this.log.info('Settings migrated: default curves are stored as tables now. The instance restarts once.');
+        this.log.info(`Settings completed (${Object.keys(neu).join(', ')}). The instance restarts once.`);
         await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, { native: neu });
         return true;
     }

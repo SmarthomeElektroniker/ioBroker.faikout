@@ -25,7 +25,7 @@ const eingang = (x = {}) => ({
     ziel: 21,
     econo: false,
     abtauen: false,
-    faehig: 'unbekannt',
+    faehig: 'unknown',
     ...x,
 });
 
@@ -58,8 +58,8 @@ describe('Regelung: Kennlinie', () => {
         const { a, uhr } = aufbau({ regelKennlinieHeizen: '0:50, 5:60', regelProbelauf: false });
         const anlage = new Anlage({ name: 'Daikin K' });
         await laufen(a, uhr, anlage, 2);
-        expect(a.wert('Daikin_K.regel.bedarf.zustand')).to.equal('gestört');
-        expect(a.wert('Daikin_K.regel.bedarf.grund')).to.match(/Konfigurationsfehler/);
+        expect(a.wert('Daikin_K.regulation.demand.state')).to.equal('fault');
+        expect(a.wert('Daikin_K.regulation.demand.reason')).to.match(/Konfigurationsfehler/);
         expect(a.gesendet).to.have.length(0);
     });
 });
@@ -133,14 +133,14 @@ describe('Regelung: Rechenkern', () => {
     it('faellt bei fehlendem/veraltetem Aussenfuehler auf 100 % zurueck ("gestört")', () => {
         const r = bedarf.berechnen(eingang({ aussen: { wert: 3, zeit: T0 - 2 * 3600000 } }), K, null, T0).ergebnis;
         expect(r.sollwert).to.equal(100);
-        expect(r.zustand).to.equal('gestört');
-        expect(bedarf.berechnen(eingang({ aussen: null }), K, null, T0).ergebnis.zustand).to.equal('gestört');
+        expect(r.zustand).to.equal('fault');
+        expect(bedarf.berechnen(eingang({ aussen: null }), K, null, T0).ergebnis.zustand).to.equal('fault');
     });
 
     it('meldet den Econo-Konflikt und "nicht fähig"', () => {
-        const r = bedarf.berechnen(eingang({ econo: true, faehig: 'nein' }), K, null, T0).ergebnis;
+        const r = bedarf.berechnen(eingang({ econo: true, faehig: 'no' }), K, null, T0).ergebnis;
         expect(r.konflikt).to.match(/Econo/);
-        expect(r.zustand).to.equal('nicht fähig');
+        expect(r.zustand).to.equal('notCapable');
     });
 });
 
@@ -183,7 +183,7 @@ describe('Regelung: Strategie Vortag + Zuschlag', () => {
 
 describe('Regelung: Schreiber', () => {
     const schritt = (z, soll, ist, t, probelauf = false) =>
-        schreiber.entscheiden({ sollwert: soll, istwert: ist, probelauf, faehig: 'ja', jetzt: t, zustand: z });
+        schreiber.entscheiden({ sollwert: soll, istwert: ist, probelauf, faehig: 'yes', jetzt: t, zustand: z });
 
     it('haelt nach oben 60 s, nach unten 600 s', () => {
         let r = schritt(null, 80, 100, T0);
@@ -205,7 +205,7 @@ describe('Regelung: Schreiber', () => {
         let gesendet = 0;
         for (let i = 0; i < 240; i++) {
             const soll = i % 2 ? 60 : 65; // wechselt staendig
-            const r = schreiber.entscheiden({ sollwert: soll, istwert: ist, probelauf: false, faehig: 'ja', jetzt: t, zustand: z, grenzen: { haltHochMs: 0, haltRunterMs: 0 } });
+            const r = schreiber.entscheiden({ sollwert: soll, istwert: ist, probelauf: false, faehig: 'yes', jetzt: t, zustand: z, grenzen: { haltHochMs: 0, haltRunterMs: 0 } });
             z = r.zustand;
             if (r.aktion === 'senden') {
                 gesendet++;
@@ -224,7 +224,7 @@ describe('Regelung: Schreiber', () => {
     it('sendet nichts bei gleichem Istwert, neutral oder nicht faehiger Anlage', () => {
         expect(schritt(null, 100, 100, T0).aktion).to.equal('nichts');
         expect(schritt(null, null, 100, T0).aktion).to.equal('nichts');
-        const r = schreiber.entscheiden({ sollwert: 50, istwert: 100, probelauf: false, faehig: 'nein', jetzt: T0, zustand: null, grenzen: { haltRunterMs: 0 } });
+        const r = schreiber.entscheiden({ sollwert: 50, istwert: 100, probelauf: false, faehig: 'no', jetzt: T0, zustand: null, grenzen: { haltRunterMs: 0 } });
         expect(r.aktion).to.equal('nichts');
     });
 
@@ -245,16 +245,16 @@ describe('Regelung: Schreiber', () => {
 describe('Regelung: Faehigkeit', () => {
     it('unterscheidet "abgelehnt bei Geraet aus" von "nicht faehig"', () => {
         let f = faehigkeit.bewerten(null, { art: 'abgelehnt', power: false, wert: 80 });
-        expect(f.wert).to.equal('unbekannt');
+        expect(f.wert).to.equal('unknown');
         expect(f.grund).to.match(/bei Gerät aus/);
         f = faehigkeit.bewerten(f, { art: 'abgelehnt', power: true, wert: 80 });
-        expect(f.wert).to.equal('nein');
-        expect(faehigkeit.bewerten(null, { art: 'angenommen', wert: 70 }).wert).to.equal('ja');
-        expect(faehigkeit.bewerten(null, { art: 'status', vollstaendig: true, demand: 70 }).wert).to.equal('ja');
-        expect(faehigkeit.bewerten(null, { art: 'status', vollstaendig: true }).wert).to.equal('nein');
-        expect(faehigkeit.bewerten(null, { art: 'status', vollstaendig: false }).wert).to.equal('unbekannt');
+        expect(f.wert).to.equal('no');
+        expect(faehigkeit.bewerten(null, { art: 'angenommen', wert: 70 }).wert).to.equal('yes');
+        expect(faehigkeit.bewerten(null, { art: 'status', vollstaendig: true, demand: 70 }).wert).to.equal('yes');
+        expect(faehigkeit.bewerten(null, { art: 'status', vollstaendig: true }).wert).to.equal('no');
+        expect(faehigkeit.bewerten(null, { art: 'status', vollstaendig: false }).wert).to.equal('unknown');
         const fehlt = faehigkeit.bewerten(null, { art: 'status', vollstaendig: true });
-        expect(faehigkeit.bewerten(fehlt, { art: 'status', vollstaendig: true, demand: 100 }).wert).to.equal('unbekannt');
+        expect(faehigkeit.bewerten(fehlt, { art: 'status', vollstaendig: true, demand: 100 }).wert).to.equal('unknown');
     });
 });
 
@@ -265,11 +265,11 @@ describe('Regelung: Zustand und Einstellungen', () => {
         const z = zustand.leer();
         z.bedarf.aussenVerlauf = [[T0, 3]];
         z.schreiber.befehle = [T0];
-        z.faehig = { wert: 'ja', grund: 'x' };
+        z.faehig = { wert: 'yes', grund: 'x' };
         const z2 = zustand.lesen(zustand.schreiben(z));
         expect(z2.bedarf.aussenVerlauf).to.eql([[T0, 3]]);
         expect(z2.schreiber.befehle).to.eql([T0]);
-        expect(z2.faehig.wert).to.equal('ja');
+        expect(z2.faehig.wert).to.equal('yes');
     });
 
     it('Probelauf ist ohne Einstellung AN', () => {
@@ -291,10 +291,10 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
                 anlage.abtauen = i === 50;
             });
             expect(a.gesendet, JSON.stringify(config)).to.have.length(0);
-            const w = JSON.parse(a.wert('Daikin_Wohnzimmer.regel.bedarf.wuerdeSenden'));
+            const w = JSON.parse(a.wert('Daikin_Wohnzimmer.regulation.demand.wouldSend'));
             expect(w.aktion).to.equal('wuerde');
-            expect(a.wert('Daikin_Wohnzimmer.regel.bedarf.probelauf')).to.equal(true);
-            expect(a.wert('Daikin_Wohnzimmer.regel.bedarf.sollwert')).to.be.within(30, 100);
+            expect(a.wert('Daikin_Wohnzimmer.regulation.demand.dryRun')).to.equal(true);
+            expect(a.wert('Daikin_Wohnzimmer.regulation.demand.setpoint')).to.be.within(30, 100);
             expect(a.zeilen.filter(z => /would send/.test(z.text)).length).to.be.at.least(1);
         }
     });
@@ -303,12 +303,12 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         const { a, uhr } = aufbau({ regelProbelauf: false, regelAktiv: true });
         const anlage = new Anlage({ name: 'Daikin Wohnzimmer', outside: 5 });
         await laufen(a, uhr, anlage, 1);
-        await a.onStateChange('faikout.0.Daikin_Wohnzimmer.regel.bedarf.probelauf', { val: false, ack: false });
+        await a.onStateChange('faikout.0.Daikin_Wohnzimmer.regulation.demand.dryRun', { val: false, ack: false });
         await laufen(a, uhr, anlage, 20);
         expect(a.gesendet.map(g => g.topic)).to.eql(['command/Daikin Wohnzimmer/demand']);
         expect(a.gesendet[0].nutzlast).to.equal('60');
         expect(anlage.demand).to.equal(60);
-        expect(a.wert('Daikin_Wohnzimmer.info.demandFaehig')).to.equal('ja');
+        expect(a.wert('Daikin_Wohnzimmer.info.demandCapable')).to.equal('yes');
         // Der Schalter ging NICHT als Befehl ans Modul
         expect(a.gesendet.some(g => /probelauf/.test(g.topic))).to.equal(false);
     });
@@ -317,26 +317,26 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         const { a, uhr } = aufbau({ regelProbelauf: false, regelAktiv: true });
         const anlage = new Anlage({ name: 'Daikin 1OG', outside: 5, nimmtDemand: 'nie' });
         await laufen(a, uhr, anlage, 1);
-        await a.onStateChange('faikout.0.Daikin_1OG.regel.bedarf.probelauf', { val: false, ack: false });
+        await a.onStateChange('faikout.0.Daikin_1OG.regulation.demand.dryRun', { val: false, ack: false });
         await laufen(a, uhr, anlage, 60);
         expect(a.gesendet).to.have.length(1);
-        expect(a.wert('Daikin_1OG.info.demandFaehig')).to.equal('nein');
-        expect(a.wert('Daikin_1OG.regel.bedarf.zustand')).to.equal('nicht fähig');
+        expect(a.wert('Daikin_1OG.info.demandCapable')).to.equal('no');
+        expect(a.wert('Daikin_1OG.regulation.demand.state')).to.equal('notCapable');
     });
 
     it('Geraet aus = neutral; Verbindungsabriss -> Fuehler veraltet -> Rueckfall 100', async () => {
         const { a, uhr, regel } = aufbau({ regelAktiv: true });
         const anlage = new Anlage({ name: 'Daikin X', power: false });
         await laufen(a, uhr, anlage, 3);
-        expect(a.wert('Daikin_X.regel.bedarf.zustand')).to.equal('neutral');
+        expect(a.wert('Daikin_X.regulation.demand.state')).to.equal('neutral');
         anlage.power = true;
         await laufen(a, uhr, anlage, 3);
-        expect(a.wert('Daikin_X.regel.bedarf.zustand')).to.equal('ok');
+        expect(a.wert('Daikin_X.regulation.demand.state')).to.equal('ok');
         anlage.verbunden = false;
         await laufen(a, uhr, anlage, 70);
         await regel.schritt('Daikin_X'); // Takt ohne Meldung (z. B. Stundenwechsel)
-        expect(a.wert('Daikin_X.regel.bedarf.sollwert')).to.equal(100);
-        expect(a.wert('Daikin_X.regel.bedarf.grund')).to.match(/veraltet/);
+        expect(a.wert('Daikin_X.regulation.demand.setpoint')).to.equal(100);
+        expect(a.wert('Daikin_X.regulation.demand.reason')).to.match(/veraltet/);
     });
 
     it('Neustart: Zustand (Aussenmittel, Befehlszaehler, Faehigkeit) kommt aus zustandJson zurueck', async () => {
@@ -344,7 +344,7 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         const anlage = new Anlage({ name: 'Daikin N', outside: 0 });
         await laufen(a, uhr, anlage, 20);
         await a.regelung.sichernAlle(); // wie beim Beenden des Adapters
-        const gespeichert = a.wert('Daikin_N.regel.bedarf.zustandJson');
+        const gespeichert = a.wert('Daikin_N.regulation.demand.stateJson');
         expect(JSON.parse(gespeichert).bedarf.aussenVerlauf.length).to.be.at.least(15);
         // neuer Adapter, gleiche Datenbank
         const neu = aufbau({ regelAktiv: true }, uhr.t);
@@ -352,8 +352,8 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         neu.a.objekte = a.objekte;
         anlage.outside = 10; // Mittel springt nicht sofort auf 10
         await laufen(neu.a, neu.uhr, anlage, 1);
-        expect(neu.a.wert('Daikin_N.regel.bedarf.aussenMittel')).to.be.below(2);
-        expect(JSON.parse(neu.a.wert('Daikin_N.regel.bedarf.zustandJson')).schreiber.befehle.length).to.equal(
+        expect(neu.a.wert('Daikin_N.regulation.demand.outsideMean')).to.be.below(2);
+        expect(JSON.parse(neu.a.wert('Daikin_N.regulation.demand.stateJson')).schreiber.befehle.length).to.equal(
             JSON.parse(gespeichert).schreiber.befehle.length,
         );
     });
@@ -363,7 +363,7 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
         const geschrieben = [];
         const setState = a.setState.bind(a);
         a.setState = async (id, w) => {
-            if (id.includes('.regel.') && !a.objekte.has(id)) {
+            if (id.includes('.regulation.') && !a.objekte.has(id)) {
                 geschrieben.push(id);
             }
             return setState(id, w);
@@ -376,11 +376,11 @@ describe('Regelung: Simulator (main.js + Anlage)', function () {
     it('legt die Datenpunkte mit Vorgaben an (probelauf true, aktiv aus der Einstellung)', async () => {
         const { a, uhr } = aufbau({});
         await laufen(a, uhr, new Anlage({ name: 'Daikin V' }), 1);
-        expect(a.wert('Daikin_V.regel.bedarf.probelauf')).to.equal(true);
-        expect(a.wert('Daikin_V.regel.bedarf.aktiv')).to.equal(false);
-        expect(a.wert('Daikin_V.regel.bedarf.zustand')).to.equal('aus');
-        expect(a.objekte.get('Daikin_V.regel.bedarf.aktiv').common.write).to.equal(true);
-        expect(a.objekte.get('Daikin_V.regel.bedarf.sollwert').common.write).to.equal(false);
+        expect(a.wert('Daikin_V.regulation.demand.dryRun')).to.equal(true);
+        expect(a.wert('Daikin_V.regulation.demand.active')).to.equal(false);
+        expect(a.wert('Daikin_V.regulation.demand.state')).to.equal('off');
+        expect(a.objekte.get('Daikin_V.regulation.demand.active').common.write).to.equal(true);
+        expect(a.objekte.get('Daikin_V.regulation.demand.setpoint').common.write).to.equal(false);
         expect(a.gesendet).to.have.length(0);
     });
 });

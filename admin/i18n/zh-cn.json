@@ -115,7 +115,7 @@
   "labelVortagMin": "最小 %",
   "labelVortagMax": "最大 %",
   "textProbeAn": "试运行：适配器只做计算。它会显示全部结果，但不向设备发送任何指令。关闭试运行后才真正调节。",
-  "textProbeAus": "正式运行：适配器会发送指令 – 发给自身试运行开关（数据点 regel.bedarf.probelauf）也已关闭的每台设备。",
+  "textProbeAus": "正式运行：适配器会发送指令 – 发给自身试运行开关（数据点 regulation.demand.dryRun）也已关闭的每台设备。",
   "headerRegelGeraete": "设备",
   "textRegelGeraete": "每台空调一个条目。没有条目的设备使用默认设置：由适配器调节，传感器自动选择。",
   "labelRegelGeraete": "各设备的设置",
@@ -264,7 +264,7 @@
   "helpExternUser": "留空 = 不登录直接连接",
   "labelExternPass": "代理上的密码",
   "labelExternClientId": "客户端 ID",
-  "helpExternClientId": "留空 = iobroker-faikout-adapter-<Nr>-<…>",
+  "helpExternClientId": "适配器登录代理时使用的名称。它必须唯一：两个使用相同 ID 的客户端会不断把对方踢下线。预填的值是为此实例一次性生成的。",
   "labelExternPraefix": "主题前缀",
   "helpExternPraefix": "仅当模块在某个前缀下发布时填写；通常留空",
   "btnBrokerTest": "测试连接",
@@ -284,5 +284,6 @@
   "textBindExtern": "将一个模块的 MQTT host 切换到外部代理（地址和端口来自“MQTT 代理”选项卡，如在那里填写了用户名和密码也一并写入）。选择模块，点击“检查”，阅读预览，然后“绑定”。模块会重启，并须在 90 秒内通过外部代理上报。“恢复”会写回之前的 MQTT host。固件和其他设置保持不变。",
   "labelTabHeizenVorgabe": "制热曲线：节点",
   "labelTabKuehlenVorgabe": "制冷曲线：节点",
-  "textWegWahl": "“调整设定值”：设备继续自行调节，适配器移动其设定值 – 也适用于位于其他房间的迟缓传感器。“发送到模块”：由模块调节设备；设备可能更频繁地启停。"
+  "textWegWahl": "“调整设定值”：设备继续自行调节，适配器移动其设定值 – 也适用于位于其他房间的迟缓传感器。“发送到模块”：由模块调节设备；设备可能更频繁地启停。",
+  "btnClientIdStandard": "恢复默认值"
 }

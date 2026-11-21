@@ -121,10 +121,10 @@ describe('Oberflaeche: Kennlinie pruefen und Bild fuer die Einstellungsseite', (
 
     it('regelKennlinieBild: SVG mit Arbeitspunkt des Geraets, im Probelauf "würde senden"', async () => {
         const a = adapter({
-            'wz.regel.bedarf.aussenMittel': 9,
-            'wz.regel.bedarf.aktiv': true,
-            'wz.regel.bedarf.sollwert': 45,
-            'wz.regel.bedarf.rohwert': 44.3,
+            'wz.regulation.demand.outsideMean': 9,
+            'wz.regulation.demand.active': true,
+            'wz.regulation.demand.setpoint': 45,
+            'wz.regulation.demand.rawValue': 44.3,
             'wz.control.power': true,
             'wz.control.mode': 'heat',
         });
@@ -146,10 +146,10 @@ describe('Oberflaeche: Kennlinie pruefen und Bild fuer die Einstellungsseite', (
 
 describe('Oberflaeche: Arbeitspunkt fuer die ziehbare Kennlinie (regelArbeitspunkt)', () => {
     const werte = {
-        'wz.regel.bedarf.aussenMittel': 9,
-        'wz.regel.bedarf.aktiv': true,
-        'wz.regel.bedarf.sollwert': 45,
-        'wz.regel.bedarf.rohwert': 44.3,
+        'wz.regulation.demand.outsideMean': 9,
+        'wz.regulation.demand.active': true,
+        'wz.regulation.demand.setpoint': 45,
+        'wz.regulation.demand.rawValue': 44.3,
         'wz.control.power': true,
         'wz.control.mode': 'heat',
     };
@@ -173,7 +173,7 @@ describe('Oberflaeche: Arbeitspunkt fuer die ziehbare Kennlinie (regelArbeitspun
     });
 
     it('volle Freigabe ueber der Obergrenze: Etikett "volle Leistung (2 K unter Ziel)", Obergrenze aus dem Formular', async () => {
-        const a = adapter({ ...werte, 'wz.regel.bedarf.sollwert': 100, 'wz.regel.bedarf.rohwert': 102.5, 'wz.regel.bedarf.probelauf': false }, { regelProbelauf: false, regelObergrenze: 100 });
+        const a = adapter({ ...werte, 'wz.regulation.demand.setpoint': 100, 'wz.regulation.demand.rawValue': 102.5, 'wz.regulation.demand.dryRun': false }, { regelProbelauf: false, regelObergrenze: 100 });
         const voll = (await frage(a, 'regelArbeitspunkt', { geraet: 'Wohnzimmer AC', obergrenze: 95 })).antwort;
         expect(voll.geraet).to.equal('wz');
         expect(voll.vollAbK).to.equal(require('../lib/regel/bedarf').VORGABEN.vollAbK);
@@ -214,7 +214,7 @@ describe('Oberflaeche: Nachrichten der Einstellungsseite', () => {
     });
 
     it('regelKann: Faehigkeiten aus den Datenpunkten', async () => {
-        const a = adapter({ 'wz.info.demandFaehig': 'nein', 'wz.regel.fuehler.raumQuelle': 'BLE-Fühler am Modul', 'wz.regel.fuehler.feuchte': 48 });
+        const a = adapter({ 'wz.info.demandCapable': 'no', 'wz.regulation.sensors.roomSource': 'BLE-Fühler am Modul', 'wz.regulation.sensors.humidity': 48 });
         const { antwort } = await frage(a, 'regelKann', { geraet: 'wz' });
         expect(antwort).to.contain('nicht unterstützt').and.to.contain('verbunden').and.to.contain('vorhanden');
         expect((await frage(a, 'regelKann', { geraet: '' })).antwort).to.contain(o.TEXTE.kWaehlen.de);
@@ -277,7 +277,7 @@ describe('Oberflaeche: Nachrichten der Einstellungsseite', () => {
 
 describe('Oberflaeche: Geraetename statt ID, Hinweise', () => {
     it('Zeilen duerfen Name oder ID tragen: Bild, Faehigkeiten und Auswahl finden das Geraet', async () => {
-        const a = adapter({ 'wz.info.demandFaehig': 'ja', 'wz.regel.bedarf.aussenMittel': 3 });
+        const a = adapter({ 'wz.info.demandCapable': 'yes', 'wz.regulation.demand.outsideMean': 3 });
         expect(o.geraetId(a, 'Wohnzimmer AC')).to.equal('wz');
         expect(o.geraetId(a, 'wz')).to.equal('wz');
         expect(o.geraetId(a, 'fremd')).to.equal('fremd');
@@ -289,18 +289,18 @@ describe('Oberflaeche: Geraetename statt ID, Hinweise', () => {
         ]);
     });
 
-    it('BLE-Fuehler: Art aus regel.fuehler.raumArt, ohne den Datenpunkt wie bisher aus dem Quellentext', async () => {
+    it('BLE-Fuehler: Art aus regulation.sensors.roomKind, ohne den Datenpunkt wie bisher aus dem Quellentext', async () => {
         const kann = async werte => (await frage(adapter(werte), 'regelKann', { geraet: 'wz' })).antwort;
-        expect(await kann({ 'wz.regel.fuehler.raumArt': 'ble', 'wz.regel.fuehler.raumQuelle': 'BLE sensor' })).to.contain('verbunden');
-        expect(await kann({ 'wz.regel.fuehler.raumArt': 'dp', 'wz.regel.fuehler.raumQuelle': 'BLE-Fühler am Modul' })).to.contain('keiner');
-        expect(await kann({ 'wz.regel.fuehler.raumQuelle': 'BLE-Fühler am Modul' })).to.contain('verbunden');
+        expect(await kann({ 'wz.regulation.sensors.roomKind': 'ble', 'wz.regulation.sensors.roomSource': 'BLE sensor' })).to.contain('verbunden');
+        expect(await kann({ 'wz.regulation.sensors.roomKind': 'dp', 'wz.regulation.sensors.roomSource': 'BLE-Fühler am Modul' })).to.contain('keiner');
+        expect(await kann({ 'wz.regulation.sensors.roomSource': 'BLE-Fühler am Modul' })).to.contain('verbunden');
     });
 
     it('Daikin-Hinweis haengt am Wert "nein" der Leistungsgrenze', async () => {
-        const nein = (await frage(adapter({ 'wz.info.demandFaehig': 'nein' }), 'regelKann', { geraet: 'wz' })).antwort;
+        const nein = (await frage(adapter({ 'wz.info.demandCapable': 'no' }), 'regelKann', { geraet: 'wz' })).antwort;
         expect(nein).to.contain('SP 1').and.to.contain('Leistungssteuerung auf „Ein“');
-        for (const wert of ['ja', 'unbekannt']) {
-            expect((await frage(adapter({ 'wz.info.demandFaehig': wert }), 'regelKann', { geraet: 'wz' })).antwort).not.to.contain('SP 1');
+        for (const wert of ['yes', 'unknown']) {
+            expect((await frage(adapter({ 'wz.info.demandCapable': wert }), 'regelKann', { geraet: 'wz' })).antwort).not.to.contain('SP 1');
         }
     });
 
@@ -316,7 +316,7 @@ describe('Oberflaeche: Geraetename statt ID, Hinweise', () => {
         expect(o.zielwechselMax([[{ t: 0, s: 'a' }, { t: 60, s: 'b' }, { t: 120, s: 'a' }], [], [], [], [], [], []], gleich)).to.equal(0);
         expect(o.zielwechselMax(wochenplan.vorgabePlan(sz), sz)).to.equal(4);
         expect(o.zielwechselMax(null, sz)).to.equal(0);
-        const a = n => adapter({ 'wz.regel.plan.wocheJson': JSON.stringify(plan(n)) });
+        const a = n => adapter({ 'wz.regulation.schedule.weekJson': JSON.stringify(plan(n)) });
         expect((await frage(a(6), 'regelKann', { geraet: 'wz', betrieb: 'faikout' })).antwort).to.contain('ändert das Ziel an einem Tag 6-mal');
         expect((await frage(a(5), 'regelKann', { geraet: 'wz', betrieb: 'faikout' })).antwort).not.to.contain('Flash');
         expect((await frage(a(8), 'regelKann', { geraet: 'wz', betrieb: 'adapter' })).antwort).not.to.contain('Flash');

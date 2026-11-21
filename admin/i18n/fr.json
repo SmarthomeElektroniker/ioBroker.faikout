@@ -115,7 +115,7 @@
   "labelVortagMin": "Minimum %",
   "labelVortagMax": "Maximum %",
   "textProbeAn": "Marche d’essai : l’adaptateur ne fait que calculer. Il affiche tout, mais n’envoie aucune commande aux appareils. Désactivez la marche d’essai pour passer en service réel.",
-  "textProbeAus": "En service : l’adaptateur envoie des commandes – à chaque appareil dont l’interrupteur d’essai propre (point de données regel.bedarf.probelauf) est lui aussi désactivé.",
+  "textProbeAus": "En service : l’adaptateur envoie des commandes – à chaque appareil dont l’interrupteur d’essai propre (point de données regulation.demand.dryRun) est lui aussi désactivé.",
   "headerRegelGeraete": "Appareils",
   "textRegelGeraete": "Une entrée par climatiseur. Un appareil sans entrée utilise les valeurs par défaut : l’adaptateur régule, capteurs en automatique.",
   "labelRegelGeraete": "Réglages par appareil",
@@ -264,7 +264,7 @@
   "helpExternUser": "Vide = connexion sans identification",
   "labelExternPass": "Mot de passe sur le broker",
   "labelExternClientId": "ID client",
-  "helpExternClientId": "Vide = iobroker-faikout-adapter-<Nr>-<…>",
+  "helpExternClientId": "Nom sous lequel l’adaptateur se connecte au broker. Il doit être unique : deux clients avec le même identifiant s’éjectent mutuellement sans cesse. La valeur préremplie a été créée une fois pour cette instance.",
   "labelExternPraefix": "Préfixe des topics",
   "helpExternPraefix": "Seulement si les modules publient sous un préfixe ; généralement vide",
   "btnBrokerTest": "Tester la connexion",
@@ -284,5 +284,6 @@
   "textBindExtern": "Bascule le MQTT host d’UN module vers le broker externe (adresse et port de l’onglet « Broker MQTT », ainsi qu’utilisateur et mot de passe s’ils y sont saisis). Choisissez un module, cliquez sur « Vérifier », lisez l’aperçu, puis « Rattacher ». Le module redémarre et doit s’annoncer via le broker externe dans les 90 s. « Rétablir » réécrit le MQTT host précédent. Le firmware et tous les autres réglages restent inchangés.",
   "labelTabHeizenVorgabe": "Courbe de chauffe : points",
   "labelTabKuehlenVorgabe": "Courbe de refroidissement : points",
-  "textWegWahl": "« Ajuster la consigne » : l’appareil continue de se réguler lui-même, l’adaptateur décale sa consigne – convient aussi aux sondes lentes dans une autre pièce. « Envoyer au module » : le module régule l’appareil ; celui-ci peut alors cycler plus souvent."
+  "textWegWahl": "« Ajuster la consigne » : l’appareil continue de se réguler lui-même, l’adaptateur décale sa consigne – convient aussi aux sondes lentes dans une autre pièce. « Envoyer au module » : le module régule l’appareil ; celui-ci peut alors cycler plus souvent.",
+  "btnClientIdStandard": "Rétablir la valeur par défaut"
 }

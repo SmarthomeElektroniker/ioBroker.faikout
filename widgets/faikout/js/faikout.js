@@ -74,6 +74,7 @@ vis.binds.faikout = {
         'aktiv': 'active',
         'Handeingriff': 'manual override',
         'gestört': 'fault',
+        'einrichten': 'set up',
         'keine Verbindung': 'no connection',
         'ausgeschaltet': 'switched off',
         'Probelauf': 'Dry run',
@@ -699,7 +700,7 @@ vis.binds.faikout = {
     },
 
     /**
-     * Kennlinie und Grenzen eines Geraets. Bevorzugt aus dem Datenpunkt regel.bedarf.kennlinieJson
+     * Kennlinie und Grenzen eines Geraets. Bevorzugt aus dem Datenpunkt regulation.demand.curveJson
      * (falls der Adapter ihn fuehrt), sonst aus den Instanzeinstellungen: Zeile des Geraets in
      * regelGeraete (ueber ID oder Name), leere Werte fallen auf die Vorgabe der Instanz zurueck.
      */
@@ -707,7 +708,7 @@ vis.binds.faikout = {
         var b = vis.binds.faikout;
         var VOR = { heizen: [[-10, 95], [0, 75], [7, 55], [15, 40]], kuehlen: [[25, 40], [30, 65], [35, 95]], untergrenze: 40, obergrenze: 95 };
         var zahl = function (v, d) { return v === undefined || v === null || v === '' || isNaN(Number(v)) ? d : Number(v); };
-        var ausDp = ctx.hat('regel.bedarf.kennlinieJson') ? ctx.wert('regel.bedarf.kennlinieJson') : null;
+        var ausDp = ctx.hat('regulation.demand.curveJson') ? ctx.wert('regulation.demand.curveJson') : null;
         if (ausDp) {
             try {
                 var k = JSON.parse(ausDp);
@@ -755,7 +756,7 @@ vis.binds.faikout = {
         vis.binds.faikout.start(widgetID, data, function ($wurzel, ctx) {
             var b = vis.binds.faikout;
             var bild = window.faikoutKennlinienbild;
-            if (!ctx.hat('regel.zustand')) return b.fehlt($wurzel, 'regel.zustand');
+            if (!ctx.hat('regulation.state')) return b.fehlt($wurzel, 'regulation.state');
             data = $.extend({}, data, { schalter: false });
             b.kopf($wurzel, ctx, data);
             var stufen = '';
@@ -775,42 +776,44 @@ vis.binds.faikout = {
                 '</div>');
             b.fuss($wurzel, ctx, data);
             var kennlinie = null;
-            var ZUSTAND = { ok: 'aktiv', hand: 'Handeingriff', 'gestört': 'gestört', offline: 'keine Verbindung', aus: 'ausgeschaltet' };
+            var ZUSTAND = { ok: 'aktiv', manual: 'Handeingriff', setup: 'einrichten', fault: 'gestört', offline: 'keine Verbindung', off: 'ausgeschaltet' };
+            // Kanal der Datenpunkte je Symbol (regulation.<Kanal>.active)
+            var KANAL = { bedarf: 'demand', feuchte: 'humidity', plan: 'schedule' };
             var TITEL = { bedarf: 'Bedarfsregelung', feuchte: 'Feuchteregelung', plan: 'Wochenplan' };
 
             var kennlinieStand = null;
             var zeichnen = function () {
                 // Aendert der Adapter die Kennlinie (Datenpunkt kennlinieJson), wird sie neu geladen
-                var stand = ctx.hat('regel.bedarf.kennlinieJson') ? ctx.wert('regel.bedarf.kennlinieJson') : null;
+                var stand = ctx.hat('regulation.demand.curveJson') ? ctx.wert('regulation.demand.curveJson') : null;
                 if (kennlinie && stand !== kennlinieStand) {
                     kennlinieStand = stand;
                     return b.kennlinieLaden(ctx, function (k) { kennlinie = k; zeichnen(); });
                 }
                 b.farbe($wurzel, ctx.akzent());
-                var zustand = ctx.wert('regel.zustand') || 'aus';
-                var faehig = ctx.wert('info.demandFaehig');
-                var ruht = ctx.wert('regel.betrieb') === 'faikout' && ctx.wert('regel.bedarf.strategie') !== 'vortag';
-                var aktiv = ctx.wert('regel.bedarf.aktiv') === true && faehig !== 'nein' && !ruht;
-                var soll = parseFloat(ctx.wert('regel.bedarf.sollwert'));
-                var probe = ctx.wert('regel.bedarf.probelauf') !== false;
+                var zustand = ctx.wert('regulation.state') || 'off';
+                var faehig = ctx.wert('info.demandCapable');
+                var ruht = ctx.wert('regulation.mode') === 'faikout' && ctx.wert('regulation.demand.strategy') !== 'previousDay';
+                var aktiv = ctx.wert('regulation.demand.active') === true && faehig !== 'no' && !ruht;
+                var soll = parseFloat(ctx.wert('regulation.demand.setpoint'));
+                var probe = ctx.wert('regulation.demand.dryRun') !== false;
                 // Zustand
                 $wurzel.find('.fk-regel-chip').text(b.t(ZUSTAND[zustand] || zustand)).attr('data-zustand', zustand)
-                    .attr('title', ctx.wert('regel.grund') || '');
-                $wurzel.find('.fk-regel-probe').text(probe && zustand !== 'aus' ? b.t('Probelauf') : '');
+                    .attr('title', ctx.wert('regulation.reason') || '');
+                $wurzel.find('.fk-regel-probe').text(probe && zustand !== 'off' ? b.t('Probelauf') : '');
                 // Szene und naechste Schaltung
-                var planAn = ctx.wert('regel.plan.aktiv') === true;
-                var szene = planAn ? ctx.wert('regel.plan.szene') : '';
+                var planAn = ctx.wert('regulation.schedule.active') === true;
+                var szene = planAn ? ctx.wert('regulation.schedule.scene') : '';
                 var ziel = b.zahl(ctx.wert('control.target'), 1);
                 $wurzel.find('.fk-regel-szene').text((szene ? szene + ' · ' : '') + (ziel !== null ? b.t('Soll') + ' ' + ziel + ' °C' : ''));
-                var naechster = Number(ctx.wert('regel.plan.naechster'));
+                var naechster = Number(ctx.wert('regulation.schedule.next'));
                 var text = '';
                 if (planAn && naechster > 0) {
                     var d = new Date(naechster);
-                    text = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' ' + (ctx.wert('regel.plan.naechsteSzene') || '');
+                    text = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' ' + (ctx.wert('regulation.schedule.nextScene') || '');
                     if (d.toDateString() !== new Date().toDateString()) text = d.toLocaleDateString(b.sprache(), { weekday: 'short' }) + ' ' + text;
                 }
                 $wurzel.find('.fk-regel-naechste').text(text ? '→ ' + text : '');
-                var raum = b.zahl(ctx.hat('regel.fuehler.raum') && ctx.wert('regel.fuehler.raum') !== null ? ctx.wert('regel.fuehler.raum') : ctx.wert('status.temp'), 1);
+                var raum = b.zahl(ctx.hat('regulation.sensors.room') && ctx.wert('regulation.sensors.room') !== null ? ctx.wert('regulation.sensors.room') : ctx.wert('status.temp'), 1);
                 $wurzel.find('.fk-regel-raum-zahl').text(raum === null ? '–' : raum);
                 // Leistungsgrenze
                 var n = aktiv && !isNaN(soll) ? bild.balkenStufen(soll) : 0;
@@ -818,15 +821,15 @@ vis.binds.faikout = {
                     $(this).toggleClass('fk-voll', i < n).toggleClass('fk-spitze', i + 1 === n);
                 });
                 $wurzel.find('.fk-regel-prozent').text(
-                    faehig === 'nein' ? b.t('nicht unterstützt') : ruht ? b.t('ruht (Faikout-Auto)') : !aktiv ? b.t('nicht begrenzt') : isNaN(soll) ? '–' : Math.round(soll) + ' %');
+                    faehig === 'no' ? b.t('nicht unterstützt') : ruht ? b.t('ruht (Faikout-Auto)') : !aktiv ? b.t('nicht begrenzt') : isNaN(soll) ? '–' : Math.round(soll) + ' %');
                 $wurzel.find('.fk-regel-balken').toggleClass('fk-ruht', !aktiv);
                 // Kennlinie mit Arbeitspunkt
                 if (kennlinie) {
                     var an = ctx.hat('control.power') ? !!ctx.wert('control.power') : true;
                     var modus = ctx.wert('control.mode');
                     var kuehlen = modus === 'cool' || (modus === 'heat_cool' && ctx.wert('status.action') === 'cooling');
-                    var x = parseFloat(ctx.wert('regel.bedarf.aussenMittel'));
-                    if (isNaN(x)) x = parseFloat(ctx.wert('regel.fuehler.aussen'));
+                    var x = parseFloat(ctx.wert('regulation.demand.outsideMean'));
+                    if (isNaN(x)) x = parseFloat(ctx.wert('regulation.sensors.outside'));
                     $wurzel.find('.fk-regel-bild').html(bild.kennlinie({
                         punkte: kuehlen ? kennlinie.kuehlen : kennlinie.heizen,
                         richtung: kuehlen ? 'kuehlen' : 'heizen',
@@ -843,21 +846,21 @@ vis.binds.faikout = {
                 var werte = [];
                 // Aussentemperatur wie beim Arbeitspunkt: das 30-Minuten-Mittel der Regelung; ohne Mittel
                 // (Regelung rechnet noch nicht) der aktuelle Wert, dann ohne den Zusatz.
-                var mittel = b.zahl(ctx.wert('regel.bedarf.aussenMittel'), 1);
-                var aussen = mittel !== null ? mittel : b.zahl(ctx.wert('regel.fuehler.aussen') !== null ? ctx.wert('regel.fuehler.aussen') : ctx.wert('status.outside'), 1);
+                var mittel = b.zahl(ctx.wert('regulation.demand.outsideMean'), 1);
+                var aussen = mittel !== null ? mittel : b.zahl(ctx.wert('regulation.sensors.outside') !== null ? ctx.wert('regulation.sensors.outside') : ctx.wert('status.outside'), 1);
                 if (aussen !== null) werte.push((mittel !== null ? b.t('außen, Mittel 30 min') : b.t('Außen').toLowerCase()) + ' ' + aussen + ' °C');
                 var watt = b.zahl(ctx.wert('status.consumption'), 0);
                 if (watt !== null) werte.push(watt + ' W');
                 $wurzel.find('.fk-regel-werte').text(werte.join(' · '));
                 $wurzel.find('.fk-regel-symbol').each(function () {
                     var art = $(this).attr('data-art');
-                    var ein = ctx.wert('regel.' + art + '.aktiv') === true;
+                    var ein = ctx.wert('regulation.' + KANAL[art] + '.active') === true;
                     $(this).attr('class', 'fk-regel-symbol' + (ein ? ' fk-an' : ''))
                         .find('title').remove();
                     $(this).prepend($(document.createElementNS('http://www.w3.org/2000/svg', 'title')).text(b.t(TITEL[art]) + ': ' + b.t(ein ? 'an' : 'aus')));
                 });
             };
-            kennlinieStand = ctx.hat('regel.bedarf.kennlinieJson') ? ctx.wert('regel.bedarf.kennlinieJson') : null;
+            kennlinieStand = ctx.hat('regulation.demand.curveJson') ? ctx.wert('regulation.demand.curveJson') : null;
             b.kennlinieLaden(ctx, function (k) { kennlinie = k; zeichnen(); });
             return zeichnen;
         });

@@ -115,7 +115,7 @@
   "labelVortagMin": "Mínimo %",
   "labelVortagMax": "Máximo %",
   "textProbeAn": "Modo de prueba: el adaptador solo calcula. Lo muestra todo, pero no envía ningún comando a los equipos. Desactive el modo de prueba para regular de verdad.",
-  "textProbeAus": "En servicio: el adaptador envía comandos – a cada equipo cuyo propio interruptor de prueba (punto de datos regel.bedarf.probelauf) también esté desactivado.",
+  "textProbeAus": "En servicio: el adaptador envía comandos – a cada equipo cuyo propio interruptor de prueba (punto de datos regulation.demand.dryRun) también esté desactivado.",
   "headerRegelGeraete": "Equipos",
   "textRegelGeraete": "Una entrada por aire acondicionado. Un equipo sin entrada usa los valores predeterminados: regula el adaptador, sensores en automático.",
   "labelRegelGeraete": "Ajustes por equipo",
@@ -264,7 +264,7 @@
   "helpExternUser": "Vacío = conectar sin iniciar sesión",
   "labelExternPass": "Contraseña en el bróker",
   "labelExternClientId": "ID de cliente",
-  "helpExternClientId": "Vacío = iobroker-faikout-adapter-<Nr>-<…>",
+  "helpExternClientId": "Nombre con el que el adaptador se conecta al broker. Debe ser único: dos clientes con el mismo ID se expulsan mutuamente una y otra vez. El valor predefinido se creó una vez para esta instancia.",
   "labelExternPraefix": "Prefijo de los temas",
   "helpExternPraefix": "Solo si los módulos publican bajo un prefijo; normalmente vacío",
   "btnBrokerTest": "Probar conexión",
@@ -284,5 +284,6 @@
   "textBindExtern": "Cambia el MQTT host de UN módulo al broker externo (dirección y puerto de la pestaña «Broker MQTT», además de usuario y contraseña si están indicados allí). Elige un módulo, haz clic en «Comprobar», lee la vista previa y después «Vincular». El módulo se reinicia y debe anunciarse a través del broker externo en 90 s. «Restablecer» vuelve a escribir el MQTT host anterior. El firmware y los demás ajustes no se tocan.",
   "labelTabHeizenVorgabe": "Curva de calefacción: puntos",
   "labelTabKuehlenVorgabe": "Curva de refrigeración: puntos",
-  "textWegWahl": "«Ajustar la consigna»: el equipo sigue regulándose solo, el adaptador desplaza su consigna – adecuado también para sensores lentos en otra habitación. «Enviar al módulo»: el módulo regula el equipo; este puede ciclar más a menudo."
+  "textWegWahl": "«Ajustar la consigna»: el equipo sigue regulándose solo, el adaptador desplaza su consigna – adecuado también para sensores lentos en otra habitación. «Enviar al módulo»: el módulo regula el equipo; este puede ciclar más a menudo.",
+  "btnClientIdStandard": "Restablecer valor predeterminado"
 }

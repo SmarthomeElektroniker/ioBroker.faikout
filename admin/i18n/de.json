@@ -115,7 +115,7 @@
   "labelVortagMin": "Mindestens %",
   "labelVortagMax": "Höchstens %",
   "textProbeAn": "Probelauf: Der Adapter rechnet nur mit. Er zeigt alles an, sendet aber keinen einzigen Befehl an die Anlagen. Zum Scharfschalten den Probelauf ausschalten.",
-  "textProbeAus": "Scharf: Der Adapter sendet Befehle – an jede Anlage, deren eigener Probelauf-Schalter (Datenpunkt regel.bedarf.probelauf) ebenfalls aus ist.",
+  "textProbeAus": "Scharf: Der Adapter sendet Befehle – an jede Anlage, deren eigener Probelauf-Schalter (Datenpunkt regulation.demand.dryRun) ebenfalls aus ist.",
   "headerRegelGeraete": "Geräte",
   "textRegelGeraete": "Ein Eintrag je Klimaanlage. Eine Anlage ohne Eintrag nimmt die Vorgaben: Der Adapter regelt, Fühler auf Automatik.",
   "labelRegelGeraete": "Einstellungen je Gerät",
@@ -264,7 +264,7 @@
   "helpExternUser": "Leer = ohne Anmeldung verbinden",
   "labelExternPass": "Passwort am Broker",
   "labelExternClientId": "Client-ID",
-  "helpExternClientId": "Leer = iobroker-faikout-adapter-<Nr>-<…>",
+  "helpExternClientId": "Name, unter dem sich der Adapter am Broker anmeldet. Er muss eindeutig sein: Zwei Clients mit derselben ID werfen sich gegenseitig immer wieder hinaus. Der vorbelegte Wert wurde einmal für diese Instanz erzeugt.",
   "labelExternPraefix": "Topic-Präfix",
   "helpExternPraefix": "Nur wenn die Module unter einem Präfix veröffentlichen; meist leer",
   "btnBrokerTest": "Verbindung testen",
@@ -284,5 +284,6 @@
   "textBindExtern": "Stellt den MQTT host EINES Moduls auf den externen Broker um (Adresse und Port aus dem Reiter „MQTT-Broker“, dazu Benutzer und Passwort, falls dort eingetragen). Modul wählen, „Prüfen“ klicken, Vorschau lesen, dann „Anbinden“. Das Modul startet neu und muss sich binnen 90 s über den externen Broker melden. „Zurückstellen“ schreibt den vorherigen MQTT host zurück. Firmware und alle anderen Einstellungen bleiben unberührt.",
   "labelTabHeizenVorgabe": "Heizkennlinie: Stützpunkte",
   "labelTabKuehlenVorgabe": "Kühlkennlinie: Stützpunkte",
-  "textWegWahl": "„Sollwert angleichen“: Die Anlage regelt weiter selbst, der Adapter verschiebt ihren Sollwert – auch für träge Fühler in einem anderen Raum geeignet. „Ans Modul senden“: Das Modul regelt die Anlage; sie kann dann häufiger takten."
+  "textWegWahl": "„Sollwert angleichen“: Die Anlage regelt weiter selbst, der Adapter verschiebt ihren Sollwert – auch für träge Fühler in einem anderen Raum geeignet. „Ans Modul senden“: Das Modul regelt die Anlage; sie kann dann häufiger takten.",
+  "btnClientIdStandard": "Standard wiederherstellen"
 }

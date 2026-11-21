@@ -115,7 +115,7 @@
   "labelVortagMin": "Minimaal %",
   "labelVortagMax": "Maximaal %",
   "textProbeAn": "Proefloop: de adapter rekent alleen mee. Hij toont alles, maar stuurt geen enkel commando naar de toestellen. Schakel de proefloop uit om echt te regelen.",
-  "textProbeAus": "In bedrijf: de adapter stuurt commando’s – naar elk toestel waarvan de eigen proefloopschakelaar (datapunt regel.bedarf.probelauf) ook uit staat.",
+  "textProbeAus": "In bedrijf: de adapter stuurt commando’s – naar elk toestel waarvan de eigen proefloopschakelaar (datapunt regulation.demand.dryRun) ook uit staat.",
   "headerRegelGeraete": "Toestellen",
   "textRegelGeraete": "Eén item per airco. Een toestel zonder item gebruikt de standaardwaarden: de adapter regelt, sensoren op automatisch.",
   "labelRegelGeraete": "Instellingen per toestel",
@@ -264,7 +264,7 @@
   "helpExternUser": "Leeg = verbinden zonder aanmelding",
   "labelExternPass": "Wachtwoord bij de broker",
   "labelExternClientId": "Client-ID",
-  "helpExternClientId": "Leeg = iobroker-faikout-adapter-<Nr>-<…>",
+  "helpExternClientId": "Naam waarmee de adapter zich bij de broker aanmeldt. Die moet uniek zijn: twee clients met dezelfde ID gooien elkaar steeds weer eruit. De vooringevulde waarde is één keer voor deze instantie aangemaakt.",
   "labelExternPraefix": "Topic-prefix",
   "helpExternPraefix": "Alleen als de modules onder een prefix publiceren; meestal leeg",
   "btnBrokerTest": "Verbinding testen",
@@ -284,5 +284,6 @@
   "textBindExtern": "Zet de MQTT host van ÉÉN module om naar de externe broker (adres en poort uit het tabblad „MQTT-broker“, plus gebruiker en wachtwoord als die daar zijn ingevuld). Kies een module, klik op „Controleren“, lees het voorbeeld en dan „Koppelen“. De module herstart en moet zich binnen 90 s via de externe broker melden. „Terugzetten“ schrijft de vorige MQTT host terug. Firmware en alle andere instellingen blijven ongemoeid.",
   "labelTabHeizenVorgabe": "Stooklijn: punten",
   "labelTabKuehlenVorgabe": "Koellijn: punten",
-  "textWegWahl": "„Setpoint aanpassen“: het toestel blijft zelf regelen, de adapter verschuift het setpoint – ook geschikt voor trage sensoren in een andere ruimte. „Naar de module sturen“: de module regelt het toestel; het kan dan vaker pendelen."
+  "textWegWahl": "„Setpoint aanpassen“: het toestel blijft zelf regelen, de adapter verschuift het setpoint – ook geschikt voor trage sensoren in een andere ruimte. „Naar de module sturen“: de module regelt het toestel; het kan dan vaker pendelen.",
+  "btnClientIdStandard": "Standaard herstellen"
 }

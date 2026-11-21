@@ -115,7 +115,7 @@
   "labelVortagMin": "Mínimo %",
   "labelVortagMax": "Máximo %",
   "textProbeAn": "Modo de teste: o adaptador só calcula. Mostra tudo, mas não envia nenhum comando aos aparelhos. Para ativar a regulação, desligue o modo de teste.",
-  "textProbeAus": "Em serviço: o adaptador envia comandos – a cada aparelho cujo interruptor próprio de teste (ponto de dados regel.bedarf.probelauf) também esteja desligado.",
+  "textProbeAus": "Em serviço: o adaptador envia comandos – a cada aparelho cujo interruptor próprio de teste (ponto de dados regulation.demand.dryRun) também esteja desligado.",
   "headerRegelGeraete": "Aparelhos",
   "textRegelGeraete": "Uma entrada por ar condicionado. Um aparelho sem entrada usa as predefinições: o adaptador regula, sensores em automático.",
   "labelRegelGeraete": "Definições por aparelho",
@@ -264,7 +264,7 @@
   "helpExternUser": "Vazio = ligar sem autenticação",
   "labelExternPass": "Palavra-passe no broker",
   "labelExternClientId": "ID de cliente",
-  "helpExternClientId": "Vazio = iobroker-faikout-adapter-<Nr>-<…>",
+  "helpExternClientId": "Nome com que o adaptador se liga ao broker. Tem de ser único: dois clientes com o mesmo ID expulsam-se mutuamente vezes sem conta. O valor predefinido foi criado uma vez para esta instância.",
   "labelExternPraefix": "Prefixo dos tópicos",
   "helpExternPraefix": "Só se os módulos publicarem sob um prefixo; normalmente vazio",
   "btnBrokerTest": "Testar ligação",
@@ -284,5 +284,6 @@
   "textBindExtern": "Muda o MQTT host de UM módulo para o broker externo (endereço e porta do separador «Broker MQTT», mais utilizador e palavra-passe se aí indicados). Escolha o módulo, clique em «Verificar», leia a pré-visualização e depois «Ligar». O módulo reinicia e tem de comunicar através do broker externo em 90 s. «Repor» volta a escrever o MQTT host anterior. O firmware e as restantes definições não são alterados.",
   "labelTabHeizenVorgabe": "Curva de aquecimento: pontos",
   "labelTabKuehlenVorgabe": "Curva de arrefecimento: pontos",
-  "textWegWahl": "«Ajustar a temperatura definida»: o aparelho continua a regular-se sozinho, o adaptador desloca a temperatura definida – adequado também para sensores lentos noutra divisão. «Enviar ao módulo»: o módulo regula o aparelho; este pode ligar e desligar com mais frequência."
+  "textWegWahl": "«Ajustar a temperatura definida»: o aparelho continua a regular-se sozinho, o adaptador desloca a temperatura definida – adequado também para sensores lentos noutra divisão. «Enviar ao módulo»: o módulo regula o aparelho; este pode ligar e desligar com mais frequência.",
+  "btnClientIdStandard": "Repor predefinição"
 }

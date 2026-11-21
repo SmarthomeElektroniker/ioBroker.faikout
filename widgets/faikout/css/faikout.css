@@ -242,8 +242,8 @@
 .fk-regel-zustand { display: flex; gap: 6px; flex-wrap: wrap; }
 .fk-regel-chip, .fk-regel-probe { font-size: 11px; line-height: 1.5; padding: 0 8px; border-radius: 9px; border: 1px solid var(--fk-still); color: var(--fk-leise); }
 .fk-regel-chip[data-zustand="ok"] { border-color: var(--fk-gut); color: var(--fk-gut); }
-.fk-regel-chip[data-zustand="hand"], .fk-regel-probe { border-color: var(--fk-warn); color: var(--fk-warn); }
-.fk-regel-chip[data-zustand="gestört"] { border-color: var(--fk-t5); color: var(--fk-t5); }
+.fk-regel-chip[data-zustand="manual"], .fk-regel-probe { border-color: var(--fk-warn); color: var(--fk-warn); }
+.fk-regel-chip[data-zustand="fault"] { border-color: var(--fk-t5); color: var(--fk-t5); }
 .fk-regel-probe:empty { display: none; }
 .fk-regel-bild { color: var(--fk-text); min-height: 60px; flex: 1; }
 .fk-regel-bild svg { max-width: none !important; }

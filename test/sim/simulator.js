@@ -37,7 +37,28 @@ class Attrappe {
         return this.objekte.get(id) || null;
     }
     async extendObject(id, obj) {
-        this.objekte.set(id, { ...(this.objekte.get(id) || {}), ...obj });
+        const alt = this.objekte.get(id) || {};
+        const neu = { ...alt, ...obj };
+        for (const k of ['common', 'native']) {
+            if (obj[k]) {
+                neu[k] = { ...(alt[k] || {}), ...obj[k] };
+            }
+        }
+        this.objekte.set(id, neu);
+    }
+    async getDevicesAsync() {
+        return [...this.objekte.entries()]
+            .filter(([, o]) => o.type === 'device')
+            .map(([id, o]) => ({ ...o, _id: `${this.namespace}.${id}` }));
+    }
+    /** Wie der js-controller: mit recursive faellt alles unter der ID mit weg. */
+    async delObjectAsync(id, opt = {}) {
+        for (const k of [...this.objekte.keys()]) {
+            if (k === id || (opt.recursive && k.startsWith(`${id}.`))) {
+                this.objekte.delete(k);
+                this.werte.delete(k);
+            }
+        }
     }
     async setObjectNotExistsAsync(id, obj) {
         if (!this.objekte.has(id)) {

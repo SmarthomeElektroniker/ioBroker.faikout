@@ -261,7 +261,7 @@ describe('Regelung: Feuchte und Taupunkt', () => {
             null,
             T,
         );
-        expect(kaputt.ergebnis).to.include({ bedarf: false, zustand: 'gestört' });
+        expect(kaputt.ergebnis).to.include({ bedarf: false, zustand: 'fault' });
         const senken = feuchte.konfigPruefen({ massnahme: 'zielSenken' }).konfig;
         expect(
             feuchte.bewerten({ ...feucht, power: true, mode: 'cool', heizt: false }, senken, null, T).ergebnis
@@ -367,7 +367,7 @@ describe('Regelung: Fuehlerquellen', () => {
 
     it('Rueckfall bei veraltetem, nicht numerischem oder unplausiblem Wert - mit Klartext', () => {
         const alt = quellen.waehlen('raum', 'dp', { dp: { wert: 22, zeit: T - 47 * 60000 }, intern: frisch(23) }, T);
-        expect(alt).to.include({ quelle: 'intern', stand: 'rueckfall' });
+        expect(alt).to.include({ quelle: 'intern', stand: 'fallback' });
         expect(alt.text).to.match(/Datenpunkt veraltet \(47 min\)/);
         expect(quellen.waehlen('raum', 'dp', { dp: frisch('n/a'), intern: frisch(23) }, T).text).to.match(/keine Zahl/);
         expect(quellen.waehlen('feuchte', 'auto', { dp: frisch(140), intern: frisch(50) }, T).quelle).to.equal(
@@ -378,7 +378,7 @@ describe('Regelung: Fuehlerquellen', () => {
 
     it('nichts brauchbar: Messung null, Zustand fehlt', () => {
         const r = quellen.waehlen('aussen', 'auto', { intern: { wert: 5, zeit: T - 2 * 3600000 } }, T);
-        expect(r).to.include({ messung: null, stand: 'fehlt' });
+        expect(r).to.include({ messung: null, stand: 'missing' });
         expect(quellen.waehlen('aussen', 'auto', {}, T).text).to.equal('kein Fühler vorhanden');
     });
 
@@ -504,7 +504,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         schalter: { plan: true, feuchte: true, bedarf: true },
         szene: szenen.get('komfort'),
         gesperrt: false,
-        faehig: 'ja',
+        faehig: 'yes',
         vortag: null,
         ...ueber,
     });
@@ -540,7 +540,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
             T,
         );
         expect(r.wunsch).to.eql({});
-        expect(r.zustandText).to.equal('hand');
+        expect(r.zustandText).to.equal('manual');
         expect(r.demand).to.be.a('number');
         // 2 K unter dem von Hand gewaehlten Ziel (24) -> 100 %
         const kalt = koordinator.koordinieren(
@@ -724,7 +724,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         );
         expect(mitVortag.demand).to.equal(60); // 500 W von 1000 W + 10 Punkte
         const ohne = koordinator.koordinieren(eingang(), kf, null, T);
-        expect(ohne.zustandText).to.equal('einrichten');
+        expect(ohne.zustandText).to.equal('setup');
     });
 
     it('control: nur bei fremdem Raumfuehler, immer vollstaendig; BLE ohne env; Faikout-Auto nur env', () => {
@@ -948,9 +948,9 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
     const planText = JSON.stringify(plan);
     const START = ort(2026, 11, 20, 21, 30); // Freitag, Komfort bis 22:00
     const scharf = async (a, id) => {
-        await a.regelung.schalter(id, 'probelauf', false);
-        await a.regelung.schalter(id, 'plan.wocheJson', planText);
-        await a.regelung.schalter(id, 'plan.aktiv', true);
+        await a.regelung.schalter(id, 'dryRun', false);
+        await a.regelung.schalter(id, 'schedule.weekJson', planText);
+        await a.regelung.schalter(id, 'schedule.active', true);
     };
     const themen = (anlage, feld) => anlage.befehle.filter(b => b.topic.endsWith(`/${feld}`)).map(b => b.nutzlast);
 
@@ -961,16 +961,16 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await scharf(a, 'Plan_A');
         await laufen(a, uhr, anlage, 20);
         expect(anlage.befehle).to.eql([]); // Komfort passt schon
-        expect(a.wert('Plan_A.regel.plan.szene')).to.equal('Komfort');
-        expect(a.wert('Plan_A.regel.plan.naechster')).to.equal(ort(2026, 11, 20, 22, 0));
+        expect(a.wert('Plan_A.regulation.schedule.scene')).to.equal('Komfort');
+        expect(a.wert('Plan_A.regulation.schedule.next')).to.equal(ort(2026, 11, 20, 22, 0));
         await laufen(a, uhr, anlage, 30); // ueber 22:00
         expect(themen(anlage, 'temp')).to.eql(['19']);
         expect(themen(anlage, 'fan')).to.eql(['night']);
         expect(themen(anlage, 'mode')).to.eql([]);
         expect(anlage.target).to.equal(19);
-        expect(a.wert('Plan_A.regel.plan.szene')).to.equal('Absenken');
-        expect(a.wert('Plan_A.regel.hand.gesperrt')).to.equal(false);
-        expect(a.wert('Plan_A.regel.zustand')).to.equal('ok');
+        expect(a.wert('Plan_A.regulation.schedule.scene')).to.equal('Absenken');
+        expect(a.wert('Plan_A.regulation.manual.locked')).to.equal(false);
+        expect(a.wert('Plan_A.regulation.state')).to.equal('ok');
     });
 
     it('Probelauf: kein einziger Befehl, aber "würde senden" steht im Datenpunkt', async () => {
@@ -981,7 +981,7 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 45);
         expect(anlage.befehle).to.eql([]);
         expect(a.gesendet).to.eql([]);
-        expect(JSON.parse(a.wert('Plan_B.regel.letzterBefehl')).aktion).to.equal('wuerde');
+        expect(JSON.parse(a.wert('Plan_B.regulation.lastCommand')).aktion).to.equal('wuerde');
         expect(a.zeilen.some(z => /dry run\) would send/.test(z.text))).to.equal(true);
     });
 
@@ -993,13 +993,13 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 3);
         anlage.target = 24; // jemand dreht an der Fernbedienung
         await laufen(a, uhr, anlage, 10);
-        expect(a.wert('Plan_C.regel.hand.gesperrt')).to.equal(true);
-        expect(a.wert('Plan_C.regel.hand.bis')).to.equal(ort(2026, 11, 20, 22, 0));
-        expect(a.wert('Plan_C.regel.zustand')).to.equal('hand');
+        expect(a.wert('Plan_C.regulation.manual.locked')).to.equal(true);
+        expect(a.wert('Plan_C.regulation.manual.until')).to.equal(ort(2026, 11, 20, 22, 0));
+        expect(a.wert('Plan_C.regulation.state')).to.equal('manual');
         expect(anlage.target).to.equal(24);
         expect(anlage.befehle).to.eql([]);
         await laufen(a, uhr, anlage, 30); // ueber 22:00: Absenken
-        expect(a.wert('Plan_C.regel.hand.gesperrt')).to.equal(false);
+        expect(a.wert('Plan_C.regulation.manual.locked')).to.equal(false);
         expect(anlage.target).to.equal(19);
     });
 
@@ -1007,15 +1007,15 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         const { a, uhr } = aufbau({ regelProbelauf: false }, START);
         const anlage = new Anlage({ name: 'Plan X', target: 21, mode: 'heat' });
         await laufen(a, uhr, anlage, 2);
-        await a.regelung.schalter('Plan_X', 'plan.aktiv', true);
+        await a.regelung.schalter('Plan_X', 'schedule.active', true);
         await laufen(a, uhr, anlage, 2);
-        expect(a.wert('Plan_X.regel.zustand')).to.equal('einrichten');
-        expect(a.wert('Plan_X.regel.plan.fehlt')).to.equal(true);
-        expect(a.wert('Plan_X.regel.grund')).to.contain('kein Wochenplan hinterlegt');
-        await a.regelung.schalter('Plan_X', 'plan.wocheJson', planText);
+        expect(a.wert('Plan_X.regulation.state')).to.equal('setup');
+        expect(a.wert('Plan_X.regulation.schedule.missing')).to.equal(true);
+        expect(a.wert('Plan_X.regulation.reason')).to.contain('kein Wochenplan hinterlegt');
+        await a.regelung.schalter('Plan_X', 'schedule.weekJson', planText);
         await laufen(a, uhr, anlage, 2);
-        expect(a.wert('Plan_X.regel.zustand')).to.equal('ok');
-        expect(a.wert('Plan_X.regel.plan.fehlt')).to.equal(false);
+        expect(a.wert('Plan_X.regulation.state')).to.equal('ok');
+        expect(a.wert('Plan_X.regulation.schedule.missing')).to.equal(false);
     });
 
     it('Knoepfe +/- auf der Karte: ein Schritt der Anlage vom jetzigen Sollwert, in den Grenzen', async () => {
@@ -1028,14 +1028,14 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
             expect(await a.regelung.schalter('Plan_Y', feld, true)).to.equal(true);
             return a.werte.get('Plan_Y.control.target');
         };
-        expect(await druecken('ziel.plus')).to.eql({ val: 21.5, ack: false });
-        expect(await druecken('ziel.minus')).to.eql({ val: 21, ack: false });
-        expect(await druecken('ziel.minus')).to.eql({ val: 20.5, ack: false });
+        expect(await druecken('target.up')).to.eql({ val: 21.5, ack: false });
+        expect(await druecken('target.down')).to.eql({ val: 21, ack: false });
+        expect(await druecken('target.down')).to.eql({ val: 20.5, ack: false });
         // an der Grenze der Anlage bleibt der Wert stehen
         a.geraete.get('Plan_Y').grenzen = { min: 18, max: 30, step: 1 };
         await a.setStateAsync('Plan_Y.control.target', { val: 18, ack: true });
-        expect(await druecken('ziel.minus')).to.eql({ val: 18, ack: true });
-        expect(await druecken('ziel.plus')).to.eql({ val: 19, ack: false });
+        expect(await druecken('target.down')).to.eql({ val: 18, ack: true });
+        expect(await druecken('target.up')).to.eql({ val: 19, ack: false });
     });
 
     it('Knopf "Automatik fortsetzen" hebt die Sperre sofort auf', async () => {
@@ -1046,8 +1046,8 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 2);
         anlage.power = false;
         await laufen(a, uhr, anlage, 3);
-        expect(a.wert('Plan_D.regel.hand.gesperrt')).to.equal(true);
-        await a.regelung.schalter('Plan_D', 'hand.aufheben', true);
+        expect(a.wert('Plan_D.regulation.manual.locked')).to.equal(true);
+        await a.regelung.schalter('Plan_D', 'manual.resume', true);
         await laufen(a, uhr, anlage, 2);
         expect(anlage.power).to.equal(true);
         expect(themen(anlage, 'mode')).to.eql(['heat']);
@@ -1063,8 +1063,8 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await scharf(a, 'Plan_E');
         await laufen(a, uhr, anlage, 25);
         expect(themen(anlage, 'temp').length).to.equal(3);
-        expect(a.wert('Plan_E.regel.zustand')).to.equal('gestört');
-        expect(a.wert('Plan_E.regel.grund')).to.match(/nicht übernommen: target/);
+        expect(a.wert('Plan_E.regulation.state')).to.equal('fault');
+        expect(a.wert('Plan_E.regulation.reason')).to.match(/nicht übernommen: target/);
     });
 
     it('Verbindungsabriss: offline, nichts wird gesendet; nach Wiederkehr gilt der Plan', async () => {
@@ -1077,12 +1077,12 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
             uhr.t += 60000;
             await a.regelung.takt();
         }
-        expect(a.wert('Plan_F.regel.zustand')).to.equal('offline');
+        expect(a.wert('Plan_F.regulation.state')).to.equal('offline');
         expect(a.gesendet).to.eql([]);
         anlage.verbunden = true;
         await laufen(a, uhr, anlage, 3);
         expect(anlage.target).to.equal(19);
-        expect(a.wert('Plan_F.regel.zustand')).to.equal('ok');
+        expect(a.wert('Plan_F.regulation.state')).to.equal('ok');
     });
 
     it('fremder Raumfuehler: vollstaendige control-Nachricht, hoechstens alle 2 min, mindestens alle 5 min', async () => {
@@ -1102,11 +1102,11 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
             expect(c).to.have.all.keys('env', 'target');
             expect(c.target).to.equal(21);
         }
-        expect(a.wert('Plan_G.regel.fuehler.raumQuelle')).to.equal('Datenpunkt');
+        expect(a.wert('Plan_G.regulation.sensors.roomSource')).to.equal('Datenpunkt');
         // Fuehler friert ein: Rueckfall auf den Fuehler der Anlage, control hoert auf
         const vorher = themen(anlage, 'control').length;
         await laufen(a, uhr, anlage, 30);
-        expect(a.wert('Plan_G.regel.fuehler.raumQuelle')).to.match(/Rückfall: Datenpunkt veraltet/);
+        expect(a.wert('Plan_G.regulation.sensors.roomSource')).to.match(/Rückfall: Datenpunkt veraltet/);
         expect(themen(anlage, 'control').length - vorher).to.be.at.most(4);
     });
 
@@ -1118,13 +1118,13 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         const { a, uhr } = aufbau(konfig, sommer);
         const anlage = new Anlage({ name: 'Plan H', target: 24, mode: 'cool', outside: 30, temp: 25, hum: 75 });
         await laufen(a, uhr, anlage, 2);
-        await a.regelung.schalter('Plan_H', 'probelauf', false);
-        await a.regelung.schalter('Plan_H', 'plan.wocheJson', woche);
-        await a.regelung.schalter('Plan_H', 'plan.aktiv', true);
-        await a.regelung.schalter('Plan_H', 'feuchte.aktiv', true);
+        await a.regelung.schalter('Plan_H', 'dryRun', false);
+        await a.regelung.schalter('Plan_H', 'schedule.weekJson', woche);
+        await a.regelung.schalter('Plan_H', 'schedule.active', true);
+        await a.regelung.schalter('Plan_H', 'humidity.active', true);
         await laufen(a, uhr, anlage, 5);
         expect(anlage.mode).to.equal('dry');
-        expect(a.wert('Plan_H.regel.feuchte.eingriff')).to.equal(true);
+        expect(a.wert('Plan_H.regulation.humidity.intervention')).to.equal(true);
         await a.regelung.sichernAlle();
         // neuer Adapter, gleiche Datenbank
         const neu = aufbau(konfig, uhr.t);
@@ -1133,12 +1133,12 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         const davor = anlage.befehle.length;
         await laufen(neu.a, neu.uhr, anlage, 5);
         expect(anlage.befehle.length).to.equal(davor);
-        expect(neu.a.wert('Plan_H.regel.hand.gesperrt')).to.equal(false);
-        expect(neu.a.wert('Plan_H.regel.feuchte.eingriff')).to.equal(true);
+        expect(neu.a.wert('Plan_H.regulation.manual.locked')).to.equal(false);
+        expect(neu.a.wert('Plan_H.regulation.humidity.intervention')).to.equal(true);
         anlage.hum = 50; // trocken: nach Mindestlaufzeit (20 min ab urspruenglichem Beginn) zurueck auf Kuehlen
         await laufen(neu.a, neu.uhr, anlage, 15);
         expect(anlage.mode).to.equal('cool');
-        expect(neu.a.wert('Plan_H.regel.feuchte.eingriff')).to.equal(false);
+        expect(neu.a.wert('Plan_H.regulation.humidity.intervention')).to.equal(false);
     });
 
     it('BLE an/aus: Quelle wechselt, Zielband ohne env solange BLE meldet', async () => {
@@ -1147,12 +1147,12 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(a, uhr, anlage, 2);
         await scharf(a, 'Plan_I');
         await laufen(a, uhr, anlage, 6);
-        expect(a.wert('Plan_I.regel.fuehler.raumQuelle')).to.equal('BLE-Fühler am Modul');
-        expect(a.wert('Plan_I.regel.fuehler.raum')).to.equal(20.8);
+        expect(a.wert('Plan_I.regulation.sensors.roomSource')).to.equal('BLE-Fühler am Modul');
+        expect(a.wert('Plan_I.regulation.sensors.room')).to.equal(20.8);
         expect(themen(anlage, 'control').map(n => JSON.parse(n))[0]).to.eql({ target: 21 });
         anlage.ble = null;
         await laufen(a, uhr, anlage, 3);
-        expect(a.wert('Plan_I.regel.fuehler.raumQuelle')).to.equal('Fühler der Anlage');
+        expect(a.wert('Plan_I.regulation.sensors.roomSource')).to.equal('Fühler der Anlage');
     });
 
     it('Schreiblast: ein ruhiger Tag erzeugt wenige Schreibvorgaenge und kaum Befehle', async function () {
@@ -1163,11 +1163,11 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         const setState = a.setState.bind(a);
         const setStateAsync = a.setStateAsync.bind(a);
         a.setState = async (id, w) => {
-            schreibvorgaenge += id.includes('.regel.') ? 1 : 0;
+            schreibvorgaenge += id.includes('.regulation.') ? 1 : 0;
             return setState(id, w);
         };
         a.setStateAsync = async (id, w) => {
-            schreibvorgaenge += id.includes('.regel.') ? 1 : 0;
+            schreibvorgaenge += id.includes('.regulation.') ? 1 : 0;
             return setStateAsync(id, w);
         };
         await laufen(a, uhr, anlage, 2);
@@ -1179,7 +1179,7 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         expect(themen(anlage, 'fan').length).to.equal(4);
         expect(themen(anlage, 'demand').length).to.be.at.most(12);
         expect(anlage.befehle.length).to.be.at.most(20);
-        console.log(`        Schreibvorgaenge regel.* in 24 h: ${schreibvorgaenge}, Befehle: ${anlage.befehle.length}`);
+        console.log(`        Schreibvorgaenge regulation.* in 24 h: ${schreibvorgaenge}, Befehle: ${anlage.befehle.length}`);
         expect(schreibvorgaenge).to.be.below(24 * 60); // deutlich unter einem Schreibvorgang je Minute
     });
 });

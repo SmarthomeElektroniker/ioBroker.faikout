@@ -216,7 +216,7 @@ describe('Regeltexte (mehrsprachig)', () => {
                 deckel: 50,
             },
             gesperrt: false,
-            faehig: 'ja',
+            faehig: 'yes',
             vortag: null,
             ...extra,
         });
@@ -226,7 +226,7 @@ describe('Regeltexte (mehrsprachig)', () => {
             const faelle = [
                 eingang(),
                 eingang({ gesperrt: true }),
-                eingang({ faehig: 'nein' }),
+                eingang({ faehig: 'no' }),
                 eingang({ szene: null }),
                 eingang({
                     szene: null,
@@ -261,7 +261,7 @@ describe('Regeltexte (mehrsprachig)', () => {
                     sollwert: 60,
                     istwert: 100,
                     probelauf: true,
-                    faehig: 'ja',
+                    faehig: 'yes',
                     jetzt: JETZT,
                     zustand: null,
                 }).grund,
@@ -307,12 +307,12 @@ describe('Regeltexte (mehrsprachig)', () => {
             for (const s of SPRACHEN) {
                 texte.setzeSprache(s);
                 const fehlt = faehigkeit.bewerten(null, { art: 'status', vollstaendig: true });
-                expect(fehlt, s).to.include({ wert: 'nein', code: 'keinDemand' });
+                expect(fehlt, s).to.include({ wert: 'no', code: 'keinDemand' });
                 // dazwischen ein failed-set bei ausgeschaltetem Geraet: der Code bleibt
                 const dazwischen = faehigkeit.bewerten(fehlt, { art: 'abgelehnt', power: false, wert: 80 });
-                expect(dazwischen, s).to.include({ wert: 'nein', code: 'keinDemand' });
+                expect(dazwischen, s).to.include({ wert: 'no', code: 'keinDemand' });
                 const wieder = faehigkeit.bewerten(dazwischen, { art: 'status', vollstaendig: true, demand: 100 });
-                expect(wieder, s).to.include({ wert: 'unbekannt', code: 'wieder' });
+                expect(wieder, s).to.include({ wert: 'unknown', code: 'wieder' });
             }
         });
 
@@ -328,24 +328,24 @@ describe('Regeltexte (mehrsprachig)', () => {
                 JSON.stringify({
                     ...zustandSpeicher.leer(),
                     faehig: {
-                        wert: 'nein',
+                        wert: 'no',
                         grund: 'Modul meldet kein demand (Anlage ohne Bedarfssteuerung oder nodemand)',
                     },
                 }),
             ).faehig;
             expect(alt.code).to.equal(undefined);
             const dazwischen = faehigkeit.bewerten(alt, { art: 'abgelehnt', power: false, wert: 80 });
-            expect(dazwischen.wert).to.equal('nein');
+            expect(dazwischen.wert).to.equal('no');
             expect(dazwischen).to.not.have.property('code');
             expect(dazwischen.grund).to.match(/^Modul meldet kein demand/);
             expect(faehigkeit.bewerten(dazwischen, { art: 'status', vollstaendig: true, demand: 100 }).wert).to.equal(
-                'unbekannt',
+                'unknown',
             );
             expect(faehigkeit.bewerten(alt, { art: 'status', vollstaendig: true, demand: 100 }).wert).to.equal(
-                'unbekannt',
+                'unknown',
             );
             // ein alter Zustand mit anderem deutschen Grund bleibt "nein"
-            const anders = { wert: 'nein', grund: 'demand 80 im Betrieb abgelehnt (failed-set). …' };
+            const anders = { wert: 'no', grund: 'demand 80 im Betrieb abgelehnt (failed-set). …' };
             expect(faehigkeit.bewerten(anders, { art: 'status', vollstaendig: true, demand: 100 })).to.equal(anders);
         });
     });

@@ -346,10 +346,25 @@
                     "hidden": "data.brokerModus !== 'extern'",
                     "newLine": true,
                     "xs": 12,
+                    "sm": 12,
+                    "md": 5,
+                    "lg": 5,
+                    "xl": 5
+                },
+                "_clientIdStandard": {
+                    "type": "sendTo",
+                    "command": "clientIdStandard",
+                    "label": "btnClientIdStandard",
+                    "variant": "outlined",
+                    "useNative": true,
+                    "jsonData": "{\"standard\":${JSON.stringify(data.externClientIdStandard ?? \"\")}}",
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "disabled": "!!data.externClientIdStandard && data.externClientId === data.externClientIdStandard",
+                    "xs": 12,
                     "sm": 6,
-                    "md": 4,
-                    "lg": 4,
-                    "xl": 4
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
                 },
                 "externPraefix": {
                     "type": "text",

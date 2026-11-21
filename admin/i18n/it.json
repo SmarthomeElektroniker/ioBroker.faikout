@@ -115,7 +115,7 @@
   "labelVortagMin": "Minimo %",
   "labelVortagMax": "Massimo %",
   "textProbeAn": "Funzionamento di prova: l’adattatore si limita a calcolare. Mostra tutto, ma non invia alcun comando agli apparecchi. Per passare al funzionamento reale disattiva la prova.",
-  "textProbeAus": "In servizio: l’adattatore invia comandi – a ogni apparecchio il cui interruttore di prova (punto dati regel.bedarf.probelauf) è anch’esso disattivato.",
+  "textProbeAus": "In servizio: l’adattatore invia comandi – a ogni apparecchio il cui interruttore di prova (punto dati regulation.demand.dryRun) è anch’esso disattivato.",
   "headerRegelGeraete": "Apparecchi",
   "textRegelGeraete": "Una voce per climatizzatore. Un apparecchio senza voce usa i valori predefiniti: regola l’adattatore, sensori in automatico.",
   "labelRegelGeraete": "Impostazioni per apparecchio",
@@ -264,7 +264,7 @@
   "helpExternUser": "Vuoto = collegamento senza accesso",
   "labelExternPass": "Password sul broker",
   "labelExternClientId": "ID client",
-  "helpExternClientId": "Vuoto = iobroker-faikout-adapter-<Nr>-<…>",
+  "helpExternClientId": "Nome con cui l’adattatore si collega al broker. Deve essere univoco: due client con lo stesso ID si espellono a vicenda di continuo. Il valore preimpostato è stato creato una volta per questa istanza.",
   "labelExternPraefix": "Prefisso dei topic",
   "helpExternPraefix": "Solo se i moduli pubblicano sotto un prefisso; di solito vuoto",
   "btnBrokerTest": "Prova connessione",
@@ -284,5 +284,6 @@
   "textBindExtern": "Passa il MQTT host di UN modulo al broker esterno (indirizzo e porta dalla scheda «Broker MQTT», più utente e password se lì inseriti). Scegli un modulo, fai clic su «Verifica», leggi l’anteprima, poi «Collega». Il modulo si riavvia e deve annunciarsi tramite il broker esterno entro 90 s. «Ripristina» riscrive il MQTT host precedente. Firmware e tutte le altre impostazioni restano invariati.",
   "labelTabHeizenVorgabe": "Curva di riscaldamento: punti",
   "labelTabKuehlenVorgabe": "Curva di raffrescamento: punti",
-  "textWegWahl": "«Adeguare il setpoint»: l’apparecchio continua a regolarsi da sé, l’adattatore ne sposta il setpoint – adatto anche a sensori lenti in un’altra stanza. «Inviare al modulo»: il modulo regola l’apparecchio, che può pendolare più spesso."
+  "textWegWahl": "«Adeguare il setpoint»: l’apparecchio continua a regolarsi da sé, l’adattatore ne sposta il setpoint – adatto anche a sensori lenti in un’altra stanza. «Inviare al modulo»: il modulo regola l’apparecchio, che può pendolare più spesso.",
+  "btnClientIdStandard": "Ripristina predefinito"
 }

@@ -182,6 +182,7 @@
     "externUser": "",
     "externPass": "",
     "externClientId": "",
+    "externClientIdStandard": "",
     "externPraefix": "",
     "historyRegister": true,
     "historyInstance": "history.0",
