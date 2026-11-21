@@ -247,14 +247,20 @@
 .fk-regel-probe:empty { display: none; }
 .fk-regel-bild { color: var(--fk-text); min-height: 60px; flex: 1; }
 .fk-regel-bild svg { max-width: none !important; }
-.fk-regel-grenze { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--fk-leise); }
-.fk-regel-grenze b { font-size: 15px; color: var(--fk-text); font-variant-numeric: tabular-nums; }
+/* Beschriftung und Wert bleiben in JEDER Sprache einzeilig: die Beschriftung kuerzt sich mit …, ein Zustand
+   als Text ("nicht unterstuetzt") steht kleiner als die Prozentzahl */
+.fk-regel-grenze { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12px; color: var(--fk-leise); }
+.fk-regel-grenze span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fk-regel-grenze b { font-size: 15px; color: var(--fk-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fk-regel-grenze b.fk-wort { font-size: 12px; }
 .fk-regel-balken { display: flex; align-items: flex-end; gap: 3px; height: 14px; }
 .fk-regel-balken span { flex: 1; height: 9px; border-radius: 2px; background: var(--fk-rand-stark); opacity: .55; }
 .fk-regel-balken span.fk-voll { background: var(--fk-text); opacity: 1; }
 .fk-regel-balken span.fk-spitze { height: 14px; }
 .fk-regel-balken.fk-ruht span { opacity: .3; }
-.fk-regel-fuss { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--fk-leise); }
+.fk-regel-fuss { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: var(--fk-leise); }
+.fk-regel-werte { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fk-regel-symbole { flex: none; }
 .fk-regel-symbole { display: flex; gap: 6px; }
 .fk-regel-symbol { width: 16px; height: 16px; color: var(--fk-still); opacity: .6; }
 .fk-regel-symbol.fk-an { color: var(--fk-akzent); opacity: 1; }

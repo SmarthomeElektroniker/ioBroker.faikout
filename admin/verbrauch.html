@@ -594,6 +594,8 @@
                         render();
                     });
                     $('title').textContent = titleText();
+                    // page title in the admin language (the static title is the neutral adapter name)
+                    document.title = `faikout – ${T('titel')}`;
                     $('prev').disabled = !data.zurueck;
                     $('next').disabled = !data.vor;
                     $('prev').title = T('zurueck');

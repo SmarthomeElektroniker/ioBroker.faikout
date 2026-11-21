@@ -11,107 +11,131 @@
 vis.binds.faikout = {
     version: '0.0.2',
 
+    /** Die elf Sprachen des Adapters - Reihenfolge der Eintraege in TEXTE. */
+    SPRACHEN: ['en', 'de', 'ru', 'pt', 'nl', 'fr', 'it', 'es', 'pl', 'uk', 'zh-cn'],
+
     /*
-     * Sichtbare Texte (Review 09.10.2026: alles, was Nutzer sehen, englisch oder uebersetzt mit
-     * Rueckfall auf Englisch). Im Code stehen die deutschen Texte, t() liefert sie bei deutscher
-     * VIS-Sprache unveraendert und sonst die englische Fassung - fehlt ein Eintrag, bleibt der Text.
+     * Alle sichtbaren Texte der Bausteine: je Schluessel elf Sprachen in der Reihenfolge von SPRACHEN.
+     * Die Tabelle steht hier und nicht in lib/, weil VIS-Bausteine eigenstaendig im Browser laufen und
+     * nichts aus dem Adapter nachladen koennen. Der erste Teil ist wortgleich aus dem Adapter uebernommen
+     * (gleiche Sache, gleicher Begriff); test/sprachen.js haelt beide zusammen und meldet feste Texte
+     * ausserhalb dieser Tabelle. Platzhalter: %s bzw. {name}, von t() der Reihe nach ersetzt.
      */
     TEXTE: {
-        'Schwenken': 'Swing',
-        'Lamellen senkrecht': 'Vertical louvres',
-        'Lamellen waagerecht': 'Horizontal louvres',
-        'Sparbetrieb': 'Econo mode',
-        'Turbo': 'Powerful',
-        'Komfortbetrieb': 'Comfort mode',
-        'Luftreinigung': 'Air purification',
-        'Anwesenheitssensor': 'Presence sensor',
-        'Anzeige-LED': 'Display LED',
-        'Leiser Außenbetrieb': 'Quiet outdoor unit',
-        'Auto': 'Auto',
-        'Kühlen': 'Cool',
-        'Heizen': 'Heat',
-        'Trocknen': 'Dry',
-        'Lüften': 'Fan',
-        'Nacht': 'Night',
-        'Außen': 'Outside',
-        'Leistung': 'Power',
-        'Heute': 'Today',
-        'Verdichter': 'Compressor',
-        'Ventilator': 'Fan speed',
-        'Kältemittel': 'Refrigerant',
-        'Raum': 'Room',
-        'Luftfeuchte': 'Humidity',
-        'Energie gesamt': 'Energy total',
-        'Gestern': 'Yesterday',
-        'Diese Stunde': 'This hour',
-        'Kein Gerät gewählt. Im Attribut „Gerät“ ein Objekt wie %s eintragen.': 'No device selected. Enter an object such as %s in the attribute “Device”.',
-        'Datenpunkte nicht lesbar: %s': 'Cannot read states: %s',
-        'gesendet · warte auf Rückmeldung': 'sent · waiting for confirmation',
-        'Dieses Gerät hat keinen Datenpunkt %s.': 'This device has no state %s.',
-        'Soll': 'Target',
-        'Betriebsart': 'Mode',
-        'Lüfter': 'Fan',
-        'Leistungsbegrenzung': 'Power limit',
-        'Dieses Gerät meldet keine der Zusatzfunktionen.': 'This device reports none of the extra functions.',
-        'Zusatzfunktionen': 'Extra functions',
-        'Keiner der gewählten Messwerte ist bei diesem Gerät vorhanden.': 'None of the selected readings is available on this device.',
-        'Kein Messwert gewählt.': 'No reading selected.',
-        'Dieses Gerät hat keinen Datenpunkt %s. Er entsteht, sobald die Anlage Energiewerte meldet.': 'This device has no state %s yet. It is created as soon as the unit reports energy values.',
-        'Noch keine Werte für diesen Zeitraum.': 'No values for this period yet.',
-        'Summe': 'Total',
-        'Dieses Gerät meldet keinen Energiezähler.': 'This device reports no energy counter.',
-        'Dieser Monat': 'This month',
-        'Dieses Jahr': 'This year',
-        'Letzte 24 Stunden': 'Last 24 hours',
-        'Letzte 31 Tage': 'Last 31 days',
-        'Letzte 12 Monate': 'Last 12 months',
-        'Tag': 'Day',
-        'Monat': 'Month',
-        'Jahr': 'Year',
-        'Gesamt': 'Total',
-        'Leistungsgrenze': 'Power limit',
-        'außen, Mittel 30 min': 'outside, 30 min mean',
-        'aktiv': 'active',
-        'Handeingriff': 'manual override',
-        'gestört': 'fault',
-        'einrichten': 'set up',
-        'keine Verbindung': 'no connection',
-        'ausgeschaltet': 'switched off',
-        'Probelauf': 'Dry run',
-        'nicht unterstützt': 'not supported',
-        'ruht (Faikout-Auto)': 'rests (Faikout auto)',
-        'nicht begrenzt': 'not limited',
-        'Bedarfsregelung': 'Demand control',
-        'Feuchteregelung': 'Humidity control',
-        'Wochenplan': 'Weekly schedule',
-        'an': 'on',
-        'aus': 'off',
-        'verbunden': 'connected',
-        'offline': 'offline'
+        // ---- wortgleich aus dem Adapter (lib/oberflaeche.js, lib/devicemanager.js, lib/verbrauchbild.js,
+        //      src-admin/src/Stufen.texte.ts); test/sprachen.js prueft die Gleichheit je Schluessel
+        zOk: ['active', 'aktiv', 'активно', 'ativa', 'actief', 'active', 'attiva', 'activa', 'aktywna', 'активне', '运行中'],
+        zHand: ['manual override', 'Handeingriff', 'ручной режим', 'intervenção manual', 'handmatige ingreep', 'intervention manuelle', 'intervento manuale', 'intervención manual', 'ingerencja ręczna', 'ручне втручання', '手动干预'],
+        zEinrichten: ['not set up', 'nicht eingerichtet', 'не настроено', 'não configurada', 'niet ingericht', 'non configurée', 'non configurata', 'sin configurar', 'nieskonfigurowana', 'не налаштовано', '未设置'],
+        zGestoert: ['fault', 'gestört', 'неисправность', 'avaria', 'storing', 'en défaut', 'anomalia', 'avería', 'usterka', 'несправність', '故障'],
+        zOffline: ['no connection', 'keine Verbindung', 'нет связи', 'sem ligação', 'geen verbinding', 'pas de connexion', 'nessuna connessione', 'sin conexión', 'brak połączenia', 'немає зв’язку', '无连接'],
+        zAus: ['switched off', 'ausgeschaltet', 'выключено', 'desligada', 'uitgeschakeld', 'désactivée', 'disattivata', 'desactivada', 'wyłączona', 'вимкнено', '已关闭'],
+        probelauf: ['Dry run', 'Probelauf', 'Пробный режим', 'Modo de teste', 'Proefdraai', 'Marche d’essai', 'Funzionamento di prova', 'Modo de prueba', 'Tryb próbny', 'Пробний режим', '试运行'],
+        grenze: ['Power limit', 'Leistungsgrenze', 'Ограничение мощности', 'Limite de potência', 'Vermogensgrens', 'Limite de puissance', 'Limite di potenza', 'Límite de potencia', 'Limit mocy', 'Обмеження потужності', '功率上限'],
+        grenzeAus: ['not limited', 'nicht begrenzt', 'без ограничения', 'sem limite', 'niet begrensd', 'non limitée', 'non limitata', 'sin límite', 'bez limitu', 'без обмеження', '不限制'],
+        ruht: ['rests (Faikout auto)', 'ruht (Faikout-Auto)', 'не работает (Faikout-авто)', 'em repouso (Faikout automático)', 'rust (Faikout-auto)', 'au repos (Faikout auto)', 'ferma (Faikout auto)', 'en reposo (Faikout automático)', 'wstrzymana (Faikout-Auto)', 'неактивне (Faikout-авто)', '暂停（Faikout 自动）'],
+        aktWochenplan: ['Weekly schedule', 'Wochenplan', 'Расписание', 'Programa semanal', 'Weekschema', 'Programme hebdo', 'Programma settimanale', 'Programa semanal', 'Harmonogram', 'Розклад', '周计划'],
+        mAn: ['on', 'an', 'вкл.', 'ligado', 'aan', 'activé', 'attivo', 'activado', 'wł.', 'увімк.', '开'],
+        mAus: ['off', 'aus', 'выкл.', 'desligado', 'uit', 'désactivé', 'disattivo', 'desactivado', 'wył.', 'вимк.', '关'],
+        mVerbunden: ['connected', 'verbunden', 'подключён', 'ligado', 'verbonden', 'connecté', 'connesso', 'conectado', 'połączony', 'під’єднано', '已连接'],
+        fAussen: ['Outside', 'Außen', 'Снаружи', 'Exterior', 'Buiten', 'Extérieur', 'Esterno', 'Exterior', 'Zewnątrz', 'Зовні', '室外'],
+        fRaum: ['Room', 'Raum', 'Помещение', 'Divisão', 'Kamer', 'Pièce', 'Ambiente', 'Habitación', 'Pomieszczenie', 'Приміщення', '房间'],
+        aussenBei: ['outside {t} °C', 'außen {t} °C', 'снаружи {t} °C', 'exterior {t} °C', 'buiten {t} °C', 'extérieur {t} °C', 'esterno {t} °C', 'exterior {t} °C', 'na zewnątrz {t} °C', 'зовні {t} °C', '室外 {t} °C'],
+        zielKurz: ['target', 'Ziel', 'цель', 'alvo', 'doel', 'cible', 'obiettivo', 'objetivo', 'cel', 'ціль', '目标'],
+        tipWaermer: ['one step warmer', 'einen Schritt wärmer', 'на шаг теплее', 'um passo mais quente', 'één stap warmer', 'un cran plus chaud', 'un passo più caldo', 'un paso más cálido', 'o krok cieplej', 'на крок тепліше', '调高一档'],
+        tipKuehler: ['one step cooler', 'einen Schritt kühler', 'на шаг холоднее', 'um passo mais frio', 'één stap koeler', 'un cran plus frais', 'un passo più fresco', 'un paso más fresco', 'o krok chłodniej', 'на крок холодніше', '调低一档'],
+        leistung: ['Power', 'Leistung', 'Мощность', 'Potência', 'Vermogen', 'Puissance', 'Potenza', 'Potencia', 'Moc', 'Потужність', '功率'],
+        tipEinschalten: ['Switch on', 'Einschalten', 'Включить', 'Ligar', 'Inschakelen', 'Mettre en marche', 'Accendi', 'Encender', 'Włącz', 'Увімкнути', '开机'],
+        tipAusschalten: ['Switch off', 'Ausschalten', 'Выключить', 'Desligar', 'Uitschakelen', 'Arrêter', 'Spegni', 'Apagar', 'Wyłącz', 'Вимкнути', '关机'],
+        modusHeatCool: ['Auto', 'Automatik', 'Авто', 'Automático', 'Automatisch', 'Automatique', 'Automatico', 'Automático', 'Automatyczny', 'Авто', '自动'],
+        modusCool: ['Cool', 'Kühlen', 'Охлаждение', 'Arrefecer', 'Koelen', 'Froid', 'Freddo', 'Frío', 'Chłodzenie', 'Охолодження', '制冷'],
+        modusHeat: ['Heat', 'Heizen', 'Обогрев', 'Aquecer', 'Verwarmen', 'Chauffage', 'Caldo', 'Calor', 'Grzanie', 'Обігрів', '制热'],
+        modusDry: ['Dry', 'Entfeuchten', 'Осушение', 'Desumidificar', 'Ontvochtigen', 'Déshumidification', 'Deumidificazione', 'Deshumidificación', 'Osuszanie', 'Осушення', '除湿'],
+        modusFanOnly: ['Fan only', 'Nur Lüfter', 'Только вентилятор', 'Só ventilação', 'Alleen ventilator', 'Ventilation seule', 'Ventilazione', 'Solo ventilador', 'Tylko wentylator', 'Лише вентилятор', '仅送风'],
+        betriebsart: ['Mode', 'Betriebsart', 'Режим', 'Modo', 'Modus', 'Mode', 'Modalità', 'Modo', 'Tryb', 'Режим', '模式'],
+        luefter: ['Fan', 'Lüfter', 'Вентилятор', 'Ventilador', 'Ventilator', 'Ventilateur', 'Ventola', 'Ventilador', 'Wentylator', 'Вентилятор', '风扇'],
+        luefterLeise: ['Quiet', 'Leise', 'Тихий режим', 'Silencioso', 'Stil', 'Silencieux', 'Silenzioso', 'Silencioso', 'Cichy', 'Тихий режим', '静音'],
+        tag: ['Day', 'Tag', 'День', 'Dia', 'Dag', 'Jour', 'Giorno', 'Día', 'Dzień', 'День', '日'],
+        monat: ['Month', 'Monat', 'Месяц', 'Mês', 'Maand', 'Mois', 'Mese', 'Mes', 'Miesiąc', 'Місяць', '月'],
+        jahr: ['Year', 'Jahr', 'Год', 'Ano', 'Jaar', 'Année', 'Anno', 'Año', 'Rok', 'Рік', '年'],
+        summe: ['Total', 'Summe', 'Сумма', 'Total', 'Totaal', 'Total', 'Totale', 'Total', 'Suma', 'Сума', '合计'],
+        // ---- nur in den Bausteinen (Begriffe wie im Adapter: Datenpunkt, Energiezaehler, Regelungsnamen)
+        bedarfsregelung: ['Demand control', 'Bedarfsregelung', 'Регулирование по потребности', 'Regulação por necessidade', 'Vraagregeling', 'Régulation selon le besoin', 'Regolazione in base al fabbisogno', 'Regulación por demanda', 'Regulacja według zapotrzebowania', 'Регулювання за потребою', '按需调节'],
+        feuchteregelung: ['Humidity control', 'Feuchteregelung', 'Регулирование влажности', 'Regulação de humidade', 'Vochtregeling', 'Régulation d’humidité', 'Regolazione dell’umidità', 'Regulación de humedad', 'Regulacja wilgotności', 'Регулювання вологості', '湿度调节'],
+        // Kurzform von "von dieser Anlage nicht unterstuetzt" (Adapter) - die Zeile im Baustein ist schmal
+        nichtUnterstuetzt: ['not supported', 'nicht unterstützt', 'не поддерживается', 'não suportado', 'niet ondersteund', 'non pris en charge', 'non supportato', 'no compatible', 'nieobsługiwane', 'не підтримується', '不支持'],
+        // Name: Wert (Tooltip der Regelungssymbole) - Doppelpunkt wie die Sprache ihn setzt
+        paar: ['%s: %s', '%s: %s', '%s: %s', '%s: %s', '%s: %s', '%s : %s', '%s: %s', '%s: %s', '%s: %s', '%s: %s', '%s：%s'],
+        // Zusatz hinter der Aussentemperatur: Mittel der letzten 30 Minuten (kurz, damit die Fusszeile einzeilig bleibt)
+        mittel30: ['⌀ 30 min', '⌀ 30 min', '⌀ 30 мин', '⌀ 30 min', '⌀ 30 min', '⌀ 30 min', '⌀ 30 min', '⌀ 30 min', '⌀ 30 min', '⌀ 30 хв', '⌀ 30 分钟'],
+        gesendet: ['sent · waiting for confirmation', 'gesendet · warte auf Rückmeldung', 'отправлено · жду подтверждения', 'enviado · a aguardar confirmação', 'verzonden · wacht op bevestiging', 'envoyé · en attente de confirmation', 'inviato · in attesa di conferma', 'enviado · esperando confirmación', 'wysłano · czekam na potwierdzenie', 'надіслано · чекаю підтвердження', '已发送 · 等待确认'],
+        // Kurzform fuer die Pille; im Adapter heisst die Stufe "Automatisch"
+        luefterAuto: ['Auto', 'Auto', 'Авто', 'Auto', 'Auto', 'Auto', 'Auto', 'Auto', 'Auto', 'Авто', '自动'],
+        schwenken: ['Swing', 'Schwenken', 'Качание', 'Oscilação', 'Zwenken', 'Balayage', 'Oscillazione', 'Oscilación', 'Wahanie', 'Коливання', '摆风'],
+        lamellenSenkrecht: ['Vertical louvres', 'Lamellen senkrecht', 'Жалюзи вертикально', 'Lamelas na vertical', 'Lamellen verticaal', 'Volets verticaux', 'Alette verticali', 'Lamas en vertical', 'Żaluzje w pionie', 'Жалюзі вертикально', '上下摆风'],
+        lamellenWaagerecht: ['Horizontal louvres', 'Lamellen waagerecht', 'Жалюзи горизонтально', 'Lamelas na horizontal', 'Lamellen horizontaal', 'Volets horizontaux', 'Alette orizzontali', 'Lamas en horizontal', 'Żaluzje w poziomie', 'Жалюзі горизонтально', '左右摆风'],
+        sparbetrieb: ['Econo mode', 'Sparbetrieb', 'Экономичный режим', 'Modo económico', 'Spaarstand', 'Mode économique', 'Modalità economica', 'Modo económico', 'Tryb oszczędny', 'Економний режим', '节能模式'],
+        turbo: ['Powerful', 'Turbo', 'Турбо', 'Turbo', 'Turbo', 'Turbo', 'Turbo', 'Turbo', 'Turbo', 'Турбо', '强力'],
+        komfortbetrieb: ['Comfort mode', 'Komfortbetrieb', 'Комфортный режим', 'Modo conforto', 'Comfortstand', 'Mode confort', 'Modalità comfort', 'Modo confort', 'Tryb komfortowy', 'Комфортний режим', '舒适模式'],
+        luftreinigung: ['Air purification', 'Luftreinigung', 'Очистка воздуха', 'Purificação do ar', 'Luchtzuivering', 'Purification de l’air', 'Purificazione dell’aria', 'Purificación del aire', 'Oczyszczanie powietrza', 'Очищення повітря', '空气净化'],
+        anwesenheitssensor: ['Presence sensor', 'Anwesenheitssensor', 'Датчик присутствия', 'Sensor de presença', 'Aanwezigheidssensor', 'Capteur de présence', 'Sensore di presenza', 'Sensor de presencia', 'Czujnik obecności', 'Датчик присутності', '人感传感器'],
+        anzeigeLed: ['Display LED', 'Anzeige-LED', 'Светодиод индикации', 'LED do visor', 'Display-led', 'LED d’affichage', 'LED del display', 'LED de la pantalla', 'Dioda LED wyświetlacza', 'Світлодіод індикації', '显示屏指示灯'],
+        leiserAussen: ['Quiet outdoor unit', 'Leiser Außenbetrieb', 'Тихий наружный блок', 'Unidade exterior silenciosa', 'Stille buitenunit', 'Unité extérieure silencieuse', 'Unità esterna silenziosa', 'Unidad exterior silenciosa', 'Cicha jednostka zewnętrzna', 'Тихий зовнішній блок', '室外机静音'],
+        zusatzfunktionen: ['Extra functions', 'Zusatzfunktionen', 'Доп. функции', 'Funções extra', 'Extra functies', 'Fonctions supplémentaires', 'Funzioni extra', 'Funciones extra', 'Funkcje dodatkowe', 'Додаткові функції', '附加功能'],
+        heute: ['Today', 'Heute', 'Сегодня', 'Hoje', 'Vandaag', 'Aujourd’hui', 'Oggi', 'Hoy', 'Dziś', 'Сьогодні', '今日'],
+        gestern: ['Yesterday', 'Gestern', 'Вчера', 'Ontem', 'Gisteren', 'Hier', 'Ieri', 'Ayer', 'Wczoraj', 'Учора', '昨日'],
+        dieseStunde: ['This hour', 'Diese Stunde', 'Этот час', 'Esta hora', 'Dit uur', 'Cette heure', 'Quest’ora', 'Esta hora', 'Ta godzina', 'Ця година', '本小时'],
+        dieserMonat: ['This month', 'Dieser Monat', 'Этот месяц', 'Este mês', 'Deze maand', 'Ce mois-ci', 'Questo mese', 'Este mes', 'Ten miesiąc', 'Цей місяць', '本月'],
+        verdichter: ['Compressor', 'Verdichter', 'Компрессор', 'Compressor', 'Compressor', 'Compresseur', 'Compressore', 'Compresor', 'Sprężarka', 'Компресор', '压缩机'],
+        ventilator: ['Fan speed', 'Ventilator', 'Вентилятор', 'Ventilador', 'Ventilator', 'Ventilateur', 'Ventola', 'Ventilador', 'Wentylator', 'Вентилятор', '风扇转速'],
+        // pl gekuerzt ("Czynnik chłodniczy" passt nicht in die schmale Messwert-Kachel)
+        kaeltemittel: ['Refrigerant', 'Kältemittel', 'Хладагент', 'Refrigerante', 'Koudemiddel', 'Réfrigérant', 'Refrigerante', 'Refrigerante', 'Czynnik chł.', 'Холодоагент', '制冷剂'],
+        // nl "Vochtigheid" statt "Luchtvochtigheid" (Messwert-Kachel)
+        luftfeuchte: ['Humidity', 'Luftfeuchte', 'Влажность', 'Humidade', 'Vochtigheid', 'Humidité', 'Umidità', 'Humedad', 'Wilgotność', 'Вологість', '湿度'],
+        energieGesamt: ['Energy total', 'Energie gesamt', 'Энергия всего', 'Energia total', 'Energie totaal', 'Énergie totale', 'Energia totale', 'Energía total', 'Energia łącznie', 'Енергія загалом', '总能耗'],
+        letzte24h: ['Last 24 hours', 'Letzte 24 Stunden', 'Последние 24 часа', 'Últimas 24 horas', 'Laatste 24 uur', '24 dernières heures', 'Ultime 24 ore', 'Últimas 24 horas', 'Ostatnie 24 godziny', 'Останні 24 години', '最近 24 小时'],
+        letzte31: ['Last 31 days', 'Letzte 31 Tage', 'Последние 31 день', 'Últimos 31 dias', 'Laatste 31 dagen', '31 derniers jours', 'Ultimi 31 giorni', 'Últimos 31 días', 'Ostatnie 31 dni', 'Останній 31 день', '最近 31 天'],
+        letzte12: ['Last 12 months', 'Letzte 12 Monate', 'Последние 12 месяцев', 'Últimos 12 meses', 'Laatste 12 maanden', '12 derniers mois', 'Ultimi 12 mesi', 'Últimos 12 meses', 'Ostatnie 12 miesięcy', 'Останні 12 місяців', '最近 12 个月'],
+        keinGeraet: ['No device selected. Enter an object such as %s in the attribute “Device”.', 'Kein Gerät gewählt. Im Attribut „Gerät“ ein Objekt wie %s eintragen.', 'Устройство не выбрано. Укажите в атрибуте «Устройство» объект, например %s.', 'Nenhum dispositivo selecionado. Introduza no atributo «Dispositivo» um objeto como %s.', 'Geen apparaat gekozen. Vul bij het attribuut “Apparaat” een object in zoals %s.', 'Aucun appareil sélectionné. Saisissez dans l’attribut « Appareil » un objet tel que %s.', 'Nessun dispositivo selezionato. Inserisci nell’attributo «Dispositivo» un oggetto come %s.', 'Ningún equipo seleccionado. Introduce en el atributo «Equipo» un objeto como %s.', 'Nie wybrano urządzenia. Wpisz w atrybucie „Urządzenie” obiekt, na przykład %s.', 'Пристрій не вибрано. Вкажіть в атрибуті «Пристрій» об’єкт, наприклад %s.', '未选择设备。请在属性“设备”中填写对象，例如 %s。'],
+        nichtLesbar: ['Cannot read data points: %s', 'Datenpunkte nicht lesbar: %s', 'Не удалось прочитать точки данных: %s', 'Não foi possível ler os pontos de dados: %s', 'Datapunten niet leesbaar: %s', 'Points de données illisibles : %s', 'Impossibile leggere i punti dati: %s', 'No se pueden leer los puntos de datos: %s', 'Nie można odczytać punktów danych: %s', 'Не вдалося прочитати точки даних: %s', '无法读取数据点：%s'],
+        keinDatenpunkt: ['This device has no data point %s.', 'Dieses Gerät hat keinen Datenpunkt %s.', 'У этого устройства нет точки данных %s.', 'Este dispositivo não tem o ponto de dados %s.', 'Dit apparaat heeft geen datapunt %s.', 'Cet appareil n’a pas de point de données %s.', 'Questo dispositivo non ha il punto dati %s.', 'Este equipo no tiene el punto de datos %s.', 'To urządzenie nie ma punktu danych %s.', 'Цей пристрій не має точки даних %s.', '此设备没有数据点 %s。'],
+        keinDatenpunktEnergie: ['This device has no data point %s yet. It is created as soon as the unit reports energy values.', 'Dieses Gerät hat keinen Datenpunkt %s. Er entsteht, sobald die Anlage Energiewerte meldet.', 'У этого устройства пока нет точки данных %s. Она появится, как только устройство сообщит значения энергии.', 'Este dispositivo ainda não tem o ponto de dados %s. É criado assim que o aparelho comunicar valores de energia.', 'Dit apparaat heeft nog geen datapunt %s. Het ontstaat zodra het toestel energiewaarden meldt.', 'Cet appareil n’a pas encore de point de données %s. Il est créé dès que l’appareil signale des valeurs d’énergie.', 'Questo dispositivo non ha ancora il punto dati %s. Viene creato appena l’apparecchio segnala valori di energia.', 'Este equipo aún no tiene el punto de datos %s. Se crea en cuanto el equipo comunica valores de energía.', 'To urządzenie nie ma jeszcze punktu danych %s. Powstanie, gdy urządzenie zgłosi wartości energii.', 'Цей пристрій ще не має точки даних %s. Вона з’явиться, щойно пристрій повідомить значення енергії.', '此设备还没有数据点 %s。设备报告能耗值后会自动创建。'],
+        keineZusatz: ['This device reports none of the extra functions.', 'Dieses Gerät meldet keine der Zusatzfunktionen.', 'Это устройство не сообщает ни об одной из дополнительных функций.', 'Este dispositivo não comunica nenhuma das funções extra.', 'Dit apparaat meldt geen van de extra functies.', 'Cet appareil ne signale aucune des fonctions supplémentaires.', 'Questo dispositivo non segnala nessuna delle funzioni extra.', 'Este equipo no comunica ninguna de las funciones extra.', 'To urządzenie nie zgłasza żadnej z funkcji dodatkowych.', 'Цей пристрій не повідомляє про жодну з додаткових функцій.', '此设备未报告任何附加功能。'],
+        keineMesswerte: ['None of the selected readings is available on this device.', 'Keiner der gewählten Messwerte ist bei diesem Gerät vorhanden.', 'Ни одного из выбранных показаний у этого устройства нет.', 'Nenhuma das leituras selecionadas existe neste dispositivo.', 'Geen van de gekozen meetwaarden is bij dit apparaat aanwezig.', 'Aucune des mesures sélectionnées n’existe sur cet appareil.', 'Nessuna delle misure selezionate è disponibile su questo dispositivo.', 'Ninguna de las lecturas seleccionadas existe en este equipo.', 'Żaden z wybranych odczytów nie jest dostępny w tym urządzeniu.', 'Жодного з вибраних показників у цього пристрою немає.', '此设备没有所选的任何测量值。'],
+        keinMesswert: ['No reading selected.', 'Kein Messwert gewählt.', 'Показание не выбрано.', 'Nenhuma leitura selecionada.', 'Geen meetwaarde gekozen.', 'Aucune mesure sélectionnée.', 'Nessuna misura selezionata.', 'Ninguna lectura seleccionada.', 'Nie wybrano odczytu.', 'Показник не вибрано.', '未选择测量值。'],
+        keineWerte: ['No values for this period yet.', 'Noch keine Werte für diesen Zeitraum.', 'Для этого периода пока нет значений.', 'Ainda sem valores para este período.', 'Nog geen waarden voor deze periode.', 'Pas encore de valeurs pour cette période.', 'Ancora nessun valore per questo periodo.', 'Aún no hay valores para este periodo.', 'Brak jeszcze wartości dla tego okresu.', 'Для цього періоду ще немає значень.', '此时段尚无数据。'],
+        keinZaehler: ['This device reports no energy counter.', 'Dieses Gerät meldet keinen Energiezähler.', 'Это устройство не сообщает счётчик энергии.', 'Este dispositivo não comunica nenhum contador de energia.', 'Dit apparaat meldt geen energieteller.', 'Cet appareil ne signale aucun compteur d’énergie.', 'Questo dispositivo non segnala alcun contatore di energia.', 'Este equipo no comunica ningún contador de energía.', 'To urządzenie nie zgłasza licznika energii.', 'Цей пристрій не повідомляє лічильник енергії.', '此设备未报告电能计数。']
     },
 
-    /** Sprache der VIS-Oberflaeche (vis.language bzw. systemLang), Rueckfall Englisch. */
+    /**
+     * Sprache der VIS-Oberflaeche (vis.language bzw. systemLang) als eine der elf Sprachen;
+     * Regionalformen (de-DE, zh_TW) fallen auf ihre Sprache, alles Unbekannte auf Englisch.
+     */
     sprache: function () {
-        var l = (typeof vis !== 'undefined' && vis.language) || (typeof systemLang !== 'undefined' && systemLang) || 'en';
-        return String(l).toLowerCase();
+        var b = vis.binds.faikout;
+        var l = String((typeof vis !== 'undefined' && vis.language) || (typeof systemLang !== 'undefined' && systemLang) || 'en')
+            .toLowerCase().replace('_', '-');
+        if (b.SPRACHEN.indexOf(l) >= 0) return l;
+        if (l.slice(0, 2) === 'zh') return 'zh-cn';
+        return b.SPRACHEN.indexOf(l.slice(0, 2)) >= 0 ? l.slice(0, 2) : 'en';
     },
 
-    /** Text in der VIS-Sprache: Deutsch bei 'de', sonst Englisch. %s wird durch `wert` ersetzt. */
-    t: function (de, wert) {
+    /**
+     * Text zum Schluessel in der VIS-Sprache, Rueckfall Englisch. Weitere Argumente ersetzen der Reihe
+     * nach die Platzhalter (%s oder {name}).
+     */
+    t: function (schluessel) {
         var b = vis.binds.faikout;
-        var text = b.sprache() === 'de' ? de : (b.TEXTE[de] || de);
-        return wert === undefined ? text : text.replace('%s', wert);
+        var e = b.TEXTE[schluessel];
+        if (!e) return schluessel;
+        var text = e[b.SPRACHEN.indexOf(b.sprache())] || e[0];
+        var werte = Array.prototype.slice.call(arguments, 1);
+        return text.replace(/%s|\{\w+\}/g, function (p) { return werte.length ? String(werte.shift()) : p; });
     },
 
-    /** Die Namen in ZUSATZ/MODI/LUEFTER/MESSWERTE einmalig in die VIS-Sprache bringen. */
-    listenUebersetzen: function () {
-        var b = vis.binds.faikout;
-        if (b._uebersetzt) return;
-        b._uebersetzt = true;
-        b.ZUSATZ.forEach(function (z) { z.name = b.t(z.name); });
-        b.MODI.forEach(function (m) { m.text = b.t(m.text); });
-        b.LUEFTER.forEach(function (l) { l.text = b.t(l.text); });
-        b.MESSWERTE.forEach(function (m) { m.name = b.t(m.name); });
+    /** Beschriftung eines Listeneintrags: fester Text (Luefterstufe 1..5) oder Schluessel der Texttabelle. */
+    name: function (eintrag) {
+        return eintrag.text !== undefined ? eintrag.text : vis.binds.faikout.t(eintrag.name);
     },
 
     /* Rueckfallwerte; die echten Grenzen liefert das Geraet ueber common.min/max/step. */
@@ -147,29 +171,30 @@ vis.binds.faikout = {
      * abgeschaltet sind.
      */
     ZUSATZ: [
-        { feld: 'control.swing', name: 'Schwenken', sym: 'swing' },
-        { feld: 'control.swingv', name: 'Lamellen senkrecht', sym: 'swingv' },
-        { feld: 'control.swingh', name: 'Lamellen waagerecht', sym: 'swingh' },
-        { feld: 'control.econo', name: 'Sparbetrieb', sym: 'econo' },
-        { feld: 'control.powerful', name: 'Turbo', sym: 'powerful' },
-        { feld: 'control.comfort', name: 'Komfortbetrieb', sym: 'comfort' },
-        { feld: 'control.streamer', name: 'Luftreinigung', sym: 'streamer' },
-        { feld: 'control.sensor', name: 'Anwesenheitssensor', sym: 'sensor' },
-        { feld: 'control.led', name: 'Anzeige-LED', sym: 'led' },
-        { feld: 'control.quiet', name: 'Leiser Außenbetrieb', sym: 'quiet' }
+        { feld: 'control.swing', name: 'schwenken', sym: 'swing' },
+        { feld: 'control.swingv', name: 'lamellenSenkrecht', sym: 'swingv' },
+        { feld: 'control.swingh', name: 'lamellenWaagerecht', sym: 'swingh' },
+        { feld: 'control.econo', name: 'sparbetrieb', sym: 'econo' },
+        { feld: 'control.powerful', name: 'turbo', sym: 'powerful' },
+        { feld: 'control.comfort', name: 'komfortbetrieb', sym: 'comfort' },
+        { feld: 'control.streamer', name: 'luftreinigung', sym: 'streamer' },
+        { feld: 'control.sensor', name: 'anwesenheitssensor', sym: 'sensor' },
+        { feld: 'control.led', name: 'anzeigeLed', sym: 'led' },
+        { feld: 'control.quiet', name: 'leiserAussen', sym: 'quiet' }
     ],
 
     MODI: [
-        { wert: 'heat_cool', text: 'Auto', farbe: '#2e7d52', sym: 'auto' },
-        { wert: 'cool', text: 'Kühlen', farbe: '#1e86c4', sym: 'cool' },
-        { wert: 'heat', text: 'Heizen', farbe: '#c96a22', sym: 'heat' },
-        { wert: 'dry', text: 'Trocknen', farbe: '#9a7b33', sym: 'dry' },
-        { wert: 'fan_only', text: 'Lüften', farbe: '#5c7186', sym: 'fan' }
+        { wert: 'heat_cool', name: 'modusHeatCool', farbe: '#2e7d52', sym: 'auto' },
+        { wert: 'cool', name: 'modusCool', farbe: '#1e86c4', sym: 'cool' },
+        { wert: 'heat', name: 'modusHeat', farbe: '#c96a22', sym: 'heat' },
+        { wert: 'dry', name: 'modusDry', farbe: '#9a7b33', sym: 'dry' },
+        { wert: 'fan_only', name: 'modusFanOnly', farbe: '#5c7186', sym: 'fan' }
     ],
 
     LUEFTER: [
-        { wert: 'auto', text: 'Auto' },
-        { wert: 'night', text: 'Nacht' },
+        // 'Auto' ist die Kurzform nur fuer die Pille (im Adapter 'Automatisch' - zu lang fuer sieben Pillen in einer Reihe)
+        { wert: 'auto', name: 'luefterAuto' },
+        { wert: 'night', name: 'luefterLeise' },
         { wert: 'low', text: '1' },
         { wert: 'lowMedium', text: '2' },
         { wert: 'medium', text: '3' },
@@ -185,17 +210,17 @@ vis.binds.faikout = {
      * bestehende Ansicht nach dem Update nicht leer bleibt.
      */
     MESSWERTE: [
-        { key: 'outdoor', legacy: 'aussen', feld: 'status.outside', name: 'Außen', einheit: '°C', stellen: 1 },
-        { key: 'power', legacy: 'leistung', feld: 'status.consumption', name: 'Leistung', einheit: 'W', stellen: 0 },
-        { key: 'today', legacy: 'heute', feld: 'consumption.total.today', name: 'Heute', einheit: 'kWh', stellen: 1 },
-        { key: 'compressor', legacy: 'verdichter', feld: 'status.comp', name: 'Verdichter', einheit: 'Hz', stellen: 0, einheitVomObjekt: true },
-        { key: 'fan', legacy: 'ventilator', feld: 'status.fanfreq', name: 'Ventilator', einheit: 'Hz', stellen: 1, einheitVomObjekt: true },
-        { key: 'refrigerant', legacy: 'kaeltemittel', feld: 'status.liquid', name: 'Kältemittel', einheit: '°C', stellen: 1 },
-        { key: 'room', legacy: 'raum', feld: 'status.temp', name: 'Raum', einheit: '°C', stellen: 1 },
-        { key: 'humidity', legacy: 'feuchte', feld: 'status.hum', name: 'Luftfeuchte', einheit: '%', stellen: 0 },
-        { key: 'energy', legacy: 'energie', feld: 'status.energy', name: 'Energie gesamt', einheit: 'kWh', stellen: 1 },
-        { key: 'yesterday', legacy: 'gestern', feld: 'consumption.total.yesterday', name: 'Gestern', einheit: 'kWh', stellen: 1 },
-        { key: 'hour', legacy: 'stunde', feld: 'consumption.total.currentHour', name: 'Diese Stunde', einheit: 'kWh', stellen: 2 }
+        { key: 'outdoor', legacy: 'aussen', feld: 'status.outside', name: 'fAussen', einheit: '°C', stellen: 1 },
+        { key: 'power', legacy: 'leistung', feld: 'status.consumption', name: 'leistung', einheit: 'W', stellen: 0 },
+        { key: 'today', legacy: 'heute', feld: 'consumption.total.today', name: 'heute', einheit: 'kWh', stellen: 1 },
+        { key: 'compressor', legacy: 'verdichter', feld: 'status.comp', name: 'verdichter', einheit: 'Hz', stellen: 0, einheitVomObjekt: true },
+        { key: 'fan', legacy: 'ventilator', feld: 'status.fanfreq', name: 'ventilator', einheit: 'Hz', stellen: 1, einheitVomObjekt: true },
+        { key: 'refrigerant', legacy: 'kaeltemittel', feld: 'status.liquid', name: 'kaeltemittel', einheit: '°C', stellen: 1 },
+        { key: 'room', legacy: 'raum', feld: 'status.temp', name: 'fRaum', einheit: '°C', stellen: 1 },
+        { key: 'humidity', legacy: 'feuchte', feld: 'status.hum', name: 'luftfeuchte', einheit: '%', stellen: 0 },
+        { key: 'energy', legacy: 'energie', feld: 'status.energy', name: 'energieGesamt', einheit: 'kWh', stellen: 1 },
+        { key: 'yesterday', legacy: 'gestern', feld: 'consumption.total.yesterday', name: 'gestern', einheit: 'kWh', stellen: 1 },
+        { key: 'hour', legacy: 'stunde', feld: 'consumption.total.currentHour', name: 'dieseStunde', einheit: 'kWh', stellen: 2 }
     ],
 
     /** Werte, die Ansichten aus 0.0.13 und frueher fuer `bereich` gespeichert haben. */
@@ -230,9 +255,10 @@ vis.binds.faikout = {
         if (v === null || v === undefined || v === '') return null;
         var n = parseFloat(v);
         if (isNaN(n)) return null;
-        // Dezimalpunkt im Englischen und Chinesischen, sonst Komma
+        // wie im Adapter: Dezimalpunkt nur im Englischen und Chinesischen, sonst Komma; echtes Minus
         var l = vis.binds.faikout.sprache();
-        return l === 'en' || l === 'zh-cn' ? n.toFixed(stellen) : n.toFixed(stellen).replace('.', ',');
+        var text = n.toFixed(stellen).replace('-', '−');
+        return l === 'en' || l === 'zh-cn' ? text : text.replace('.', ',');
     },
 
     /**
@@ -243,7 +269,6 @@ vis.binds.faikout = {
      */
     start: function (widgetID, data, aufbau) {
         var b = vis.binds.faikout;
-        b.listenUebersetzen();
         var $div = $('#' + widgetID);
         if (!$div.length) {
             return setTimeout(function () { b.start(widgetID, data, aufbau); }, 100);
@@ -252,14 +277,14 @@ vis.binds.faikout = {
         var prefix = data.deviceOid;
         if (!prefix) {
             $div.html('<div class="fk"><div class="fk-fehler">' +
-                b.t('Kein Gerät gewählt. Im Attribut „Gerät“ ein Objekt wie %s eintragen.', '<code>faikout.0.Wohnzimmer</code>') +
+                b.t('keinGeraet', '<code>faikout.0.Wohnzimmer</code>') +
                 '</div></div>');
             return;
         }
 
         vis.conn.getStates(prefix + '.*', function (fehler, zustaende) {
             if (fehler) {
-                $div.html('<div class="fk"><div class="fk-fehler">' + b.t('Datenpunkte nicht lesbar: %s', $('<span>').text(String(fehler)).html()) + '</div></div>');
+                $div.html('<div class="fk"><div class="fk-fehler">' + b.t('nichtLesbar', $('<span>').text(String(fehler)).html()) + '</div></div>');
                 return;
             }
             zustaende = zustaende || {};
@@ -287,7 +312,7 @@ vis.binds.faikout = {
                 wartet: function ($w) {
                     var $s = $w.find('.fk-status');
                     if (!$s.length) return;
-                    $s.text(b.t('gesendet · warte auf Rückmeldung')).addClass('fk-wartet');
+                    $s.text(b.t('gesendet')).addClass('fk-wartet');
                     clearTimeout($w.data('fkTimer'));
                     $w.data('fkTimer', setTimeout(function () { $s.text('').removeClass('fk-wartet'); }, 65000));
                 }
@@ -304,7 +329,9 @@ vis.binds.faikout = {
             // Verlauf, Messwerte und Verbrauch liessen ihn sonst immer auf "aus" stehen.
             var zeichnen = function () {
                 zeichnenBaustein.apply(this, arguments);
-                $wurzel.find('.fk-kopf .fk-schalter').toggleClass('fk-an', ctx.hat('control.power') ? !!ctx.wert('control.power') : true);
+                var laeuft = ctx.hat('control.power') ? !!ctx.wert('control.power') : true;
+                var tip = b.t(laeuft ? 'tipAusschalten' : 'tipEinschalten');
+                $wurzel.find('.fk-kopf .fk-schalter').toggleClass('fk-an', laeuft).attr({ title: tip, 'aria-label': tip });
             };
 
             var gebunden = [];
@@ -361,7 +388,7 @@ vis.binds.faikout = {
 
     /** Hinweis, wenn die Anlage den benoetigten Datenpunkt gar nicht hat. */
     fehlt: function ($wurzel, feld) {
-        $wurzel.html('<div class="fk-fehler">' + vis.binds.faikout.t('Dieses Gerät hat keinen Datenpunkt %s.', '<code>' + feld + '</code>') + '</div>');
+        $wurzel.html('<div class="fk-fehler">' + vis.binds.faikout.t('keinDatenpunkt', '<code>' + feld + '</code>') + '</div>');
         return null;
     },
 
@@ -390,7 +417,7 @@ vis.binds.faikout = {
             .append($('<div class="fk-name"></div>').text(name))
             .append(data.untertitel ? $('<div class="fk-ort"></div>').text(data.untertitel) : ''));
         if (ctx.hat('control.power') && data.schalter !== false) {
-            $('<button type="button" class="fk-schalter" aria-label="Ein/Aus"></button>')
+            $('<button type="button" class="fk-schalter"></button>')
                 .on('click', function () {
                     vis.setValue(ctx.oid('control.power'), !ctx.wert('control.power'));
                     ctx.wartet($wurzel);
@@ -402,7 +429,7 @@ vis.binds.faikout = {
 
     fuss: function ($wurzel, ctx, data) {
         if (data.fuss === false) return;
-        $wurzel.append('<div class="fk-fuss"><span class="fk-punkt">verbunden</span><span class="fk-status"></span></div>');
+        $wurzel.append('<div class="fk-fuss"><span class="fk-punkt">' + vis.binds.faikout.t('mVerbunden') + '</span><span class="fk-status"></span></div>');
     },
 
     /* ================================================================== Bogen */
@@ -446,7 +473,7 @@ vis.binds.faikout = {
             '  </svg>' +
             '  <div class="fk-ablesung">' +
             '   <div class="fk-soll"><span class="fk-soll-zahl">–</span><span class="fk-soll-einheit">°C</span></div>' +
-            '   <div class="fk-soll-etikett">' + b.t('Soll') + '</div>' +
+            '   <div class="fk-soll-etikett">' + b.t('zielKurz') + '</div>' +
             '   <div class="fk-ist">' +
             '    <span class="fk-ist-temp-feld">' + b.SYM.temp + '<b class="fk-ist-temp">–</b> °C</span>' +
             '    <span class="fk-ist-hum-feld">' + b.SYM.hum + '<b class="fk-ist-hum">–</b> %</span>' +
@@ -454,8 +481,8 @@ vis.binds.faikout = {
             '  </div>' +
             ' </div>' +
             ' <div class="fk-pm-reihe">' +
-            '  <button type="button" class="fk-pm fk-pm-minus" aria-label="Sollwert senken">−</button>' +
-            '  <button type="button" class="fk-pm fk-pm-plus" aria-label="Sollwert erhöhen">+</button>' +
+            '  <button type="button" class="fk-pm fk-pm-minus" title="' + b.t('tipKuehler') + '" aria-label="' + b.t('tipKuehler') + '">−</button>' +
+            '  <button type="button" class="fk-pm fk-pm-plus" title="' + b.t('tipWaermer') + '" aria-label="' + b.t('tipWaermer') + '">+</button>' +
             ' </div>' +
             '</div>');
 
@@ -572,7 +599,7 @@ vis.binds.faikout = {
                 $wurzel.find('.fk-schalter').toggleClass('fk-an', an);
                 zeichneBogen();
                 var erreichbar = ctx.hat('info.online') ? !!ctx.wert('info.online') : true;
-                $wurzel.find('.fk-punkt').toggleClass('fk-weg', !erreichbar).text(vis.binds.faikout.t(erreichbar ? 'verbunden' : 'offline'));
+                $wurzel.find('.fk-punkt').toggleClass('fk-weg', !erreichbar).text(vis.binds.faikout.t(erreichbar ? 'mVerbunden' : 'zOffline'));
             };
         });
     },
@@ -585,12 +612,12 @@ vis.binds.faikout = {
 
             b.kopf($wurzel, ctx, data);
             var $g = $('<div class="fk-gruppe"></div>');
-            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('Betriebsart') + '</div>');
+            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('betriebsart') + '</div>');
             var $p = $('<div class="fk-pillen"></div>').toggleClass('fk-senkrecht', !!senkrecht);
             b.MODI.forEach(function (m) {
                 $('<button type="button" class="fk-pille"></button>')
-                    .html((data.symbole === false ? '' : b.SYM[m.sym]) + '<span>' + m.text + '</span>')
-                    .attr('data-wert', m.wert)
+                    .html((data.symbole === false ? '' : b.SYM[m.sym]) + '<span>' + b.name(m) + '</span>')
+                    .attr({ 'data-wert': m.wert, title: b.name(m) })
                     .on('click', function () {
                         vis.setValue(ctx.oid('control.mode'), m.wert);
                         // Eine Betriebsart zu waehlen heisst: die Anlage soll laufen.
@@ -626,11 +653,11 @@ vis.binds.faikout = {
 
             b.kopf($wurzel, ctx, data);
             var $g = $('<div class="fk-gruppe"></div>');
-            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('Lüfter') + '</div>');
+            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('luefter') + '</div>');
             var $p = $('<div class="fk-pillen"></div>').toggleClass('fk-senkrecht', !!senkrecht);
             b.LUEFTER.forEach(function (l) {
                 $('<button type="button" class="fk-pille fk-nur-text"></button>')
-                    .text(l.text).attr('data-wert', l.wert)
+                    .text(b.name(l)).attr('data-wert', l.wert)
                     .on('click', function () {
                         vis.setValue(ctx.oid('control.fan'), l.wert);
                         ctx.wartet($wurzel);
@@ -661,7 +688,7 @@ vis.binds.faikout = {
 
             b.kopf($wurzel, ctx, data);
             var $g = $('<div class="fk-gruppe"></div>');
-            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('Leistungsbegrenzung') + '</div>');
+            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('grenze') + '</div>');
             $g.append(
                 '<div class="fk-leistung">' +
                 ' <div class="fk-leistung-wert"><span class="fk-leistung-zahl">–</span><small>%</small></div>' +
@@ -778,7 +805,7 @@ vis.binds.faikout = {
                 '  <div class="fk-regel-raum"><span class="fk-regel-raum-zahl">–</span><small>°C</small></div></div>' +
                 ' <div class="fk-regel-zustand"><span class="fk-regel-chip"></span><span class="fk-regel-probe"></span></div>' +
                 ' <div class="fk-regel-bild"></div>' +
-                ' <div class="fk-regel-grenze"><span>' + b.t('Leistungsgrenze') + '</span><b class="fk-regel-prozent">–</b></div>' +
+                ' <div class="fk-regel-grenze"><span title="' + b.t('grenze') + '">' + b.t('grenze') + '</span><b class="fk-regel-prozent">–</b></div>' +
                 ' <div class="fk-regel-balken">' + stufen + '</div>' +
                 ' <div class="fk-regel-fuss"><span class="fk-regel-werte"></span><span class="fk-regel-symbole">' +
                 ['bedarf', 'feuchte', 'plan'].map(function (n) {
@@ -787,10 +814,10 @@ vis.binds.faikout = {
                 '</div>');
             b.fuss($wurzel, ctx, data);
             var kennlinie = null;
-            var ZUSTAND = { ok: 'aktiv', manual: 'Handeingriff', setup: 'einrichten', fault: 'gestört', offline: 'keine Verbindung', off: 'ausgeschaltet' };
+            var ZUSTAND = { ok: 'zOk', manual: 'zHand', setup: 'zEinrichten', fault: 'zGestoert', offline: 'zOffline', off: 'zAus' };
             // Kanal der Datenpunkte je Symbol (regulation.<Kanal>.active)
             var KANAL = { bedarf: 'demand', feuchte: 'humidity', plan: 'schedule' };
-            var TITEL = { bedarf: 'Bedarfsregelung', feuchte: 'Feuchteregelung', plan: 'Wochenplan' };
+            var TITEL = { bedarf: 'bedarfsregelung', feuchte: 'feuchteregelung', plan: 'aktWochenplan' };
 
             var kennlinieStand = null;
             var zeichnen = function () {
@@ -808,14 +835,14 @@ vis.binds.faikout = {
                 var soll = parseFloat(ctx.wert('regulation.demand.setpoint'));
                 var probe = ctx.wert('regulation.demand.dryRun') !== false;
                 // Zustand
-                $wurzel.find('.fk-regel-chip').text(b.t(ZUSTAND[zustand] || zustand)).attr('data-zustand', zustand)
+                $wurzel.find('.fk-regel-chip').text(ZUSTAND[zustand] ? b.t(ZUSTAND[zustand]) : zustand).attr('data-zustand', zustand)
                     .attr('title', ctx.wert('regulation.reason') || '');
-                $wurzel.find('.fk-regel-probe').text(probe && zustand !== 'off' ? b.t('Probelauf') : '');
+                $wurzel.find('.fk-regel-probe').text(probe && zustand !== 'off' ? b.t('probelauf') : '');
                 // Szene und naechste Schaltung
                 var planAn = ctx.wert('regulation.schedule.active') === true;
                 var szene = planAn ? ctx.wert('regulation.schedule.level') : '';
                 var ziel = b.zahl(ctx.wert('control.target'), 1);
-                $wurzel.find('.fk-regel-szene').text((szene ? szene + ' · ' : '') + (ziel !== null ? b.t('Soll') + ' ' + ziel + ' °C' : ''));
+                $wurzel.find('.fk-regel-szene').text((szene ? szene + ' · ' : '') + (ziel !== null ? b.t('zielKurz') + ' ' + ziel + ' °C' : ''));
                 var naechster = Number(ctx.wert('regulation.schedule.next'));
                 var text = '';
                 if (planAn && naechster > 0) {
@@ -831,8 +858,8 @@ vis.binds.faikout = {
                 $wurzel.find('.fk-regel-balken span').each(function (i) {
                     $(this).toggleClass('fk-voll', i < n).toggleClass('fk-spitze', i + 1 === n);
                 });
-                $wurzel.find('.fk-regel-prozent').text(
-                    faehig === 'no' ? b.t('nicht unterstützt') : ruht ? b.t('ruht (Faikout-Auto)') : !aktiv ? b.t('nicht begrenzt') : isNaN(soll) ? '–' : Math.round(soll) + ' %');
+                $wurzel.find('.fk-regel-prozent').toggleClass('fk-wort', faehig === 'no' || ruht || !aktiv).text(
+                    faehig === 'no' ? b.t('nichtUnterstuetzt') : ruht ? b.t('ruht') : !aktiv ? b.t('grenzeAus') : isNaN(soll) ? '–' : Math.round(soll) + ' %');
                 $wurzel.find('.fk-regel-balken').toggleClass('fk-ruht', !aktiv);
                 // Kennlinie mit Arbeitspunkt
                 if (kennlinie) {
@@ -860,7 +887,7 @@ vis.binds.faikout = {
                 // (Regelung rechnet noch nicht) der aktuelle Wert, dann ohne den Zusatz.
                 var mittel = b.zahl(ctx.wert('regulation.demand.outsideMean'), 1);
                 var aussen = mittel !== null ? mittel : b.zahl(ctx.wert('regulation.sensors.outside') !== null ? ctx.wert('regulation.sensors.outside') : ctx.wert('status.outside'), 1);
-                if (aussen !== null) werte.push((mittel !== null ? b.t('außen, Mittel 30 min') : b.t('Außen').toLowerCase()) + ' ' + aussen + ' °C');
+                if (aussen !== null) werte.push(b.t('aussenBei', aussen) + (mittel !== null ? ' (' + b.t('mittel30') + ')' : ''));
                 var watt = b.zahl(ctx.wert('status.consumption'), 0);
                 if (watt !== null) werte.push(watt + ' W');
                 $wurzel.find('.fk-regel-werte').text(werte.join(' · '));
@@ -869,7 +896,7 @@ vis.binds.faikout = {
                     var ein = ctx.wert('regulation.' + KANAL[art] + '.active') === true;
                     $(this).attr('class', 'fk-regel-symbol' + (ein ? ' fk-an' : ''))
                         .find('title').remove();
-                    $(this).prepend($(document.createElementNS('http://www.w3.org/2000/svg', 'title')).text(b.t(TITEL[art]) + ': ' + b.t(ein ? 'an' : 'aus')));
+                    $(this).prepend($(document.createElementNS('http://www.w3.org/2000/svg', 'title')).text(b.t('paar', b.t(TITEL[art]), b.t(ein ? 'mAn' : 'mAus'))));
                 });
             };
             kennlinieStand = ctx.hat('regulation.demand.curveJson') ? ctx.wert('regulation.demand.curveJson') : null;
@@ -891,20 +918,20 @@ vis.binds.faikout = {
                 return ctx.hat(z.feld);
             });
             if (!liste.length) {
-                $wurzel.append('<div class="fk-fehler">' + b.t('Dieses Gerät meldet keine der Zusatzfunktionen.') + '</div>');
+                $wurzel.append('<div class="fk-fehler">' + b.t('keineZusatz') + '</div>');
                 return null;
             }
 
             b.kopf($wurzel, ctx, data);
             var $g = $('<div class="fk-gruppe"></div>');
-            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('Zusatzfunktionen') + '</div>');
+            if (data.etikett !== false) $g.append('<div class="fk-gruppe-etikett">' + b.t('zusatzfunktionen') + '</div>');
             var $p = $('<div class="fk-pillen"></div>').toggleClass('fk-senkrecht', !!senkrecht);
             liste.forEach(function (z) {
                 var mitText = data.beschriftung === true || senkrecht;
                 $('<button type="button" class="fk-pille fk-schalt"></button>')
                     .addClass(mitText ? '' : 'fk-nur-icon')
-                    .attr({ 'data-feld': z.feld, title: z.name, 'aria-label': z.name })
-                    .html(b.SYM[z.sym] + (mitText ? '<span>' + z.name + '</span>' : ''))
+                    .attr({ 'data-feld': z.feld, title: b.name(z), 'aria-label': b.name(z) })
+                    .html(b.SYM[z.sym] + (mitText ? '<span>' + b.name(z) + '</span>' : ''))
                     .on('click', function () {
                         var alt = ctx.wert(z.feld);
                         // `swing` ist eine Liste (off/on), alle anderen sind Schalter.
@@ -952,7 +979,7 @@ vis.binds.faikout = {
             b.kopf($wurzel, ctx, data);
             var liste = b.gewaehlteWerte(data).filter(function (m) { return ctx.hat(m.feld); });
             if (!liste.length) {
-                $wurzel.append('<div class="fk-fehler">' + b.t('Keiner der gewählten Messwerte ist bei diesem Gerät vorhanden.') + '</div>');
+                $wurzel.append('<div class="fk-fehler">' + b.t('keineMesswerte') + '</div>');
                 return null;
             }
             $wurzel.append('<div class="fk-messwerte"></div>');
@@ -977,9 +1004,9 @@ vis.binds.faikout = {
      * Dieselben Zaehler wie der Reiter "Verbrauch" der Instanz (consumption.total.*).
      */
     VERBRAUCH: [
-        { key: 'today', feld: 'consumption.total.today', name: 'Heute', einheit: 'kWh', stellen: 1 },
-        { key: 'month', feld: 'consumption.total.thisMonth', name: 'Dieser Monat', einheit: 'kWh', stellen: 1 },
-        { key: 'power', feld: 'status.consumption', name: 'Leistung', einheit: 'W', stellen: 0 }
+        { key: 'today', feld: 'consumption.total.today', name: 'heute', einheit: 'kWh', stellen: 1 },
+        { key: 'month', feld: 'consumption.total.thisMonth', name: 'dieserMonat', einheit: 'kWh', stellen: 1 },
+        { key: 'power', feld: 'status.consumption', name: 'leistung', einheit: 'W', stellen: 0 }
     ],
 
     verbrauch: function (widgetID, view, data) {
@@ -990,7 +1017,7 @@ vis.binds.faikout = {
                 return data['show_' + m.key] !== false && ctx.hat(m.feld);
             });
             if (!liste.some(function (m) { return m.einheit === 'kWh'; })) {
-                $wurzel.append('<div class="fk-fehler">' + b.t('Dieses Gerät meldet keinen Energiezähler.') + '</div>');
+                $wurzel.append('<div class="fk-fehler">' + b.t('keinZaehler') + '</div>');
                 return null;
             }
             $wurzel.append('<div class="fk-messwerte"></div>');
@@ -1018,14 +1045,14 @@ vis.binds.faikout = {
                 if (b.MESSWERTE[i].key === gewaehlt || b.MESSWERTE[i].legacy === gewaehlt) m = b.MESSWERTE[i];
             }
             if (!m) {
-                $wurzel.html('<div class="fk-fehler">' + b.t('Kein Messwert gewählt.') + '</div>');
+                $wurzel.html('<div class="fk-fehler">' + b.t('keinMesswert') + '</div>');
                 return null;
             }
             if (!ctx.hat(m.feld)) return b.fehlt($wurzel, m.feld);
 
             $wurzel.append(
                 '<div class="fk-einzel">' +
-                (data.etikett === false ? '' : '<div class="fk-einzel-name">' + (data.titel || m.name) + '</div>') +
+                (data.etikett === false ? '' : '<div class="fk-einzel-name">' + (data.titel || b.t(m.name)) + '</div>') +
                 ' <div class="fk-einzel-wert">–<small>' + m.einheit + '</small></div>' +
                 '</div>');
 
@@ -1106,14 +1133,22 @@ vis.binds.faikout = {
     /** Kurze Achsenbeschriftung: Stunde, Tag im Monat oder Monatsname. */
     verlaufBeschriftung: function (schluessel, bereich) {
         if (bereich === 'day') return schluessel.slice(-2);                      // 2026-08-19T14 -> 14
-        if (/^\d{4}-\d{2}-\d{2}$/.test(schluessel)) return String(+schluessel.slice(8)) + '.';
+        var sprache = vis.binds.faikout.sprache();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(schluessel)) {
+            // Tag im Monat, wie die Sprache ihn schreibt (de/en "12", zh "12日")
+            try {
+                return new Intl.DateTimeFormat(sprache, { day: 'numeric' }).format(new Date(+schluessel.slice(0, 4), +schluessel.slice(5, 7) - 1, +schluessel.slice(8)));
+            } catch (e) {
+                return String(+schluessel.slice(8));
+            }
+        }
         if (/^\d{4}-\d{2}$/.test(schluessel)) {
             // Monatsname in der VIS-Sprache vom Browser - keine eigene Liste je Sprache
             var monat = +schluessel.slice(5) - 1;
             try {
-                return new Intl.DateTimeFormat(vis.binds.faikout.sprache(), { month: 'short' }).format(new Date(2000, monat, 15));
-            } catch (e) {
-                return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monat] || schluessel;
+                return new Intl.DateTimeFormat(sprache, { month: 'short' }).format(new Date(2000, monat, 15));
+            } catch (e2) {
+                return schluessel.slice(5);
             }
         }
         return schluessel;
@@ -1170,8 +1205,8 @@ vis.binds.faikout = {
                 svg += '<rect x="' + x.toFixed(1) + '" y="' + y(wert).toFixed(1) +
                        '" width="' + balkenB.toFixed(1) + '" height="' + h.toFixed(1) +
                        '" rx="1" fill="' + b.VERLAUF_FARBEN[r.art] + '">' +
-                       '<title>' + punkte[k].beschriftung + ' · ' + b.t('Kühlen') + ' ' + b.zahl(punkte[k].cooling, 1) +
-                       ' kWh · ' + b.t('Heizen') + ' ' + b.zahl(punkte[k].heating, 1) + ' kWh</title></rect>';
+                       '<title>' + punkte[k].beschriftung + ' · ' + b.t('modusCool') + ' ' + b.zahl(punkte[k].cooling, 1) +
+                       ' kWh · ' + b.t('modusHeat') + ' ' + b.zahl(punkte[k].heating, 1) + ' kWh</title></rect>';
             });
         });
         svg += '</g></svg>';
@@ -1191,7 +1226,7 @@ vis.binds.faikout = {
                 heating: b.attr(data, 'show_heating', 'zeige_heizen') !== false
             };
             // Die Reihen des Adapters reichen weiter zurueck (Tage z. B. 62) - gezeigt wird ein fester Ausschnitt.
-            var BESCHRIFTUNG = { day: b.t('Letzte 24 Stunden'), month: b.t('Letzte 31 Tage'), year: b.t('Letzte 12 Monate') };
+            var BESCHRIFTUNG = { day: b.t('letzte24h'), month: b.t('letzte31'), year: b.t('letzte12') };
             var ANZAHL = { day: 24, month: 31, year: 12 };
 
             var $box = $('<div class="fk-verlauf"></div>').appendTo($wurzel);
@@ -1199,7 +1234,7 @@ vis.binds.faikout = {
                 var $schalter = $('<div class="fk-v-schalter"></div>').appendTo($box);
                 ['day', 'month', 'year'].forEach(function (wahl) {
                     $('<button type="button"></button>')
-                        .text(b.t({ day: 'Tag', month: 'Monat', year: 'Jahr' }[wahl]))
+                        .text(b.t({ day: 'tag', month: 'monat', year: 'jahr' }[wahl]))
                         .attr('aria-pressed', wahl === bereich ? 'true' : 'false')
                         .on('click', function () {
                             bereich = wahl;
@@ -1212,7 +1247,7 @@ vis.binds.faikout = {
             }
             if (b.attr(data, 'seriesSelect', 'auswahl') !== false) {
                 var $arten = $('<div class="fk-v-arten"></div>').appendTo($box);
-                [['total', b.t('Gesamt')], ['cooling', b.t('Kühlen')], ['heating', b.t('Heizen')]].forEach(function (paar) {
+                [['total', b.t('summe')], ['cooling', b.t('modusCool')], ['heating', b.t('modusHeat')]].forEach(function (paar) {
                     var $l = $('<label></label>').appendTo($arten);
                     $('<input type="checkbox">')
                         .prop('checked', arten[paar[0]])
@@ -1232,13 +1267,13 @@ vis.binds.faikout = {
                 b.verlaufLesen(ctx, bereich, function (punkte, fehlend) {
                     $fuss.find('.fk-v-zeitraum').text(BESCHRIFTUNG[bereich] || '');
                     if (punkte === null) {
-                        $flaeche.html('<div class="fk-fehler">' + b.t('Dieses Gerät hat keinen Datenpunkt %s. Er entsteht, sobald die Anlage Energiewerte meldet.',
+                        $flaeche.html('<div class="fk-fehler">' + b.t('keinDatenpunktEnergie',
                             '<code>consumption.&lt;type&gt;.' + fehlend + '</code>') + '</div>');
                         $fuss.find('.fk-v-summe').text('');
                         return;
                     }
                     if (!punkte.length) {
-                        $flaeche.html('<div class="fk-v-leer">' + b.t('Noch keine Werte für diesen Zeitraum.') + '</div>');
+                        $flaeche.html('<div class="fk-v-leer">' + b.t('keineWerte') + '</div>');
                         $fuss.find('.fk-v-summe').text('');
                         return;
                     }
@@ -1246,7 +1281,7 @@ vis.binds.faikout = {
                     var w = $flaeche.width() || 400;
                     b.verlaufZeichnen($flaeche, punkte, arten, w, Math.max(110, Math.round(w * 0.42)));
                     var summe = punkte.reduce(function (a, p) { return a + p.cooling + p.heating; }, 0);
-                    $fuss.find('.fk-v-summe').html(b.t('Summe') + ' <b>' +
+                    $fuss.find('.fk-v-summe').html(b.t('summe') + ' <b>' +
                         b.zahl(summe, summe >= 100 ? 0 : 1) + ' kWh</b>');
                 });
             }
@@ -1271,10 +1306,10 @@ vis.binds.faikout = {
 
             teile.push(b.bogenBauen($wurzel, ctx, data, 'fkskala_' + widgetID));
             if (ctx.hat('control.mode')) {
-                teile.push(b.teilPillen($wurzel, ctx, b.t('Betriebsart'), 'control.mode', b.MODI, false, data.symbole !== false));
+                teile.push(b.teilPillen($wurzel, ctx, b.t('betriebsart'), 'control.mode', b.MODI, false, data.symbole !== false));
             }
             if (ctx.hat('control.fan')) {
-                teile.push(b.teilPillen($wurzel, ctx, b.t('Lüfter'), 'control.fan', b.LUEFTER, true, false));
+                teile.push(b.teilPillen($wurzel, ctx, b.t('luefter'), 'control.fan', b.LUEFTER, true, false));
             }
 
             // Schwenken gehoert auf die grosse Kachel. Die uebrigen Zusatzfunktionen kommen
@@ -1298,7 +1333,7 @@ vis.binds.faikout = {
                 $wurzel.find('.fk-schalter').toggleClass('fk-an', an);
                 teile.forEach(function (f) { if (f) f(); });
                 var erreichbar = ctx.hat('info.online') ? !!ctx.wert('info.online') : true;
-                $wurzel.find('.fk-punkt').toggleClass('fk-weg', !erreichbar).text(vis.binds.faikout.t(erreichbar ? 'verbunden' : 'offline'));
+                $wurzel.find('.fk-punkt').toggleClass('fk-weg', !erreichbar).text(vis.binds.faikout.t(erreichbar ? 'mVerbunden' : 'zOffline'));
             };
         });
     },
@@ -1312,8 +1347,8 @@ vis.binds.faikout = {
         var $p = $('<div class="fk-pillen"></div>');
         liste.forEach(function (e) {
             var $t = $('<button type="button" class="fk-pille"></button>').attr('data-wert', e.wert);
-            if (nurText) $t.addClass('fk-nur-text').text(e.text);
-            else $t.html((symbole ? b.SYM[e.sym] : '') + '<span>' + e.text + '</span>');
+            if (nurText) $t.addClass('fk-nur-text').text(b.name(e));
+            else $t.attr('title', b.name(e)).html((symbole ? b.SYM[e.sym] : '') + '<span>' + b.name(e) + '</span>');
             $t.on('click', function () {
                 vis.setValue(ctx.oid(feld), e.wert);
                 if (feld === 'control.mode' && ctx.hat('control.power') && !ctx.wert('control.power')) {
@@ -1340,14 +1375,14 @@ vis.binds.faikout = {
         var b = vis.binds.faikout;
         var $g = $('<div class="fk-gruppe" style="flex:none"></div>')
             .append('<div class="fk-gruppe-etikett">' +
-                b.t(liste.length > 3 ? 'Zusatzfunktionen' : 'Schwenken') + '</div>');
+                b.t(liste.length > 3 ? 'zusatzfunktionen' : 'schwenken') + '</div>');
         var $p = $('<div class="fk-pillen"></div>');
         liste.forEach(function (z) {
             var mitText = data && data.beschriftung === true;
             $('<button type="button" class="fk-pille fk-schalt"></button>')
                 .addClass(mitText ? '' : 'fk-nur-icon')
-                .attr({ 'data-feld': z.feld, title: z.name, 'aria-label': z.name })
-                .html(b.SYM[z.sym] + (mitText ? '<span>' + z.name + '</span>' : ''))
+                .attr({ 'data-feld': z.feld, title: b.name(z), 'aria-label': b.name(z) })
+                .html(b.SYM[z.sym] + (mitText ? '<span>' + b.name(z) + '</span>' : ''))
                 .on('click', function () {
                     var alt = ctx.wert(z.feld);
                     // `swing` kennt off/on/V/H/H+V/C/H+C (SWING_* in Faikout.c). Umgeschaltet wird nur

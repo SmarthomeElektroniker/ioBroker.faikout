@@ -6,7 +6,7 @@
             name="viewport"
             content="width=device-width, initial-scale=1"
         />
-        <title>Faikout weekly schedule</title>
+        <title>faikout</title>
         <!--
             Wochenraster des Wochenplans (Dialog der Geraetekarte und Reiter "Zeitplaene" der Einstellungsseite
             von faikout, als iframe geladen).
@@ -1588,6 +1588,10 @@
                     socket.on('connect', async () => {
                         try {
                             info = await send('wochenplanInfo', {});
+                            // page title in the admin language (the static title is the neutral adapter name)
+                            if (info.texts.aktWochenplan) {
+                                document.title = `faikout – ${info.texts.aktWochenplan}`;
+                            }
                             applyColors();
                             setProgram(info.program);
                             $('hint').textContent = info.texts.pHinweis;

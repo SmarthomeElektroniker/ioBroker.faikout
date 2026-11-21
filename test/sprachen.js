@@ -70,6 +70,34 @@ function sammle(wurzel, wo, ziel) {
     lauf(wurzel, '');
 }
 
+/**
+ * Laedt die VIS-Bausteine wie der Browser (ohne module, mit einer Attrappe fuer `vis`).
+ *
+ * @param {string} [sprache]  VIS-Sprache
+ * @returns {Record<string, any>} vis.binds.faikout
+ */
+function bausteine(sprache = 'en') {
+    const vm = require('node:vm');
+    const fenster = {};
+    const umgebung = { self: fenster, window: fenster, vis: { binds: {}, language: sprache } };
+    vm.runInNewContext(lies('widgets/faikout/js/kennlinienbild.js'), umgebung);
+    vm.runInNewContext(lies('widgets/faikout/js/faikout.js'), umgebung);
+    return umgebung.vis.binds.faikout;
+}
+
+/** Texttabelle der VIS-Bausteine als { schluessel: { sprache: text } }. */
+function bausteinTexte() {
+    const b = bausteine();
+    return Object.fromEntries(Object.entries(b.TEXTE).map(([k, liste]) => [k, Object.fromEntries(b.SPRACHEN.map((s, i) => [s, liste[i]]))]));
+}
+
+/** Uebersetzungstabelle des VIS-Editors (systemDictionary in widgets/faikout.html). */
+function editorTexte() {
+    const block = lies('widgets/faikout.html').match(/\$\.extend\(true, systemDictionary, (\{[\s\S]*?\n {8}\})\);/);
+    expect(block, 'systemDictionary in widgets/faikout.html').to.not.equal(null);
+    return new Function(`return ${block[1]}`)();
+}
+
 /** Alle Texte aller Quellen als Liste [Ort, { sprache: text }]. */
 function alleTexte() {
     const liste = [];
@@ -90,6 +118,8 @@ function alleTexte() {
     sammle(require('../lib/anbinden'), 'anbinden', liste);
     sammle(require('../lib/suche'), 'suche', liste);
     sammle(require('../lib/verbrauchbild'), 'verbrauchbild', liste);
+    sammle(bausteinTexte(), 'widgets', liste);
+    sammle(editorTexte(), 'widgets-editor', liste);
     const io = JSON.parse(lies('io-package.json'));
     sammle({ titleLang: io.common.titleLang, desc: io.common.desc, news: { [io.common.version]: io.common.news[io.common.version] } }, 'io-package', liste);
     sammle(io.instanceObjects, 'io-package.instanceObjects', liste);
@@ -137,7 +167,7 @@ describe('Sprachen: Regeln fuer alle Quellen', () => {
 
     it('es werden wirklich alle Quellen gelesen', () => {
         expect(texte.length).to.be.greaterThan(850);
-        for (const quelle of ['Zeitplaene.texte.ts', 'Stufen.texte.ts', 'admin/i18n', 'src-admin/src/i18n', 'oberflaeche', 'regel', 'anbinden', 'suche', 'verbrauchbild', 'io-package']) {
+        for (const quelle of ['Zeitplaene.texte.ts', 'Stufen.texte.ts', 'admin/i18n', 'src-admin/src/i18n', 'oberflaeche', 'regel', 'anbinden', 'suche', 'verbrauchbild', 'io-package', 'widgets.', 'widgets-editor']) {
             expect(texte.filter(([ort]) => ort.startsWith(quelle)).length, quelle).to.be.greaterThan(1);
         }
     });
@@ -276,15 +306,15 @@ describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englisch
 
     it('keine fremde Sprache enthaelt den deutschen oder englischen Text unveraendert (gepflegte Ausnahmen)', () => {
         // Maschinenwerte und Eigennamen bleiben in jeder Sprache gleich
-        const TECHNIK = /^((ha|no)\.\w+|livestatus|reporting|Faikout|Firmware \/ hardware|IP|max\.|h|\d+)$/;
+        const TECHNIK = /^((ha|no)\.\w+|livestatus|reporting|Faikout|Firmware \/ hardware|IP|max\.|h|\d+|%s: %s|⌀ 30 min)$/;
         // Woerter, die in der Sprache wirklich so heissen ("sprache:Text")
         const GLEICH = new Set([
-            ...['Individual', 'Total'].map(w => `es:${w}`),
-            ...['Absence', 'Faikout auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'active'].map(w => `fr:${w}`),
-            ...['Comfort', 'Faikout auto'].map(w => `it:${w}`),
-            ...['ioBroker-Adapter regelt', 'Alles', 'Automatisch', 'Client-ID', 'Comfort', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Week', 'morgen'].map(w => `nl:${w}`),
-            ...['Faikout-Auto', 'Komfort', 'Port', 'Punkt %s', 'Status'].map(w => `pl:${w}`),
-            ...['Individual', 'Total'].map(w => `pt:${w}`),
+            ...['Auto', 'Individual', 'Total', 'Turbo'].map(w => `es:${w}`),
+            ...['Absence', 'Auto', 'Faikout auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'Turbo', 'active'].map(w => `fr:${w}`),
+            ...['Auto', 'Comfort', 'Faikout auto', 'Turbo'].map(w => `it:${w}`),
+            ...['ioBroker-Adapter regelt', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
+            ...['Auto', 'Faikout-Auto', 'Komfort', 'Port', 'Punkt %s', 'Status', 'Turbo'].map(w => `pl:${w}`),
+            ...['Auto', 'Compressor', 'Individual', 'Total', 'Turbo'].map(w => `pt:${w}`),
         ]);
         const texte = alleTexte();
         const fehler = [];
@@ -320,5 +350,289 @@ describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englisch
             }
         }
         expect(fehler).to.eql([]);
+    });
+});
+
+describe('Sprachen: VIS-Bausteine (widgets/) und Seitentitel', () => {
+    const ts = require('typescript');
+    const texte = bausteinTexte();
+    const quelltext = lies('widgets/faikout/js/faikout.js');
+    const BUCHSTABEN = /[A-Za-zÄÖÜäöüßА-яЁёІіЇїЄєҐґ一-鿿]{3,}/g;
+
+    /**
+     * Sichtbare Woerter einer Zeichenkette aus dem Quelltext der Bausteine: in HTML/SVG die Beschriftungen in
+     * Attributen und alles zwischen den Marken; ohne Marken Umlaute oder fremde Schrift, ein grossgeschriebenes
+     * Wort oder mehrere Woerter. Klassen, Selektoren, Datenpunkte und Schluessel der Texttabelle zaehlen nicht.
+     *
+     * @param {string} text  Inhalt der Zeichenkette
+     * @returns {string[]} Fundstellen
+     */
+    const sichtbareWoerter = text => {
+        if (/[<>]/.test(text)) {
+            const aus = [];
+            for (const m of text.matchAll(/\b(?:title|aria-label|placeholder|alt)="([^"]*)/g)) {
+                aus.push(...(m[1].match(BUCHSTABEN) || []));
+            }
+            const zwischen = text
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/<[^>]*$/, ' ')
+                .replace(/^[^<>]*>/, ' ')
+                .replace(/&[a-z]+;/g, ' ');
+            return aus.concat(zwischen.match(BUCHSTABEN) || []);
+        }
+        if (/fk-|^[.#]|^use strict$/.test(text)) {
+            return [];
+        }
+        const auffaellig =
+            /[ÄÖÜäöüßА-яЁёІіЇїЄєҐґ一-鿿]/.test(text) || /^[A-ZÄÖÜ][a-zäöüß]{2,}/.test(text) || /[A-Za-zäöüß]{2,} [·–-]? ?[A-Za-zäöüß]{2,}/.test(text);
+        return auffaellig ? [text.trim().slice(0, 40)] : [];
+    };
+
+    it('Texttabelle: jeder Schluessel in elf Sprachen, nicht leer, gleiche Platzhalter', () => {
+        const b = bausteine();
+        expect(Array.from(b.SPRACHEN)).to.eql(SPRACHEN);
+        expect(Object.keys(texte).length).to.be.greaterThan(60);
+        const fehler = [];
+        for (const [k, liste] of Object.entries(b.TEXTE)) {
+            if (!/^[a-z][A-Za-z0-9]*$/.test(k)) {
+                fehler.push(`${k}: Schluessel ist kein schlichter Name`);
+            }
+            if (liste.length !== SPRACHEN.length) {
+                fehler.push(`${k}: ${liste.length} Sprachen`);
+                continue;
+            }
+            for (const s of SPRACHEN) {
+                if (typeof texte[k][s] !== 'string' || !texte[k][s].trim()) {
+                    fehler.push(`${k}/${s}: leer`);
+                } else if (platzhalter(texte[k][s]) !== platzhalter(texte[k].en)) {
+                    fehler.push(`${k}/${s}: Platzhalter`);
+                }
+            }
+        }
+        expect(fehler).to.eql([]);
+    });
+
+    it('gemeinsame Begriffe stehen wortgleich wie im Adapter', () => {
+        const o = require('../lib/oberflaeche').TEXTE;
+        const dm = require('../lib/devicemanager');
+        const vb = require('../lib/verbrauchbild').TEXTE;
+        const stufen = komponentenTexte('Stufen.texte.ts');
+        const ausO = ['zOk', 'zHand', 'zEinrichten', 'zGestoert', 'zOffline', 'zAus', 'probelauf', 'grenze', 'grenzeAus', 'ruht', 'aktWochenplan']
+            .concat(['mAn', 'mAus', 'mVerbunden', 'fAussen', 'fRaum', 'aussenBei', 'zielKurz', 'tipWaermer', 'tipKuehler'])
+            .map(k => [k, o[k]]);
+        // Schluessel des Bausteins -> derselbe Text im Adapter
+        const GLEICH = {
+            ...Object.fromEntries(ausO),
+            leistung: dm.TEXTE.leistung,
+            tipEinschalten: dm.TEXTE.tipEinschalten,
+            tipAusschalten: dm.TEXTE.tipAusschalten,
+            modusHeatCool: dm.MODUS_TEXTE.heat_cool,
+            modusCool: dm.MODUS_TEXTE.cool,
+            modusHeat: dm.MODUS_TEXTE.heat,
+            modusDry: dm.MODUS_TEXTE.dry,
+            modusFanOnly: dm.MODUS_TEXTE.fan_only,
+            betriebsart: stufen.betriebsart,
+            luefter: stufen.luefter,
+            luefterLeise: stufen.fan_night,
+            tag: vb.tag,
+            monat: vb.monat,
+            jahr: vb.jahr,
+            summe: vb.summe,
+        };
+        // Kurzformen: der Text des Bausteins steckt im (laengeren) Text des Adapters
+        const ENTHALTEN = {
+            bedarfsregelung: o.tipBedarfAn,
+            feuchteregelung: o.tipFeuchteAn,
+            nichtUnterstuetzt: o.nichtUnterstuetzt,
+        };
+        expect(Object.keys(GLEICH).length).to.equal(35);
+        const fehler = [];
+        for (const [k, adapter] of Object.entries(GLEICH)) {
+            for (const s of SPRACHEN) {
+                if (!adapter || !texte[k] || texte[k][s] !== adapter[s]) {
+                    fehler.push(`${k}/${s}: "${texte[k] && texte[k][s]}" statt "${adapter && adapter[s]}"`);
+                }
+            }
+        }
+        for (const [k, adapter] of Object.entries(ENTHALTEN)) {
+            for (const s of SPRACHEN) {
+                if (!adapter[s].toLowerCase().includes(texte[k][s].toLowerCase())) {
+                    fehler.push(`${k}/${s}: "${texte[k][s]}" nicht in "${adapter[s]}"`);
+                }
+            }
+        }
+        // der Hinweis "kein Geraet gewaehlt" nennt das Attribut so, wie der Editor es beschriftet
+        const editor = editorTexte();
+        for (const s of SPRACHEN) {
+            if (!texte.keinGeraet[s].includes(editor.deviceOid[s])) {
+                fehler.push(`keinGeraet/${s}: Attributname "${editor.deviceOid[s]}" fehlt`);
+            }
+        }
+        expect(fehler).to.eql([]);
+    });
+
+    it('jeder benutzte Schluessel steht in der Tabelle, jeder Eintrag der Tabelle wird benutzt', () => {
+        const ohneTabelle = quelltext.replace(/\n {4}TEXTE: \{[\s\S]*?\n {4}\},\n/, '\n');
+        expect(ohneTabelle.length).to.be.below(quelltext.length - 5000);
+        const benutzt = new Set();
+        const nimm = (muster, teil) => {
+            for (const m of ohneTabelle.matchAll(muster)) {
+                for (const k of m[1].matchAll(teil)) {
+                    benutzt.add(k[1]);
+                }
+            }
+        };
+        // t('schluessel', ...) - auch mit Auswahl t(a ? 'x' : 'y'); nur das erste Argument ist ein Schluessel
+        nimm(/\bt\(((?:[^(),]|\([^()]*\))*)/g, /'([A-Za-z0-9]+)'/g);
+        // Listen (name: 'schluessel') und Zuordnungen (ZUSTAND, TITEL, Umschalter Tag/Monat/Jahr)
+        nimm(/\b(name: '[A-Za-z0-9]+')/g, /'([A-Za-z0-9]+)'/g);
+        nimm(/var (?:ZUSTAND|TITEL) = \{([^}]*)\}/g, /: '([A-Za-z0-9]+)'/g);
+        nimm(/b\.t\(\{([^}]*)\}\[/g, /: '([A-Za-z0-9]+)'/g);
+        expect([...benutzt].filter(k => !texte[k]), 'benutzt, aber nicht in TEXTE').to.eql([]);
+        expect(Object.keys(texte).filter(k => !benutzt.has(k)), 'in TEXTE, aber unbenutzt').to.eql([]);
+        // ohne Tabelleneintrag liefert t() den Schluessel - der Vergleich oben haelt das aus dem Bild heraus
+        expect(bausteine('fr').t('gibtEsNicht')).to.equal('gibtEsNicht');
+    });
+
+    it('kein fester sichtbarer Text in widgets/faikout/js/*.js ausserhalb der Tabelle', () => {
+        // Woerter, die bewusst in keiner Sprache uebersetzt werden ("Datei:Wort")
+        const ERLAUBT = new Set([
+            // Beispiel-Objekt und Platzhalter in den Hinweisen "kein Geraet gewaehlt" / "Datenpunkt fehlt" (in <code>)
+            'faikout.js:faikout',
+            'faikout.js:Wohnzimmer',
+            'faikout.js:consumption',
+            'faikout.js:type',
+            // Einheitenzeichen
+            'faikout.js:kWh',
+        ]);
+        const funde = [];
+        const benutzt = new Set();
+        for (const datei of ['faikout.js', 'kennlinienbild.js']) {
+            const sf = ts.createSourceFile(datei, lies(`widgets/faikout/js/${datei}`), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+            const lauf = n => {
+                // die Texttabelle selbst und die Symbol-Pfade (SVG ohne Text) sind kein fester Text
+                if (ts.isPropertyAssignment(n) && ['TEXTE', 'SYM', 'REGEL_SYMBOLE'].includes(n.name.getText())) {
+                    return;
+                }
+                if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n) || ts.isTemplateHead(n) || ts.isTemplateMiddle(n) || ts.isTemplateTail(n)) {
+                    for (const wort of sichtbareWoerter(n.text)) {
+                        benutzt.add(`${datei}:${wort}`);
+                        if (!ERLAUBT.has(`${datei}:${wort}`)) {
+                            funde.push(`${datei}:${sf.getLineAndCharacterOfPosition(n.getStart()).line + 1} "${wort}"`);
+                        }
+                    }
+                }
+                ts.forEachChild(n, lauf);
+            };
+            lauf(sf);
+        }
+        expect(funde).to.eql([]);
+        expect([...ERLAUBT].filter(e => !benutzt.has(e)), 'Ausnahmeliste ohne Ueberfluessiges').to.eql([]);
+        // Gegenprobe: die Pruefung erkennt die Texte, die frueher fest im Code standen ...
+        for (const alt of ['<span class="fk-punkt">verbunden</span>', '<button aria-label="Sollwert senken">', 'Ein/Aus', 'gesendet · warte', 'Kühlen', 'Jan']) {
+            expect(sichtbareWoerter(alt), alt).to.not.eql([]);
+        }
+        // ... und laesst Klassen, Selektoren, Datenpunkte und Schluessel in Ruhe
+        for (const technisch of ['fk-pille fk-nur-text', '.fk-kopf .fk-schalter', 'control.power', 'zEinrichten', '<div class="fk-fuss">', 'data-wert', '°C']) {
+            expect(sichtbareWoerter(technisch), technisch).to.eql([]);
+        }
+    });
+
+    it('widgets/faikout.html: Editor-Tabelle vollstaendig, jedes Attribut beschriftet, kein fester Text ausser den Bausteinnamen', () => {
+        const html = lies('widgets/faikout.html');
+        const editor = editorTexte();
+        const fehler = [];
+        for (const [k, t] of Object.entries(editor)) {
+            if (Object.keys(t).sort().join() !== [...SPRACHEN].sort().join() || SPRACHEN.some(s => !String(t[s]).trim())) {
+                fehler.push(`${k}: Sprachen ${Object.keys(t).join()}`);
+            }
+        }
+        // jedes Attribut, jede Auswahl und jede Gruppe der Vorlagen hat einen Eintrag
+        const namen = new Set(['faikout_group_faikout']);
+        for (const m of html.matchAll(/data-vis-attrs0?="([^"]*)"/g)) {
+            for (const teil of m[1].split(';').filter(Boolean)) {
+                const [name, art = ''] = teil.split('/');
+                namen.add(name.replace(/^group\./, 'group_'));
+                if (art.startsWith('select,')) {
+                    art.split(',')
+                        .slice(1)
+                        .forEach(wahl => namen.add(wahl));
+                }
+            }
+        }
+        expect(namen.size).to.be.greaterThan(40);
+        for (const n of namen) {
+            if (!editor[n]) {
+                fehler.push(`${n}: kein Eintrag in systemDictionary`);
+            }
+        }
+        expect(fehler).to.eql([]);
+        // Bausteinnamen in der Auswahl des Editors (data-vis-name) bleiben englisch - gepflegte Liste
+        const NAMEN = [
+            'Climate tile (complete)',
+            'Set point arc',
+            'Mode (horizontal)',
+            'Mode (vertical)',
+            'Fan speed (horizontal)',
+            'Fan speed (vertical)',
+            'Power limit',
+            'Climate control (display)',
+            'Extra functions (horizontal)',
+            'Extra functions (vertical)',
+            'Energy history (day/month/year)',
+            'Readings (block, selectable)',
+            'Consumption (today / this month)',
+            'Reading (single)',
+        ];
+        expect([...html.matchAll(/data-vis-name="([^"]*)"/g)].map(m => m[1])).to.eql(NAMEN);
+        // sonst steht in der Datei kein sichtbarer Text: nur Kommentare, Skripte und Vorlagen ohne Textknoten
+        const rest = html
+            .replace(/<!--[\s\S]*?-->/g, '')
+            .replace(/<script type="text\/javascript">[\s\S]*?<\/script>/g, '')
+            .replace(/<%[\s\S]*?%>/g, '')
+            .replace(/<[^>]*>/g, '\n');
+        expect(rest.match(/[A-Za-zÄÖÜäöüß]{3,}[^\n]*/g) || []).to.eql([]);
+        expect([...html.matchAll(/\s(?:title|placeholder|aria-label|alt)="([^"]*)"/g)].map(m => m[1])).to.eql([]);
+    });
+
+    it('Sprache aus VIS mit Rueckfall Englisch; Zahlen und Datum in der Sprache', () => {
+        const sprache = l => bausteine(l).sprache();
+        expect(SPRACHEN.map(sprache)).to.eql(SPRACHEN);
+        expect(['de-DE', 'zh', 'zh_TW', 'PT-br', 'sv', ''].map(sprache)).to.eql(['de', 'zh-cn', 'zh-cn', 'pt', 'en', 'en']);
+        // unbekannte Sprache -> englischer Text; Platzhalter der Reihe nach
+        expect(bausteine('sv').t('zHand')).to.equal('manual override');
+        expect(bausteine('de').t('zHand')).to.equal('Handeingriff');
+        expect(bausteine('fr').t('paar', 'A', 'B')).to.equal('A : B');
+        expect(bausteine('de').t('aussenBei', '−3,5')).to.equal('außen −3,5 °C');
+        // Dezimalpunkt nur in Englisch und Chinesisch, echtes Minus ueberall
+        for (const s of SPRACHEN) {
+            expect(bausteine(s).zahl(-3.5, 1), s).to.equal(s === 'en' || s === 'zh-cn' ? '−3.5' : '−3,5');
+        }
+        // Monat und Tag kommen vom Browser (Intl) - keine eigenen Listen
+        expect(bausteine('de').verlaufBeschriftung('2026-03', 'year')).to.match(/^Mär/);
+        expect(bausteine('fr').verlaufBeschriftung('2026-03', 'year')).to.match(/^mars/);
+        expect(bausteine('zh-cn').verlaufBeschriftung('2026-03', 'year')).to.equal('3月');
+        expect(bausteine('de').verlaufBeschriftung('2026-03-07', 'month')).to.equal('7');
+        expect(bausteine('zh-cn').verlaufBeschriftung('2026-03-07', 'month')).to.equal('7日');
+    });
+
+    it('Seitentitel: im HTML neutral, gesetzt aus den Texten des Adapters', () => {
+        const plan = lies('admin/wochenplan.html');
+        const verbrauch = lies('admin/verbrauch.html');
+        for (const seite of [plan, verbrauch]) {
+            expect([...seite.matchAll(/<title>([^<]*)<\/title>/g)].map(m => m[1])).to.eql(['faikout']);
+        }
+        expect(plan).to.contain('document.title = `faikout – ${info.texts.aktWochenplan}`');
+        expect(verbrauch).to.contain("document.title = `faikout – ${T('titel')}`");
+        const o = require('../lib/oberflaeche');
+        const vb = require('../lib/verbrauchbild');
+        const titel = new Set();
+        for (const s of SPRACHEN) {
+            expect(o.planTexte(s).aktWochenplan, s).to.equal(o.TEXTE.aktWochenplan[s]);
+            expect(vb.TEXTE.titel[s], s).to.be.a('string').and.not.equal('');
+            titel.add(o.planTexte(s).aktWochenplan);
+        }
+        // wirklich uebersetzt (einzelne Sprachen duerfen gleich heissen)
+        expect(titel.size).to.be.greaterThan(8);
     });
 });
