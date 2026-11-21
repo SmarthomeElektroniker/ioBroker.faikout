@@ -1138,6 +1138,66 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         expect(anlage.target).to.equal(19);
     });
 
+    it('Uebergabe nach „Faikout-Modul regelt selbst“: was das Modul in den ersten Minuten verstellt, ist kein Handeingriff - der Plan stellt durch', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const anlage = new Anlage({ name: 'Plan U', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        await scharf(a, 'Plan_U');
+        await laufen(a, uhr, anlage, 3);
+        // bis vor zwei Minuten regelte das Modul selbst (Stand aus dem gespeicherten Zustand)
+        const r = a.regelung.geraete.get('Plan_U');
+        r.zustand.modulBetrieb = uhr.t - 2 * 60000;
+        anlage.target = 16; // das Modul fuehrt die Anlage noch nach
+        anlage.mode = 'cool';
+        await laufen(a, uhr, anlage, 3);
+        expect(a.wert('Plan_U.regulation.manual.locked')).to.equal(false);
+        expect(a.wert('Plan_U.regulation.state')).to.equal('ok');
+        // der Adapter hat seine Sollwerte durchgestellt
+        expect([anlage.target, anlage.mode]).to.eql([21, 'heat']);
+        expect(a.zeilen.some(z => /manual change detected/.test(z.text))).to.equal(false);
+        // nach der Frist (11 min) wird ein echter Handeingriff wieder erkannt
+        await laufen(a, uhr, anlage, 10);
+        anlage.target = 24;
+        await laufen(a, uhr, anlage, 3);
+        expect(a.wert('Plan_U.regulation.manual.locked')).to.equal(true);
+        expect(anlage.target).to.equal(24);
+    });
+
+    it('Modul-Automatik laeuft, obwohl der Adapter regeln soll: Hinweis und „nicht eingerichtet“ statt Handeingriff-Schleife', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const anlage = new Anlage({ name: 'Plan V', target: 21, mode: 'heat', autoe: true });
+        await laufen(a, uhr, anlage, 2);
+        await scharf(a, 'Plan_V');
+        await laufen(a, uhr, anlage, 3);
+        expect(a.wert('Plan_V.regulation.state')).to.equal('ok'); // autoe allein (ohne gemeldetes autor) sagt nichts
+        a.regelung.nativ('Plan_V', { autoe: true, autor: 0.5 });
+        anlage.target = 17;
+        await laufen(a, uhr, anlage, 3);
+        expect(a.wert('Plan_V.regulation.manual.locked')).to.equal(false);
+        expect(a.wert('Plan_V.regulation.state')).to.equal('setup');
+        expect(a.wert('Plan_V.regulation.reason')).to.contain('Die Automatik des Moduls ist noch eingeschaltet');
+        // im Modul ausgeschaltet: Hinweis weg, Handeingriff wird wieder erkannt
+        a.regelung.nativ('Plan_V', { autoe: true, autor: 0 });
+        await laufen(a, uhr, anlage, 3);
+        expect(a.wert('Plan_V.regulation.state')).to.equal('ok');
+        expect(a.wert('Plan_V.regulation.reason')).not.to.contain('Automatik des Moduls');
+        anlage.target = 25;
+        await laufen(a, uhr, anlage, 3);
+        expect(a.wert('Plan_V.regulation.manual.locked')).to.equal(true);
+    });
+
+    it('„Faikout-Modul regelt selbst“ merkt sich die Zeit des Modulbetriebs; der Zustand uebersteht Speichern und Lesen', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false, regelGeraete: [{ geraet: 'Plan W', betrieb: 'faikout' }] }, START);
+        const anlage = new Anlage({ name: 'Plan W', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 3);
+        const r = a.regelung.geraete.get('Plan_W');
+        expect(r.zustand.modulBetrieb).to.be.within(uhr.t - 2 * 60000, uhr.t);
+        expect(zustand.lesen(zustand.schreiben(r.zustand)).modulBetrieb).to.equal(r.zustand.modulBetrieb);
+        expect(zustand.lesen('{}').modulBetrieb).to.equal(0);
+        // ohne vorherigen Modulbetrieb bleibt alles wie bisher
+        expect(a.regelung.geraete.size).to.equal(1);
+    });
+
     it('Handeingriff ohne wartenden Plan: kein Hinweis (kein Plan hinterlegt, Plan aus, nur Feuchte an)', async () => {
         const faelle = {
             // Feuchteregelung an, Wochenplan aus und keiner hinterlegt

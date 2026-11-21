@@ -98,9 +98,10 @@ Limits of "Faikout module controls itself":
 - The power limit is only set with the strategy **Auto**. With the strategy "curve", demand control
   rests; the card then says "rests (module controls itself)".
 - **Back to "ioBroker adapter controls":** switch the automatic mode in the module off again ("Auto temp"
-  to "Off"). After the change the module keeps driving the unit for up to ten minutes; if it changes
-  target or mode during that time, the card shows "manual override" – "End manual override" hands
-  control back to the weekly schedule.
+  to "Off"). After the change the module keeps driving the unit for up to ten minutes; the adapter does
+  not treat what it changes during that time as a manual override and simply applies its own set points.
+  If the module's automatic mode stays enabled, the card shows "not set up" with the note "The module's
+  automatic mode is still enabled – switch it off in the module".
 - **Every change of the target is stored in the module (flash memory).** If the schedule changes
   the target six or more times on one day, the tab and the schedule dialog warn. For schedules
   with many switching times "ioBroker adapter controls" is the better choice.
@@ -131,6 +132,8 @@ cycling. If the room is 2 K or more below the target, the adapter always release
 above a lower upper limit and above the maximum power of the temperature level. If the curve itself
 reaches 100 % (factory default at −10 °C), that is an ordinary value: the maximum power of the
 temperature level still limits it.
+If the room is 1.5 K or more above the target (below it when cooling), the power drops to the minimum
+level of 30 % – but never below the lower limit of the unit (overheating protection).
 
 - **Curve by outside temperature:** points "outside °C → power %", dragged with the mouse in the
   picture (the table is collapsed). The picture shows lower and upper limit and – as soon as the

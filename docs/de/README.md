@@ -97,9 +97,10 @@ Grenzen von „Faikout-Modul regelt selbst“:
 - Die Leistungsgrenze wird nur mit der Strategie **Auto** gesetzt. Mit der Strategie „Kennlinie“
   ruht die Bedarfsregelung; auf der Karte steht dann „ruht (Modul regelt selbst)“.
 - **Zurück zu „ioBroker-Adapter regelt“:** Die Automatik im Modul dabei wieder ausschalten („Auto temp“
-  auf „Off“). Das Modul führt die Anlage nach dem Umstellen noch bis zu zehn Minuten selbst weiter; ändert
-  es in dieser Zeit Ziel oder Betriebsart, zeigt die Karte „Handeingriff“ – mit „Handeingriff beenden“
-  übernimmt der Wochenplan wieder.
+  auf „Off“). Das Modul führt die Anlage nach dem Umstellen noch bis zu zehn Minuten selbst weiter; was es
+  in dieser Zeit verstellt, wertet der Adapter nicht als Handeingriff, er stellt seine Sollwerte durch.
+  Bleibt die Automatik des Moduls eingeschaltet, steht auf der Karte „nicht eingerichtet“ mit dem Hinweis
+  „Die Automatik des Moduls ist noch eingeschaltet – im Modul ausschalten“.
 - **Jede Zieländerung wird im Modul gespeichert (Flash-Speicher).** Ändert der Wochenplan das Ziel
   an einem Tag sechsmal oder öfter, warnen der Reiter und der Wochenplan-Dialog. Für Pläne mit
   vielen Schaltpunkten ist „ioBroker-Adapter regelt“ die bessere Wahl.
@@ -130,6 +131,8 @@ durchläuft statt zu takten. Liegt der Raum 2 K oder mehr unter dem Ziel, gibt d
 100 % frei – auch über eine niedrigere Obergrenze und über die Höchstleistung der Temperaturstufe
 hinweg. Erreicht dagegen die Kennlinie selbst 100 % (Werksvorgabe bei −10 °C), ist das ein normaler
 Wert: Die Höchstleistung der Temperaturstufe begrenzt ihn weiter.
+Liegt der Raum 1,5 K oder mehr über dem Ziel (beim Kühlen darunter), geht die Leistung auf die
+Mindeststufe 30 % – aber nie unter die Untergrenze der Anlage (Überheizschutz).
 
 - **Kennlinie nach Außentemperatur:** Stützpunkte „Außen °C → Leistung %“, im Bild mit der Maus zu
   ziehen (die Tabelle dazu ist eingeklappt). Das Bild zeigt Unter- und Obergrenze und – sobald die
