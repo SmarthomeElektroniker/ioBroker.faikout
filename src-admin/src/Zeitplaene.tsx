@@ -657,7 +657,8 @@ export function ZeitplaeneAnsicht(props: AnsichtProps): React.JSX.Element {
             g.id,
             'wochenplanOeffnen',
             g.id === VORLAGE
-                ? { week: vorlagePlan ? vorlageRoh : '', ...(Array.isArray(props.stufenFormular) ? { stufen: props.stufenFormular } : {}) }
+                ? // leer heisst Werksplan: der Editor zeigt, was gilt - nicht eine leere Woche
+                  { week: vorlageText, ...(Array.isArray(props.stufenFormular) ? { stufen: props.stufenFormular } : {}) }
                 : {},
         );
         if (a && lebt.current) {

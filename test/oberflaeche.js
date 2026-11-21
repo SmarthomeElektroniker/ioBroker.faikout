@@ -1133,8 +1133,12 @@ describe('Einstellungsseite: neue Felder je Geraet und Modul-Reiter', () => {
         expect(zeile.fuehlerWeg.options.map(x => x.value)).to.eql(['sollwert', 'modul']);
         expect(zeile.fuehlerWeg.default).to.equal('sollwert');
         expect(zeile.fuehlerWeg.hidden).to.equal("data.raumQuelle !== 'dp'");
-        expect(zeile.raumTraegeMin).to.include({ min: 0, max: 240, default: 0, hidden: "data.raumQuelle !== 'dp'" });
-        expect(zeile.korrAbstandMin).to.include({ min: 10, max: 180, default: 30 });
+        expect(zeile.raumTraegeMin).to.include({ min: 0, max: 240, hidden: "data.raumQuelle !== 'dp'" });
+        expect(zeile.korrAbstandMin).to.include({ min: 10, max: 180, help: 'helpKorrAbstand' });
+        // ohne default: sonst traegt die Seite den Wert in aeltere Eintraege nach und "Speichern" ist schon beim
+        // Oeffnen aktiv (Rauchtest 21.11.2026) - leer heisst im Adapter 30 Minuten bzw. 0
+        expect(zeile.raumTraegeMin).to.not.have.property('default');
+        expect(zeile.korrAbstandMin).to.not.have.property('default');
         expect(zeile.korrAbstandMin.hidden).to.contain("data.fuehlerWeg === 'modul'");
         // der Titel des Eintrags ist der Geraetename (Wert der Auswahl)
         expect(konfig.items.tabRegelung.items.regelGeraete.titleAttr).to.equal('geraet');

@@ -1331,7 +1331,6 @@
                             "md": 4,
                             "lg": 4,
                             "xl": 4,
-                            "default": 30,
                             "hidden": "data.raumQuelle !== 'dp' || data.fuehlerWeg === 'modul'",
                             "help": "helpKorrAbstand"
                         },
@@ -1360,7 +1359,6 @@
                             "md": 4,
                             "lg": 4,
                             "xl": 4,
-                            "default": 0,
                             "hidden": "data.raumQuelle !== 'dp'",
                             "help": "helpRaumTraege",
                             "newLine": true
