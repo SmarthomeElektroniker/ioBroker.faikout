@@ -36,6 +36,7 @@
             'show_outdoor': { 'en': 'Outside', 'de': 'Außentemperatur', 'ru': 'Снаружи', 'pt': 'Exterior', 'nl': 'Buiten', 'fr': 'Extérieur', 'it': 'Esterno', 'es': 'Exterior', 'pl': 'Na zewnątrz', 'uk': 'Зовні', 'zh-cn': '室外' },
             'show_power': { 'en': 'Power', 'de': 'Leistung', 'ru': 'Мощность', 'pt': 'Potência', 'nl': 'Vermogen', 'fr': 'Puissance', 'it': 'Potenza', 'es': 'Potencia', 'pl': 'Moc', 'uk': 'Потужність', 'zh-cn': '功率' },
             'show_today': { 'en': 'Energy today', 'de': 'Energie heute', 'ru': 'Энергия сегодня', 'pt': 'Energia hoje', 'nl': 'Energie vandaag', 'fr': 'Énergie aujourd’hui', 'it': 'Energia oggi', 'es': 'Energía hoy', 'pl': 'Energia dziś', 'uk': 'Енергія сьогодні', 'zh-cn': '今日能耗' },
+            'show_month': { 'en': 'Energy this month', 'de': 'Energie dieser Monat', 'ru': 'Энергия за месяц', 'pt': 'Energia este mês', 'nl': 'Energie deze maand', 'fr': 'Énergie ce mois', 'it': 'Energia questo mese', 'es': 'Energía este mes', 'pl': 'Energia w tym miesiącu', 'uk': 'Енергія цього місяця', 'zh-cn': '本月能耗' },
             'show_compressor': { 'en': 'Compressor', 'de': 'Verdichter', 'ru': 'Компрессор', 'pt': 'Compressor', 'nl': 'Compressor', 'fr': 'Compresseur', 'it': 'Compressore', 'es': 'Compresor', 'pl': 'Sprężarka', 'uk': 'Компресор', 'zh-cn': '压缩机' },
             'show_fan': { 'en': 'Fan speed', 'de': 'Ventilator', 'ru': 'Вентилятор', 'pt': 'Ventilador', 'nl': 'Ventilator', 'fr': 'Ventilateur', 'it': 'Ventola', 'es': 'Ventilador', 'pl': 'Wentylator', 'uk': 'Вентилятор', 'zh-cn': '风扇转速' },
             'show_refrigerant': { 'en': 'Refrigerant', 'de': 'Kältemittel', 'ru': 'Хладагент', 'pt': 'Refrigerante', 'nl': 'Koelmiddel', 'fr': 'Réfrigérant', 'it': 'Refrigerante', 'es': 'Refrigerante', 'pl': 'Czynnik chłodniczy', 'uk': 'Холодоагент', 'zh-cn': '制冷剂' },
@@ -231,6 +232,20 @@
         data-vis-attrs0="group.readings;show_outdoor/checkbox;show_power/checkbox;show_today/checkbox;show_compressor/checkbox;show_fan/checkbox;show_refrigerant/checkbox;show_room/checkbox;show_humidity/checkbox;show_energy/checkbox;show_yesterday/checkbox;show_hour/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:160px">
         <% vis.binds.faikout.messwerte(this.data.wid, this.view, this.data, this.style); %>
+    </div>
+</script>
+
+<!-- ==================================================== Verbrauch heute / Monat -->
+<script id="tplFaikoutVerbrauch"
+        type="text/ejs"
+        class="vis-tpl"
+        data-vis-set="faikout"
+        data-vis-type="val"
+        data-vis-name="Consumption (today / this month)"
+        data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox"
+        data-vis-attrs0="group.readings;show_today/checkbox;show_month/checkbox;show_power/checkbox">
+    <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:130px">
+        <% vis.binds.faikout.verbrauch(this.data.wid, this.view, this.data, this.style); %>
     </div>
 </script>
 

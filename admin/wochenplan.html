@@ -168,7 +168,12 @@
                 bottom: 0;
                 border: 0;
                 margin: 0;
-                padding: 0 6px;
+                /* kein Innenabstand: ein Knopf wird nie schmaler als sein Innenabstand - kurze Bloecke
+                   (z. B. 22:30-24:00 in Handybreite) ragten sonst rechts aus der Zeile */
+                padding: 0;
+                min-width: 0;
+                text-indent: 6px;
+                box-sizing: border-box;
                 color: var(--block-fg);
                 font: inherit;
                 font-size: 13px;
@@ -248,6 +253,22 @@
                 border-radius: 3px;
                 pointer-events: none;
                 z-index: 6;
+                white-space: nowrap;
+            }
+            /* am Rand der Zeile nicht aus dem Rahmen laufen */
+            .tip.edge-l,
+            .preview span.edge-l {
+                transform: translateX(0);
+            }
+            .tip.edge-r,
+            .preview span.edge-r {
+                transform: translateX(-100%);
+            }
+            .preview span.edge-l {
+                left: 0;
+            }
+            .preview span.edge-r {
+                left: 100%;
             }
             .now {
                 position: absolute;
@@ -306,6 +327,10 @@
                 display: flex;
                 flex-direction: column;
                 min-width: 190px;
+                max-width: calc(100vw - 12px);
+                max-height: calc(100vh - 8px);
+                overflow-y: auto;
+                box-sizing: border-box;
             }
             .menu button {
                 border: 0;
@@ -404,6 +429,65 @@
                 padding: 4px 10px 6px 10px;
                 color: var(--muted);
                 font-size: 12px;
+            }
+            /* ---------- Handybreite: ein Tag pro Zeile ----------
+               Kopf (Tag links, Werkzeuge rechts), darunter der Balken ueber die volle Breite und eine
+               eigene kleine Stundenachse. Die Klasse setzt das Skript (matchMedia), weil sich auch die
+               Reihenfolge der Elemente aendert. */
+            body.narrow #grid {
+                grid-template-columns: 1fr auto;
+                row-gap: 2px;
+                column-gap: 6px;
+            }
+            body.narrow .day {
+                font-size: 15px;
+                padding-top: 6px;
+            }
+            body.narrow .tools {
+                padding-top: 6px;
+                justify-content: flex-end;
+            }
+            body.narrow .track,
+            body.narrow .scale {
+                grid-column: 1 / -1;
+            }
+            body.narrow .track {
+                height: 46px;
+            }
+            body.narrow .scale {
+                height: 15px;
+                font-size: 11px;
+                margin-bottom: 4px;
+            }
+            body.narrow .scale span:first-child {
+                transform: translateX(0);
+            }
+            body.narrow .scale span:last-child {
+                transform: translateX(-100%);
+            }
+            body.narrow .handle {
+                width: 28px;
+                margin-left: -14px;
+            }
+            body.narrow .handle::after {
+                left: 12px;
+            }
+            body.narrow .tool {
+                width: 36px;
+                height: 36px;
+            }
+            body.narrow .add {
+                padding: 7px 12px;
+                font-size: 13px;
+            }
+            body.narrow .menu button {
+                padding: 10px 12px;
+            }
+            body.narrow #absFields label,
+            body.narrow #absFields input,
+            body.narrow #absFields select {
+                width: 100%;
+                box-sizing: border-box;
             }
             html,
             body {
@@ -588,9 +672,13 @@
                 function applyTheme() {
                     let dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
                     try {
-                        const bg = getComputedStyle(window.parent.document.body).backgroundColor;
-                        const m = /rgba?\((\d+), *(\d+), *(\d+)/.exec(bg);
-                        if (m) {
+                        // only when embedded, and never from a fully transparent background (reads as black)
+                        const bg =
+                            window.parent === window
+                                ? ''
+                                : getComputedStyle(window.parent.document.body).backgroundColor;
+                        const m = /rgba?\((\d+), *(\d+), *(\d+)(?:, *([\d.]+))?/.exec(bg);
+                        if (m && m[4] !== '0') {
                             dark = 0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3] < 128;
                         }
                     } catch {
@@ -698,23 +786,31 @@
                     const focusKey = document.activeElement && document.activeElement.dataset.key;
                     const grid = $('grid');
                     grid.innerHTML = '';
-                    grid.appendChild(document.createElement('div'));
-                    const scale = document.createElement('div');
-                    scale.className = 'scale';
-                    for (let h = 0; h <= 24; h += 2) {
-                        const s = document.createElement('span');
-                        s.style.left = `${(h / 24) * 100}%`;
-                        s.textContent = String(h);
-                        scale.appendChild(s);
+                    const narrow = document.body.classList.contains('narrow');
+                    // hour axis: every 2 h on a wide page; one per day with fewer marks on a phone
+                    const makeScale = step => {
+                        const scale = document.createElement('div');
+                        scale.className = 'scale';
+                        scale.setAttribute('aria-hidden', 'true');
+                        for (let h = 0; h <= 24; h += step) {
+                            const s = document.createElement('span');
+                            s.style.left = `${(h / 24) * 100}%`;
+                            s.textContent = String(h);
+                            scale.appendChild(s);
+                        }
+                        return scale;
+                    };
+                    if (!narrow) {
+                        grid.appendChild(document.createElement('div'));
+                        grid.appendChild(makeScale(2));
+                        grid.appendChild(document.createElement('div'));
                     }
-                    grid.appendChild(scale);
-                    grid.appendChild(document.createElement('div'));
                     const now = new Date();
                     const today = (now.getDay() + 6) % 7;
                     for (let d = 0; d < 7; d++) {
                         const name = document.createElement('div');
                         name.className = `day${d === today ? ' today' : ''}`;
-                        name.textContent = dayName(d, 'short');
+                        name.textContent = dayName(d, narrow ? 'long' : 'short');
                         name.title = dayName(d, 'long');
                         grid.appendChild(name);
                         const track = document.createElement('div');
@@ -737,7 +833,7 @@
                             b.addEventListener('keydown', ev => blockKey(ev, b, d, bl));
                             b.addEventListener('contextmenu', ev => {
                                 ev.preventDefault();
-                                openMenuAt(b, d, bl.a, minuteAt(track, ev.clientX, d));
+                                openMenuAt(b, d, bl.a, minuteAt(track, ev.clientX, d), ev);
                             });
                             track.appendChild(b);
                         });
@@ -762,7 +858,9 @@
                             n.style.left = `${((now.getHours() * 60 + now.getMinutes()) / DAY) * 100}%`;
                             track.appendChild(n);
                         }
-                        grid.appendChild(track);
+                        if (!narrow) {
+                            grid.appendChild(track);
+                        }
                         const tools = document.createElement('div');
                         tools.className = 'tools';
                         const copy = tool(ICON_COPY, info.texts.pTagKopieren, () => {
@@ -782,6 +880,11 @@
                         add.addEventListener('click', () => addToDay(d));
                         tools.append(add, copy, paste);
                         grid.appendChild(tools);
+                        if (narrow) {
+                            // phone: day and tools in one line, the bar below over the full width, its own axis
+                            grid.appendChild(track);
+                            grid.appendChild(makeScale(3));
+                        }
                     }
                     if (focusKey) {
                         const el = grid.querySelector(`[data-key="${focusKey}"]`);
@@ -924,10 +1027,44 @@
                 }
 
                 // ---------- editing ----------
+                /* calc:begin - pure functions, read and checked by test/devicemanager.js */
                 const snap = m => Math.round(m / STEP) * STEP;
+                /** Minute of the week under a pointer position, snapped to the grid of the page. */
+                function minuteFromX(left, width, clientX, d) {
+                    return d * DAY + snap(Math.min(Math.max((clientX - left) / (width || 1), 0), 1) * DAY);
+                }
+                /**
+                 * Where "New switching time at ..." of a menu splits its block, or -1 for "do not offer".
+                 * A menu opened on a LINE belongs to that switching time (its own time is the title) and
+                 * offers no split: the middle of the following block (12:30 for a line at 08:30) read like
+                 * the time of the line that was clicked.
+                 *
+                 * @param {{a: number, b: number}} bl Block
+                 * @param {number|undefined} at Pointer position (minute of the week), if known
+                 * @param {number[]} taken Minutes that already are switching times
+                 * @param {boolean} onLine Menu was opened on a line
+                 * @returns {number} Minute of the week or -1
+                 */
+                function splitOffer(bl, at, taken, onLine) {
+                    if (onLine) {
+                        return -1;
+                    }
+                    const m = at !== undefined && at > bl.a && at < bl.b ? at : bl.a + snap((bl.b - bl.a) / 2);
+                    return m > bl.a && m < bl.b && !taken.includes(m) ? m : -1;
+                }
+                /** Edge class for a small label above a line: no overflow at either end of the row. */
+                const edgeOf = frac => (frac < 0.08 ? 'edge-l' : frac > 0.92 ? 'edge-r' : '');
+                /* calc:end */
                 function minuteAt(track, clientX, d) {
                     const r = track.getBoundingClientRect();
-                    return d * DAY + snap(Math.min(Math.max((clientX - r.left) / r.width, 0), 1) * DAY);
+                    return minuteFromX(r.left, r.width, clientX, d);
+                }
+                function edge(el, m, d) {
+                    el.classList.remove('edge-l', 'edge-r');
+                    const c = edgeOf((m - d * DAY) / DAY);
+                    if (c) {
+                        el.classList.add(c);
+                    }
                 }
                 function limits(d, p) {
                     sorted();
@@ -964,6 +1101,7 @@
                         handle.style.left = x;
                         tip.style.left = x;
                         tip.textContent = hhmm(p.m);
+                        edge(tip, p.m, d);
                         // live preview of the two neighbouring blocks
                         const blocks = track.querySelectorAll('.block');
                         blocksOf(d).forEach((bl, i) => {
@@ -989,7 +1127,7 @@
                             // a click on a line: change or delete this switching time
                             tip.remove();
                             handle.classList.remove('drag');
-                            openMenuAt(handle, d, p.m);
+                            openMenuAt(handle, d, p.m, undefined, ev, true);
                             return;
                         }
                         changed();
@@ -1006,7 +1144,7 @@
                     } else if (ev.key === 'Delete' || ev.key === 'Backspace') {
                         // same question as in the menu
                         ev.preventDefault();
-                        openMenuAt(ev.target, d, p.m);
+                        openMenuAt(ev.target, d, p.m, undefined, undefined, true);
                         const del = menu && menu.querySelector('button.danger');
                         if (del) {
                             del.click();
@@ -1014,7 +1152,7 @@
                         return;
                     } else if (ev.key === 'Enter' || ev.key === ' ') {
                         ev.preventDefault();
-                        openMenuAt(ev.target, d, p.m);
+                        openMenuAt(ev.target, d, p.m, undefined, undefined, true);
                         return;
                     } else if (ev.key === 'Insert' || ev.key === '+') {
                         ev.preventDefault();
@@ -1055,6 +1193,7 @@
                     }
                     line.style.left = `${((m - d * DAY) / DAY) * 100}%`;
                     line.firstChild.textContent = `+ ${hhmm(m)}`;
+                    edge(line.firstChild, m, d);
                 }
                 /** Click into a block: new switching time there; keyboard "click" (Enter) opens the choice */
                 function clickBlock(ev, btn, track, d, bl) {
@@ -1064,7 +1203,7 @@
                     }
                     const m = minuteAt(track, ev.clientX, d);
                     if (m <= bl.a || m >= bl.b || points.some(p => p.m === m)) {
-                        openMenuAt(btn, d, bl.a);
+                        openMenuAt(btn, d, bl.a, undefined, ev);
                         return;
                     }
                     insertAt(d, m);
@@ -1144,7 +1283,7 @@
                         }
                     }
                     placeMenu(menuEl, anchor);
-                    first.focus();
+                    first.focus({ preventScroll: true });
                 }
                 function removePoint(p) {
                     if (points.length <= 1) {
@@ -1207,13 +1346,21 @@
                  * @param {number} d Day
                  * @param {number} m Start of the block (a switching time or the start of the day)
                  * @param {number} [at] Where to split (right click); default the middle of the block
+                 * @param {{clientX: number}} [pointer] Pointer event: the menu opens below that position
+                 * @param {boolean} [onLine] Opened on a line: the menu is about that switching time only
                  */
-                function openMenuAt(anchor, d, m, at) {
+                function openMenuAt(anchor, d, m, at, pointer, onLine) {
                     closeMenu();
                     const bl = blocksOf(d).find(x => x.a === m) || { a: m, b: m + STEP, type: typeAt(m) };
                     const menuEl = document.createElement('div');
                     menuEl.className = 'menu';
                     menuEl.setAttribute('role', 'menu');
+                    // title: which period this menu changes ("Scene from Mon 08:30") - the time of the line
+                    const title = document.createElement('div');
+                    title.className = 'title';
+                    title.textContent = info.texts.pSzeneAb.replace('{time}', `${dayName(d, 'short')} ${hhmm(bl.a)}`);
+                    menuEl.setAttribute('aria-label', title.textContent);
+                    menuEl.appendChild(title);
                     const item = (html, fn, cls) => {
                         const b = document.createElement('button');
                         b.setAttribute('role', 'menuitem');
@@ -1225,21 +1372,6 @@
                         menuEl.appendChild(b);
                         return b;
                     };
-                    let splitAt = at !== undefined && at > bl.a && at < bl.b ? at : bl.a + snap((bl.b - bl.a) / 2);
-                    if (points.some(p => p.m === splitAt)) {
-                        splitAt = -1;
-                    }
-                    if (splitAt > bl.a && splitAt < bl.b) {
-                        const b = item(ICON_SPLIT, () => {
-                            insertAt(d, splitAt);
-                        });
-                        b.appendChild(
-                            document.createTextNode(
-                                info.texts.pNeuUm.replace('{time}', hhmm(splitAt)),
-                            ),
-                        );
-                        menuEl.appendChild(document.createElement('hr'));
-                    }
                     let first = null;
                     for (const { type } of info.types) {
                         const b = item(`<span class="swatch" style="background:var(--c-${type})"></span>`, () => {
@@ -1250,6 +1382,21 @@
                         if (type === bl.type || !first) {
                             first = b;
                         }
+                    }
+                    // "New switching time at ...": only in the menu of a block, below the scenes
+                    const splitAt = splitOffer(
+                        bl,
+                        at,
+                        points.map(p => p.m),
+                        !!onLine,
+                    );
+                    if (splitAt >= 0) {
+                        menuEl.appendChild(document.createElement('hr'));
+                        const b = item(ICON_SPLIT, () => {
+                            insertAt(d, splitAt);
+                        });
+                        b.dataset.split = hhmm(splitAt);
+                        b.appendChild(document.createTextNode(info.texts.pNeuUm.replace('{time}', hhmm(splitAt))));
                     }
                     const point = points.find(p => p.m === m);
                     if (point && points.length > 1) {
@@ -1289,11 +1436,11 @@
                         );
                         del.appendChild(document.createTextNode(info.texts.pLoeschen));
                     }
-                    placeMenu(menuEl, anchor);
-                    first.focus();
+                    placeMenu(menuEl, anchor, pointer);
+                    first.focus({ preventScroll: true });
                 }
                 /** Keyboard and position of a menu next to its element (below, or above if there is no room) */
-                function placeMenu(menuEl, anchor) {
+                function placeMenu(menuEl, anchor, pointer) {
                     menuEl.addEventListener('keydown', ev => {
                         const items = [...menuEl.querySelectorAll('button')];
                         const i = items.indexOf(document.activeElement);
@@ -1311,14 +1458,21 @@
                     });
                     document.body.appendChild(menuEl);
                     const r = anchor.getBoundingClientRect();
-                    // below the element if it fits, otherwise above it, never outside the page (no scrolling)
+                    // below the element if it fits, otherwise above it; always inside the visible part of the
+                    // page (the iframe cuts everything else off) - also when the page is scrolled (phone)
+                    const vw = document.documentElement.clientWidth || window.innerWidth;
+                    const vh = window.innerHeight;
                     let top = r.bottom + 4;
-                    if (top + menuEl.offsetHeight > window.innerHeight - 4) {
+                    if (top + menuEl.offsetHeight > vh - 4) {
                         top = r.top - menuEl.offsetHeight - 4;
                     }
-                    top = Math.min(Math.max(4, top), Math.max(4, window.innerHeight - menuEl.offsetHeight - 4));
-                    menuEl.style.top = `${top}px`;
-                    menuEl.style.left = `${Math.min(Math.max(r.left - 10, 4), window.innerWidth - menuEl.offsetWidth - 8)}px`;
+                    top = Math.min(Math.max(4, top), Math.max(4, vh - menuEl.offsetHeight - 4));
+                    // horizontally: at the pointer if known (a long block starts far from the click), else at
+                    // the element; pushed back in at the right and left edge
+                    const want = pointer && Number.isFinite(pointer.clientX) ? pointer.clientX - 14 : r.left - 10;
+                    const left = Math.max(4, Math.min(want, vw - menuEl.offsetWidth - 8));
+                    menuEl.style.top = `${top + window.scrollY}px`;
+                    menuEl.style.left = `${left + window.scrollX}px`;
                     menu = menuEl;
                 }
                 // a click into the admin outside the grid closes the menu as well
@@ -1332,6 +1486,16 @@
                 // ---------- start ----------
                 async function start() {
                     applyTheme();
+                    // phone width: one day per line (other order of the elements, so the page draws again)
+                    const mq = window.matchMedia('(max-width: 600px)');
+                    const layout = () => {
+                        document.body.classList.toggle('narrow', mq.matches);
+                        if (info) {
+                            render();
+                        }
+                    };
+                    mq.addEventListener('change', layout);
+                    document.body.classList.toggle('narrow', mq.matches);
                     // the admin draws the default iframe border (its style object drops border settings); the page
                     // is same-origin and removes it itself
                     try {

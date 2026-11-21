@@ -409,7 +409,7 @@ describe('Module suchen: Nachrichten an den Adapter', () => {
     }
 
     const seiteHtml = seite({ mqtthost: '10.9.9.9:1777', mqttuser: 'geheimnutzer' });
-    const adapter = () =>
+    const adapter = (kandidaten = [{ ip: '192.168.30.70', name: 'x' }]) =>
         proxyquire('../main', {
             '@iobroker/adapter-core': { Adapter: Attrappe },
             './lib/suche': {
@@ -417,7 +417,7 @@ describe('Module suchen: Nachrichten an den Adapter', () => {
                 suchen: o =>
                     suche.suchen({
                         ...o,
-                        mdnsSuchen: async () => ({ kandidaten: [{ ip: '192.168.30.70', name: 'x' }] }),
+                        mdnsSuchen: async () => ({ kandidaten }),
                         fingerprint: async ip => ({ ...discovery.seiteAuswerten(seiteHtml), ok: true, adresse: ip }),
                     }),
             },
@@ -434,8 +434,19 @@ describe('Module suchen: Nachrichten an den Adapter', () => {
         expect(r.native._found).to.have.length(1);
         expect(r.native._found[0]).to.have.keys('name', 'ip', 'firmware', 'status');
         expect(r.native._found[0].status).to.equal('anderer MQTT-Broker');
-        expect(r.result).to.match(/1 faikout-Modul/);
+        // Rueckmeldung als Formularwert (Bestaetigungszeile) - ein `result` zeigte der Admin gar nicht
+        expect(r.native._foundText).to.match(/1 faikout-Modul/);
         expect(a.logs.join('\n')).to.not.match(/10\.9\.9\.9|1777|geheimnutzer|192\.168\.30\.70/);
+    });
+
+    it('suchen ohne Treffer bei leerer Tabelle: nur eine Meldung, kein Formularwert (Speichern bleibt aus)', async () => {
+        const a = adapter([]);
+        const r = await senden(a, 'suchen', { adresse: '10.0.0.1', leer: true });
+        expect(r.native).to.equal(undefined);
+        expect(r.error).to.match(/^0 Module gefunden\. Läuft der ioBroker in Docker\?/);
+        // steht in der Tabelle der Seite noch etwas, wird sie geleert (dann aendert sich das Formular wirklich)
+        const r2 = await senden(a, 'suchen', { adresse: '10.0.0.1', leer: false });
+        expect(r2.native._found).to.eql([]);
     });
 
     it('Einzelpruefungen sammeln sich in der Tabelle, neue Suche beginnt von vorn', async () => {

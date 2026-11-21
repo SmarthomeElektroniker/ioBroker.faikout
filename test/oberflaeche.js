@@ -369,7 +369,7 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
             const a = adapter();
             a.modulEinstellungenLesen = ({ ip }) => o.modulLesen(ip, { request: requestTcl });
             const gelesen = (await frage(a, 'modulEinstellungenLesen', { ip: '10.0.0.6' })).antwort.native;
-            expect(gelesen._modFehlt).to.equal('Bei diesem Modul nicht vorhanden (hängt von Firmware und Anlage ab): ha1c, nodemand');
+            expect(gelesen._modFehlt).to.equal('Bei diesem Modul nicht vorhanden (hängt von Firmware und Anlage ab): Ziel nur in ganzen Grad (ha1c), Leistungsgrenze ausblenden (nodemand)');
             expect(gelesen._modHa1c).to.equal(null);
             expect(gelesen._modNodemand).to.equal(null);
             expect(gelesen._modReporting).to.equal(60);
@@ -421,7 +421,7 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
         const { a } = mitModul();
         const { gelesen, basis, pruefung } = await vorbereiten(a, { _modLivestatus: true, _modTopicgroup1: 'Sim_Wohnzimmer' });
         expect(gelesen).to.include({ _modReporting: 60, _modLivestatus: false, _modThermostat: true, _modPlan: '' });
-        expect(pruefung.native._modVorschau).to.contain('livestatus: aus → an').and.to.contain('topicgroup1: (leer) → Sim_Wohnzimmer');
+        expect(pruefung.native._modVorschau).to.contain('Statusmeldungen in Echtzeit (livestatus): aus → an').and.to.contain('Zusätzlicher Befehlsname (topicgroup1): (leer) → Sim_Wohnzimmer');
         expect(pruefung.native._modVorschau).not.to.contain('reporting');
         expect((await frage(a, 'modulEinstellungenPruefen', { ...basis, ip: '10.0.0.9' })).antwort.error).to.equal(o.TEXTE.mErstLesen.de);
         expect((await frage(a, 'modulEinstellungenPruefen', { ...basis, formular: FORMULAR })).antwort.native._modVorschau).to.equal(o.TEXTE.mKeineAenderung.de);
@@ -436,7 +436,7 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
         const { auftrag } = await vorbereiten(a, { _modReporting: 90, _modLivestatus: true });
         const r = (await frage(a, 'modulEinstellungenSchreiben', auftrag)).antwort.native;
         expect(a.veroeffentlicht).to.eql([{ topic: 'setting/Sim Wohnzimmer', nutzlast: '{"reporting":90,"livestatus":true}' }]);
-        expect(r._modVorschau).to.contain('alles übernommen').and.to.contain('✓ reporting = 90: übernommen').and.to.contain('✓ livestatus = an: übernommen');
+        expect(r._modVorschau).to.contain('alles übernommen').and.to.contain('✓ Statusintervall (Sekunden) (reporting) = 90: übernommen').and.to.contain('✓ Statusmeldungen in Echtzeit (livestatus) = an: übernommen');
         expect(r).to.include({ _modReporting: 90, _modLivestatus: true, _modPlan: '' });
         expect(JSON.parse(r._modStand).werte.reporting).to.equal('90');
         // der Stand VOR dem Schreiben ist gesichert - nur Felder der Liste
@@ -473,8 +473,8 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
         v = await vorbereiten(m.a, { _modReporting: 90, _modLivestatus: true });
         m.a.broker.publish = async (topic, nutzlast) => (m.a.veroeffentlicht.push({ topic, nutzlast }), (m.modul.livestatus = true));
         let r = (await frage(m.a, 'modulEinstellungenSchreiben', v.auftrag)).antwort.native;
-        expect(r._modVorschau).to.contain('nicht alles wurde übernommen').and.to.contain('✗ reporting = 90: nicht übernommen (im Modul steht: 60)');
-        expect(r._modVorschau).to.contain('✓ livestatus = an: übernommen');
+        expect(r._modVorschau).to.contain('nicht alles wurde übernommen').and.to.contain('✗ Statusintervall (Sekunden) (reporting) = 90: nicht übernommen (im Modul steht: 60)');
+        expect(r._modVorschau).to.contain('✓ Statusmeldungen in Echtzeit (livestatus) = an: übernommen');
         expect(r._modReporting).to.equal(60);
         // Modul meldet sich nach dem Schreiben nicht mehr
         m = mitModul();
@@ -497,7 +497,7 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
         expect((await frage(a, 'modulEinstellungenWiederherstellen', { ...basis, zeit: '' })).antwort.error).to.equal(o.TEXTE.mSicherungFehlt.de);
         const w = (await frage(a, 'modulEinstellungenWiederherstellen', { ...basis, zeit: liste[0].value })).antwort.native;
         expect(w._modReporting).to.equal(60);
-        expect(w._modVorschau).to.contain('in das Formular übernommen').and.to.contain('reporting: 90 → 60');
+        expect(w._modVorschau).to.contain('in das Formular übernommen').and.to.contain('(reporting): 90 → 60');
         const formular = Object.fromEntries(Object.entries(w).filter(([k]) => k.startsWith('_mod') && !['_modPlan', '_modVorschau'].includes(k)));
         await frage(a, 'modulEinstellungenSchreiben', { ...basis, formular, plan: w._modPlan, zeitlimitMs: 50, abstandMs: 10 });
         expect(a.veroeffentlicht[1]).to.eql({ topic: 'setting/Sim Wohnzimmer', nutzlast: '{"reporting":60}' });
@@ -871,8 +871,21 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
         expect(b.externPass.type).to.equal('password');
         expect(b.externPort).to.include({ default: 1883, help: 'helpExternPort' });
         // Hinweis auf das Ziel der Module auch in "Module suchen" und "Einrichtung"
-        for (const tab of ['tabSearch', 'tabHelp']) {
-            expect(konfig.items[tab].items._externZiel.hidden).to.equal("data.brokerModus !== 'extern'");
+        expect(konfig.items.tabSearch.items._externZiel.hidden).to.equal("data.brokerModus !== 'extern'");
+        // "Einrichtung" und "Modul anbinden" haben fuer den Extern-Betrieb einen EIGENEN Text statt
+        // eines Warnkastens ueber dem Text fuer den eigenen Broker
+        const hilfe = konfig.items.tabHelp.items;
+        expect(hilfe.tS2.hidden).to.equal("data.brokerModus === 'extern'");
+        expect(hilfe.tS2e).to.include({ text: 'textSchritt2Extern', hidden: "data.brokerModus !== 'extern'" });
+        const such = konfig.items.tabSearch.items;
+        expect(such.bindText.hidden).to.equal("data.brokerModus === 'extern'");
+        expect(such.bindTextExtern).to.include({ text: 'textBindExtern', hidden: "data.brokerModus !== 'extern'" });
+        expect(such.moduleAddress.hidden).to.equal("data.brokerModus === 'extern'");
+        // Anleitung ist der erste Reiter
+        expect(Object.keys(konfig.items)[0]).to.equal('tabHelp');
+        // ein altes Testergebnis verschwindet, sobald Adresse/Port/TLS/Benutzer geaendert werden
+        for (const k of ['_tTestOk', '_tTestAnmeldung', '_tTestNicht', '_tTestZeit', '_tTestEingabe', '_tTestFehler']) {
+            expect(b[k].hidden, k).to.contain('data._brokerTestZiel !== ');
         }
     });
 
@@ -900,12 +913,14 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
     });
 
     it('Antwortumwandlung: Art des Tests -> Formularwerte', () => {
-        expect(o.brokerTestAntwort({ ok: true, art: 'ok' }, 'de')).to.eql({ native: { _brokerTest: 'ok', _brokerTestText: '' } });
+        expect(o.brokerTestAntwort({ ok: true, art: 'ok' }, 'de')).to.eql({ native: { _brokerTest: 'ok', _brokerTestZiel: '', _brokerTestText: '' } });
+        expect(o.brokerTestAntwort({ ok: true, art: 'ok' }, 'de', 'h:1883:false:').native._brokerTestZiel).to.equal('h:1883:false:');
         for (const art of ['anmeldung', 'nichtErreichbar', 'zeit', 'eingabe']) {
-            expect(o.brokerTestAntwort({ ok: false, art }, 'de').native).to.eql({ _brokerTest: art, _brokerTestText: '' });
+            expect(o.brokerTestAntwort({ ok: false, art }, 'de').native).to.eql({ _brokerTest: art, _brokerTestZiel: '', _brokerTestText: '' });
         }
         expect(o.brokerTestAntwort({ ok: false, art: 'fehler', fehler: 'self signed certificate' }, 'de').native).to.eql({
             _brokerTest: 'fehler',
+            _brokerTestZiel: '',
             _brokerTestText: 'Verbindung fehlgeschlagen: self signed certificate',
         });
         // Unbekanntes oder Widerspruechliches wird nie als Erfolg gezeigt

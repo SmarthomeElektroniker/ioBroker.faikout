@@ -59,6 +59,7 @@ vis.binds.faikout = {
         'Dieses Gerät hat keinen Datenpunkt %s. Er entsteht, sobald die Anlage Energiewerte meldet.': 'This device has no state %s yet. It is created as soon as the unit reports energy values.',
         'Noch keine Werte für diesen Zeitraum.': 'No values for this period yet.',
         'Summe': 'Total',
+        'Dieses Gerät meldet keinen Energiezähler.': 'This device reports no energy counter.',
         'Dieser Monat': 'This month',
         'Dieses Jahr': 'This year',
         'Letzte 24 Stunden': 'Last 24 hours',
@@ -949,6 +950,43 @@ vis.binds.faikout = {
                     if (v === null) return;
                     html += '<div class="fk-mw"><div class="fk-mw-name">' + b.t(m.name) + '</div>' +
                         '<div class="fk-mw-wert">' + v + '<small>' + b.einheit(ctx, m) + '</small></div></div>';
+                });
+                $wurzel.find('.fk-messwerte').html(html);
+                vis.binds.faikout.farbe($wurzel, ctx.akzent());
+            };
+        });
+    },
+
+    /**
+     * Verbrauchskachel: heute und dieser Monat (kWh), auf Wunsch die aktuelle Leistung (W).
+     * Dieselben Zaehler wie der Reiter "Verbrauch" der Instanz (consumption.total.*).
+     */
+    VERBRAUCH: [
+        { key: 'today', feld: 'consumption.total.today', name: 'Heute', einheit: 'kWh', stellen: 1 },
+        { key: 'month', feld: 'consumption.total.thisMonth', name: 'Dieser Monat', einheit: 'kWh', stellen: 1 },
+        { key: 'power', feld: 'status.consumption', name: 'Leistung', einheit: 'W', stellen: 0 }
+    ],
+
+    verbrauch: function (widgetID, view, data) {
+        vis.binds.faikout.start(widgetID, data, function ($wurzel, ctx) {
+            var b = vis.binds.faikout;
+            b.kopf($wurzel, ctx, data);
+            var liste = b.VERBRAUCH.filter(function (m) {
+                return data['show_' + m.key] !== false && ctx.hat(m.feld);
+            });
+            if (!liste.some(function (m) { return m.einheit === 'kWh'; })) {
+                $wurzel.append('<div class="fk-fehler">' + b.t('Dieses Gerät meldet keinen Energiezähler.') + '</div>');
+                return null;
+            }
+            $wurzel.append('<div class="fk-messwerte"></div>');
+            b.fuss($wurzel, ctx, data);
+
+            return function () {
+                var html = '';
+                liste.forEach(function (m) {
+                    var v = b.zahl(ctx.wert(m.feld), m.stellen);
+                    html += '<div class="fk-mw"><div class="fk-mw-name">' + b.t(m.name) + '</div>' +
+                        '<div class="fk-mw-wert">' + (v === null ? '–' : v) + '<small>' + m.einheit + '</small></div></div>';
                 });
                 $wurzel.find('.fk-messwerte').html(html);
                 vis.binds.faikout.farbe($wurzel, ctx.akzent());

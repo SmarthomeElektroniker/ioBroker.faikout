@@ -178,6 +178,9 @@ class Faikout extends utils.Adapter {
 
     async onReady() {
         await this.setState('info.connection', { val: false, ack: true });
+        if (await this.konfigUmziehen()) {
+            return; // die Instanz startet mit der umgezogenen Konfiguration neu
+        }
         await this.verbrauchUmziehen();
         await this.objekteAbgleichen();
         // Geloeschte Objekte mitbekommen (Issue #6): sonst schreibt der Adapter weiter in einen
@@ -1397,7 +1400,7 @@ class Faikout extends utils.Adapter {
                         return antworten({ error: suche.text(suche.ERGEBNIS_TEXTE.adresseFehlt, sprache) });
                     }
                     if (this.sucheLaeuft) {
-                        return antworten({ error: 'A search is already running' });
+                        return antworten({ error: require('./lib/oberflaeche').t('sucheLaeuft', sprache) });
                     }
                     this.sucheLaeuft = true;
                     try {
@@ -1440,25 +1443,30 @@ class Faikout extends utils.Adapter {
                             const ips = new Set(neu.map(z => z.ip));
                             this.letzteZeilen = [...(this.letzteZeilen || []).filter(z => !ips.has(z.ip)), ...neu];
                         }
-                        return antworten({ native: { _found: this.letzteZeilen }, result: r.text });
+                        // Ohne Treffer und bei leerer Tabelle: nur die Meldung, KEIN Formularwert - sonst
+                        // gilt das Formular als geaendert und "Speichern" wird aktiv (UX-Fund 21.11.2026).
+                        // Der Admin zeigt `error` als eigenen Dialog (ein `result` waere ein Browser-alert).
+                        if (!ziel && !r.fingerprints.length && msg.leer === true && !this.letzteZeilen.length) {
+                            return antworten({ error: r.text });
+                        }
+                        return antworten({
+                            native: {
+                                _found: this.letzteZeilen,
+                                _foundText: `${r.text} (${new Date().toLocaleTimeString(sprache, { hour: '2-digit', minute: '2-digit', second: '2-digit' })})`,
+                            },
+                        });
                     } finally {
                         this.sucheLaeuft = false;
                     }
                 }
-                case 'modulListe':
-                    // selectSendTo: Module der letzten Suche
-                    return antworten(
-                        this.letzteSuche.map(m => ({
-                            label: `${m.name} (${m.ip})${m.status === 'verbunden' ? ' ✓' : ''}`,
-                            value: m.ip,
-                        })),
-                    );
                 case 'anbindenPruefen':
                     return antworten(await this.anbindenPruefen(msg));
                 case 'anbinden':
                 case 'zurueckstellen': {
                     if (this.anbindenLaeuft) {
-                        return antworten({ error: 'Another module is being changed right now' });
+                        return antworten({
+                            error: require('./lib/oberflaeche').t('anbindenLaeuft', await this.sprache()),
+                        });
                     }
                     this.anbindenLaeuft = true;
                     try {
@@ -1481,6 +1489,36 @@ class Faikout extends utils.Adapter {
             this.log.warn(`${obj.command}: ${e.message}`);
             antworten({ error: e.message });
         }
+    }
+
+    /**
+     * Zieht Einstellungen aus aelteren Staenden um. Bisher: die Vorgabe-Kennlinien standen als Text
+     * "-10:95, 0:75" in der Konfiguration; die Einstellungsseite fuehrt sie jetzt als Tabelle wie
+     * beim Geraet. Ein alter Text wird einmal in die Tabelle uebertragen - sonst zeigte die Seite eine
+     * leere Tabelle und das naechste Speichern verwuerfe die Kennlinie des Nutzers.
+     *
+     * @returns {Promise<boolean>} true, wenn die Konfiguration geschrieben wurde (Neustart folgt)
+     */
+    async konfigUmziehen() {
+        const kennlinie = require('./lib/regel/kennlinie');
+        const neu = {};
+        for (const feld of ['regelKennlinieHeizen', 'regelKennlinieKuehlen']) {
+            const wert = this.config[feld];
+            if (typeof wert !== 'string') {
+                continue;
+            }
+            const punkte = (kennlinie.lesen(wert).punkte || []).filter(
+                p => Number.isFinite(p[0]) && Number.isFinite(p[1]),
+            );
+            neu[feld] = punkte.map(([x, y]) => ({ x, y }));
+            this.config[feld] = neu[feld];
+        }
+        if (!Object.keys(neu).length || typeof this.extendForeignObjectAsync !== 'function') {
+            return false;
+        }
+        this.log.info('Settings migrated: default curves are stored as tables now. The instance restarts once.');
+        await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, { native: neu });
+        return true;
     }
 
     /**

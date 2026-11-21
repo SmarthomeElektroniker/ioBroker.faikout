@@ -1,0 +1,901 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        />
+        <title>faikout</title>
+        <!--
+            Verbrauchsansicht im Reiter "Verbrauch" der Instanzeinstellungen (iframe).
+            EIN gestapeltes Balkendiagramm: je Geraet eine dauerhaft gleiche Farbe, die Balkenhoehe ist die Summe.
+            Die Seite fragt den Adapter selbst (sendTo verbrauchDaten {zeitraum, versatz, art}) und bekommt
+              {zeitraum, versatz, art, raster, schluessel[], laufend, zurueck, vor, hinweis, lang, texte{},
+               geraete[{id, name, platz, farbe{hell,dunkel}|null, leistung, zaehler, werte[], summe, hatWerte}]}
+            (lib/verbrauchbild.js). Sie schreibt nichts und aendert keine Einstellung.
+            Kein fremder Code: reines HTML, CSS und JavaScript; der Socket kommt vom Admin (/lib/js/socket.io.js).
+        -->
+        <script src="../../lib/js/socket.io.js"></script>
+        <style>
+            :root {
+                --fg: #1f1f1f;
+                --fg2: #52514e;
+                --muted: #7a7974;
+                --line: #e3e2de;
+                --surface: #ffffff;
+                --control: rgba(0, 0, 0, 0.06);
+                --control-on: #1f1f1f;
+                --control-on-fg: #ffffff;
+                --focus: #1565c0;
+                --tip: #ffffff;
+                --shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+                --other: #9a9994;
+                --note: rgba(33, 150, 243, 0.1);
+                --note-line: #2196f3;
+            }
+            body.dark {
+                --fg: #f0efec;
+                --fg2: #c3c2b7;
+                --muted: #98978f;
+                --line: #3a3a37;
+                --surface: #1e1e1e;
+                --control: rgba(255, 255, 255, 0.09);
+                --control-on: #f0efec;
+                --control-on-fg: #1a1a19;
+                --focus: #90caf9;
+                --tip: #2c2c2c;
+                --shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+                --other: #77766f;
+                --note: rgba(33, 150, 243, 0.14);
+            }
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                color: var(--fg);
+                font-family: Roboto, 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                overflow: hidden;
+            }
+            #root {
+                padding: 4px 2px 8px 2px;
+            }
+            button {
+                font: inherit;
+                color: inherit;
+            }
+            button:focus-visible {
+                outline: 2px solid var(--focus);
+                outline-offset: 1px;
+            }
+            .row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px 12px;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            .seg {
+                display: inline-flex;
+                background: var(--control);
+                border-radius: 8px;
+                padding: 2px;
+            }
+            .seg button {
+                border: 0;
+                background: transparent;
+                border-radius: 6px;
+                padding: 6px 12px;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+            .seg button[aria-pressed='true'] {
+                background: var(--control-on);
+                color: var(--control-on-fg);
+            }
+            .nav {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+            .nav button {
+                border: 0;
+                background: var(--control);
+                width: 32px;
+                height: 32px;
+                border-radius: 16px;
+                cursor: pointer;
+                font-size: 18px;
+                line-height: 1;
+            }
+            .nav button:disabled {
+                opacity: 0.35;
+                cursor: default;
+            }
+            #title {
+                min-width: 9em;
+                text-align: center;
+                font-weight: 500;
+                padding: 0 4px;
+            }
+            .spacer {
+                flex: 1 1 0;
+            }
+            .chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                height: 30px;
+                padding: 0 12px 0 10px;
+                border-radius: 15px;
+                border: 1px solid var(--line);
+                background: transparent;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+            .chip .sw {
+                width: 12px;
+                height: 12px;
+                border-radius: 3px;
+                flex: none;
+            }
+            .chip .w {
+                color: var(--fg2);
+                font-variant-numeric: tabular-nums;
+            }
+            .chip[aria-pressed='false'] {
+                color: var(--muted);
+            }
+            .chip[aria-pressed='false'] .name {
+                text-decoration: line-through;
+            }
+            .chip[aria-pressed='false'] .sw {
+                opacity: 0.25;
+            }
+            .chip:disabled {
+                cursor: default;
+                color: var(--muted);
+                border-style: dashed;
+            }
+            .chip.all {
+                background: var(--control);
+                border-color: transparent;
+            }
+            #head {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px 28px;
+                align-items: baseline;
+                margin: 6px 0 4px 0;
+            }
+            .hero .num {
+                font-size: 28px;
+                font-weight: 500;
+                font-variant-numeric: tabular-nums;
+            }
+            .hero .unit,
+            .hero .cap {
+                color: var(--fg2);
+            }
+            .hero .cap {
+                display: block;
+                font-size: 12px;
+            }
+            #plot {
+                position: relative;
+            }
+            svg {
+                display: block;
+                width: 100%;
+            }
+            svg text {
+                fill: var(--muted);
+                font-size: 11px;
+                font-family: inherit;
+            }
+            .grid {
+                stroke: var(--line);
+                stroke-width: 1;
+            }
+            .hit {
+                fill: transparent;
+                cursor: default;
+            }
+            .hit:hover,
+            .hit.on {
+                fill: var(--control);
+            }
+            #tip {
+                position: absolute;
+                pointer-events: none;
+                background: var(--tip);
+                color: var(--fg);
+                box-shadow: var(--shadow);
+                border-radius: 8px;
+                padding: 8px 10px;
+                font-size: 13px;
+                min-width: 150px;
+                max-width: 260px;
+                display: none;
+                z-index: 2;
+            }
+            #tip .th {
+                font-weight: 500;
+                margin-bottom: 4px;
+            }
+            #tip .tr,
+            #tip .ts {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            #tip .tr .sw {
+                width: 10px;
+                height: 10px;
+                border-radius: 2px;
+                flex: none;
+            }
+            #tip .n {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            #tip .v {
+                font-variant-numeric: tabular-nums;
+            }
+            #tip .ts {
+                border-top: 1px solid var(--line);
+                margin-top: 4px;
+                padding-top: 4px;
+                font-weight: 500;
+            }
+            #note {
+                border: 1px solid var(--note-line);
+                background: var(--note);
+                border-radius: 6px;
+                padding: 12px 14px;
+                margin: 10px 0;
+                line-height: 1.45;
+                display: none;
+            }
+            #note.error {
+                border-color: #d9534f;
+                background: rgba(217, 83, 79, 0.1);
+            }
+            #foot {
+                color: var(--muted);
+                font-size: 12px;
+                margin-top: 6px;
+            }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                font-variant-numeric: tabular-nums;
+            }
+            th,
+            td {
+                padding: 5px 8px;
+                border-bottom: 1px solid var(--line);
+                text-align: right;
+                white-space: nowrap;
+            }
+            th:first-child,
+            td:first-child {
+                text-align: left;
+            }
+            th {
+                color: var(--fg2);
+                font-weight: 500;
+            }
+            th .sw {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                border-radius: 2px;
+                margin-right: 5px;
+            }
+            tfoot td {
+                font-weight: 500;
+                border-bottom: 0;
+            }
+            #tablewrap {
+                overflow-x: auto;
+                display: none;
+            }
+            @media (max-width: 480px) {
+                .seg button {
+                    padding: 6px 9px;
+                }
+                .spacer {
+                    display: none;
+                }
+                .hero .num {
+                    font-size: 24px;
+                }
+                /* no room beside the bar: the values stand below the chart instead of covering it */
+                #tip {
+                    position: static;
+                    max-width: none;
+                    box-shadow: none;
+                    border: 1px solid var(--line);
+                    margin-top: 6px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root">
+            <div class="row">
+                <div
+                    class="seg"
+                    id="segPeriod"
+                    role="group"
+                ></div>
+                <div class="nav">
+                    <button
+                        id="prev"
+                        type="button"
+                    >
+                        &#8249;
+                    </button>
+                    <div id="title"></div>
+                    <button
+                        id="next"
+                        type="button"
+                    >
+                        &#8250;
+                    </button>
+                </div>
+                <div class="spacer"></div>
+                <div
+                    class="seg"
+                    id="segKind"
+                    role="group"
+                ></div>
+                <div
+                    class="seg"
+                    id="segView"
+                    role="group"
+                ></div>
+            </div>
+            <div
+                class="row"
+                id="chips"
+            ></div>
+            <div id="head"></div>
+            <div id="note"></div>
+            <div id="plot">
+                <svg
+                    id="svg"
+                    role="img"
+                ></svg>
+                <div id="tip"></div>
+            </div>
+            <div id="tablewrap"></div>
+            <div id="foot"></div>
+        </div>
+        <script>
+            (function () {
+                const q = new URLSearchParams(location.search);
+                const $ = id => document.getElementById(id);
+                const esc = s =>
+                    String(s).replace(
+                        /[&<>"']/g,
+                        c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+                    );
+
+                // Instanz: aus der Adresse der Seite, sonst aus der Adresse des Admins (…/system.adapter.faikout.N)
+                let INSTANCE = q.get('instance') || '';
+                if (!INSTANCE) {
+                    try {
+                        const m = /system\.adapter\.(faikout\.\d+)/.exec(window.parent.location.hash || '');
+                        INSTANCE = m ? m[1] : '';
+                    } catch {
+                        // not embedded
+                    }
+                }
+                INSTANCE = INSTANCE || 'faikout.0';
+
+                const PERIODS = ['tag', 'woche', 'monat', 'jahr'];
+                const KINDS = ['alles', 'heizen', 'kuehlen'];
+                const state = { zeitraum: 'woche', versatz: 0, art: 'alles', view: 'diagramm' };
+                /** hidden device ids - survives period changes, the colour stays with the device */
+                const hidden = new Set();
+                let data = null;
+                let socket = null;
+                let dark = false;
+                let pinned = -1;
+
+                // ---------- theme: follow the admin (same origin), otherwise the system ----------
+                function applyTheme() {
+                    let d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (q.get('theme')) {
+                        d = q.get('theme') === 'dark';
+                    } else {
+                        try {
+                            const bg = getComputedStyle(window.parent.document.body).backgroundColor;
+                            const m = /rgba?\((\d+), *(\d+), *(\d+)/.exec(bg);
+                            if (m && window.parent !== window) {
+                                d = 0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3] < 128;
+                            }
+                        } catch {
+                            // not embedded
+                        }
+                    }
+                    const changed = d !== dark;
+                    dark = !!d;
+                    document.body.classList.toggle('dark', dark);
+                    return changed;
+                }
+
+                // ---------- formatting ----------
+                const lang = () => (data && data.lang) || navigator.language || 'en';
+                const T = k => (data && data.texte && data.texte[k]) || k;
+                function num(v, max = 2) {
+                    const digits = Math.abs(v) >= 100 ? 0 : Math.abs(v) >= 10 ? Math.min(1, max) : max;
+                    try {
+                        return v.toLocaleString(lang(), {
+                            minimumFractionDigits: Math.min(1, digits),
+                            maximumFractionDigits: digits,
+                        });
+                    } catch {
+                        return v.toFixed(digits);
+                    }
+                }
+                const fmt = (d, o) => {
+                    try {
+                        return new Intl.DateTimeFormat(lang(), o).format(d);
+                    } catch {
+                        return d.toISOString().slice(0, 10);
+                    }
+                };
+                const dateOf = k =>
+                    new Date(Number(k.slice(0, 4)), Number(k.slice(5, 7) || 1) - 1, Number(k.slice(8, 10) || 1));
+                function tickLabel(k) {
+                    if (data.raster === 'stunde') {
+                        return k.slice(11, 13);
+                    }
+                    if (data.raster === 'monat') {
+                        return fmt(dateOf(k), { month: 'short' });
+                    }
+                    return data.zeitraum === 'woche'
+                        ? fmt(dateOf(k), { weekday: 'short', day: 'numeric' })
+                        : String(Number(k.slice(8, 10)));
+                }
+                function fullLabel(k) {
+                    if (data.raster === 'stunde') {
+                        const h = Number(k.slice(11, 13));
+                        const p = n => String(n).padStart(2, '0');
+                        return `${fmt(dateOf(k), { day: 'numeric', month: 'short' })}, ${p(h)}:00–${p(h + 1)}:00`;
+                    }
+                    if (data.raster === 'monat') {
+                        return fmt(dateOf(k), { month: 'long', year: 'numeric' });
+                    }
+                    return fmt(dateOf(k), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                }
+                function titleText() {
+                    const a = dateOf(data.schluessel[0]);
+                    const b = dateOf(data.schluessel[data.schluessel.length - 1]);
+                    if (data.zeitraum === 'tag') {
+                        return fmt(a, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                    }
+                    if (data.zeitraum === 'woche') {
+                        try {
+                            return new Intl.DateTimeFormat(lang(), {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                            }).formatRange(a, b);
+                        } catch {
+                            return `${fmt(a, { day: 'numeric', month: 'short' })} – ${fmt(b, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                        }
+                    }
+                    if (data.zeitraum === 'monat') {
+                        return fmt(a, { month: 'long', year: 'numeric' });
+                    }
+                    return String(a.getFullYear());
+                }
+
+                // ---------- series: one per device in fixed order; devices beyond the palette fold into "others" ----------
+                const colour = g => (g.farbe ? (dark ? g.farbe.dunkel : g.farbe.hell) : 'var(--other)');
+                function series() {
+                    const own = [];
+                    const rest = [];
+                    for (const g of data.geraete) {
+                        if (!g.zaehler || hidden.has(g.id)) {
+                            continue;
+                        }
+                        (g.farbe ? own : rest).push(g);
+                    }
+                    const out = own.map(g => ({ id: g.id, name: g.name, colour: colour(g), werte: g.werte }));
+                    if (rest.length) {
+                        out.push({
+                            id: '*',
+                            name: T('weitere'),
+                            colour: 'var(--other)',
+                            werte: data.schluessel.map((_, i) =>
+                                rest.some(g => g.werte[i] !== null)
+                                    ? rest.reduce((s, g) => s + (g.werte[i] || 0), 0)
+                                    : null,
+                            ),
+                        });
+                    }
+                    return out;
+                }
+                const totalAt = (ss, i) => ss.reduce((s, x) => s + (x.werte[i] || 0), 0);
+
+                // ---------- talking to the adapter ----------
+                function send(message) {
+                    return new Promise((resolve, reject) => {
+                        const timer = setTimeout(() => reject(new Error('timeout')), 15000);
+                        socket.emit('sendTo', INSTANCE, 'verbrauchDaten', message, res => {
+                            clearTimeout(timer);
+                            if (res && res.error) {
+                                reject(new Error(res.error));
+                            } else {
+                                resolve(res);
+                            }
+                        });
+                    });
+                }
+                let loading = 0;
+                async function load() {
+                    const mine = ++loading;
+                    try {
+                        const r = await send({ zeitraum: state.zeitraum, versatz: state.versatz, art: state.art });
+                        if (mine !== loading) {
+                            return; // a newer request is on its way
+                        }
+                        data = r;
+                        state.versatz = r.versatz;
+                        pinned = -1;
+                        render();
+                    } catch (err) {
+                        if (mine === loading) {
+                            note(data ? T('nichtVerbunden') : `faikout: ${err.message}`, true);
+                            fit();
+                        }
+                    }
+                }
+
+                // ---------- drawing ----------
+                function note(text, error) {
+                    const n = $('note');
+                    n.textContent = text || '';
+                    n.style.display = text ? 'block' : 'none';
+                    n.classList.toggle('error', !!error);
+                }
+                function seg(el, items, current, on) {
+                    el.innerHTML = '';
+                    for (const k of items) {
+                        const b = document.createElement('button');
+                        b.type = 'button';
+                        b.textContent = T(k);
+                        b.setAttribute('aria-pressed', String(k === current));
+                        b.onclick = () => on(k);
+                        el.appendChild(b);
+                    }
+                }
+                function controls() {
+                    seg($('segPeriod'), PERIODS, state.zeitraum, k => {
+                        state.zeitraum = k;
+                        state.versatz = 0;
+                        load();
+                    });
+                    seg($('segKind'), KINDS, state.art, k => {
+                        state.art = k;
+                        load();
+                    });
+                    seg($('segView'), ['diagramm', 'tabelle'], state.view, k => {
+                        state.view = k;
+                        render();
+                    });
+                    $('title').textContent = titleText();
+                    $('prev').disabled = !data.zurueck;
+                    $('next').disabled = !data.vor;
+                    $('prev').title = T('zurueck');
+                    $('next').title = T('vor');
+                    $('prev').setAttribute('aria-label', T('zurueck'));
+                    $('next').setAttribute('aria-label', T('vor'));
+                }
+                function chips() {
+                    const el = $('chips');
+                    el.innerHTML = '';
+                    const withCounter = data.geraete.filter(g => g.zaehler);
+                    if (withCounter.length > 1) {
+                        const all = document.createElement('button');
+                        all.type = 'button';
+                        all.className = 'chip all';
+                        all.textContent = T('alleGeraete');
+                        all.setAttribute('aria-pressed', String(!withCounter.some(g => hidden.has(g.id))));
+                        all.onclick = () => {
+                            hidden.clear();
+                            render();
+                        };
+                        el.appendChild(all);
+                    }
+                    for (const g of data.geraete) {
+                        const b = document.createElement('button');
+                        b.type = 'button';
+                        b.className = 'chip';
+                        const w = g.leistung === null ? '' : `<span class="w">${num(g.leistung, 0)} W</span>`;
+                        if (!g.zaehler) {
+                            b.disabled = true;
+                            b.innerHTML = `<span class="name">${esc(g.name)}</span><span class="w">${esc(T('ohneZaehler'))}</span>`;
+                        } else {
+                            b.innerHTML = `<span class="sw" style="background:${colour(g)}"></span><span class="name">${esc(g.name)}</span>${w}`;
+                            b.setAttribute('aria-pressed', String(!hidden.has(g.id)));
+                            b.onclick = () => {
+                                if (hidden.has(g.id)) {
+                                    hidden.delete(g.id);
+                                } else {
+                                    hidden.add(g.id);
+                                }
+                                render();
+                            };
+                        }
+                        el.appendChild(b);
+                    }
+                }
+                function head(ss) {
+                    const sum = data.schluessel.reduce((s, _, i) => s + totalAt(ss, i), 0);
+                    const shown = data.geraete.filter(g => g.zaehler && !hidden.has(g.id));
+                    const watts = shown.filter(g => g.leistung !== null);
+                    const power = watts.reduce((s, g) => s + g.leistung, 0);
+                    $('head').innerHTML =
+                        `<div class="hero"><span class="cap">${esc(T('titel'))} · ${esc(T(state.art))}</span>` +
+                        `<span class="num">${num(sum)}</span> <span class="unit">kWh</span></div>` +
+                        (watts.length
+                            ? `<div class="hero"><span class="cap">${esc(T('leistung'))}</span>` +
+                              `<span class="num">${num(power, 0)}</span> <span class="unit">W</span></div>`
+                            : '');
+                }
+                function niceStep(max) {
+                    const raw = max / 4;
+                    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+                    for (const m of [1, 2, 2.5, 5, 10]) {
+                        if (m * pow >= raw) {
+                            return m * pow;
+                        }
+                    }
+                    return 10 * pow;
+                }
+                function chart(ss) {
+                    const svg = $('svg');
+                    const W = Math.max(260, $('plot').clientWidth);
+                    const H = W < 480 ? 240 : 300;
+                    const n = data.schluessel.length;
+                    const totals = data.schluessel.map((_, i) => totalAt(ss, i));
+                    const max = Math.max(...totals, 0);
+                    const step = max > 0 ? niceStep(max) : 1;
+                    const top = max > 0 ? Math.ceil(max / step - 1e-9) * step : 1;
+                    const yLabels = [];
+                    // one number style along the axis: as many decimals as the step needs
+                    const axisDigits = step >= 1 && Number.isInteger(step) ? 0 : step >= 0.1 ? 1 : 2;
+                    for (let v = 0; v <= top + step / 1000; v += step) {
+                        yLabels.push(
+                            v.toLocaleString(lang(), {
+                                minimumFractionDigits: axisDigits,
+                                maximumFractionDigits: axisDigits,
+                            }),
+                        );
+                    }
+                    const L = Math.max(...yLabels.map(s => s.length)) * 6.5 + 10;
+                    const R = 6;
+                    const TOP = 12;
+                    const B = 24;
+                    const pw = W - L - R;
+                    const ph = H - TOP - B;
+                    const band = pw / n;
+                    const bw = Math.max(3, Math.min(24, band - (band > 8 ? 4 : 1)));
+                    const y = v => TOP + ph - (v / top) * ph;
+                    let s = '';
+                    yLabels.forEach((t, i) => {
+                        const yy = Math.round(y(i * step)) + 0.5;
+                        s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}"/>`;
+                        s += `<text x="${L - 6}" y="${yy + 4}" text-anchor="end">${esc(t)}</text>`;
+                    });
+                    // x labels: as many as fit without touching
+                    const labels = data.schluessel.map(tickLabel);
+                    const need = Math.max(...labels.map(t => t.length)) * 6.5 + 8;
+                    const every = Math.max(1, Math.ceil(need / band));
+                    const GAP = 2;
+                    for (let i = 0; i < n; i++) {
+                        const x0 = L + i * band;
+                        const cx = x0 + band / 2;
+                        if (i % every === 0) {
+                            s += `<text x="${cx}" y="${H - 7}" text-anchor="middle">${esc(labels[i])}</text>`;
+                        }
+                        // stack bottom-up in fixed device order; 2 px surface gap between segments, rounded data end
+                        let base = 0;
+                        const parts = ss.filter(x => (x.werte[i] || 0) > 0);
+                        parts.forEach((x, pi) => {
+                            const y1 = y(base);
+                            base += x.werte[i];
+                            const y0 = y(base);
+                            const last = pi === parts.length - 1;
+                            const h = Math.max(1, y1 - y0 - (last ? 0 : GAP));
+                            const yTop = y1 - h;
+                            const r = last ? Math.min(4, bw / 2, h) : 0;
+                            const xl = cx - bw / 2;
+                            s +=
+                                `<path fill="${x.colour}" d="M${xl},${y1}V${yTop + r}` +
+                                `a${r},${r} 0 0 1 ${r},${-r}H${xl + bw - r}a${r},${r} 0 0 1 ${r},${r}V${y1}Z"/>`;
+                        });
+                        s += `<rect class="hit${i === pinned ? ' on' : ''}" data-i="${i}" x="${x0}" y="${TOP}" width="${band}" height="${ph}"/>`;
+                    }
+                    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+                    svg.setAttribute('height', H);
+                    svg.setAttribute('aria-label', `${T('titel')} – ${titleText()}`);
+                    svg.innerHTML = s;
+                }
+                function tipShow(i, ss) {
+                    const tip = $('tip');
+                    if (i < 0) {
+                        tip.style.display = 'none';
+                        fit();
+                        return;
+                    }
+                    const rows = ss
+                        .filter(x => x.werte[i] !== null)
+                        .reverse() // same order as the stack, top first
+                        .map(
+                            x =>
+                                `<div class="tr"><span class="sw" style="background:${x.colour}"></span>` +
+                                `<span class="n">${esc(x.name)}</span><span class="v">${num(x.werte[i])} kWh</span></div>`,
+                        );
+                    tip.innerHTML =
+                        `<div class="th">${esc(fullLabel(data.schluessel[i]))}</div>` +
+                        (rows.length
+                            ? rows.join('') +
+                              `<div class="ts"><span class="n">${esc(T('summe'))}</span><span class="v">${num(totalAt(ss, i))} kWh</span></div>`
+                            : `<div class="tr"><span class="n">–</span></div>`);
+                    tip.style.display = 'block';
+                    if (getComputedStyle(tip).position === 'static') {
+                        fit();
+                        return;
+                    }
+                    const hit = $('svg').querySelector(`.hit[data-i="${i}"]`);
+                    const box = $('plot').getBoundingClientRect();
+                    const hb = hit.getBoundingClientRect();
+                    const tw = tip.offsetWidth;
+                    let left = hb.right - box.left + 8;
+                    if (left + tw > box.width) {
+                        left = hb.left - box.left - tw - 8;
+                    }
+                    tip.style.left = `${Math.max(0, Math.min(left, box.width - tw))}px`;
+                    tip.style.top = '8px';
+                }
+                function table(ss) {
+                    const rows = data.schluessel
+                        .map((k, i) => {
+                            if (!ss.some(x => x.werte[i] !== null)) {
+                                return '';
+                            }
+                            return (
+                                `<tr><td>${esc(fullLabel(k))}</td>` +
+                                ss.map(x => `<td>${x.werte[i] === null ? '–' : num(x.werte[i])}</td>`).join('') +
+                                `<td>${num(totalAt(ss, i))}</td></tr>`
+                            );
+                        })
+                        .join('');
+                    const sums = ss.map(x => x.werte.reduce((s, v) => s + (v || 0), 0));
+                    $('tablewrap').innerHTML =
+                        `<table><thead><tr><th>${esc(T('zeit'))}</th>` +
+                        ss
+                            .map(x => `<th><span class="sw" style="background:${x.colour}"></span>${esc(x.name)}</th>`)
+                            .join('') +
+                        `<th>${esc(T('summe'))}</th></tr></thead><tbody>${rows}</tbody>` +
+                        `<tfoot><tr><td>${esc(T('summe'))} (kWh)</td>${sums.map(v => `<td>${num(v)}</td>`).join('')}` +
+                        `<td>${num(sums.reduce((a, b) => a + b, 0))}</td></tr></tfoot></table>`;
+                }
+                function render() {
+                    if (!data) {
+                        return;
+                    }
+                    const ss = series();
+                    controls();
+                    chips();
+                    const empty = data.hinweis || !ss.some(x => x.werte.some(v => v !== null));
+                    // a clear message instead of empty axes
+                    note(data.hinweis ? T(data.hinweis) : empty ? T('keineDaten') : '');
+                    $('head').style.display = empty ? 'none' : 'flex';
+                    $('plot').style.display = !empty && state.view === 'diagramm' ? 'block' : 'none';
+                    $('tablewrap').style.display = !empty && state.view === 'tabelle' ? 'block' : 'none';
+                    $('tip').style.display = 'none';
+                    if (!empty) {
+                        head(ss);
+                        if (state.view === 'diagramm') {
+                            chart(ss);
+                            if (pinned >= 0) {
+                                tipShow(pinned, ss);
+                            }
+                        } else {
+                            table(ss);
+                        }
+                    }
+                    $('foot').textContent = T('reichweite');
+                    fit();
+                }
+                /** the page is same-origin: it sizes its own frame to its content and removes the frame border */
+                function fit() {
+                    try {
+                        if (window.frameElement) {
+                            window.frameElement.style.border = 'none';
+                            window.frameElement.style.height = `${Math.ceil($('root').getBoundingClientRect().height) + 4}px`;
+                            const wrap = window.frameElement.parentElement;
+                            if (wrap) {
+                                wrap.style.height = 'auto';
+                            }
+                        }
+                    } catch {
+                        // not embedded
+                    }
+                }
+
+                // ---------- events ----------
+                $('prev').onclick = () => {
+                    state.versatz += 1;
+                    load();
+                };
+                $('next').onclick = () => {
+                    state.versatz = Math.max(0, state.versatz - 1);
+                    load();
+                };
+                $('svg').addEventListener('mousemove', e => {
+                    if (pinned >= 0) {
+                        return;
+                    }
+                    const i = e.target && e.target.dataset ? e.target.dataset.i : undefined;
+                    tipShow(i === undefined ? -1 : Number(i), series());
+                });
+                $('svg').addEventListener('mouseleave', () => {
+                    if (pinned < 0) {
+                        tipShow(-1);
+                    }
+                });
+                // click or tap pins the tooltip (touch has no hover); a second click releases it
+                $('svg').addEventListener('click', e => {
+                    const i =
+                        e.target && e.target.dataset && e.target.dataset.i !== undefined
+                            ? Number(e.target.dataset.i)
+                            : -1;
+                    pinned = i === pinned ? -1 : i;
+                    render();
+                });
+                let resizeTimer = null;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(render, 80);
+                });
+
+                function start() {
+                    applyTheme();
+                    // the admin can switch its theme while the page is open
+                    setInterval(() => {
+                        if (applyTheme()) {
+                            render();
+                        }
+                    }, 2000);
+                    // current power and the running bar move on their own
+                    setInterval(() => {
+                        if (socket && socket.connected !== false && !document.hidden && pinned < 0) {
+                            load();
+                        }
+                    }, 60000);
+                    if (typeof io === 'undefined') {
+                        note('faikout: socket.io not available', true);
+                        return;
+                    }
+                    const base = location.pathname.replace(/\/adapter\/.*$/, '');
+                    socket = io.connect('/', { path: `${base}/socket.io` });
+                    socket.on('connect', load);
+                }
+                start();
+            })();
+        </script>
+    </body>
+</html>

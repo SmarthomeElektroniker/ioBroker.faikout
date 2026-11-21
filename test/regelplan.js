@@ -523,7 +523,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
             T,
         );
         expect(ab.demand).to.equal(40);
-        expect(ab.gruende.join(' ')).to.match(/Deckel/);
+        expect(ab.gruende.join(' ')).to.match(/Höchstleistung/);
     });
 
     it('Szene Aus: Geraet aus, Leistungsgrenze frei', () => {
@@ -681,7 +681,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         expect(koordinator.koordinieren(e, ks, null, T).wunsch.target).to.equal(23);
     });
 
-    it('Faikout-Auto: keine Betriebsart vom Adapter; ohne autoe gestoert', () => {
+    it('Faikout-Auto: keine Betriebsart vom Adapter; ohne autoe "einrichten" (keine Stoerung)', () => {
         const kf = { ...k, betrieb: 'faikout' };
         const ok = koordinator.koordinieren(
             eingang({
@@ -724,7 +724,7 @@ describe('Regelung: Koordinator (Vorrang)', () => {
         );
         expect(mitVortag.demand).to.equal(60); // 500 W von 1000 W + 10 Punkte
         const ohne = koordinator.koordinieren(eingang(), kf, null, T);
-        expect(ohne.zustandText).to.equal('gestört');
+        expect(ohne.zustandText).to.equal('einrichten');
     });
 
     it('control: nur bei fremdem Raumfuehler, immer vollstaendig; BLE ohne env; Faikout-Auto nur env', () => {

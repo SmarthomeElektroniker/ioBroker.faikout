@@ -284,6 +284,7 @@ describe('Device-Manager: Karte', () => {
             'outside',
             'consumption',
             'energyToday',
+            'energyMonth',
         ]);
         // die ID nur als Wert
         expect(items.ident).to.include({ type: 'staticText', text: 'Wohnzimmer AC', noTranslation: true });
@@ -1059,6 +1060,29 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                 expect(oberflaeche.BEFEHLE.has(b)).to.equal(true);
             }
         });
+
+        it('Wochenplan-Seite: Klickzeit auf dem Raster, die Linie bietet keine Blockmitte an', () => {
+            const html = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'admin', 'wochenplan.html'), 'utf8');
+            const teil = /\/\* calc:begin[^*]*\*\/([\s\S]*?)\/\* calc:end \*\//.exec(html);
+            expect(teil, 'Abschnitt calc:begin..calc:end').to.not.equal(null);
+            const f = new Function('STEP', 'DAY', `${teil[1]}; return { snap, minuteFromX, splitOffer, edgeOf };`)(15, 1440);
+            // Spur 1000 px breit ab x = 100: 8:30 liegt bei 100 + 1000 * 8.5 / 24
+            expect(f.minuteFromX(100, 1000, 100 + (1000 * 8.5) / 24, 0)).to.equal(510);
+            expect(f.minuteFromX(100, 1000, 100 + (1000 * 8.4) / 24, 2)).to.equal(2 * 1440 + 510);
+            // Handybreite (Spur 400 px ab 0): derselbe Zeitpunkt, Raender begrenzt
+            expect(f.minuteFromX(0, 400, (400 * 8.5) / 24, 0)).to.equal(510);
+            expect(f.minuteFromX(0, 400, -20, 0)).to.equal(0);
+            expect(f.minuteFromX(0, 400, 999, 0)).to.equal(1440);
+            const block = { a: 510, b: 990 }; // 08:30-16:30
+            // Klick auf die Linie 08:30: kein "Neuer Schaltpunkt um 12:30" (frueher die Blockmitte)
+            expect(f.splitOffer(block, undefined, [510, 990], true)).to.equal(-1);
+            // Menue eines Blocks: an der Zeigerstelle, sonst in der Mitte; nie auf einem vorhandenen Schaltpunkt
+            expect(f.splitOffer(block, 615, [510, 990], false)).to.equal(615);
+            expect(f.splitOffer(block, undefined, [510, 990], false)).to.equal(750);
+            expect(f.splitOffer(block, undefined, [510, 750, 990], false)).to.equal(-1);
+            expect(f.splitOffer({ a: 510, b: 525 }, undefined, [510], false)).to.equal(-1);
+            expect([f.edgeOf(0), f.edgeOf(0.5), f.edgeOf(0.97)]).to.eql(['edge-l', '', 'edge-r']);
+        });
     });
 
     describe('Details-Dialog', () => {
@@ -1067,7 +1091,10 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             let gezeigt;
             const k = { showForm: async (schema, opt) => ((gezeigt = { schema, opt }), undefined) };
             expect(await a.deviceManagement.detailsDialog(ID, k)).to.eql({ refresh: false });
-            expect(gezeigt.opt.buttons).to.eql(['close']);
+            // "Schließen" mit eigener Beschriftung ('close' zeichnete der Admin als "Abbrechen")
+            expect(gezeigt.opt.buttons).to.have.length(1);
+            expect(gezeigt.opt.buttons[0]).to.include({ type: 'cancel' });
+            expect(gezeigt.opt.buttons[0].label.de).to.equal('Schließen');
             expect(gezeigt.opt.title.de).to.equal('Regelung von Wohnzimmer AC');
             const html = gezeigt.schema.items.inhalt.text;
             expect(gezeigt.schema.items.inhalt).to.include({ type: 'staticText', format: 'html', noTranslation: true });

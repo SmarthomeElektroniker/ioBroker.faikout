@@ -2,6 +2,163 @@
     "i18n": true,
     "type": "tabs",
     "items": {
+        "tabHelp": {
+            "type": "panel",
+            "label": "tabHelp",
+            "items": {
+                "hS": {
+                    "type": "header",
+                    "size": 4,
+                    "text": "headerSchritte",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_stand": {
+                    "type": "textSendTo",
+                    "container": "html",
+                    "command": "einrichtungStand",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "hS1": {
+                    "type": "header",
+                    "size": 5,
+                    "text": "headerSchritt1",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "tS1": {
+                    "type": "staticText",
+                    "text": "textSchritt1",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "hS2": {
+                    "type": "header",
+                    "size": 5,
+                    "text": "headerSchritt2",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "tS2": {
+                    "type": "staticText",
+                    "text": "textSchritt2",
+                    "hidden": "data.brokerModus === 'extern'",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "tS2e": {
+                    "type": "staticText",
+                    "text": "textSchritt2Extern",
+                    "hidden": "data.brokerModus !== 'extern'",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_mqtthostHilfe": {
+                    "type": "textSendTo",
+                    "container": "text",
+                    "command": "mqtthostWert",
+                    "copyToClipboard": true,
+                    "label": "labelMqtthostValue",
+                    "jsonData": "{\"adresse\":${JSON.stringify(data.moduleAddress ?? '')},\"port\":${JSON.stringify(data.port ?? '')}}",
+                    "alsoDependsOn": [
+                        "moduleAddress",
+                        "port"
+                    ],
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 8,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "hS3": {
+                    "type": "header",
+                    "size": 5,
+                    "text": "headerSchritt3",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "tS3": {
+                    "type": "staticText",
+                    "text": "textSchritt3",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "h2": {
+                    "type": "header",
+                    "size": 5,
+                    "text": "headerDocker",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "newLine": true,
+                    "hidden": "data.brokerModus === 'extern'"
+                },
+                "t2": {
+                    "type": "staticText",
+                    "text": "textDocker",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus === 'extern'"
+                },
+                "h3": {
+                    "type": "header",
+                    "size": 5,
+                    "text": "headerLive",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "newLine": true
+                },
+                "t3": {
+                    "type": "staticText",
+                    "text": "textLive",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                }
+            }
+        },
         "tabBroker": {
             "type": "panel",
             "label": "tabBroker",
@@ -225,7 +382,7 @@
                     "md": 12,
                     "lg": 12,
                     "xl": 12,
-                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'ok'",
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'ok' || data._brokerTestZiel !== (String(data.externHost || '').trim() + ':' + String(data.externPort ?? '').trim() + ':' + !!data.externTls + ':' + String(data.externUser || '').trim())",
                     "style": {
                         "border": "1px solid #3d9a50",
                         "borderRadius": 6,
@@ -243,7 +400,7 @@
                     "md": 12,
                     "lg": 12,
                     "xl": 12,
-                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'anmeldung'",
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'anmeldung' || data._brokerTestZiel !== (String(data.externHost || '').trim() + ':' + String(data.externPort ?? '').trim() + ':' + !!data.externTls + ':' + String(data.externUser || '').trim())",
                     "style": {
                         "border": "1px solid #d9534f",
                         "borderRadius": 6,
@@ -261,7 +418,7 @@
                     "md": 12,
                     "lg": 12,
                     "xl": 12,
-                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'nichtErreichbar'",
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'nichtErreichbar' || data._brokerTestZiel !== (String(data.externHost || '').trim() + ':' + String(data.externPort ?? '').trim() + ':' + !!data.externTls + ':' + String(data.externUser || '').trim())",
                     "style": {
                         "border": "1px solid #d9534f",
                         "borderRadius": 6,
@@ -279,7 +436,7 @@
                     "md": 12,
                     "lg": 12,
                     "xl": 12,
-                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'zeit'",
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'zeit' || data._brokerTestZiel !== (String(data.externHost || '').trim() + ':' + String(data.externPort ?? '').trim() + ':' + !!data.externTls + ':' + String(data.externUser || '').trim())",
                     "style": {
                         "border": "1px solid #d9534f",
                         "borderRadius": 6,
@@ -297,7 +454,7 @@
                     "md": 12,
                     "lg": 12,
                     "xl": 12,
-                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'eingabe'",
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'eingabe' || data._brokerTestZiel !== (String(data.externHost || '').trim() + ':' + String(data.externPort ?? '').trim() + ':' + !!data.externTls + ':' + String(data.externUser || '').trim())",
                     "style": {
                         "border": "1px solid #d9534f",
                         "borderRadius": 6,
@@ -312,7 +469,7 @@
                     "text": "${data._brokerTestText || \"\"}",
                     "noTranslation": true,
                     "doNotSave": true,
-                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'fehler'",
+                    "hidden": "data.brokerModus !== 'extern' || data._brokerTest !== 'fehler' || data._brokerTestZiel !== (String(data.externHost || '').trim() + ':' + String(data.externPort ?? '').trim() + ':' + !!data.externTls + ':' + String(data.externUser || '').trim())",
                     "newLine": true,
                     "style": {
                         "border": "1px solid #d9534f",
@@ -368,6 +525,25 @@
                     "lg": 12,
                     "xl": 12
                 },
+                "_verbrauchBild": {
+                    "type": "iframe",
+                    "url": "./adapter/faikout/verbrauch.html",
+                    "lazyLoad": "eager",
+                    "reloadOnShow": true,
+                    "doNotSave": true,
+                    "newLine": true,
+                    "style": {
+                        "minHeight": 460
+                    },
+                    "innerStyle": {
+                        "height": "460px"
+                    },
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
                 "historyRegister": {
                     "type": "checkbox",
                     "label": "labelHistoryRegister",
@@ -392,6 +568,22 @@
                     "md": 12,
                     "lg": 6,
                     "xl": 6
+                },
+                "_historyHinweis": {
+                    "type": "textSendTo",
+                    "container": "html",
+                    "command": "historyHinweis",
+                    "jsonData": "{\"instanz\":${JSON.stringify(data.historyInstance ?? \"\")},\"an\":${data.historyRegister !== false}}",
+                    "alsoDependsOn": [
+                        "historyInstance",
+                        "historyRegister"
+                    ],
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
                 }
             }
         },
@@ -1318,7 +1510,8 @@
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12
+                    "xl": 12,
+                    "hidden": "data.brokerModus === 'extern'"
                 },
                 "searchTextAddress": {
                     "type": "staticText",
@@ -1327,14 +1520,15 @@
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12
+                    "xl": 12,
+                    "hidden": "data.brokerModus === 'extern'"
                 },
                 "moduleAddress": {
                     "type": "text",
                     "label": "labelModuleAddress",
                     "help": "helpModuleAddress",
                     "defaultSendTo": "adresseVorschlag",
-                    "validator": "!!(data.moduleAddress && data.moduleAddress.trim())",
+                    "validator": "data.brokerModus === 'extern' || !!(data.moduleAddress && data.moduleAddress.trim())",
                     "validatorErrorText": "errorModuleAddress",
                     "validatorNoSaveOnError": false,
                     "newLine": true,
@@ -1342,7 +1536,8 @@
                     "sm": 12,
                     "md": 6,
                     "lg": 4,
-                    "xl": 4
+                    "xl": 4,
+                    "hidden": "data.brokerModus === 'extern'"
                 },
                 "_addressHint": {
                     "type": "textSendTo",
@@ -1352,7 +1547,8 @@
                     "sm": 12,
                     "md": 6,
                     "lg": 6,
-                    "xl": 6
+                    "xl": 6,
+                    "hidden": "data.brokerModus === 'extern'"
                 },
                 "searchHeaderInstructions": {
                     "type": "header",
@@ -1428,7 +1624,7 @@
                     "useNative": true,
                     "showProcess": true,
                     "timeout": 60000,
-                    "jsonData": "{\"adresse\":${JSON.stringify(data.moduleAddress ?? '')}}",
+                    "jsonData": "{\"adresse\":${JSON.stringify(data.moduleAddress ?? '')},\"leer\":${!(data._found && data._found.length)}}",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -1462,6 +1658,26 @@
                     "md": 6,
                     "lg": 4,
                     "xl": 4
+                },
+                "_foundText": {
+                    "type": "staticText",
+                    "text": "${data._foundText || \"\"}",
+                    "noTranslation": true,
+                    "doNotSave": true,
+                    "hidden": "!data._foundText",
+                    "newLine": true,
+                    "style": {
+                        "border": "1px solid #3d9a50",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(61,154,80,0.12)",
+                        "whiteSpace": "pre-line"
+                    },
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
                 },
                 "_found": {
                     "type": "table",
@@ -1525,17 +1741,27 @@
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12
+                    "xl": 12,
+                    "hidden": "data.brokerModus === 'extern'"
+                },
+                "bindTextExtern": {
+                    "type": "staticText",
+                    "text": "textBindExtern",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "hidden": "data.brokerModus !== 'extern'"
                 },
                 "_bindIp": {
                     "type": "selectSendTo",
-                    "command": "modulListe",
+                    "command": "modulAuswahlListe",
                     "label": "labelBindIp",
                     "help": "helpBindIp",
                     "alsoDependsOn": [
                         "_found"
                     ],
-                    "noTranslation": true,
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -1562,7 +1788,7 @@
                     "showProcess": true,
                     "timeout": 20000,
                     "jsonData": "{\"ip\":${JSON.stringify(data._bindIp ?? '')},\"adresse\":${JSON.stringify(data.moduleAddress ?? '')},\"pass\":${JSON.stringify(data._bindPass ?? '')}}",
-                    "disabled": "!data._bindIp || !data.moduleAddress",
+                    "disabled": "!data._bindIp || (data.brokerModus !== 'extern' && !data.moduleAddress)",
                     "xs": 12,
                     "sm": 12,
                     "md": 6,
@@ -2263,9 +2489,25 @@
                             "hidden": "data.aussenQuelle !== 'dp'",
                             "xs": 12,
                             "sm": 12,
-                            "md": 8,
-                            "lg": 8,
-                            "xl": 8
+                            "md": 5,
+                            "lg": 5,
+                            "xl": 5
+                        },
+                        {
+                            "attr": "_aussenDpWert",
+                            "type": "textSendTo",
+                            "container": "html",
+                            "command": "fuehlerWert",
+                            "jsonData": "{\"id\":${JSON.stringify(data.aussenDp ?? \"\")},\"art\":\"aussen\"}",
+                            "alsoDependsOn": [
+                                "aussenDp"
+                            ],
+                            "hidden": "data.aussenQuelle !== 'dp'",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 3,
+                            "lg": 3,
+                            "xl": 3
                         },
                         {
                             "attr": "raumQuelle",
@@ -2304,9 +2546,25 @@
                             "hidden": "data.raumQuelle !== 'dp'",
                             "xs": 12,
                             "sm": 12,
-                            "md": 8,
-                            "lg": 8,
-                            "xl": 8
+                            "md": 5,
+                            "lg": 5,
+                            "xl": 5
+                        },
+                        {
+                            "attr": "_raumDpWert",
+                            "type": "textSendTo",
+                            "container": "html",
+                            "command": "fuehlerWert",
+                            "jsonData": "{\"id\":${JSON.stringify(data.raumDp ?? \"\")},\"art\":\"raum\"}",
+                            "alsoDependsOn": [
+                                "raumDp"
+                            ],
+                            "hidden": "data.raumQuelle !== 'dp'",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 3,
+                            "lg": 3,
+                            "xl": 3
                         },
                         {
                             "attr": "fuehlerWeg",
@@ -2324,12 +2582,26 @@
                             ],
                             "xs": 12,
                             "sm": 12,
-                            "md": 8,
-                            "lg": 8,
-                            "xl": 8,
+                            "md": 6,
+                            "lg": 6,
+                            "xl": 6,
                             "default": "sollwert",
                             "hidden": "data.raumQuelle !== 'dp'",
                             "newLine": true
+                        },
+                        {
+                            "attr": "_tWegWahl",
+                            "type": "staticText",
+                            "text": "textWegWahl",
+                            "hidden": "data.raumQuelle !== 'dp'",
+                            "style": {
+                                "opacity": 0.75
+                            },
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 12,
+                            "lg": 12,
+                            "xl": 12
                         },
                         {
                             "attr": "korrAbstandMin",
@@ -2412,9 +2684,25 @@
                             "hidden": "data.feuchteQuelle !== 'dp'",
                             "xs": 12,
                             "sm": 12,
-                            "md": 8,
-                            "lg": 8,
-                            "xl": 8
+                            "md": 5,
+                            "lg": 5,
+                            "xl": 5
+                        },
+                        {
+                            "attr": "_feuchteDpWert",
+                            "type": "textSendTo",
+                            "container": "html",
+                            "command": "fuehlerWert",
+                            "jsonData": "{\"id\":${JSON.stringify(data.feuchteDp ?? \"\")},\"art\":\"feuchte\"}",
+                            "alsoDependsOn": [
+                                "feuchteDp"
+                            ],
+                            "hidden": "data.feuchteQuelle !== 'dp'",
+                            "xs": 12,
+                            "sm": 12,
+                            "md": 3,
+                            "lg": 3,
+                            "xl": 3
                         },
                         {
                             "attr": "feuchteMassnahme",
@@ -2646,16 +2934,54 @@
                             "default": 95
                         },
                         "regelKennlinieHeizen": {
-                            "type": "text",
-                            "label": "labelKennlinieHeizen",
-                            "default": "-10:95, 0:75, 7:55, 15:40",
+                            "type": "table",
+                            "label": "labelTabHeizenVorgabe",
                             "hidden": "data.regelStrategie === 'vortag'",
                             "newLine": true,
                             "xs": 12,
                             "sm": 12,
                             "md": 6,
                             "lg": 6,
-                            "xl": 6
+                            "xl": 6,
+                            "items": [
+                                {
+                                    "type": "number",
+                                    "attr": "x",
+                                    "title": "colX",
+                                    "min": -40,
+                                    "max": 50,
+                                    "default": 0,
+                                    "width": "50%"
+                                },
+                                {
+                                    "type": "number",
+                                    "attr": "y",
+                                    "title": "colY",
+                                    "min": 0,
+                                    "max": 100,
+                                    "step": 5,
+                                    "default": 50,
+                                    "width": "50%"
+                                }
+                            ],
+                            "default": [
+                                {
+                                    "x": -10,
+                                    "y": 95
+                                },
+                                {
+                                    "x": 0,
+                                    "y": 75
+                                },
+                                {
+                                    "x": 7,
+                                    "y": 55
+                                },
+                                {
+                                    "x": 15,
+                                    "y": 40
+                                }
+                            ]
                         },
                         "_bildH": {
                             "type": "textSendTo",
@@ -2675,16 +3001,50 @@
                             "hidden": "data.regelStrategie === 'vortag'"
                         },
                         "regelKennlinieKuehlen": {
-                            "type": "text",
-                            "label": "labelKennlinieKuehlen",
-                            "default": "25:40, 30:65, 35:95",
+                            "type": "table",
+                            "label": "labelTabKuehlenVorgabe",
                             "hidden": "data.regelStrategie === 'vortag'",
                             "newLine": true,
                             "xs": 12,
                             "sm": 12,
                             "md": 6,
                             "lg": 6,
-                            "xl": 6
+                            "xl": 6,
+                            "items": [
+                                {
+                                    "type": "number",
+                                    "attr": "x",
+                                    "title": "colX",
+                                    "min": -40,
+                                    "max": 50,
+                                    "default": 0,
+                                    "width": "50%"
+                                },
+                                {
+                                    "type": "number",
+                                    "attr": "y",
+                                    "title": "colY",
+                                    "min": 0,
+                                    "max": 100,
+                                    "step": 5,
+                                    "default": 50,
+                                    "width": "50%"
+                                }
+                            ],
+                            "default": [
+                                {
+                                    "x": 25,
+                                    "y": 40
+                                },
+                                {
+                                    "x": 30,
+                                    "y": 65
+                                },
+                                {
+                                    "x": 35,
+                                    "y": 95
+                                }
+                            ]
                         },
                         "_bildK": {
                             "type": "textSendTo",
@@ -3212,85 +3572,9 @@
                     "xl": 12
                 }
             }
-        },
-        "tabHelp": {
-            "type": "panel",
-            "label": "tabHelp",
-            "items": {
-                "_externZiel": {
-                    "type": "staticText",
-                    "text": "textExternZiel",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12,
-                    "hidden": "data.brokerModus !== 'extern'",
-                    "style": {
-                        "border": "1px solid #d98a00",
-                        "borderRadius": 6,
-                        "padding": "8px 12px",
-                        "backgroundColor": "rgba(217,138,0,0.12)"
-                    }
-                },
-                "h1": {
-                    "type": "header",
-                    "size": 4,
-                    "text": "headerSetup",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "t1": {
-                    "type": "staticText",
-                    "text": "textSetup",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "h2": {
-                    "type": "header",
-                    "size": 5,
-                    "text": "headerDocker",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "t2": {
-                    "type": "staticText",
-                    "text": "textDocker",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "h3": {
-                    "type": "header",
-                    "size": 5,
-                    "text": "headerLive",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                },
-                "t3": {
-                    "type": "staticText",
-                    "text": "textLive",
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12
-                }
-            }
         }
+    },
+    "tabsStyle": {
+        "marginRight": 110
     }
 }
