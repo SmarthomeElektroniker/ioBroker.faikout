@@ -218,14 +218,14 @@ export const TEXTE = {
     fan_auto: {
         en: 'Automatic',
         de: 'Automatisch',
-        ru: 'Автоматически',
+        ru: 'Авто',
         pt: 'Automático',
         nl: 'Automatisch',
         fr: 'Automatique',
         it: 'Automatico',
         es: 'Automático',
-        pl: 'Automatycznie',
-        uk: 'Автоматично',
+        pl: 'Auto',
+        uk: 'Авто',
         'zh-cn': '自动',
     },
     fan_night: {
