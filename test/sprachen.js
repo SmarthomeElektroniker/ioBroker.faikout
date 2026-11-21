@@ -220,3 +220,104 @@ describe('Sprachen: Regeln fuer alle Quellen', () => {
         expect(fehler).to.eql([]);
     });
 });
+
+describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englischen Texts', () => {
+    it('Komponenten (src-admin/src/*.tsx): kein sichtbarer Text ausserhalb der Texttabellen', () => {
+        // TypeScript kommt mit der Entwicklungsumgebung (eslint-config); ohne es waere der Test blind
+        const ts = require('typescript');
+        const ATTRIBUTE = new Set(['title', 'aria-label', 'placeholder', 'label', 'alt', 'helperText']);
+        const wort = t => /[A-Za-zÄÖÜäöüß]{3,}/.test(t);
+        // feste Zeichenketten, die bewusst in keiner Sprache uebersetzt werden ("Datei:Text")
+        const ERLAUBT = new Set([]);
+        const funde = [];
+        const ordner = path.join(WURZEL, 'src-admin', 'src');
+        const dateien = fs.readdirSync(ordner).filter(d => d.endsWith('.tsx') && !['smokeRender.tsx', 'index.tsx'].includes(d));
+        expect(dateien.length).to.be.greaterThan(5);
+        for (const datei of dateien) {
+            const sf = ts.createSourceFile(datei, fs.readFileSync(path.join(ordner, datei), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+            const melde = (knoten, text) => {
+                if (!ERLAUBT.has(`${datei}:${text.trim()}`)) {
+                    funde.push(`${datei}:${sf.getLineAndCharacterOfPosition(knoten.getStart()).line + 1} "${text.trim().slice(0, 60)}"`);
+                }
+            };
+            const lauf = n => {
+                if (ts.isJsxText(n) && wort(n.text)) {
+                    melde(n, n.text);
+                } else if (ts.isJsxAttribute(n) && ATTRIBUTE.has(n.name.getText()) && n.initializer && ts.isStringLiteral(n.initializer) && wort(n.initializer.text)) {
+                    melde(n, n.initializer.text);
+                } else if (ts.isJsxExpression(n) && n.expression && ts.isStringLiteral(n.expression) && wort(n.expression.text) && !ts.isJsxAttribute(n.parent)) {
+                    melde(n, n.expression.text);
+                }
+                ts.forEachChild(n, lauf);
+            };
+            lauf(sf);
+        }
+        expect(funde).to.eql([]);
+    });
+
+    it('Seiten (admin/wochenplan.html, admin/verbrauch.html): kein fester Text im Seitenrumpf', () => {
+        const funde = [];
+        for (const datei of ['admin/wochenplan.html', 'admin/verbrauch.html']) {
+            const rumpf = lies(datei)
+                .replace(/^[\s\S]*<body[^>]*>/, '')
+                .replace(/<script[\s\S]*?<\/script>/g, '')
+                .replace(/<style[\s\S]*?<\/style>/g, '')
+                .replace(/<!--[\s\S]*?-->/g, '');
+            for (const m of rumpf.replace(/<[^>]*>/g, '\n').matchAll(/[A-Za-zÄÖÜäöüß]{3,}[^\n]*/g)) {
+                funde.push(`${datei}: "${m[0].trim().slice(0, 60)}"`);
+            }
+            for (const m of rumpf.matchAll(/\b(?:title|placeholder|aria-label|alt)="([^"]*[A-Za-zÄÖÜäöüß]{3}[^"]*)"/g)) {
+                funde.push(`${datei}: Attribut "${m[1]}"`);
+            }
+        }
+        expect(funde).to.eql([]);
+    });
+
+    it('keine fremde Sprache enthaelt den deutschen oder englischen Text unveraendert (gepflegte Ausnahmen)', () => {
+        // Maschinenwerte und Eigennamen bleiben in jeder Sprache gleich
+        const TECHNIK = /^((ha|no)\.\w+|livestatus|reporting|Faikout|Firmware \/ hardware|IP|max\.|h|\d+)$/;
+        // Woerter, die in der Sprache wirklich so heissen ("sprache:Text")
+        const GLEICH = new Set([
+            ...['Individual', 'Total'].map(w => `es:${w}`),
+            ...['Absence', 'Faikout auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'active'].map(w => `fr:${w}`),
+            ...['Comfort', 'Faikout auto'].map(w => `it:${w}`),
+            ...['Adapter regelt', 'Alles', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
+            ...['Faikout-Auto', 'Komfort', 'Port', 'Punkt %s', 'Status'].map(w => `pl:${w}`),
+            ...['Compressor', 'Individual', 'Total'].map(w => `pt:${w}`),
+        ]);
+        const texte = alleTexte();
+        const fehler = [];
+        const benutzt = new Set();
+        for (const [ort, t] of texte) {
+            for (const s of SPRACHEN.filter(x => x !== 'en' && x !== 'de')) {
+                if ((t[s] === t.de || t[s] === t.en) && !TECHNIK.test(t[s])) {
+                    benutzt.add(`${s}:${t[s]}`);
+                    if (!GLEICH.has(`${s}:${t[s]}`)) {
+                        fehler.push(`${ort}: ${s} = "${String(t[s]).slice(0, 50)}"`);
+                    }
+                }
+            }
+        }
+        expect(fehler).to.eql([]);
+        // die Ausnahmeliste enthaelt nichts Ueberfluessiges
+        expect([...GLEICH].filter(g => !benutzt.has(g))).to.eql([]);
+    });
+
+    it('Russisch und Ukrainisch in kyrillischer, Chinesisch in chinesischer Schrift (laengere Texte)', () => {
+        const fehler = [];
+        for (const [ort, t] of alleTexte()) {
+            for (const s of ['ru', 'uk']) {
+                if (t[s].length > 14 && /[a-z]{5}/i.test(t[s]) && !/[а-яіїєґё]/i.test(t[s])) {
+                    fehler.push(`${ort}: ${s}`);
+                }
+            }
+            if (t['zh-cn'].length > 14 && !/[一-鿿]/.test(t['zh-cn'])) {
+                fehler.push(`${ort}: zh-cn`);
+            }
+            if (/[а-яіїєґё一-鿿]/i.test(t.de + t.en)) {
+                fehler.push(`${ort}: de/en mit fremder Schrift`);
+            }
+        }
+        expect(fehler).to.eql([]);
+    });
+});
