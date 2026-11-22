@@ -1147,14 +1147,14 @@ export const TEXTE = {
     sML: {
         en: 'Low-medium',
         de: 'Niedrig-mittel',
-        ru: 'Ниже среднего',
+        ru: 'Ниже сред.',
         pt: 'Baixo-médio',
         nl: 'Laag-midden',
         fr: 'Bas-moyen',
         it: 'Medio-basso',
         es: 'Medio-bajo',
         pl: 'Niżej średni',
-        uk: 'Нижче середнього',
+        uk: 'Нижче сер.',
         'zh-cn': '中低',
     },
     sM: {
@@ -1173,14 +1173,14 @@ export const TEXTE = {
     sMH: {
         en: 'Medium-high',
         de: 'Mittel-hoch',
-        ru: 'Выше среднего',
+        ru: 'Выше сред.',
         pt: 'Médio-alto',
         nl: 'Midden-hoog',
         fr: 'Moyen-haut',
         it: 'Medio-alto',
         es: 'Medio-alto',
         pl: 'Wyżej średni',
-        uk: 'Вище середнього',
+        uk: 'Вище сер.',
         'zh-cn': '中高',
     },
     sH: {
