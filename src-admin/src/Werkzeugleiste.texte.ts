@@ -1,5 +1,7 @@
 // Texte der Knopfleiste "Kopieren / Einfuegen / Zuruecksetzen" (Werkzeugleiste.tsx) in allen Sprachen
 // des Admins. Platzhalter %s. Der Block TEXTE ist reines JavaScript - test/kennlinienzug.js liest ihn.
+import { fest } from './einheit';
+
 const TEXTE = {
     en: {
         kopieren: 'Copy',
@@ -350,7 +352,7 @@ export type Schluessel = keyof typeof TEXTE.en;
 export function wt(sprache: string, schluessel: Schluessel, ...werte: (string | number)[]): string {
     const satz = (TEXTE as Record<string, Record<string, string>>)[sprache] || TEXTE.en;
     let n = 0;
-    return (satz[schluessel] || TEXTE.en[schluessel] || schluessel).replace(/%s/g, () => String(werte[n++] ?? ''));
+    return fest((satz[schluessel] || TEXTE.en[schluessel] || schluessel).replace(/%s/g, () => String(werte[n++] ?? '')));
 }
 
 export default TEXTE;

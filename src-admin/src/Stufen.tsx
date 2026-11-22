@@ -1085,7 +1085,7 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                             schritt={ZIEL.schritt}
                                             farbe={farbe[i]}
                                             name={`${t('ziel')}: ${s.name}`}
-                                            wertText={`${zahl(s.soll, sprache, 1)} °C`}
+                                            wertText={`${zahl(s.soll, sprache, 1)}\u00a0°C`}
                                             striche={[10, 15, 20, 25, 30]}
                                             einheit="°C"
                                             sprache={sprache}
@@ -1171,7 +1171,7 @@ export function StufenAnsicht(props: AnsichtProps): React.JSX.Element {
                                                     schritt={DECKEL.schritt}
                                                     farbe={farbe[i]}
                                                     name={`${t('deckel')}: ${s.name}`}
-                                                    wertText={`${zahl(s.deckel, sprache)} %`}
+                                                    wertText={`${zahl(s.deckel, sprache)}\u00a0%`}
                                                     striche={[30, 50, 75, 100]}
                                                     einheit="%"
                                                     sprache={sprache}

@@ -639,6 +639,10 @@ describe('Sprachen: VIS-Bausteine (widgets/) und Seitentitel', () => {
                 if (ts.isPropertyAssignment(n) && ['TEXTE', 'SYM', 'REGEL_SYMBOLE'].includes(n.name.getText())) {
                     return;
                 }
+                // die Liste der Einheitenzeichen (geschuetztes Leerzeichen zwischen Zahl und Einheit) ist ein Suchmuster
+                if (ts.isVariableDeclaration(n) && n.name.getText() === 'EINHEIT_MUSTER') {
+                    return;
+                }
                 if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n) || ts.isTemplateHead(n) || ts.isTemplateMiddle(n) || ts.isTemplateTail(n)) {
                     for (const wort of sichtbareWoerter(n.text)) {
                         benutzt.add(`${datei}:${wort}`);
@@ -728,7 +732,7 @@ describe('Sprachen: VIS-Bausteine (widgets/) und Seitentitel', () => {
         expect(bausteine('sv').t('zHand')).to.equal('manual override');
         expect(bausteine('de').t('zHand')).to.equal('Handeingriff');
         expect(bausteine('fr').t('paar', 'A', 'B')).to.equal('A : B');
-        expect(bausteine('de').t('aussenBei', '−3,5')).to.equal('außen −3,5 °C');
+        expect(bausteine('de').t('aussenBei', '−3,5')).to.equal('außen −3,5\u00a0°C');
         // Dezimalpunkt nur in Englisch und Chinesisch, echtes Minus ueberall
         for (const s of SPRACHEN) {
             expect(bausteine(s).zahl(-3.5, 1), s).to.equal(s === 'en' || s === 'zh-cn' ? '−3.5' : '−3,5');
@@ -759,5 +763,117 @@ describe('Sprachen: VIS-Bausteine (widgets/) und Seitentitel', () => {
         }
         // wirklich uebersetzt (einzelne Sprachen duerfen gleich heissen)
         expect(titel.size).to.be.greaterThan(8);
+    });
+});
+
+describe('Sprachen: geschuetztes Leerzeichen zwischen Zahl und Einheit', () => {
+    // Nutzerfund 22.11.2026: in der Zeitplaene-Uebersicht brach "Komfort 21,5 °C" so um, dass "°C" allein stand
+    const bild = require('../lib/kennlinienbild');
+    const zug = require('../lib/kennlinienzug');
+    const NB = '\u00a0';
+    // gewoehnliches Leerzeichen zwischen Ziffer und Einheit - das darf in keinem angezeigten Text mehr stehen
+    const OFFEN = /\d (°C|%|kWh|W|K|min|h|s|Вт|мин|хв|ч|с|分钟)(?![A-Za-z0-9\u00c0-\u024f\u0400-\u04ff\u4e00-\u9fff])/;
+
+    it('eine Regel: Adapter/VIS (kennlinienbild) und Einstellungsseite (kennlinienzug) benutzen dasselbe Muster', () => {
+        expect(zug.EINHEIT_MUSTER).to.equal(bild.EINHEIT_MUSTER);
+        for (const [roh, soll] of [
+            ['Komfort 21,5 °C', `Komfort 21,5${NB}°C`],
+            ['60 %', `60${NB}%`],
+            ['270 W', `270${NB}W`],
+            ['0,03 kWh', `0,03${NB}kWh`],
+            ['0,5 K', `0,5${NB}K`],
+            ['10 min', `10${NB}min`],
+            ['innerhalb von 90 s hier', `innerhalb von 90${NB}s hier`],
+            ['не более 8 ч', `не более 8${NB}ч`],
+            ['最多 10 分钟', `最多 10${NB}分钟`],
+            ['gerundet auf 5-%-Schritte: 70 %', `gerundet auf 5-%-Schritte: 70${NB}%`],
+            // keine Einheit: Woerter, Platzhalter, schon geschuetzt
+            ['5 Wochen, 3 Kinder, 2 seconds, 1 hour', '5 Wochen, 3 Kinder, 2 seconds, 1 hour'],
+            ['zwischen 0 und %s', 'zwischen 0 und %s'],
+            [`21${NB}°C`, `21${NB}°C`],
+        ]) {
+            expect(bild.einheitFest(roh), roh).to.equal(soll);
+            expect(zug.einheitFest(roh), roh).to.equal(soll);
+        }
+        expect(bild.einheitFest(null)).to.equal('');
+        expect(OFFEN.test('21,5 °C') && !OFFEN.test(`21,5${NB}°C`)).to.equal(true);
+    });
+
+    it('Adapter-Oberflaeche: t() liefert jeden Text in jeder Sprache mit geschuetztem Leerzeichen', () => {
+        const o = require('../lib/oberflaeche');
+        const fehler = [];
+        for (const [k, eintrag] of Object.entries(o.TEXTE)) {
+            const werte = Object.fromEntries([...String(eintrag.en).matchAll(/\{(\w+)\}/g)].map(m => [m[1], '7,5']));
+            for (const s of SPRACHEN) {
+                if (OFFEN.test(o.t(k, s, werte))) {
+                    fehler.push(`${k}/${s}`);
+                }
+            }
+        }
+        expect(fehler).to.eql([]);
+        expect(o.t('sendet', 'de', { p: 45 })).to.equal(`Leistungsgrenze 45${NB}%`);
+    });
+
+    it('Komponenten: jede Textfunktion laeuft durch die Regel, feste Zahl-Einheit-Texte im Quelltext sind geschuetzt', () => {
+        const ordner = path.join(WURZEL, 'src-admin', 'src');
+        for (const datei of fs.readdirSync(ordner).filter(d => d.endsWith('.texte.ts'))) {
+            const quelle = lies(`src-admin/src/${datei}`);
+            // der Abschnitt hat nur vier Texte ohne Werte
+            if (/replace\(\/%s\/g/.test(quelle)) {
+                expect(/return fest\(\(.*\)\.replace\(\/%s\/g/.test(quelle), datei).to.equal(true);
+            }
+        }
+        expect(lies('src-admin/src/einheit.ts')).to.contain('einheitFest');
+        // zusammengesetzte Texte: "${zahl} °C" mit gewoehnlichem Leerzeichen gibt es in den Komponenten nicht mehr
+        const fehler = [];
+        for (const datei of fs.readdirSync(ordner).filter(d => d.endsWith('.tsx') && d !== 'smokeRender.tsx')) {
+            lies(`src-admin/src/${datei}`)
+                .split('\n')
+                .forEach((zeile, nr) => {
+                    if (/\$\{[^}]*\} (°C|%|K|W|kWh)`/.test(zeile)) {
+                        fehler.push(`${datei}:${nr + 1}`);
+                    }
+                });
+        }
+        expect(fehler).to.eql([]);
+    });
+
+    it('Einstellungsseite (admin/i18n, src-admin/src/i18n): kein gewoehnliches Leerzeichen zwischen Zahl und Einheit', () => {
+        const fehler = [];
+        for (const ordner of ['admin/i18n', 'src-admin/src/i18n']) {
+            for (const s of SPRACHEN) {
+                for (const [k, text] of Object.entries(JSON.parse(lies(`${ordner}/${s}.json`)))) {
+                    if (OFFEN.test(text) || /%s (°C|%|K|h|ч|год)(?![A-Za-z\u0400-\u04ff])/.test(text)) {
+                        fehler.push(`${ordner}/${s}: ${k}`);
+                    }
+                }
+            }
+        }
+        expect(fehler).to.eql([]);
+    });
+
+    it('VIS-Bausteine: t() schuetzt das Leerzeichen in jeder Sprache', () => {
+        const fehler = [];
+        for (const s of SPRACHEN) {
+            const b = bausteine(s);
+            for (const k of Object.keys(b.TEXTE)) {
+                if (OFFEN.test(b.t(k, '7', '8', '9'))) {
+                    fehler.push(`${k}/${s}`);
+                }
+            }
+        }
+        expect(fehler).to.eql([]);
+        expect(lies('widgets/faikout/js/faikout.js')).not.to.match(/\+ ' (°C|%|W|kWh)\b/);
+    });
+
+    it('Datenpunktwerte und Logs behalten das gewoehnliche Leerzeichen - geschuetzt wird erst bei der Anzeige', () => {
+        // regulation.reason / regulation.demand.reason sind gespeicherte Werte (Skripte, Vergleiche, Suche im Log)
+        const regel = require('../lib/regel/texte');
+        const text = regel.t('bedarf.kennlinieHeizen', { temp: 5, prozent: 61 });
+        expect(text).to.contain('5 °C').and.to.contain('61 %').and.not.to.contain(NB);
+        // die Geraetekarte und der Details-Dialog setzen es beim Anzeigen ein
+        const dm = require('../lib/devicemanager');
+        const kopf = new Function('_states', `return \`${dm.regelKopfHtml(false).de.replace(/`/g, '\\`')}\``)({ z: { val: 'ok' }, g: { val: text }, p: { val: false } });
+        expect(kopf).to.contain(`5${NB}°C → 61${NB}%`);
     });
 });

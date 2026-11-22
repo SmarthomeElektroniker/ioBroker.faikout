@@ -151,10 +151,10 @@ describe('Kennlinie ziehen: Raster und Grenzen', () => {
     });
 
     it('Etikett: echtes Minus, Dezimalzeichen der Sprache', () => {
-        expect(zug.etikett({ x: -5, y: 85 }, 'de')).to.equal('−5 °C · 85 %');
-        expect(zug.etikett({ x: 7.5, y: 55 }, 'de')).to.equal('7,5 °C · 55 %');
-        expect(zug.etikett({ x: 7.5, y: 55 }, 'en')).to.equal('7.5 °C · 55 %');
-        expect(zug.etikett({ x: 0, y: 100 }, 'unsinn-sprache-xx')).to.equal('0 °C · 100 %');
+        expect(zug.etikett({ x: -5, y: 85 }, 'de')).to.equal('−5\u00a0°C · 85\u00a0%');
+        expect(zug.etikett({ x: 7.5, y: 55 }, 'de')).to.equal('7,5\u00a0°C · 55\u00a0%');
+        expect(zug.etikett({ x: 7.5, y: 55 }, 'en')).to.equal('7.5\u00a0°C · 55\u00a0%');
+        expect(zug.etikett({ x: 0, y: 100 }, 'unsinn-sprache-xx')).to.equal('0\u00a0°C · 100\u00a0%');
     });
 });
 
@@ -322,7 +322,8 @@ describe('Kennlinie ziehen: Komponente der Einstellungsseite', () => {
             const texte = lies(`src-admin/src/i18n/${s}.json`);
             expect(Object.keys(texte), s).to.eql(Object.keys(de));
             for (const k of ['fZuWenig', 'fZahl', 'fBereich', 'fAufsteigend', 'fFallend', 'fSteigend', 'fGrenzen', 'untergrenze', 'obergrenze']) {
-                expect(texte[`fk_${k}`], `${s}/${k}`).to.equal(o.TEXTE[k][s].replace(/\{n\}/g, '%s'));
+                // wie der Adapter sie ausgibt: mit geschuetztem Leerzeichen zwischen Zahl und Einheit
+                expect(texte[`fk_${k}`], `${s}/${k}`).to.equal(o.t(k, s).replace(/\{n\}/g, '%s'));
             }
             // ausgeliefert wird genau die Quelle
             expect(lies(`admin/custom/i18n/${s}.json`), s).to.eql(texte);

@@ -25,6 +25,7 @@ import { t as text, type Schluessel } from './Rechenweg.texte';
 const zug = zugLib as {
     anzeige(n: number, sprache?: string): string;
     anzeigeFest(n: number, stellen: number, sprache?: string): string;
+    einheitFest(text: unknown): string;
 };
 
 export type Richtung = 'heizen' | 'kuehlen';
@@ -75,7 +76,7 @@ export const RAUM_VORGABE = { prozentProK: 10, totband: 0.3 };
 export function wegText(weg: Weg | null | undefined, sprache: string, richtung?: Richtung): string {
     const t = (s: Schluessel, ...w: (string | number)[]): string => text(sprache, s, ...w);
     const zahl = (n: unknown): string => zug.anzeige(Number(n), sprache);
-    const prozent = (n: unknown): string => `${zahl(n)} %`;
+    const prozent = (n: unknown): string => `${zahl(n)}\u00a0%`;
     if (!weg || typeof weg !== 'object' || !weg.art) {
         return t('wartet');
     }
@@ -140,7 +141,8 @@ export function wegText(weg: Weg | null | undefined, sprache: string, richtung?:
     if (weg.deckel && Number.isFinite(Number(weg.deckel.wert))) {
         teile.push(t('deckel', String(weg.deckel.stufe ?? ''), zahl(weg.deckel.wert)));
     }
-    return `${vorn}${teile.join(' → ')}${hinten}`;
+    // der Adapter liefert `wartet` als fertigen Text mit gewoehnlichem Leerzeichen
+    return zug.einheitFest(`${vorn}${teile.join(' → ')}${hinten}`);
 }
 
 /** Der Satz zur Raumkorrektur mit den Zahlen der Einstellungen. */

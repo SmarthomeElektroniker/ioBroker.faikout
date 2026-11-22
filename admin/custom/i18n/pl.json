@@ -7,11 +7,11 @@
     "fk_zurVorgabe": "Ponownie użyj ustawienia domyślnego (usuń własne punkty)",
     "fk_fZuWenig": "Potrzebne są co najmniej dwa punkty.",
     "fk_fZahl": "Punkt %s nie jest liczbą.",
-    "fk_fBereich": "Punkt %s: moc musi mieścić się między 0 a 100 %.",
+    "fk_fBereich": "Punkt %s: moc musi mieścić się między 0 a 100\u00a0%.",
     "fk_fAufsteigend": "Temperatury muszą rosnąć z wiersza na wiersz.",
     "fk_fFallend": "Krzywa grzewcza musi opadać: im zimniej na zewnątrz, tym więcej mocy.",
     "fk_fSteigend": "Krzywa chłodzenia musi rosnąć: im cieplej na zewnątrz, tym więcej mocy.",
-    "fk_fGrenzen": "Dolna granica musi wynosić co najmniej 30 % i nie przekraczać górnej; górna najwyżej 100 %.",
+    "fk_fGrenzen": "Dolna granica musi wynosić co najmniej 30\u00a0% i nie przekraczać górnej; górna najwyżej 100\u00a0%.",
     "fk_untergrenze": "Dolna granica",
     "fk_obergrenze": "Górna granica"
 }

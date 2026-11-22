@@ -623,7 +623,7 @@
                         const b = document.createElement('button');
                         b.type = 'button';
                         b.className = 'chip';
-                        const w = g.leistung === null ? '' : `<span class="w">${num(g.leistung, 0)} W</span>`;
+                        const w = g.leistung === null ? '' : `<span class="w">${num(g.leistung, 0)}&nbsp;W</span>`;
                         if (!g.zaehler) {
                             b.disabled = true;
                             b.innerHTML = `<span class="name">${esc(g.name)}</span><span class="w">${esc(T('ohneZaehler'))}</span>`;
@@ -649,10 +649,10 @@
                     const power = watts.reduce((s, g) => s + g.leistung, 0);
                     $('head').innerHTML =
                         `<div class="hero"><span class="cap">${esc(T('titel'))} · ${esc(T(state.art))}</span>` +
-                        `<span class="num">${num(sum)}</span> <span class="unit">kWh</span></div>` +
+                        `<span class="num">${num(sum)}</span>&nbsp;<span class="unit">kWh</span></div>` +
                         (watts.length
                             ? `<div class="hero"><span class="cap">${esc(T('leistung'))}</span>` +
-                              `<span class="num">${num(power, 0)}</span> <span class="unit">W</span></div>`
+                              `<span class="num">${num(power, 0)}</span>&nbsp;<span class="unit">W</span></div>`
                             : '');
                 }
                 function niceStep(max) {
@@ -747,13 +747,13 @@
                         .map(
                             x =>
                                 `<div class="tr"><span class="sw" style="background:${x.colour}"></span>` +
-                                `<span class="n">${esc(x.name)}</span><span class="v">${num(x.werte[i])} kWh</span></div>`,
+                                `<span class="n">${esc(x.name)}</span><span class="v">${num(x.werte[i])}&nbsp;kWh</span></div>`,
                         );
                     tip.innerHTML =
                         `<div class="th">${esc(fullLabel(data.schluessel[i]))}</div>` +
                         (rows.length
                             ? rows.join('') +
-                              `<div class="ts"><span class="n">${esc(T('summe'))}</span><span class="v">${num(totalAt(ss, i))} kWh</span></div>`
+                              `<div class="ts"><span class="n">${esc(T('summe'))}</span><span class="v">${num(totalAt(ss, i))}&nbsp;kWh</span></div>`
                             : `<div class="tr"><span class="n">–</span></div>`);
                     tip.style.display = 'block';
                     if (getComputedStyle(tip).position === 'static') {

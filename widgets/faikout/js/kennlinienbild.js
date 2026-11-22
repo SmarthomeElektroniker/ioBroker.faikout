@@ -40,6 +40,26 @@ const esc = s =>
 
 const r1 = n => Math.round(n * 10) / 10;
 
+/**
+ * Zahl und Einheit gehoeren zusammen: das Leerzeichen zwischen einer Ziffer und einer Einheit ("21,5 °C",
+ * "60 %", "270 W", "0,03 kWh", "0,5 K", "10 min") wird ein geschuetztes (U+00A0) - sonst bricht die Zeile
+ * dazwischen um und "°C" steht allein (Nutzerfund 22.11.2026). EINE Regel fuer alle Oberflaechen; dieselbe
+ * Zeichenkette steht in lib/kennlinienzug.js fuer die Einstellungsseite (Test: sprachen).
+ * Bewusst ohne Unicode-Klassen und u-Schalter: alte Browser der VIS-Tafeln kennen das nicht.
+ * Nur fuer die ANZEIGE - Datenpunktwerte und Logs behalten das gewoehnliche Leerzeichen.
+ */
+const EINHEIT_MUSTER =
+    '(\\d) (?=(?:°C|°F|%|kWh|Wh|kW|W|K|dBm|Hz|ms|min|h|s|кВт·ч|Вт|дБм|мин|хв|год|ч|с|分钟|小时|秒)(?![A-Za-z0-9À-ɏЀ-ӿ一-鿿]))';
+const EINHEIT_RE = new RegExp(EINHEIT_MUSTER, 'g');
+
+/**
+ * Text fuer die Anzeige: geschuetztes Leerzeichen zwischen Zahl und Einheit.
+ *
+ * @param {unknown} text  Text
+ * @returns {string} Text mit U+00A0 zwischen Zahl und Einheit
+ */
+const einheitFest = text => String(text === undefined || text === null ? '' : text).replace(EINHEIT_RE, '$1\u00a0');
+
 /** Sprachen mit Punkt als Dezimalzeichen; alle anderen der elf schreiben ein Komma. */
 const PUNKT_SPRACHEN = ['en', 'zh-cn'];
 
@@ -360,5 +380,7 @@ return {
     BALKEN_SCHRITT,
     zahl,
     esc,
+    EINHEIT_MUSTER,
+    einheitFest,
 };
 });

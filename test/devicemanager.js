@@ -983,7 +983,9 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             const k = muster(dm.regelKopfHtml(false)[l], { z: 'ok', g: lang, p: false });
             expect(k).not.to.match(/line-clamp|overflow:hidden|text-overflow/);
             const zeilen = [...k.matchAll(/<div style="margin-top:2px">([^<]*)<\/div>/g)].map(m => m[1]);
-            expect(zeilen).to.eql(lang.split(' · '));
+            // ... fuer die Anzeige mit geschuetztem Leerzeichen zwischen Zahl und Einheit (der Datenpunkt behaelt das gewoehnliche)
+            expect(zeilen).to.eql(lang.split(' · ').map(x => x.replace(/(\d) (?=°C|%)/g, '$1\u00a0')));
+            expect(zeilen[2]).to.contain('5,4\u00a0°C → 62\u00a0%').and.to.contain('5-%-Schritte: 60\u00a0%');
         }
         expect(muster(dm.regelKopfHtml(false).de, { z: 'ok', g: 'a · <i>b</i>', p: false })).to.contain('<div style="margin-top:2px">&lt;i>b&lt;/i></div>');
         expect(muster(dm.regelKopfHtml(false).de, { z: 'manual', g: '', p: false })).to.contain('Handeingriff').and.not.to.contain('Probelauf');
@@ -1008,12 +1010,12 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(muster(dm.regelPlanHtml().en, { s: '', n: null, ns: '' })).to.contain('button “Weekly schedule”');
 
         const f = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Sensor der Anlage', rv: 20.6, rq: 'Sensor der Anlage (Rückfall: Datenpunkt zu alt)', fv: null, fq: '', fa: false });
-        expect(f).to.contain('Außen 4,5 °C').and.to.contain('Raum 20,6 °C · Rückfall').and.not.to.contain('Feuchte');
+        expect(f).to.contain('Außen 4,5\u00a0°C').and.to.contain('Raum 20,6\u00a0°C · Rückfall').and.not.to.contain('Feuchte');
         expect(f).to.contain('title="Sensor der Anlage (Rückfall: Datenpunkt zu alt)"');
         expect(muster(dm.regelFuehlerHtml().de, { av: null, fa: true })).to.contain('Außen fehlt').and.to.contain('Feuchte fehlt');
         // mit dem Datenpunkt regulation.sensors.<art>Stand zaehlt der, nicht mehr das Wort im Quellentext
         const stand = muster(dm.regelFuehlerHtml().de, { av: 4.5, aq: 'Sensor of the unit (fallback)', as: 'fallback', rv: 20, rq: 'x (Rückfall: y)', rs: 'ok' });
-        expect(stand).to.contain('Außen 4,5 °C · Rückfall').and.to.contain('Raum 20 °C<');
+        expect(stand).to.contain('Außen 4,5\u00a0°C · Rückfall').and.to.contain('Raum 20\u00a0°C<');
         expect(muster(dm.regelHandHtml().de, { h: true, b: new Date(new Date().setHours(22, 0, 0, 0)).getTime() })).to.contain('<b>22:00</b>');
     });
 
@@ -1053,8 +1055,8 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             expect(k.formulare[0].opt.title.de).to.equal('Wochenplan von Wohnzimmer AC');
             expect(info.program).to.eql([]);
             expect(info.types.map(t => t.type)).to.eql(['komfort', 'absenken', 'abwesend', 'aus']);
-            expect(info.types[0].info).to.equal('21 °C');
-            expect(info.types[1].info).to.equal('19 °C · max. 60 %');
+            expect(info.types[0].info).to.equal('21\u00a0°C');
+            expect(info.types[1].info).to.equal('19\u00a0°C · max. 60\u00a0%');
             expect(info.types[3].info).to.equal('Anlage aus');
             expect(info.farben.hell.komfort).to.be.a('string');
             expect(info.texts.pVorgabe).to.equal('Vorgabeplan laden');
@@ -1515,7 +1517,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
                     const liste = await frage(a, 'zeitplaeneListe', { formular });
                     const { info } = await editor(a, ID, formular);
                     expect(info.types.map(t => t.label)).to.eql(['Sparen', 'Wohlfühlen', 'Abwesend', 'Aus', 'Stufe 5']);
-                    expect(info.types[1].info).to.equal('21,5 °C');
+                    expect(info.types[1].info).to.equal('21,5\u00a0°C');
                     expect(ausEditor(info)).to.eql(ausListe(liste.stufen[ID]));
                     expect(ausEditor(info)).to.eql(ausListe(liste.stufen.vorlage));
                     // die neue Stufe ist gekennzeichnet (Editor und Liste), der Plan bleibt lesbar (er haengt an den IDs)
@@ -1761,11 +1763,11 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             const html = gezeigt.schema.items.inhalt.text;
             expect(gezeigt.schema.items.inhalt).to.include({ type: 'staticText', format: 'html', noTranslation: true });
             expect(html.match(/<svg/g)).to.have.length(2);
-            expect(html).to.contain('Probelauf.').and.to.contain('würde senden 60 %');
+            expect(html).to.contain('Probelauf.').and.to.contain('würde senden 60\u00a0%');
             expect(html).to.contain('<li style="margin:2px 0">Szene Komfort</li>');
-            expect(html).to.contain('Kennlinie Heizen bei 5 °C → 61 %</li>');
+            expect(html).to.contain('Kennlinie Heizen bei 5\u00a0°C → 61\u00a0%</li>');
             expect(html).to.contain('Leistungsgrenze, letzte 24 Stunden').and.to.contain('ioBroker-Adapter regelt');
-            expect(html).to.contain('21,5 °C').and.to.contain('Sensor der Anlage');
+            expect(html).to.contain('21,5\u00a0°C').and.to.contain('Sensor der Anlage');
             // nichts, was der Admin als Muster auswerten wuerde
             expect(html).not.to.match(/[`\\]|\$\{/);
             expect(a.gesetzt).to.eql([]);
@@ -1796,7 +1798,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
             a.regelung = { geraete: new Map([[ID, { weg: { art: 'normal' } }]]) };
             const mit = (await a.deviceManagement.detailsFormular(ID, 'de')).items.inhalt.text;
             expect(mit.match(/<svg/g)).to.have.length(2);
-            expect(mit).to.match(/(Leistungsgrenze|würde senden) 60 %/);
+            expect(mit).to.match(/(Leistungsgrenze|würde senden) 60\u00a0%/);
             a.regelung = vorher;
         });
 
@@ -1852,13 +1854,13 @@ describe('Device-Manager: Fuehlerkorrektur neben der Solltemperatur', () => {
                 Object.fromEntries(Object.entries(werte).map(([k, v]) => [k, { val: v }])),
             );
         const text = werte => textIn('de', werte);
-        expect(text({ k: 1, z: 21 })).to.contain('Sensorkorrektur +1,0 K · Ziel 21,0 °C');
+        expect(text({ k: 1, z: 21 })).to.contain('Sensorkorrektur +1,0\u00a0K · Ziel 21,0\u00a0°C');
         // Dezimalzeichen der Sprache: Englisch und Chinesisch Punkt, alle anderen Komma
         for (const l of SPRACHEN) {
             const punkt = l === 'en' || l === 'zh-cn';
-            expect(textIn(l, { k: 1.5, z: 21.5 }), l).to.contain(punkt ? '+1.5 K' : '+1,5 K').and.to.contain(punkt ? '21.5 °C' : '21,5 °C');
+            expect(textIn(l, { k: 1.5, z: 21.5 }), l).to.contain(punkt ? '+1.5\u00a0K' : '+1,5\u00a0K').and.to.contain(punkt ? '21.5\u00a0°C' : '21,5\u00a0°C');
         }
-        expect(text({ k: -0.5 })).to.contain('Sensorkorrektur −0,5 K').and.not.to.contain('Ziel');
+        expect(text({ k: -0.5 })).to.contain('Sensorkorrektur −0,5\u00a0K').and.not.to.contain('Ziel');
         for (const l of SPRACHEN) {
             expect(e.text.func[l]).to.be.a('string');
         }

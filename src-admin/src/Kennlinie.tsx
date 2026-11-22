@@ -1367,7 +1367,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                               aria-valuemin={b.min}
                                               aria-valuemax={b.max}
                                               aria-valuenow={wert}
-                                              aria-valuetext={`${zahl(wert)} %`}
+                                              aria-valuetext={`${zahl(wert)}\u00a0%`}
                                               aria-keyshortcuts="Enter F2"
                                               onPointerDown={grenzeGreifen(welche, true)}
                                               onPointerMove={grenzeBewegen}

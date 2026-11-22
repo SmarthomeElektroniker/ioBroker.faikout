@@ -149,7 +149,7 @@ describe('Oberflaeche: Kennlinie pruefen und Bild fuer die Einstellungsseite', (
         });
         const { erledigt, antwort } = await frage(a, 'regelKennlinieBild', { richtung: 'heizen', punkte: '-10:95, 0:75, 7:55, 15:40', untergrenze: 40, obergrenze: 95, geraet: 'wz' });
         expect(erledigt).to.equal(true);
-        expect(antwort).to.contain('<svg').and.to.contain('würde senden 45 %').and.to.contain('roh 44,3 %');
+        expect(antwort).to.contain('<svg').and.to.contain('würde senden 45\u00a0%').and.to.contain('roh 44,3\u00a0%');
     });
 
     it('regelKennlinieBild: ungueltige Kennlinie und Grenzen werden im Klartext gemeldet', async () => {
@@ -183,9 +183,9 @@ describe('Oberflaeche: Arbeitspunkt fuer die ziehbare Kennlinie (regelArbeitspun
         expect(erledigt).to.equal(true);
         expect(antwort).to.include({ geraet: 'wz', x: 9, wert: 45, roh: 44.3, richtung: 'heizen', probelauf: true, aktiv: true });
         expect(antwort).to.deep.include(await o.arbeitspunkt(a, 'wz'));
-        expect(antwort.etikett.heizen).to.eql({ x: 9, wert: 45, text: 'würde senden 45 %', unterzeile: 'roh 44,3 % · außen 9,0 °C' });
+        expect(antwort.etikett.heizen).to.eql({ x: 9, wert: 45, text: 'würde senden 45\u00a0%', unterzeile: 'roh 44,3\u00a0% · außen 9,0\u00a0°C' });
         // im Bild der anderen Richtung steht nur die Aussentemperatur, kein Wert
-        expect(antwort.etikett.kuehlen).to.eql({ x: 9, wert: null, text: 'außen 9,0 °C' });
+        expect(antwort.etikett.kuehlen).to.eql({ x: 9, wert: null, text: 'außen 9,0\u00a0°C' });
         // dieselben Texte wie im bisherigen Bild
         const svg = (await frage(a, 'regelKennlinieBild', { richtung: 'heizen', punkte: '-10:95, 0:75, 7:55, 15:40', untergrenze: 40, obergrenze: 95, geraet: 'wz' })).antwort;
         expect(svg).to.contain(antwort.etikett.heizen.text).and.to.contain(antwort.etikett.heizen.unterzeile);
@@ -196,12 +196,12 @@ describe('Oberflaeche: Arbeitspunkt fuer die ziehbare Kennlinie (regelArbeitspun
         const voll = (await frage(a, 'regelArbeitspunkt', { geraet: 'Wohnzimmer AC', obergrenze: 95 })).antwort;
         expect(voll.geraet).to.equal('wz');
         expect(voll.vollAbK).to.equal(require('../lib/regel/bedarf').VORGABEN.vollAbK);
-        expect(voll.etikett.heizen.text).to.equal(o.TEXTE.volleLeistungK.de.replace('{k}', String(voll.vollAbK).replace('.', ',')));
+        expect(voll.etikett.heizen.text).to.equal(o.t('volleLeistungK', 'de', { k: String(voll.vollAbK).replace('.', ',') }));
         expect(voll.etikett.heizen.text).to.contain('volle Leistung').and.to.contain('K unter Ziel');
         expect(voll.etikett.heizen.unterzeile).to.contain('95').and.to.contain('9,0');
         // ohne Angabe gilt die gespeicherte Obergrenze der Instanz (hier 100 %): normales Etikett
         const normal = (await frage(a, 'regelArbeitspunkt', { geraet: 'wz' })).antwort;
-        expect(normal.etikett.heizen.text).to.equal(o.TEXTE.sendet.de.replace('{p}', '100'));
+        expect(normal.etikett.heizen.text).to.equal(o.t('sendet', 'de', { p: '100' }));
     });
 
     it('Rechenweg und Einstellungen der Raumkorrektur: aus dem letzten Durchlauf der Regelung bzw. der gespeicherten Konfiguration', async () => {
@@ -326,7 +326,7 @@ describe('Oberflaeche: Geraetename statt ID, Hinweise', () => {
         expect(o.geraetId(a, 'wz')).to.equal('wz');
         expect(o.geraetId(a, 'fremd')).to.equal('fremd');
         expect((await frage(a, 'regelKann', { geraet: 'Wohnzimmer AC' })).antwort).to.contain('unterstützt');
-        expect((await frage(a, 'regelKennlinieBild', { richtung: 'heizen', geraet: 'Wohnzimmer AC' })).antwort).to.contain('außen 3,0 °C');
+        expect((await frage(a, 'regelKennlinieBild', { richtung: 'heizen', geraet: 'Wohnzimmer AC' })).antwort).to.contain('außen 3,0\u00a0°C');
         expect((await frage(a, 'regelZeilenListe', { zeilen: ['wz', 'OG', ''] })).antwort).to.eql([
             { label: 'Wohnzimmer AC', value: 'wz' },
             { label: 'OG', value: 'OG' },
@@ -657,7 +657,7 @@ describe('Oberflaeche: Modul-Einstellungen lesen, pruefen, schreiben, wiederhers
         v = await vorbereiten(m.a, { _modReporting: 90 });
         m.a.broker.publish = async () => ((m.a.erreichbar = false), true);
         r = (await frage(m.a, 'modulEinstellungenSchreiben', v.auftrag)).antwort.native;
-        expect(r._modVorschau).to.contain('hat innerhalb von 0 s nicht geantwortet');
+        expect(r._modVorschau).to.contain('hat innerhalb von 0\u00a0s nicht geantwortet');
         expect(r._modStand).to.equal('');
     });
 
@@ -1481,10 +1481,10 @@ describe('UX-Funde 21.11.2026', () => {
         const html = async (id, art = 'raum') => (await frage(a, 'fuehlerWert', { id, art })).antwort;
         expect(await html('')).to.contain('noch kein Datenpunkt gewählt');
         expect(await html('0_userdata.0.gibtsnicht')).to.contain('Datenpunkt existiert nicht: 0_userdata.0.gibtsnicht').and.to.contain(o.AMPEL.fehler);
-        expect(await html('hm.0.raum')).to.contain('jetzt: 21,5 °C · vor 30 s').and.to.contain(o.AMPEL.gut);
-        expect(await html('hm.0.alt')).to.contain('17,0 °C').and.to.contain('Wert ist alt').and.to.contain(o.AMPEL.warn);
+        expect(await html('hm.0.raum')).to.contain('jetzt: 21,5\u00a0°C · vor 30\u00a0s').and.to.contain(o.AMPEL.gut);
+        expect(await html('hm.0.alt')).to.contain('17,0\u00a0°C').and.to.contain('Wert ist alt').and.to.contain(o.AMPEL.warn);
         expect(await html('hm.0.text')).to.contain('Kein Zahlenwert: offen');
-        expect(await html('hm.0.raum', 'feuchte')).to.contain('21,5 %');
+        expect(await html('hm.0.raum', 'feuchte')).to.contain('21,5\u00a0%');
         expect(o.alterText(45000)).to.equal('45 s');
         expect(o.alterText(600000)).to.equal('10 min');
         expect(o.alterText(7200000)).to.equal('2 h');
@@ -1610,7 +1610,7 @@ describe('UX-Funde 21.11.2026', () => {
             sprache: 'de',
             punkt: { x: -2.3, wert: 100, roh: 102.5, richtung: 'heizen', probelauf: false, vollAbK: 2 },
         });
-        expect(svg).to.contain('volle Leistung (2 K unter Ziel)').and.to.contain('sonst höchstens 95 % · außen −2,3 °C');
+        expect(svg).to.contain('volle Leistung (2\u00a0K unter Ziel)').and.to.contain('sonst höchstens 95\u00a0% · außen −2,3\u00a0°C');
         expect(svg).not.to.contain('roh');
         // ohne Freigabe bleibt es bei Wert und Rohwert
         const normal = o.kennlinieSvg({
@@ -1621,7 +1621,7 @@ describe('UX-Funde 21.11.2026', () => {
             sprache: 'de',
             punkt: { x: -2.3, wert: 80, roh: 79.6, richtung: 'heizen', probelauf: false, vollAbK: 2 },
         });
-        expect(normal).to.contain('Leistungsgrenze 80 %').and.to.contain('roh 79,6 %');
+        expect(normal).to.contain('Leistungsgrenze 80\u00a0%').and.to.contain('roh 79,6\u00a0%');
     });
 
     it('Modul-Einstellungen: verstaendlicher Name, Schluessel des Moduls klein dahinter', () => {

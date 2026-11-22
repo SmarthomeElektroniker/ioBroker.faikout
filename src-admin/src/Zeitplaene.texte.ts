@@ -2,6 +2,8 @@
  * Texte der Komponente "Zeitplaene" in allen 11 Sprachen des Adapters. Platzhalter: %s (der Reihe nach).
  * Englisch ist die Rueckfallsprache; der Typ erzwingt, dass jede Sprache jeden Schluessel hat.
  */
+import { fest } from './einheit';
+
 const en = {
     hinweisSofort:
         'Device weekly schedules take effect immediately – they are stored in the device’s data point. The template only applies after “Save” of the instance.',
@@ -736,7 +738,7 @@ export const TEXTE: Record<string, Satz> = { en, de, ru, pt, nl, fr, it, es, pl,
 export function text(sprache: string, schluessel: Schluessel, ...werte: (string | number)[]): string {
     const satz = TEXTE[sprache] || TEXTE[String(sprache || '').toLowerCase()] || en;
     let n = 0;
-    return (satz[schluessel] || en[schluessel] || schluessel).replace(/%s/g, () => String(werte[n++] ?? ''));
+    return fest((satz[schluessel] || en[schluessel] || schluessel).replace(/%s/g, () => String(werte[n++] ?? '')));
 }
 
 export default TEXTE;
