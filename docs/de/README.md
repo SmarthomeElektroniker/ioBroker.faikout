@@ -114,24 +114,24 @@ ob ein Feuchtewert vorhanden ist.
 
 #### Leistungsgrenze bei Daikin
 
-Die Leistungsgrenze (`demand`) wirkt bei Daikin nur, wenn
+Zwei Dinge sind zu unterscheiden:
 
-1. das **originale Daikin-WLAN-Modul eingeschaltet** ist (Fernbedienung: „Powerful“ 5 Sekunden
-   halten, bis „SP 1“ erscheint) und
-2. die **Bedarfs- bzw. Leistungssteuerung in der Daikin-App (Onecta)** passend steht.
+- **A) Einstellung „Bedarfssteuerung“ in der Daikin-App (Onecta):** Aus / manuell (fester Wert) / Auto.
+- **B) Das Daikin-WLAN-Modul selbst**, per Fernbedienung ein- oder ausgeschaltet (SP-Menü: „Powerful“
+  gedrückt halten → „SP 1“ = WLAN an, „SP oFF“ = aus; Handbuch 3P649406) – unabhängig von der App.
 
-Welche Einstellung in der App richtig ist, hängt nach bisherigen Erfahrungen davon ab, ob das
-Daikin-Modul Internet hat. **Das ist ein Erfahrungswert aus zwei Installationen, noch nicht
-bestätigt:**
-
-| Daikin-WLAN-Modul | Bedarfssteuerung in Onecta | Beobachtet |
+| B) Daikin-WLAN-Modul | A) Bedarfssteuerung in Onecta | Leistungsgrenze vom Adapter |
 |---|---|---|
-| mit Cloud-Verbindung (Internet) | **„Aus“** | an einer Multisplit-Anlage: erst mit „Aus“ übernahm die Anlage den Wert des faikout-Moduls |
-| ohne Internet (eigenes Netz, App offline) | **„Ein“** | an den Anlagen des Entwicklers (Internet für das Daikin-Modul gesperrt): mit „Ein“ wirkt der Wert |
+| aus („SP oFF“) | egal | wirkt **nicht** (eigene Messung) |
+| an, ohne Internet (eigenes Netz) | manuell (fester Wert) | wirkt; Adapter und App dürfen schreiben, der letzte Wert gilt (eigene Messung) |
+| an, ohne Internet | Aus | Anlage bleibt bei 100 % (eigene Messung) |
+| an, ohne Internet | Auto | ohne Cloud nicht sinnvoll |
+| an, mit Cloud (z. B. fest eingebaute Module der Perfera) | Auto oder manuell | die Cloud setzt ihren Wert nach Sekunden zurück, der Wert des Adapters hält nicht (Tester-Bericht) |
+| an, mit Cloud | Aus | Werte des Adapters halten (Tester-Bericht, noch nicht gegengeprüft) |
 
-Wirkt die Leistungsgrenze nicht, die andere Einstellung ausprobieren – und gern im Forum berichten,
-welche Kombination bei dir gilt. „Auto“ heißt: die Cloud regelt selbst. Eine Ablehnung bei
-ausgeschalteter Anlage sagt nichts aus – der Adapter zeigt dann weiter „noch nicht geprüft“.
+**Empfehlung:** Modul an („SP 1“); mit Cloud → App „Aus“; ohne Internet → App „manuell (fester Wert)“.
+Rückmeldungen im Forum sind willkommen. Eine Ablehnung bei ausgeschalteter Anlage sagt nichts aus – der
+Adapter zeigt dann weiter „noch nicht geprüft“.
 
 #### Multisplit: eine Leistungsgrenze je Außengerät
 

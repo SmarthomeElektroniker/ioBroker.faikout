@@ -230,23 +230,24 @@ it would do, but sends nothing. Instances from older versions keep their dry run
 
 ### Power limit on Daikin units
 
-The power limit (`demand`) only has an effect on a Daikin unit if
+Two different things matter:
 
-1. the **original Daikin Wi-Fi module is switched on** (remote control: hold "Powerful" for
-   5 seconds until "SP 1" appears) and
-2. **demand control in the Daikin app (Onecta)** is set appropriately.
+- **A) The setting "demand control" in the Daikin app (Onecta):** off / manual (fixed value) / auto.
+- **B) The Daikin Wi-Fi module itself**, switched on or off with the remote control (SP menu: hold
+  "Powerful" → "SP 1" = Wi-Fi on, "SP oFF" = off; manual 3P649406) – independent of the app.
 
-Which app setting is right seems to depend on whether the Daikin module has internet access – **experience
-from two installations, not yet confirmed:**
-
-| Daikin Wi-Fi module | Demand control in Onecta | Observed |
+| B) Daikin Wi-Fi module | A) Demand control in Onecta | Power limit from the adapter |
 |---|---|---|
-| with cloud connection (internet) | **"Off"** | multi split system: only with "Off" did the unit follow the faikout value |
-| without internet (own network, app offline) | **"On"** | developer's units (internet blocked for the Daikin module) |
+| off ("SP oFF") | any | has **no** effect (own measurement) |
+| on, without internet (own network) | manual (fixed value) | works; adapter and app may both write, the last value wins (own measurement) |
+| on, without internet | off | the unit stays at 100 % (own measurement) |
+| on, without internet | auto | not useful without the cloud |
+| on, with cloud (e.g. built-in modules of the Perfera) | auto or manual | the cloud resets its value after seconds, the adapter's value does not hold (tester report) |
+| on, with cloud | off | the adapter's values hold (tester report, not yet cross-checked) |
 
-If the limit has no effect, try the other setting and report it in the forum. "Auto" means the cloud
-controls. A value rejected while the unit is switched off says nothing – the adapter keeps showing "not
-tested yet".
+**Recommendation:** module on ("SP 1"); with cloud → app "off"; without internet → app "manual (fixed
+value)". Feedback in the forum is welcome. A value rejected while the unit is switched off says nothing –
+the adapter keeps showing "not tested yet".
 
 ### Multi split: assigning indoor units to an outdoor unit
 
@@ -315,8 +316,9 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
   same value, the maximum of the requests of the running units; 100 % once when none runs
   (`outdoorUnits.<id>.demand`, `.demandReason`, `.leader`).
 - Note for indoor units without a Faikout module: do not set an own power limit for them in the Daikin app.
-- Daikin app (Onecta): the recommended demand control setting now depends on the Daikin module – with cloud
-  connection "Off", without internet "On" (experience, not yet confirmed); README, guide and hints updated.
+- Daikin power limit: README and guide separate the app setting (Onecta demand control) from the Daikin Wi-Fi
+  module itself (SP 1 / SP oFF) in one table; recommendation: module on, with cloud app "off", without internet
+  app "manual (fixed value)" (partly tester reports, not yet confirmed).
 
 ### 1.1.1 (2026-11-22)
 - Fix for multi split systems ([#8](https://github.com/SmarthomeElektroniker/ioBroker.faikout/issues/8)):

@@ -342,7 +342,7 @@ describe('Oberflaeche: Geraetename statt ID, Hinweise', () => {
 
     it('Daikin-Hinweis haengt am Wert "nein" der Leistungsgrenze', async () => {
         const nein = (await frage(adapter({ 'wz.info.demandCapable': 'no' }), 'regelKann', { geraet: 'wz' })).antwort;
-        expect(nein).to.contain('SP 1').and.to.contain('Modul ohne Internet → „Ein“').and.to.contain('Cloud-Verbindung → „Aus“');
+        expect(nein).to.contain('SP 1').and.to.contain('Modul ohne Internet → „manuell (fester Wert)“').and.to.contain('Cloud-Verbindung → „Aus“');
         for (const wert of ['yes', 'unknown']) {
             expect((await frage(adapter({ 'wz.info.demandCapable': wert }), 'regelKann', { geraet: 'wz' })).antwort).not.to.contain('SP 1');
         }

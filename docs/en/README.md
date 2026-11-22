@@ -115,23 +115,24 @@ module and whether a humidity value is available.
 
 #### Power limit on Daikin units
 
-The power limit (`demand`) only has an effect on a Daikin unit if
+Two different things matter:
 
-1. the **original Daikin Wi-Fi module is switched on** (remote control: hold "Powerful" for
-   5 seconds until "SP 1" appears) and
-2. **demand control in the Daikin app (Onecta)** is set appropriately.
+- **A) The setting "demand control" in the Daikin app (Onecta):** off / manual (fixed value) / auto.
+- **B) The Daikin Wi-Fi module itself**, switched on or off with the remote control (SP menu: hold
+  "Powerful" → "SP 1" = Wi-Fi on, "SP oFF" = off; manual 3P649406) – independent of the app.
 
-Which app setting is right seems to depend on whether the Daikin module has internet access. **This is
-experience from two installations, not yet confirmed:**
-
-| Daikin Wi-Fi module | Demand control in Onecta | Observed |
+| B) Daikin Wi-Fi module | A) Demand control in Onecta | Power limit from the adapter |
 |---|---|---|
-| with cloud connection (internet) | **"Off"** | on a multi split system: only with "Off" did the unit follow the faikout module's value |
-| without internet (own network, app offline) | **"On"** | on the developer's units (internet blocked for the Daikin module): with "On" the value works |
+| off ("SP oFF") | any | has **no** effect (own measurement) |
+| on, without internet (own network) | manual (fixed value) | works; adapter and app may both write, the last value wins (own measurement) |
+| on, without internet | off | the unit stays at 100 % (own measurement) |
+| on, without internet | auto | not useful without the cloud |
+| on, with cloud (e.g. built-in modules of the Perfera) | auto or manual | the cloud resets its value after seconds, the adapter's value does not hold (tester report) |
+| on, with cloud | off | the adapter's values hold (tester report, not yet cross-checked) |
 
-If the power limit has no effect, try the other setting – and feel free to report in the forum which
-combination applies to you. "Auto" means the cloud controls by itself. A value rejected while the
-unit is switched off says nothing – the adapter keeps showing "not tested yet".
+**Recommendation:** module on ("SP 1"); with cloud → app "off"; without internet → app "manual (fixed
+value)". Feedback in the forum is welcome. A value rejected while the unit is switched off says nothing –
+the adapter keeps showing "not tested yet".
 
 #### Multi split: one power limit per outdoor unit
 

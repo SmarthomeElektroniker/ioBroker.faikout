@@ -152,7 +152,7 @@ describe('Regeltexte (mehrsprachig)', () => {
         expect(faehigkeit.bewerten(null, { art: 'abgelehnt', power: true, wert: 80 }).grund).to.equal(
             'demand 80 im Betrieb abgelehnt (failed-set). Bei Daikin wirkt die Leistungsgrenze nur, ' +
                 'wenn das originale Daikin-WLAN-Modul eingeschaltet ist (Fernbedienung: Powerful 5 s, Anzeige „SP 1“). ' +
-                'Außerdem die Leistungssteuerung in der Daikin-App prüfen (Erfahrungswert: Modul ohne Internet „Ein“, ' +
+                'Außerdem die Leistungssteuerung in der Daikin-App prüfen (Erfahrungswert: Modul ohne Internet „manuell (fester Wert)“, ' +
                 'mit Cloud-Verbindung „Aus“)',
         );
         expect(faehigkeit.bewerten(null, { art: 'abgelehnt', power: false, wert: 80 }).grund).to.equal(
