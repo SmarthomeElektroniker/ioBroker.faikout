@@ -977,6 +977,15 @@ describe('Device-Manager: Regelung auf der Karte', () => {
     it('Muster der Karte: Zustand, Probelauf, Balken, "ruht (Modul regelt selbst)", nicht unterstuetzt, Fuehler-Rueckfall', () => {
         const kopf = muster(dm.regelKopfHtml(true).de, { z: 'ok', g: 'Szene <b>Komfort</b>', p: true });
         expect(kopf).to.contain('>aktiv<').and.to.contain('Probelauf').and.to.contain('Szene &lt;b>Komfort');
+        // die Begruendung steht ganz auf der Karte: je Teil (Plan · Feuchte · Bedarf) eine eigene Zeile, nichts abgeschnitten
+        const lang = 'Plan: Stufe Nacht · Feuchte: 51 % im Zielbereich · Bedarf: Kennlinie Heizen bei 5,4 °C → 62 %; Raum 20,1 °C / Ziel 20 °C, Korrektur +0 Pkt.; gerundet auf 5-%-Schritte: 60 %';
+        for (const l of ['de', 'en', 'zh-cn']) {
+            const k = muster(dm.regelKopfHtml(false)[l], { z: 'ok', g: lang, p: false });
+            expect(k).not.to.match(/line-clamp|overflow:hidden|text-overflow/);
+            const zeilen = [...k.matchAll(/<div style="margin-top:2px">([^<]*)<\/div>/g)].map(m => m[1]);
+            expect(zeilen).to.eql(lang.split(' · '));
+        }
+        expect(muster(dm.regelKopfHtml(false).de, { z: 'ok', g: 'a · <i>b</i>', p: false })).to.contain('<div style="margin-top:2px">&lt;i>b&lt;/i></div>');
         expect(muster(dm.regelKopfHtml(false).de, { z: 'manual', g: '', p: false })).to.contain('Handeingriff').and.not.to.contain('Probelauf');
         expect(muster(dm.regelKopfHtml(true).de, { z: 'off', g: '', p: true })).to.contain('ausgeschaltet').and.not.to.contain('Probelauf');
 
