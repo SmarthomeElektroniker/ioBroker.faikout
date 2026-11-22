@@ -13,6 +13,7 @@ import { DialogSelectID, I18n } from '@iobroker/gui-components';
 import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from '@iobroker/json-config';
 
 import modelleLib from '../../lib/effizienz/modelle.js';
+import laufzeitTexte from '../../lib/effizienz/texte.js';
 import { t, type Schluessel } from './Effizienz.texte';
 import { EpsBild, Erklaerbild, LuftstromBild, STUFEN, Stile, stufenName, zahl, type Art, type EpsSatz, type Farben, type Stufe } from './EffizienzGrafik';
 import { KalibrierungAnsicht, type KalStand } from './EffizienzKalibrierung';
@@ -113,6 +114,7 @@ export interface AnsichtProps {
     objektWahl?: (aktuell: string, fertig: (id: string) => void) => void;
 }
 
+const ZUSTAND_TEXT = (laufzeitTexte as { ZUSTAND: Record<string, Record<string, string>> }).ZUSTAND;
 const BAUFORM: Record<string, Schluessel> = { wand: 'bWand', truhe: 'bTruhe', kanal: 'bKanal', kassette: 'bKassette', decke: 'bDecke' };
 const GUETE: Record<string, Schluessel> = { estimated: 'geschaetzt', calibrated: 'kalibriert', measured: 'gemessen', unavailable: 'nichtVerfuegbar' };
 const HOECHSTENS = 30;
@@ -424,7 +426,9 @@ function Karte(props: AnsichtProps & { g: GeraetStand; start: boolean }): React.
         kurz = `${kuehlt ? 'EER' : 'COP'} ${zahl(live.cop, 1, sprache)} · ${zahl(live.leistungKW, 2, sprache)} kW · ${mitUnsicherheit()}`;
     } else {
         const heute = g.mengen ? g.mengen.cop.today : null;
-        kurz = t(sprache, live.art === 'abtauen' ? 'zAbtauen' : live.art === 'stillstand' ? 'zStillstand' : 'zAus').split(/[.–-] /)[0].replace(/\.$/, '');
+        // dieselben Woerter wie im Datenpunkt efficiency.state (lib/effizienz/texte.js)
+        const wort = ZUSTAND_TEXT[live.art === 'abtauen' ? 'defrosting' : live.art === 'stillstand' ? 'idle' : 'off'];
+        kurz = wort[sprache] || wort.en;
         if (typeof heute === 'number') {
             kurz += ` · ${t(sprache, 'copHeute')} ${zahl(heute, 1, sprache)}`;
         }
