@@ -3,6 +3,7 @@
  * Platzhalter %s; Zahlen kommen fertig formatiert herein.
  */
 import { spracheVon, type Sprache } from './Stufen.texte';
+import { fest } from './einheit';
 
 type Eintrag = Record<Sprache, string>;
 
@@ -497,5 +498,5 @@ export type Schluessel = keyof typeof TEXTE;
 export function t(sprache: string, schluessel: Schluessel, ...werte: (string | number)[]): string {
     const eintrag: Eintrag = TEXTE[schluessel];
     let n = 0;
-    return (eintrag[spracheVon(sprache)] || eintrag.en).replace(/%s/g, () => String(werte[n++] ?? ''));
+    return fest((eintrag[spracheVon(sprache)] || eintrag.en).replace(/%s/g, () => String(werte[n++] ?? '')));
 }

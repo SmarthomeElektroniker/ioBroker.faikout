@@ -25,6 +25,7 @@ import { t as text, type Schluessel } from './Rechenweg.texte';
 const zug = zugLib as {
     anzeige(n: number, sprache?: string): string;
     anzeigeFest(n: number, stellen: number, sprache?: string): string;
+    einheitFest(text: unknown): string;
 };
 
 export type Richtung = 'heizen' | 'kuehlen';
@@ -46,6 +47,8 @@ export interface Weg {
     grenze?: 'unter' | 'ober' | null;
     /** die greifende Grenze stammt aus der Strategie "Auto" (Vortag), nicht von der Anlage */
     grenzeVortag?: boolean;
+    /** die Stufung hat den Wert geaendert: Schrittweite in % (aus lib/regel/bedarf.js), auf = aufgerundet */
+    rundung?: { stufe: number; auf?: boolean } | null;
     /** Schwelle in K, ab der "volle Leistung" bzw. der Ueberheizschutz greift */
     schwelle?: number | null;
     sollwert?: number | null;
@@ -73,7 +76,7 @@ export const RAUM_VORGABE = { prozentProK: 10, totband: 0.3 };
 export function wegText(weg: Weg | null | undefined, sprache: string, richtung?: Richtung): string {
     const t = (s: Schluessel, ...w: (string | number)[]): string => text(sprache, s, ...w);
     const zahl = (n: unknown): string => zug.anzeige(Number(n), sprache);
-    const prozent = (n: unknown): string => `${zahl(n)} %`;
+    const prozent = (n: unknown): string => `${zahl(n)}\u00a0%`;
     if (!weg || typeof weg !== 'object' || !weg.art) {
         return t('wartet');
     }
@@ -131,12 +134,15 @@ export function wegText(weg: Weg | null | undefined, sprache: string, richtung?:
             ? t(vt ? 'grenzeVortagUnter' : 'grenzeUnter', zahl(weg.sollwert))
             : weg.grenze === 'ober'
               ? t(vt ? 'grenzeVortagOber' : 'grenzeOber', zahl(weg.sollwert))
-              : prozent(weg.sollwert),
+              : weg.rundung && Number.isFinite(Number(weg.rundung.stufe))
+                ? t(weg.rundung.auf ? 'aufgerundet' : 'gerundet', zahl(weg.rundung.stufe), zahl(weg.sollwert))
+                : prozent(weg.sollwert),
     );
     if (weg.deckel && Number.isFinite(Number(weg.deckel.wert))) {
         teile.push(t('deckel', String(weg.deckel.stufe ?? ''), zahl(weg.deckel.wert)));
     }
-    return `${vorn}${teile.join(' → ')}${hinten}`;
+    // der Adapter liefert `wartet` als fertigen Text mit gewoehnlichem Leerzeichen
+    return zug.einheitFest(`${vorn}${teile.join(' → ')}${hinten}`);
 }
 
 /** Der Satz zur Raumkorrektur mit den Zahlen der Einstellungen. */

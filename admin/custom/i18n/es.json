@@ -7,11 +7,11 @@
     "fk_zurVorgabe": "Volver a usar el valor predeterminado (eliminar puntos propios)",
     "fk_fZuWenig": "Se necesitan al menos dos puntos.",
     "fk_fZahl": "El punto %s no es un número.",
-    "fk_fBereich": "Punto %s: la potencia debe estar entre 0 y 100 %.",
+    "fk_fBereich": "Punto %s: la potencia debe estar entre 0 y 100\u00a0%.",
     "fk_fAufsteigend": "Las temperaturas deben aumentar de fila en fila.",
     "fk_fFallend": "La curva de calefacción debe descender: cuanto más frío fuera, más potencia.",
     "fk_fSteigend": "La curva de refrigeración debe ascender: cuanto más calor fuera, más potencia.",
-    "fk_fGrenzen": "El límite inferior debe ser al menos 30 % y no superar el superior; este como máximo 100 %.",
+    "fk_fGrenzen": "El límite inferior debe ser al menos 30\u00a0% y no superar el superior; este como máximo 100\u00a0%.",
     "fk_untergrenze": "Límite inferior",
     "fk_obergrenze": "Límite superior"
 }

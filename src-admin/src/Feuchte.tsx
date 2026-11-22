@@ -195,7 +195,7 @@ function Skala(props: SkalaProps): React.JSX.Element {
     const rechts = B - RAND.r;
     const mitte = BALKEN.o + BALKEN.h / 2;
     const unten = BALKEN.o + BALKEN.h;
-    const zeige = (n: number): string => `${zahl(n, sprache, ber.stellen)} ${ber.einheit}`;
+    const zeige = (n: number): string => `${zahl(n, sprache, ber.stellen)}\u00a0${ber.einheit}`;
 
     // Achsenstriche
     const strichSchritt = art === 'dtp' ? 5 : W < 380 ? 20 : 10;
@@ -459,7 +459,7 @@ function Skala(props: SkalaProps): React.JSX.Element {
                         dx={v === (art === 'dtp' ? max : min) ? -4 : v === (art === 'dtp' ? min : max) ? 4 : 0}
                         fillOpacity="0.7"
                     >
-                        {zahl(v, sprache)} {ber.einheit}
+                        {`${zahl(v, sprache)}\u00a0${ber.einheit}`}
                     </text>
                 </g>
             ))}

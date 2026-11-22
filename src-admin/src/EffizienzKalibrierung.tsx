@@ -549,7 +549,7 @@ export function KalibrierungAnsicht(props: KalProps): React.JSX.Element {
                 >
                     <li className={g.aktiv ? '' : 'fk-e-gilt'}>
                         <span>
-                            {t(sprache, 'listeDatenblatt')} <span className="fk-e-blass">ε ±{prozent(g.vorgabe.heizen.unsicherheit)} %</span>
+                            {t(sprache, 'listeDatenblatt')} <span className="fk-e-blass">ε ±{prozent(g.vorgabe.heizen.unsicherheit)}{'\u00a0'}%</span>
                         </span>
                         {g.aktiv ? (
                             <button
@@ -575,7 +575,7 @@ export function KalibrierungAnsicht(props: KalProps): React.JSX.Element {
                             >
                                 <span>
                                     {t(sprache, k.quelle === 'hand' ? 'listeHand' : 'listeSensor', datum(k.zeit, sprache), k.n)}{' '}
-                                    <span className="fk-e-blass">ε ±{prozent(e && e.unsicherheit)} %</span>
+                                    <span className="fk-e-blass">ε ±{prozent(e && e.unsicherheit)}{'\u00a0'}%</span>
                                 </span>
                                 {k.aktiv ? (
                                     <span className="fk-e-marke">{t(sprache, 'listeGilt')}</span>

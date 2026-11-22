@@ -7,11 +7,11 @@
     "fk_zurVorgabe": "重新使用默认值（删除自有的点）",
     "fk_fZuWenig": "至少需要两个点。",
     "fk_fZahl": "第 %s 个点不是数字。",
-    "fk_fBereich": "第 %s 个点：功率必须在 0 到 100 % 之间。",
+    "fk_fBereich": "第 %s 个点：功率必须在 0 到 100\u00a0% 之间。",
     "fk_fAufsteigend": "温度必须逐行升高。",
     "fk_fFallend": "制热曲线必须下降：室外越冷，功率越高。",
     "fk_fSteigend": "制冷曲线必须上升：室外越热，功率越高。",
-    "fk_fGrenzen": "下限至少为 30 % 且不得高于上限；上限最高为 100 %。",
+    "fk_fGrenzen": "下限至少为 30\u00a0% 且不得高于上限；上限最高为 100\u00a0%。",
     "fk_untergrenze": "下限",
     "fk_obergrenze": "上限"
 }

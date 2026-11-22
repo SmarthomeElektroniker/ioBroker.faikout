@@ -664,7 +664,7 @@
                         const b = document.createElement('button');
                         b.type = 'button';
                         b.className = 'chip';
-                        const w = g.leistung === null ? '' : `<span class="w">${num(g.leistung, 0)} W</span>`;
+                        const w = g.leistung === null ? '' : `<span class="w">${num(g.leistung, 0)}&nbsp;W</span>`;
                         if (!g.zaehler) {
                             b.disabled = true;
                             b.innerHTML = `<span class="name">${esc(g.name)}</span><span class="w">${esc(T(heat() ? 'ohneWaerme' : 'ohneZaehler'))}</span>`;
@@ -693,19 +693,19 @@
                         const c = ratio(sum, el);
                         $('head').innerHTML =
                             `<div class="hero"><span class="cap">${esc(heatTitle())}</span>` +
-                            `<span class="num">${num(sum)}</span> <span class="unit">kWh</span></div>` +
+                            `<span class="num">${num(sum)}</span>&nbsp;<span class="unit">kWh</span></div>` +
                             `<div class="hero"><span class="cap">${esc(copName())}</span>` +
                             `<span class="num">${c === null ? '–' : num(c, 1)}</span></div>` +
                             `<div class="hero"><span class="cap">${esc(T('strom'))}</span>` +
-                            `<span class="num">${num(el)}</span> <span class="unit">kWh</span></div>`;
+                            `<span class="num">${num(el)}</span>&nbsp;<span class="unit">kWh</span></div>`;
                         return;
                     }
                     $('head').innerHTML =
                         `<div class="hero"><span class="cap">${esc(T('titel'))} · ${esc(T(state.art))}</span>` +
-                        `<span class="num">${num(sum)}</span> <span class="unit">kWh</span></div>` +
+                        `<span class="num">${num(sum)}</span>&nbsp;<span class="unit">kWh</span></div>` +
                         (watts.length
                             ? `<div class="hero"><span class="cap">${esc(T('leistung'))}</span>` +
-                              `<span class="num">${num(power, 0)}</span> <span class="unit">W</span></div>`
+                              `<span class="num">${num(power, 0)}</span>&nbsp;<span class="unit">W</span></div>`
                             : '');
                 }
                 function niceStep(max) {
@@ -828,15 +828,15 @@
                         .map(
                             x =>
                                 `<div class="tr"><span class="sw" style="background:${x.colour}"></span>` +
-                                `<span class="n">${esc(x.name)}</span><span class="v">${num(x.werte[i])} kWh</span></div>`,
+                                `<span class="n">${esc(x.name)}</span><span class="v">${num(x.werte[i])}&nbsp;kWh</span></div>`,
                         );
                     tip.innerHTML =
                         `<div class="th">${esc(fullLabel(data.schluessel[i]))}</div>` +
                         (rows.length
                             ? rows.join('') +
-                              `<div class="ts"><span class="n">${esc(T('summe'))}</span><span class="v">${num(totalAt(ss, i))} kWh</span></div>` +
+                              `<div class="ts"><span class="n">${esc(T('summe'))}</span><span class="v">${num(totalAt(ss, i))}&nbsp;kWh</span></div>` +
                               (heat()
-                                  ? `<div class="tr"><span class="n">${esc(T('strom'))}</span><span class="v">${num(powerAt(ss, i))} kWh</span></div>` +
+                                  ? `<div class="tr"><span class="n">${esc(T('strom'))}</span><span class="v">${num(powerAt(ss, i))}&nbsp;kWh</span></div>` +
                                     `<div class="ts"><span class="n">${esc(copName())}</span><span class="v">${copAt(ss, i) === null ? '–' : num(copAt(ss, i), 1)}</span></div>`
                                   : '')
                             : `<div class="tr"><span class="n">–</span></div>`);
@@ -915,7 +915,7 @@
                     const quality = ['estimated', 'calibrated', 'measured'].find(q => shownUnits.some(g => g.guete === q));
                     const unc = Math.max(0, ...shownUnits.map(g => g.unsicherheit || 0));
                     $('foot').textContent = heat()
-                        ? `${T('waermeFuss').replace('{guete}', T(`guete${(quality || 'estimated').replace(/^./, c => c.toUpperCase())}`) + (unc ? ` ±${unc} %` : ''))} ${T('reichweite')}`
+                        ? `${T('waermeFuss').replace('{guete}', T(`guete${(quality || 'estimated').replace(/^./, c => c.toUpperCase())}`) + (unc ? ` ±${unc}\u00a0%` : ''))} ${T('reichweite')}`
                         : T('reichweite');
                     fit();
                 }

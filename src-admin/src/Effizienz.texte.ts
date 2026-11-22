@@ -2,6 +2,7 @@
  * Texte des Reiters "Effizienz" (Komponenten Effizienz, EffizienzGrafik, EffizienzKalibrierung) in allen 11 Sprachen.
  * Platzhalter %s. Zahlen kommen fertig formatiert herein (Komma bzw. Punkt je Sprache).
  */
+import { fest } from './einheit';
 import { spracheVon, type Sprache } from './Stufen.texte';
 
 type Eintrag = Record<Sprache, string>;
@@ -2599,5 +2600,5 @@ export type Schluessel = keyof typeof TEXTE;
 export function t(sprache: string, schluessel: Schluessel, ...werte: (string | number)[]): string {
     const eintrag = TEXTE[schluessel] as Eintrag;
     let n = 0;
-    return (eintrag[spracheVon(sprache)] || eintrag.en).replace(/%s/g, () => String(werte[n++] ?? ''));
+    return fest((eintrag[spracheVon(sprache)] || eintrag.en).replace(/%s/g, () => String(werte[n++] ?? '')));
 }

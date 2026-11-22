@@ -131,7 +131,13 @@ vis.binds.faikout = {
         if (!e) return schluessel;
         var text = e[b.SPRACHEN.indexOf(b.sprache())] || e[0];
         var werte = Array.prototype.slice.call(arguments, 1);
-        return text.replace(/%s|\{\w+\}/g, function (p) { return werte.length ? String(werte.shift()) : p; });
+        return b.einheitFest(text.replace(/%s|\{\w+\}/g, function (p) { return werte.length ? String(werte.shift()) : p; }));
+    },
+
+    /** Geschuetztes Leerzeichen zwischen Zahl und Einheit ("21,5 °C") - die Regel aus kennlinienbild.js. */
+    einheitFest: function (text) {
+        var bild = (typeof window !== 'undefined' && window.faikoutKennlinienbild) || (typeof self !== 'undefined' && self.faikoutKennlinienbild);
+        return bild && bild.einheitFest ? bild.einheitFest(text) : String(text);
     },
 
     /** Beschriftung eines Listeneintrags: fester Text (Luefterstufe 1..5) oder Schluessel der Texttabelle. */
@@ -478,7 +484,7 @@ vis.binds.faikout = {
             '   <div class="fk-soll"><span class="fk-soll-zahl">–</span><span class="fk-soll-einheit">°C</span></div>' +
             '   <div class="fk-soll-etikett">' + b.t('zielKurz') + '</div>' +
             '   <div class="fk-ist">' +
-            '    <span class="fk-ist-temp-feld">' + b.SYM.temp + '<b class="fk-ist-temp">–</b> °C</span>' +
+            '    <span class="fk-ist-temp-feld">' + b.SYM.temp + '<b class="fk-ist-temp">–</b>&nbsp;°C</span>' +
             '    <span class="fk-ist-hum-feld">' + b.SYM.hum + '<b class="fk-ist-hum">–</b> %</span>' +
             '   </div>' +
             '  </div>' +
@@ -839,13 +845,13 @@ vis.binds.faikout = {
                 var probe = ctx.wert('regulation.demand.dryRun') !== false;
                 // Zustand
                 $wurzel.find('.fk-regel-chip').text(ZUSTAND[zustand] ? b.t(ZUSTAND[zustand]) : zustand).attr('data-zustand', zustand)
-                    .attr('title', ctx.wert('regulation.reason') || '');
+                    .attr('title', b.einheitFest(ctx.wert('regulation.reason') || ''));
                 $wurzel.find('.fk-regel-probe').text(probe && zustand !== 'off' ? b.t('probelauf') : '');
                 // Szene und naechste Schaltung
                 var planAn = ctx.wert('regulation.schedule.active') === true;
                 var szene = planAn ? ctx.wert('regulation.schedule.level') : '';
                 var ziel = b.zahl(ctx.wert('control.target'), 1);
-                $wurzel.find('.fk-regel-szene').text((szene ? szene + ' · ' : '') + (ziel !== null ? b.t('zielKurz') + ' ' + ziel + ' °C' : ''));
+                $wurzel.find('.fk-regel-szene').text((szene ? szene + ' · ' : '') + (ziel !== null ? b.t('zielKurz') + ' ' + ziel + '\u00a0°C' : ''));
                 var naechster = Number(ctx.wert('regulation.schedule.next'));
                 var text = '';
                 if (planAn && naechster > 0) {
@@ -865,7 +871,7 @@ vis.binds.faikout = {
                 // in langen Sprachen auf drei Buchstaben): hier steht nur "ruht", der ganze Text im Tooltip
                 var ruhtText = b.t('ruht');
                 $wurzel.find('.fk-regel-prozent').toggleClass('fk-wort', faehig === 'no' || ruht || !aktiv).attr('title', ruht && faehig !== 'no' ? ruhtText : null).text(
-                    faehig === 'no' ? b.t('nichtUnterstuetzt') : ruht ? ruhtText.split(/\s*[(（]/)[0] : !aktiv ? b.t('grenzeAus') : isNaN(soll) ? '–' : Math.round(soll) + ' %');
+                    faehig === 'no' ? b.t('nichtUnterstuetzt') : ruht ? ruhtText.split(/\s*[(（]/)[0] : !aktiv ? b.t('grenzeAus') : isNaN(soll) ? '–' : Math.round(soll) + '\u00a0%');
                 $wurzel.find('.fk-regel-balken').toggleClass('fk-ruht', !aktiv);
                 // Kennlinie mit Arbeitspunkt
                 if (kennlinie) {
@@ -895,7 +901,7 @@ vis.binds.faikout = {
                 var aussen = mittel !== null ? mittel : b.zahl(ctx.wert('regulation.sensors.outside') !== null ? ctx.wert('regulation.sensors.outside') : ctx.wert('status.outside'), 1);
                 if (aussen !== null) werte.push(b.t('aussenBei', aussen) + (mittel !== null ? ' (' + b.t('mittel30') + ')' : ''));
                 var watt = b.zahl(ctx.wert('status.consumption'), 0);
-                if (watt !== null) werte.push(watt + ' W');
+                if (watt !== null) werte.push(watt + '\u00a0W');
                 $wurzel.find('.fk-regel-werte').text(werte.join(' · '));
                 $wurzel.find('.fk-regel-symbol').each(function () {
                     var art = $(this).attr('data-art');
@@ -1212,7 +1218,7 @@ vis.binds.faikout = {
                        '" width="' + balkenB.toFixed(1) + '" height="' + h.toFixed(1) +
                        '" rx="1" fill="' + b.VERLAUF_FARBEN[r.art] + '">' +
                        '<title>' + punkte[k].beschriftung + ' · ' + b.t('modusCool') + ' ' + b.zahl(punkte[k].cooling, 1) +
-                       ' kWh · ' + b.t('modusHeat') + ' ' + b.zahl(punkte[k].heating, 1) + ' kWh</title></rect>';
+                       '\u00a0kWh · ' + b.t('modusHeat') + ' ' + b.zahl(punkte[k].heating, 1) + '\u00a0kWh</title></rect>';
             });
         });
         svg += '</g></svg>';
@@ -1288,7 +1294,7 @@ vis.binds.faikout = {
                     b.verlaufZeichnen($flaeche, punkte, arten, w, Math.max(110, Math.round(w * 0.42)));
                     var summe = punkte.reduce(function (a, p) { return a + p.cooling + p.heating; }, 0);
                     $fuss.find('.fk-v-summe').html(b.t('summe') + ' <b>' +
-                        b.zahl(summe, summe >= 100 ? 0 : 1) + ' kWh</b>');
+                        b.zahl(summe, summe >= 100 ? 0 : 1) + '\u00a0kWh</b>');
                 });
             }
 

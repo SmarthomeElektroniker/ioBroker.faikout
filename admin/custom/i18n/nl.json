@@ -7,11 +7,11 @@
     "fk_zurVorgabe": "Weer de standaard gebruiken (eigen punten verwijderen)",
     "fk_fZuWenig": "Er zijn minstens twee punten nodig.",
     "fk_fZahl": "Punt %s is geen getal.",
-    "fk_fBereich": "Punt %s: het vermogen moet tussen 0 en 100 % liggen.",
+    "fk_fBereich": "Punt %s: het vermogen moet tussen 0 en 100\u00a0% liggen.",
     "fk_fAufsteigend": "De temperaturen moeten van rij tot rij stijgen.",
     "fk_fFallend": "De stooklijn moet dalen: hoe kouder buiten, hoe meer vermogen.",
     "fk_fSteigend": "De koelcurve moet stijgen: hoe warmer buiten, hoe meer vermogen.",
-    "fk_fGrenzen": "De ondergrens moet minstens 30 % zijn en niet boven de bovengrens liggen; de bovengrens hoogstens 100 %.",
+    "fk_fGrenzen": "De ondergrens moet minstens 30\u00a0% zijn en niet boven de bovengrens liggen; de bovengrens hoogstens 100\u00a0%.",
     "fk_untergrenze": "Ondergrens",
     "fk_obergrenze": "Bovengrens"
 }

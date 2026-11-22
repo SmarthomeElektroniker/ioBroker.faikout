@@ -765,7 +765,13 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
         return links ? RAND.l + 22 : B - RAND.r - 22;
     };
     const griffX: Record<Grenze, number> = { ober: griffStelle('ober'), unter: griffStelle('unter') };
-    const beschriftung = (welche: Grenze): { text: string; x: number; y: number; anker: 'start' | 'end' } => {
+    // Stelle der senkrechten Jetzt-Linie - auch solange sie beim Ziehen nicht gezeichnet wird: die Schriften
+    // weichen ihr aus und duerfen nicht springen, wenn die Linie fuer die Dauer des Ziehens verschwindet
+    const jetztX = ap && sauber.length >= 2 && Number.isFinite(Number(ap.x)) ? X(Math.min(a.max, Math.max(a.min, Number(ap.x)))) : null;
+    const JETZT_LUFT = 6;
+    /** laeuft die Jetzt-Linie durch eine Schrift zwischen von und bis? */
+    const jetztTrifft = (von: number, bis: number): boolean => jetztX !== null && jetztX > von - JETZT_LUFT && jetztX < bis + JETZT_LUFT;
+    const beschriftung = (welche: Grenze): { text: string; x: number; y: number; anker: 'start' | 'end'; frei: boolean } => {
         const wert = welche === 'ober' ? ober : unter;
         const lang =
             welche === 'unter'
@@ -773,15 +779,81 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                 : wert < 100
                   ? k(kuehlen ? 'oberLangKuehlen' : 'oberLangHeizen', zahl(wert), zahl(vollAbK))
                   : k('ober', zahl(wert));
-        const text = textBreite(lang) <= W - 60 ? lang : k(welche === 'unter' ? 'unter' : 'ober', zahl(wert));
+        const kurz = k(welche === 'unter' ? 'unter' : 'ober', zahl(wert));
+        const passend = textBreite(lang) <= W - 60 ? lang : kurz;
         // Beide Schriften stehen unter ihrer Linie (die Untergrenze damit in ihrer gesperrten Zone; der
         // Streifen ueber der Obergrenze ist bei 95 % zu schmal fuer Schrift) - und neben dem Griff, also
         // auf der Seite, auf der die Kennlinie die Linie nicht beruehrt.
         const y = welche === 'unter' && Y(0) - Y(wert) < 18 ? Y(wert) - 5 : Y(wert) + (welche === 'unter' ? 14 : 13);
         const gx = griffX[welche];
         const links = (welche === 'unter') !== kuehlen;
-        return links ? { text, x: gx + 24, y, anker: 'start' } : { text, x: gx - 24, y, anker: 'end' };
+        // Die Schrift steht neben dem Griff. Laeuft die Jetzt-Linie hindurch, rueckt sie auf die vom Griff
+        // abgewandte Seite der Linie (Nutzerfund 22.11.2026: bei 420 px lief die Linie durch "Obergrenze 100 %");
+        // passt die lange Fassung dort nicht, die kurze. Geht auch das nicht (sehr schmal, langer Text), bleibt
+        // sie stehen und die Jetzt-Linie setzt an der Schrift aus (jetztLuecken) statt sie zu kreuzen.
+        const lage = (text: string): { x: number; anker: 'start' | 'end'; frei: boolean } => {
+            const breite = textBreite(text);
+            const x0 = links ? gx + 24 : gx - 24;
+            const anker = links ? 'start' : 'end';
+            if (!jetztTrifft(links ? x0 : x0 - breite, links ? x0 + breite : x0)) {
+                return { x: x0, anker, frei: true };
+            }
+            const x = (jetztX as number) + (links ? JETZT_LUFT + 1 : -JETZT_LUFT - 1);
+            const passt = links ? x + breite <= B - RAND.r - 2 : x - breite >= RAND.l + 2;
+            return passt ? { x, anker, frei: true } : { x: x0, anker, frei: false };
+        };
+        let text = passend;
+        let l = lage(text);
+        if (!l.frei && passend !== kurz) {
+            const k2 = lage(kurz);
+            if (k2.frei) {
+                text = kurz;
+                l = k2;
+            }
+        }
+        return { text, x: l.x, y, anker: l.anker, frei: l.frei };
     };
+
+    // eigene Grenze des Geraets (gezogen oder im Formular) - auch ohne eigene Punkte ist die Kennlinie dann "eigen"
+    const grenzeEigen =
+        !istVorlage &&
+        (!!grenzZug || (!!props.grenzenEigen && (!istLeer(grenzenEigen.untergrenze) || !istLeer(grenzenEigen.obergrenze))));
+    // Etikett an der gestrichelten Linie, solange es keine eigene Kennlinie gibt: Lage (vor dem Jetzt-Marker
+    // berechnet - die Jetzt-Linie spart die Schriften aus, denen sie nicht ausweichen kann)
+    let leerLage: { text: string; nachLinks: boolean; x: number; y: number; breite: number; frei: boolean } | null = null;
+    if (blass && sauber.length >= 2) {
+        const mitteX = (sauber[0][0] + sauber[sauber.length - 1][0]) / 2;
+        // eigene Grenze, aber die Punkte der Vorlage: "nicht angepasst" waere dann falsch
+        const text = k(istVorlage ? 'etikettWerk' : grenzeEigen ? 'etikettVorlageKurve' : 'etikettVorlage');
+        const breite = textBreite(text) * 1.1;
+        const passtRechts = X(mitteX) + 10 + breite <= B - RAND.r;
+        const nachLinks = kuehlen || !passtRechts;
+        let x = Math.max(RAND.l + 4 + (nachLinks ? breite : 0), X(mitteX) + (nachLinks ? -10 : 10));
+        let frei = true;
+        // auch dieses Etikett weicht der Jetzt-Linie aus: weiter in seine Richtung (dort liegt die Kennlinie
+        // tiefer), wenn es dort noch ins Bild passt
+        if (jetztTrifft(nachLinks ? x - breite : x, nachLinks ? x : x + breite)) {
+            const neu = (jetztX as number) + (nachLinks ? -JETZT_LUFT - 1 : JETZT_LUFT + 1);
+            if (nachLinks ? neu - breite >= RAND.l + 2 : neu + breite <= B - RAND.r - 2) {
+                x = neu;
+            } else {
+                frei = false;
+            }
+        }
+        leerLage = { text, nachLinks, x, y: Y(bild.wertAuf(sauber, mitteX)) - 12, breite, frei };
+    }
+    // Schriften, denen die Jetzt-Linie nicht ausweichen kann (schmales Bild, langer Text): dort setzt die
+    // Linie aus - sie laeuft durch keine Beschriftung
+    const jetztLuecken: [number, number][] = [];
+    for (const welche of ['unter', 'ober'] as Grenze[]) {
+        const sch = beschriftung(welche);
+        if (!sch.frei) {
+            jetztLuecken.push([sch.y - 13, sch.y + 5]);
+        }
+    }
+    if (leerLage && !leerLage.frei) {
+        jetztLuecken.push([leerLage.y - 13, leerLage.y + 5]);
+    }
 
     // Jetzt-Marker: duenn, blass, ohne Mausereignisse - und waehrend des Ziehens gar nicht
     let jetztBild: React.JSX.Element | null = null;
@@ -797,6 +869,18 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
         // schmales Bild, langer Text (z. B. Russisch bei 420 px): passt er auch links nicht, beginnt er am linken
         // Rand der Zeichenflaeche statt aus dem Bild zu laufen
         const linksRaus = links && X(x) - 7 - textBreite(text) < RAND.l + 2;
+        // die Linie von oben nach unten, ohne die Stellen der Schriften, denen sie nicht ausweichen konnte
+        const jetztStuecke: [number, number][] = [];
+        let von = Y(100);
+        for (const [l0, l1] of [...jetztLuecken].sort((p, q) => p[0] - q[0])) {
+            if (l0 > von) {
+                jetztStuecke.push([von, Math.min(l0, Y(0))]);
+            }
+            von = Math.max(von, l1);
+        }
+        if (von < Y(0)) {
+            jetztStuecke.push([von, Y(0)]);
+        }
         if (ziehend < 0 && !grenzeZiehtGerade) {
             jetztBild = (
                 <g
@@ -804,15 +888,18 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                     pointerEvents="none"
                     aria-hidden="true"
                 >
-                    <line
-                        x1={X(x)}
-                        x2={X(x)}
-                        y1={Y(100)}
-                        y2={Y(0)}
-                        stroke="currentColor"
-                        strokeOpacity="0.3"
-                        strokeWidth="1"
-                    />
+                    {jetztStuecke.map(([y1, y2]) => (
+                        <line
+                            key={y1}
+                            x1={X(x)}
+                            x2={X(x)}
+                            y1={y1}
+                            y2={y2}
+                            stroke="currentColor"
+                            strokeOpacity="0.3"
+                            strokeWidth="1"
+                        />
+                    ))}
                     <circle
                         className="fk-jetzt-punkt"
                         cx={X(x)}
@@ -878,23 +965,14 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
         );
     }
 
-    // eigene Grenze des Geraets (gezogen oder im Formular) - auch ohne eigene Punkte ist die Kennlinie dann "eigen"
-    const grenzeEigen =
-        !istVorlage &&
-        (!!grenzZug || (!!props.grenzenEigen && (!istLeer(grenzenEigen.untergrenze) || !istLeer(grenzenEigen.obergrenze))));
-    // Etikett an der gestrichelten Linie, solange es keine eigene Kennlinie gibt
     let leerEtikett: React.JSX.Element | null = null;
-    if (blass && sauber.length >= 2) {
-        const mitteX = (sauber[0][0] + sauber[sauber.length - 1][0]) / 2;
-        // eigene Grenze, aber die Punkte der Vorlage: "nicht angepasst" waere dann falsch
-        const text = k(istVorlage ? 'etikettWerk' : grenzeEigen ? 'etikettVorlageKurve' : 'etikettVorlage');
-        const passtRechts = X(mitteX) + 10 + textBreite(text) * 1.1 <= B - RAND.r;
-        const nachLinks = kuehlen || !passtRechts;
+    if (leerLage) {
+        const { text, nachLinks, x: leerX, y: leerY } = leerLage;
         leerEtikett = (
             <text
                 className="fk-leer-etikett"
-                x={Math.max(RAND.l + 4 + (nachLinks ? textBreite(text) * 1.1 : 0), X(mitteX) + (nachLinks ? -10 : 10))}
-                y={Y(bild.wertAuf(sauber, mitteX)) - 12}
+                x={leerX}
+                y={leerY}
                 textAnchor={nachLinks ? 'end' : 'start'}
                 fontSize="12"
                 fontWeight="600"
@@ -1315,6 +1393,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                         />
                                         <text
                                             className="fk-grenztext"
+                                            data-ausgewichen={b.x !== (b.anker === 'end' ? griffX[welche] - 24 : griffX[welche] + 24) ? '1' : undefined}
                                             x={b.x}
                                             y={b.y}
                                             textAnchor={b.anker}
@@ -1367,7 +1446,7 @@ export function KennlinieAnsicht(props: AnsichtProps): React.JSX.Element {
                                               aria-valuemin={b.min}
                                               aria-valuemax={b.max}
                                               aria-valuenow={wert}
-                                              aria-valuetext={`${zahl(wert)} %`}
+                                              aria-valuetext={`${zahl(wert)}\u00a0%`}
                                               aria-keyshortcuts="Enter F2"
                                               onPointerDown={grenzeGreifen(welche, true)}
                                               onPointerMove={grenzeBewegen}

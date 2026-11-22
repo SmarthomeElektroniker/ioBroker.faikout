@@ -243,7 +243,8 @@ function stufenText(stufe: Stufe | undefined, id: string, sprache: string, name 
     } catch {
         // unbekannte Sprache
     }
-    return `${stufe.name || id} ${grad} °C`;
+    // geschuetztes Leerzeichen: "21,5 °C" bricht nie zwischen Zahl und Einheit um
+    return `${stufe.name || id} ${grad}\u00a0°C`;
 }
 
 /** "heute 16:30", "morgen 06:00", "Sa 07:30" */

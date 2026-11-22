@@ -21,6 +21,8 @@ const WEGE: Record<string, [Weg | null | undefined, ('heizen' | 'kuehlen')?]> = 
     kalt: [{ ...basis, abweichung: 1.7, korrektur: 14, sollwert: 65 }],
     imZiel: [{ ...basis, abweichung: 0.2, korrektur: 0, sollwert: 50 }],
     ohneRaum: [{ ...basis, abweichung: null, korrektur: 0, sollwert: 50 }],
+    gerundet: [{ ...basis, basis: 72, abweichung: 0.1, korrektur: 0, sollwert: 70, rundung: { stufe: 5 } }],
+    aufgerundet: [{ ...basis, strategie: 'vortag', basis: 58, vortag: { prozent: 48, zuschlag: 10 }, abweichung: -1, korrektur: -7, sollwert: 55, rundung: { stufe: 5, auf: true } }],
     unten: [{ ...basis, basis: 42, abweichung: -0.9, korrektur: -6, grenze: 'unter', sollwert: 40 }],
     oben: [{ ...basis, basis: 100, abweichung: 1, korrektur: 7, grenze: 'ober', sollwert: 95 }],
     voll: [{ ...basis, art: 'voll', abweichung: 2.3, korrektur: 20, schwelle: 2, sollwert: 100 }],
@@ -185,6 +187,18 @@ export function renderAll(): Record<string, string> {
         werk: bild('kuehlen', [], { mitVorgabe: false }),
         eingeklappt: bild('kuehlen', [], { eingeklappt: true }),
         falsch: bild('heizen', [{ x: 0, y: 50 }, { x: 5, y: 70 }]),
+        // Jetzt-Linie an jeder Stelle der Achse: sie laeuft durch keine Beschriftung (Schluessel jetzt_<richtung>_<x>)
+        ...Object.fromEntries(
+            (['heizen', 'kuehlen'] as Richtung[]).flatMap(r =>
+                Array.from({ length: 36 }, (_, i) => (r === 'heizen' ? -15 : 20) + i * 0.5 * (r === 'heizen' ? 2 : 1)).map(x => [
+                    `jetzt_${r}_${x}`,
+                    bild(r, r === 'heizen' ? [{ x: -10, y: 100 }, { x: 0, y: 82 }, { x: 6, y: 64 }, { x: 15, y: 40 }] : [{ x: 25, y: 40 }, { x: 30, y: 65 }, { x: 35, y: 95 }], {
+                        obergrenze: 100,
+                        arbeitspunkt: { x, wert: 65, text: '', unterzeile: '', weg: { art: 'normal', strategie: 'kennlinie', richtung: r, basis: 65, abweichung: 0, korrektur: 0, totband: 0.3, grenze: null, sollwert: 65 } },
+                    }),
+                ]),
+            ),
+        ),
         stufenWerk: stufen([], false),
         stufenEigen: stufen(
             [

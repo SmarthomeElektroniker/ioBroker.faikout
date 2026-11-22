@@ -126,8 +126,11 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         const griffe = h => (h.match(/role="slider"/g) || []).length;
         // Kennlinie: vier Stuetzpunkte und die beiden Grenzlinien sind ziehbar
         assert.strictEqual(griffe(html.eigene), 6, 'vier ziehbare Punkte und zwei Grenzlinien');
-        assert.ok(/Jetzt: außen −4,9 °C → 95 %/.test(html.eigene), 'Jetzt-Marker beschriftet');
-        assert.ok(/Obergrenze 95 % –/.test(html.eigene) && /Untergrenze 40 % –/.test(html.eigene), 'Grenzen beschriftet');
+        assert.ok(/Jetzt: außen −4,9\u00a0°C → 95\u00a0%/.test(html.eigene), 'Jetzt-Marker beschriftet');
+        // die Jetzt-Linie (−4,9 °C) liefe durch beide langen Schriften: die der Untergrenze rueckt rechts neben die Linie,
+        // fuer die der Obergrenze ist links kein Platz - dort steht die kurze Fassung (ohne Jetzt-Linie: beide lang)
+        assert.ok(/data-ausgewichen="1"[^>]*>Untergrenze 40\u00a0% –/.test(html.eigene) && />Obergrenze 95\u00a0%</.test(html.eigene), 'Grenzen beschriftet, der Jetzt-Linie ausgewichen');
+        assert.ok(/>Obergrenze 95\u00a0% –/.test(html.grenzeEigen) && !/data-ausgewichen/.test(html.grenzeEigen), 'Grenzen beschriftet (ohne Jetzt-Linie: lange Fassung am Griff)');
         assert.ok(/Werte als Tabelle/.test(html.eigene), 'Tabelle nur eingeklappt');
         // die Grenzen haben keine Eingabefelder mehr: Schrift an der Linie, Zahleneingabe erst auf Doppelklick/Enter
         for (const [name, h] of Object.entries({ eigene: html.eigene, leer: html.leer })) {
@@ -144,7 +147,7 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         // im Bild nicht mehr "nicht angepasst"
         assert.ok(/Kennlinie \(globale Kennlinie, eigene Grenze\)/.test(html.grenzeEigen) && !/\(eigene Kennlinie\)/.test(html.grenzeEigen) && /Kurve aus der Vorlage \(eigene Grenze\)/.test(html.grenzeEigen) && !/nicht angepasst/.test(html.grenzeEigen), 'eigene Grenze: Etikett im Bild passt zur Klammer');
         // "So entsteht der Wert gerade": am Geraet immer da (fester Platz), an der Vorlage nie
-        assert.ok(/class="[^"]*fk-weg[^"]*"[^>]*>.*So entsteht der Wert gerade:.*Kennlinie 87 % → Raum 1,0 K zu kalt: \+7 → 95 %/.test(html.eigene), 'Rechenweg unter dem Bild');
+        assert.ok(/class="[^"]*fk-weg[^"]*"[^>]*>.*So entsteht der Wert gerade:.*Kennlinie 87\u00a0% → Raum 1,0\u00a0K zu kalt: \+7 → 95\u00a0%/.test(html.eigene), 'Rechenweg unter dem Bild');
         assert.ok(/So entsteht der Wert gerade:.*Noch kein Wert/.test(html.leer), 'ohne Daten steht die Zeile trotzdem da');
         assert.ok(!/fk-weg/.test(html.werk), 'Vorlage: kein Rechenweg');
         assert.ok(!/fk-jetzt-text/.test(html.eigene + html.leer), 'der alte Satz zur Raumkorrektur ist ersetzt');
@@ -159,7 +162,25 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.ok(/Es gilt die Werksvorgabe/.test(html.werk) && /Eigene Kennlinie anlegen/.test(html.werk) && !/\(globale Kennlinie\)/.test(html.werk), 'Vorlage leer: Werksvorgabe + Knopf, keine Klammer');
         assert.strictEqual(griffe(html.eingeklappt), 0, 'eingeklappt: nur die Titelzeile');
         assert.ok(/Die Heizkennlinie muss fallen/.test(html.falsch), 'Fehler im Klartext');
-        ok('Rendern Kennlinie: eigene Punkte, leere Liste (Vorlage), eingeklappt und ungueltig');
+        // Jetzt-Linie: an keiner Stelle der Achse laeuft sie durch die Schrift einer Grenzlinie - die Schrift weicht aus
+        // (Breite wie im Code geschaetzt: 6,1 px je Zeichen; echte Masse prueft der Pruefstand harnessK/jetzt.mjs)
+        const jetztFaelle = Object.keys(html).filter(k => k.startsWith('jetzt_'));
+        assert.strictEqual(jetztFaelle.length, 72, 'Jetzt-Linie: 36 Stellen je Richtung');
+        let ausgewichen = 0;
+        for (const fall of jetztFaelle) {
+            const gruppe = (html[fall].match(/<g class="fk-jetzt"[\s\S]*?<\/g>/) || [''])[0];
+            const linien = [...gruppe.matchAll(/<line[^>]*x1="([\d.]+)"/g)].map(m => Number(m[1]));
+            assert.ok(linien.length >= 1, `${fall}: Jetzt-Linie gezeichnet`);
+            for (const m of html[fall].matchAll(/<text class="fk-grenztext"([^>]*)>([^<]*)<\/text>/g)) {
+                const x = Number(/ x="([\d.]+)"/.exec(m[1])[1]);
+                const breite = [...m[2]].length * 6.1;
+                const [von, bis] = /text-anchor="end"/.test(m[1]) ? [x - breite, x] : [x, x + breite];
+                ausgewichen += /data-ausgewichen="1"/.test(m[1]) ? 1 : 0;
+                assert.ok(linien.length > 1 || linien[0] <= von - 2 || linien[0] >= bis + 2, `${fall}: Jetzt-Linie ${linien[0]} laeuft durch „${m[2]}“ (${von.toFixed(0)}..${bis.toFixed(0)})`);
+            }
+        }
+        assert.ok(ausgewichen >= 8, `Jetzt-Linie: die Schrift weicht aus (${ausgewichen} Faelle)`);
+        ok('Rendern Kennlinie: eigene Punkte, leere Liste (Vorlage), eingeklappt und ungueltig; Jetzt-Linie laeuft durch keine Grenzbeschriftung');
         // Temperaturstufen
         assert.strictEqual(griffe(html.stufenEigen), 2, 'eine eingeschaltete Stufe: Ziel und Hoechstleistung ziehbar');
         assert.ok(/Werksvorgabe/.test(html.stufenEigen) && /Temperaturstufe hinzufügen/.test(html.stufenEigen), 'Stufen der Vorlage');
@@ -174,7 +195,7 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.ok(!/<button[^>]*fk-wz-zurueck[^>]*disabled/.test(html.stufenGeraetEigen), 'eigene Stufen: Zuruecksetzen frei');
         ok('Rendern Stufen je Geraet: Vorlage direkt anfassbar, eigen/Vorlage als Text');
         // Zuruecksetzen, waehrend der Plan eigene Stufen benutzt: Rueckfrage im Formular, je Stufe eine Ersatzwahl
-        // mit der naechstliegenden Stufe der Vorlage als Vorgabe (Tag 22 °C -> Komfort, Nacht 18 °C -> Absenken)
+        // mit der naechstliegenden Stufe der Vorlage als Vorgabe (Tag 22\u00a0°C -> Komfort, Nacht 18\u00a0°C -> Absenken)
         const frage = (html.stufenRueckfrage.match(/<div class="fk-st-rueckfrage[\s\S]*?fk-st-rueckfrage-nein[\s\S]*?<\/button>/) || [''])[0];
         assert.ok(/role="alertdialog"/.test(frage) && /Der Wochenplan von Test benutzt Stufen, die es in der Vorlage nicht gibt:/.test(frage), 'Rueckfrage nennt die Anlage');
         const wahl = [...frage.matchAll(/data-stufe="([^"]*)"[\s\S]*?<span>([^<]*)<\/span>[\s\S]*?<option value="([^"]*)" selected="">([^<]*)</g)].map(m => m.slice(1));
@@ -186,24 +207,26 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         ok('Rendern Rueckfrage beim Zuruecksetzen der Stufen: Ersatzwahl je Stufe, Vorgabe naechste Temperatur');
         // Rechenweg: jeder Fall als Satz
         const WEG = {
-            warm: 'Kennlinie 52 % → Raum 1,0 K zu warm: −7 → 45 %',
-            kalt: 'Kennlinie 52 % → Raum 1,7 K zu kalt: +14 → 65 %',
-            imZiel: 'Kennlinie 52 % → Raum am Ziel (innerhalb ±0,3 K): ±0 → 50 %',
-            ohneRaum: 'Kennlinie 52 % → kein Raumwert: keine Korrektur → 50 %',
-            unten: 'Kennlinie 42 % → Raum 0,9 K zu warm: −6 → 40 % (Untergrenze)',
-            oben: 'Kennlinie 100 % → Raum 1,0 K zu kalt: +7 → 95 % (Obergrenze)',
-            voll: 'Kennlinie 52 % → Raum 2,3 K zu kalt: volle Leistung (ab 2 K) → 100 %',
-            ueber: 'Kennlinie 52 % → Raum 1,6 K zu warm: Überheizschutz (ab 1,5 K) → 30 %',
-            deckel: 'Kennlinie 86 % → Raum 1,7 K zu kalt: +14 → 100 % → Stufe „Tag“ höchstens 90 %',
-            vortag: 'Vortag 48 % + 10 → Raum 1,0 K zu warm: −7 → 55 %',
-            kuehlenWarm: 'Kennlinie 65 % → Raum 1,0 K zu warm: +7 → 70 %',
+            warm: 'Kennlinie 52\u00a0% → Raum 1,0\u00a0K zu warm: −7 → 45\u00a0%',
+            kalt: 'Kennlinie 52\u00a0% → Raum 1,7\u00a0K zu kalt: +14 → 65\u00a0%',
+            imZiel: 'Kennlinie 52\u00a0% → Raum am Ziel (innerhalb ±0,3\u00a0K): ±0 → 50\u00a0%',
+            ohneRaum: 'Kennlinie 52\u00a0% → kein Raumwert: keine Korrektur → 50\u00a0%',
+            gerundet: 'Kennlinie 72\u00a0% → Raum am Ziel (innerhalb ±0,3\u00a0K): ±0 → gerundet auf 5-%-Schritte: 70\u00a0%',
+            aufgerundet: 'Vortag 48\u00a0% + 10 → Raum 1,0\u00a0K zu warm: −7 → aufgerundet auf 5-%-Schritte: 55\u00a0%',
+            unten: 'Kennlinie 42\u00a0% → Raum 0,9\u00a0K zu warm: −6 → 40\u00a0% (Untergrenze)',
+            oben: 'Kennlinie 100\u00a0% → Raum 1,0\u00a0K zu kalt: +7 → 95\u00a0% (Obergrenze)',
+            voll: 'Kennlinie 52\u00a0% → Raum 2,3\u00a0K zu kalt: volle Leistung (ab 2\u00a0K) → 100\u00a0%',
+            ueber: 'Kennlinie 52\u00a0% → Raum 1,6\u00a0K zu warm: Überheizschutz (ab 1,5\u00a0K) → 30\u00a0%',
+            deckel: 'Kennlinie 86\u00a0% → Raum 1,7\u00a0K zu kalt: +14 → 100\u00a0% → Stufe „Tag“ höchstens 90\u00a0%',
+            vortag: 'Vortag 48\u00a0% + 10 → Raum 1,0\u00a0K zu warm: −7 → 55\u00a0%',
+            kuehlenWarm: 'Kennlinie 65\u00a0% → Raum 1,0\u00a0K zu warm: +7 → 70\u00a0%',
             andereRichtung: 'Die Anlage heizt gerade nicht – diese Kennlinie ist nicht im Einsatz.',
-            probelauf: 'Kennlinie 52 % → Raum 1,0 K zu warm: −7 → 45 % (Probelauf – es wird nichts gesendet)',
-            aus: 'Bedarfsregelung ist aus – sie würde so rechnen: Kennlinie 52 % → Raum 1,0 K zu warm: −7 → 45 %',
-            rueckfall: 'Kein Außenwert – zur Sicherheit volle Leistung: 100 %',
-            rueckfallVortag: 'Keine Daten von gestern – zur Sicherheit volle Leistung: 100 %',
-            abtauen: 'Abtauen – der Wert bleibt bei 75 %',
-            stufeOhne: 'Stufe „Tag“ läuft ohne Leistungsregelung: 100 %',
+            probelauf: 'Kennlinie 52\u00a0% → Raum 1,0\u00a0K zu warm: −7 → 45\u00a0% (Probelauf – es wird nichts gesendet)',
+            aus: 'Bedarfsregelung ist aus – sie würde so rechnen: Kennlinie 52\u00a0% → Raum 1,0\u00a0K zu warm: −7 → 45\u00a0%',
+            rueckfall: 'Kein Außenwert – zur Sicherheit volle Leistung: 100\u00a0%',
+            rueckfallVortag: 'Keine Daten von gestern – zur Sicherheit volle Leistung: 100\u00a0%',
+            abtauen: 'Abtauen – der Wert bleibt bei 75\u00a0%',
+            stufeOhne: 'Stufe „Tag“ läuft ohne Leistungsregelung: 100\u00a0%',
             ruhtAuto: 'Das Faikout-Modul regelt selbst – der Adapter setzt keine Leistungsgrenze.',
             nichtFaehig: 'Diese Anlage übernimmt keine Leistungsgrenze – der Adapter setzt keine.',
             neutral: 'Die Anlage heizt oder kühlt gerade nicht – kein Wert.',
@@ -215,27 +238,27 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.strictEqual(Object.keys(html).filter(k => k.startsWith('weg_')).length, Object.keys(WEG).length, 'jeder Fall geprueft');
         assert.ok(/data-art="normal"/.test(html.wegZeile) && /data-art=""/.test(html.wegZeileLeer), 'Art der Zeile am Element');
         // Satz bei der Strategie: Zahlen aus den Einstellungen
-        assert.strictEqual(html.satz, 'Die Raumtemperatur korrigiert den Wert: ±10 % je Kelvin Abweichung vom Ziel (ab 0,3 K).');
-        assert.strictEqual(html.satzEigen, 'Die Raumtemperatur korrigiert den Wert: ±15 % je Kelvin Abweichung vom Ziel (ab 0,5 K).');
-        assert.strictEqual(html.satzEn, 'The room temperature corrects the value: ±10 % per kelvin of deviation from the target (from 0.3 K).');
+        assert.strictEqual(html.satz, 'Die Raumtemperatur korrigiert den Wert: ±10\u00a0% je Kelvin Abweichung vom Ziel (ab 0,3\u00a0K).');
+        assert.strictEqual(html.satzEigen, 'Die Raumtemperatur korrigiert den Wert: ±15\u00a0% je Kelvin Abweichung vom Ziel (ab 0,5\u00a0K).');
+        assert.strictEqual(html.satzEn, 'The room temperature corrects the value: ±10\u00a0% per kelvin of deviation from the target (from 0.3\u00a0K).');
         assert.strictEqual(html.satzNull, 'Die Raumtemperatur korrigiert den Wert nicht (Korrekturstärke 0).');
         // Raumkorrektur zum Ziehen: zwei Griffe, Zahlen an der Linie, kein Eingabefeld, solange nichts geoeffnet ist
         assert.strictEqual(griffe(html.raumkorrektur), 2, 'Staerke und Totband ziehbar');
-        assert.ok(/Stärke 10 % je K/.test(html.raumkorrektur) && /Totband ±0,3 K/.test(html.raumkorrektur) && !/<input/.test(html.raumkorrektur), 'Werte als Schrift, Eingabe erst auf Doppelklick');
-        assert.ok(/Beispiel: Raum 1 K zu kalt → \+7 Punkte, 1 K zu warm → −7 Punkte\./.test(html.raumkorrektur), 'Beispiel mit den Zahlen');
+        assert.ok(/Stärke 10\u00a0% je K/.test(html.raumkorrektur) && /Totband ±0,3\u00a0K/.test(html.raumkorrektur) && !/<input/.test(html.raumkorrektur), 'Werte als Schrift, Eingabe erst auf Doppelklick');
+        assert.ok(/Beispiel: Raum 1\u00a0K zu kalt → \+7 Punkte, 1\u00a0K zu warm → −7 Punkte\./.test(html.raumkorrektur), 'Beispiel mit den Zahlen');
         assert.ok(/<button[^>]*fk-rk-werk[^>]*disabled/.test(html.raumkorrektur) && !/<button[^>]*fk-rk-werk[^>]*disabled/.test(html.raumkorrekturEigen), 'Werksvorgabe nur, wenn etwas abweicht');
-        assert.ok(/Stärke 25 % je K/.test(html.raumkorrekturEigen) && /Totband ±0,5 K/.test(html.raumkorrekturEigen) && /→ \+13 Punkte/.test(html.raumkorrekturEigen), 'eigene Werte');
+        assert.ok(/Stärke 25\u00a0% je K/.test(html.raumkorrekturEigen) && /Totband ±0,5\u00a0K/.test(html.raumkorrekturEigen) && /→ \+13 Punkte/.test(html.raumkorrekturEigen), 'eigene Werte');
         ok('Rendern Rechenweg (alle Faelle), Satz zur Raumkorrektur und ziehbare Raumkorrektur');
         // Feuchte, Erklaerung, Zeitplaene
         assert.strictEqual(griffe(html.feuchte), 4, 'vier ziehbare Feuchte-Grenzen');
-        assert.ok(/Wohnzimmer/.test(html.feuchte) && /Abstand 9,4 K/.test(html.feuchte), 'Live-Werte');
+        assert.ok(/Wohnzimmer/.test(html.feuchte) && /Abstand 9,4\u00a0K/.test(html.feuchte), 'Live-Werte');
         // je Betriebsart steht da, was geschieht - abhaengig von der gewaehlten Massnahme (wie lib/regel/feuchte.js)
         const art = (h, name) => (h.match(new RegExp(`data-art="${name}"[^>]*>.*?</li>`)) || [''])[0].replace(/<[^>]+>/g, '');
         assert.ok(/Heizen: bewusst kein Eingriff, nur eine Meldung/.test(art(html.feuchte, 'heizen')), 'Heizen: bewusst nichts');
         assert.ok(/Kühlen: schaltet auf Entfeuchten und danach wieder zurück/.test(art(html.feuchte, 'kuehlen')), 'Kuehlen: Entfeuchten');
         assert.ok(/Entfeuchten: läuft schon/.test(art(html.feuchte, 'entfeuchten')), 'Entfeuchten laeuft schon');
         assert.ok(/Anlage aus: nur eine Meldung – der Adapter schaltet die Anlage dafür nicht ein/.test(art(html.feuchte, 'aus')), 'Anlage aus');
-        assert.ok(/Kühlen: senkt die Zieltemperatur um 1 K und stellt sie danach wieder zurück/.test(art(html.feuchteZiel, 'kuehlen')), 'Ziel senken');
+        assert.ok(/Kühlen: senkt die Zieltemperatur um 1\u00a0K und stellt sie danach wieder zurück/.test(art(html.feuchteZiel, 'kuehlen')), 'Ziel senken');
         assert.ok(/Entfeuchten: kein Eingriff/.test(art(html.feuchteZiel, 'entfeuchten')) && /bewusst kein Eingriff/.test(art(html.feuchteZiel, 'heizen')), 'Ziel senken wirkt nur beim Kuehlen');
         for (const name of ['heizen', 'kuehlen', 'entfeuchten']) {
             assert.ok(/nur eine Meldung, kein Eingriff/.test(art(html.feuchteMelden, name)), `nur melden: ${name}`);

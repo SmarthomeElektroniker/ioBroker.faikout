@@ -224,6 +224,33 @@ describe('Regelung: Strategie Vortag + Zuschlag', () => {
         expect(bedarf.berechnen(eingang({ vortag: gross }), k, null, T0).ergebnis.sollwert).to.equal(95);
     });
 
+    it('Rechenweg: die Stufung ist ein eigener Schritt - nur wenn sie den Wert aendert, Schrittweite aus der Konfiguration', () => {
+        const mit = (raum, mehr = {}, k = K) => bedarf.berechnen(eingang({ raum: { wert: raum, zeit: T0 }, ...mehr }), k, null, T0).ergebnis;
+        // 75 % + 0: nichts zu runden - kein Schritt, weder in den Daten noch im Text
+        expect(mit(20.8).weg.rundung).to.equal(null);
+        expect(mit(20.8).grund).not.to.match(/gerundet/);
+        // 75 % + 7 = 82 -> 80: der Schritt steht da, mit der Schrittweite aus VORGABEN.stufe
+        const r = mit(20);
+        expect(r.weg).to.include({ basis: 75, korrektur: 7, sollwert: 80 });
+        expect(r.weg.rundung).to.eql({ stufe: bedarf.VORGABEN.stufe, auf: false });
+        expect(r.grund).to.match(/; gerundet auf 5-%-Schritte: 80 %$/);
+        // andere Schrittweite: Text und Daten folgen der Konfiguration, nichts steht fest im Text
+        const zehn = mit(20, {}, { ...K, stufe: 10 });
+        expect(zehn.weg.rundung).to.eql({ stufe: 10, auf: false });
+        expect(zehn.grund).to.match(/; gerundet auf 10-%-Schritte: 80 %$/);
+        // greift eine Grenze, erklaert sie den Wert: kein Rundungsschritt daneben
+        const unten = mit(21.9, { aussen: { wert: 15, zeit: T0 } });
+        expect(unten.weg).to.include({ grenze: 'unter', rundung: null });
+        expect(unten.grund).not.to.match(/gerundet/);
+        // volle Leistung / Ueberheizschutz: kein Rundungsschritt
+        expect(mit(19).weg.rundung).to.equal(null);
+        // Strategie Auto (Vortag) rundet auf: 48 % + 10 - 7 = 51 -> 55
+        const vt = bedarf.konfigPruefen({ strategie: 'vortag', vortag: { referenzW: 1000, zuschlag: 10 } }).konfig;
+        const auf = mit(22, { vortag: { spitzeW: 480, mittelW: 300, stunden: 5 } }, vt);
+        expect(auf.weg.rundung).to.eql({ stufe: 5, auf: true });
+        expect(auf.grund).to.match(/; aufgerundet auf 5-%-Schritte: 55 %$/);
+    });
+
     it('Rechenweg Vortag: Prozent des Vortags + Zuschlag, dann die Raumkorrektur', () => {
         const k = bedarf.konfigPruefen({ strategie: 'vortag', vortag: { referenzW: 1000, zuschlag: 10 } }).konfig;
         const v = { spitzeW: 480, mittelW: 300, stunden: 5 };

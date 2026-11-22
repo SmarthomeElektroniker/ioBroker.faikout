@@ -3,6 +3,7 @@
  * Strategie und zur ziehbaren Raumkorrektur unter "Fuer Fortgeschrittene" - in allen 11 Sprachen. Platzhalter %s.
  */
 import { spracheVon, type Sprache } from './Stufen.texte';
+import { fest } from './einheit';
 
 type Eintrag = Record<Sprache, string>;
 
@@ -97,6 +98,32 @@ export const TEXTE = {
         pl: 'brak wartości z pomieszczenia: bez korekty',
         uk: 'немає значення кімнати: без корекції',
         'zh-cn': '没有室内数值：不修正',
+    },
+    gerundet: {
+        en: 'rounded to %s % steps: %s %',
+        de: 'gerundet auf %s-%-Schritte: %s %',
+        ru: 'округлено с шагом %s %: %s %',
+        pt: 'arredondado a passos de %s %: %s %',
+        nl: 'afgerond op stappen van %s %: %s %',
+        fr: 'arrondi par pas de %s % : %s %',
+        it: 'arrotondato a passi del %s %: %s %',
+        es: 'redondeado a pasos del %s %: %s %',
+        pl: 'zaokrąglono do kroków co %s %: %s %',
+        uk: 'округлено з кроком %s %: %s %',
+        'zh-cn': '按 %s % 步长取整：%s %',
+    },
+    aufgerundet: {
+        en: 'rounded up to %s % steps: %s %',
+        de: 'aufgerundet auf %s-%-Schritte: %s %',
+        ru: 'округлено вверх с шагом %s %: %s %',
+        pt: 'arredondado para cima a passos de %s %: %s %',
+        nl: 'naar boven afgerond op stappen van %s %: %s %',
+        fr: 'arrondi au pas supérieur de %s % : %s %',
+        it: 'arrotondato per eccesso a passi del %s %: %s %',
+        es: 'redondeado hacia arriba a pasos del %s %: %s %',
+        pl: 'zaokrąglono w górę do kroków co %s %: %s %',
+        uk: 'округлено вгору з кроком %s %: %s %',
+        'zh-cn': '按 %s % 步长向上取整：%s %',
     },
     grenzeUnter: {
         en: '%s % (lower limit)',
@@ -678,5 +705,5 @@ export type Schluessel = keyof typeof TEXTE;
 export function t(sprache: string, schluessel: Schluessel, ...werte: (string | number)[]): string {
     const eintrag: Eintrag = TEXTE[schluessel];
     let n = 0;
-    return (eintrag[spracheVon(sprache)] || eintrag.en).replace(/%s/g, () => String(werte[n++] ?? ''));
+    return fest((eintrag[spracheVon(sprache)] || eintrag.en).replace(/%s/g, () => String(werte[n++] ?? '')));
 }

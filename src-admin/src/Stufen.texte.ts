@@ -2,6 +2,8 @@
  * Texte der Komponente "Stufen" (Temperaturstufen) in allen 11 Sprachen. Platzhalter %s.
  * Zahlen kommen fertig formatiert herein (Komma bzw. Punkt je Sprache, siehe zahl() in Stufen.tsx).
  */
+import { fest } from './einheit';
+
 export type Sprache = 'en' | 'de' | 'ru' | 'pt' | 'nl' | 'fr' | 'it' | 'es' | 'pl' | 'uk' | 'zh-cn';
 export const SPRACHEN: Sprache[] = ['en', 'de', 'ru', 'pt', 'nl', 'fr', 'it', 'es', 'pl', 'uk', 'zh-cn'];
 type Eintrag = Record<Sprache, string>;
@@ -840,5 +842,5 @@ export function spracheVon(roh: unknown): Sprache {
 export function t(sprache: string, schluessel: Schluessel, ...werte: (string | number)[]): string {
     const eintrag: Eintrag = TEXTE[schluessel];
     let n = 0;
-    return (eintrag[spracheVon(sprache)] || eintrag.en).replace(/%s/g, () => String(werte[n++] ?? ''));
+    return fest((eintrag[spracheVon(sprache)] || eintrag.en).replace(/%s/g, () => String(werte[n++] ?? '')));
 }

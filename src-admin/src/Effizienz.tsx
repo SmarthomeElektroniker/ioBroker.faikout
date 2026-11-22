@@ -301,7 +301,7 @@ function ModellWahl(props: { eigene: Modell[]; gewaehlt: string | null; sprache:
                                 {[m.hersteller, m.eigen ? t(sprache, 'gEigen') : m.reihe].filter(Boolean).join(' · ')}
                                 <br />
                                 {t(sprache, 'luftstromH')}: {zahl(m.luftstromHeizen.H ?? m.luftstromKuehlen.H ?? null, 1, sprache)} {t(sprache, 'luftAchse')}
-                                {typeof m.nennHeizenKW === 'number' ? ` · ${zahl(m.nennHeizenKW, 1, sprache)} kW` : ''}
+                                {typeof m.nennHeizenKW === 'number' ? ` · ${zahl(m.nennHeizenKW, 1, sprache)}\u00a0kW` : ''}
                             </span>
                         </button>
                     ))}
@@ -423,7 +423,7 @@ function Karte(props: AnsichtProps & { g: GeraetStand; start: boolean }): React.
     } else if (g.wartet || !live) {
         kurz = t(sprache, 'wartet');
     } else if (laeuft) {
-        kurz = `${kuehlt ? 'EER' : 'COP'} ${zahl(live.cop, 1, sprache)} · ${zahl(live.leistungKW, 2, sprache)} kW · ${mitUnsicherheit()}`;
+        kurz = `${kuehlt ? 'EER' : 'COP'} ${zahl(live.cop, 1, sprache)} · ${zahl(live.leistungKW, 2, sprache)}\u00a0kW · ${mitUnsicherheit()}`;
     } else {
         const heute = g.mengen ? g.mengen.cop.today : null;
         // dieselben Woerter wie im Datenpunkt efficiency.state (lib/effizienz/texte.js)
@@ -517,7 +517,7 @@ function Karte(props: AnsichtProps & { g: GeraetStand; start: boolean }): React.
                             >
                                 <div className="fk-e-kachel">
                                     <span className="fk-e-blass">{t(sprache, kuehlt ? 'kaelteleistung' : 'waermeleistung')}</span>
-                                    <b>{laeuft && live ? `${zahl(live.leistungKW, 2, sprache)} kW` : '–'}</b>
+                                    <b>{laeuft && live ? `${zahl(live.leistungKW, 2, sprache)}\u00a0kW` : '–'}</b>
                                     <span className="fk-e-blass">{laeuft ? mitUnsicherheit() : ''}</span>
                                 </div>
                                 <div className="fk-e-kachel">
@@ -532,7 +532,7 @@ function Karte(props: AnsichtProps & { g: GeraetStand; start: boolean }): React.
                                 </div>
                                 <div className="fk-e-kachel">
                                     <span className="fk-e-blass">{t(sprache, kuehlt ? 'kaelteHeute' : 'waermeHeute')}</span>
-                                    <b>{g.mengen ? `${zahl(kuehlt ? g.mengen.cold.today : g.mengen.heat.today, 1, sprache)} kWh` : '–'}</b>
+                                    <b>{g.mengen ? `${zahl(kuehlt ? g.mengen.cold.today : g.mengen.heat.today, 1, sprache)}\u00a0kWh` : '–'}</b>
                                     <span className="fk-e-blass">
                                         {g.mengen && typeof g.mengen.heat.thisMonth === 'number' && !kuehlt
                                             ? t(sprache, 'monat', zahl(g.mengen.heat.thisMonth, 0, sprache), zahl(g.mengen.cop.thisMonth, 1, sprache))
