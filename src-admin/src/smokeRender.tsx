@@ -19,6 +19,8 @@ const WEGE: Record<string, [Weg | null | undefined, ('heizen' | 'kuehlen')?]> = 
     kalt: [{ ...basis, abweichung: 1.7, korrektur: 14, sollwert: 65 }],
     imZiel: [{ ...basis, abweichung: 0.2, korrektur: 0, sollwert: 50 }],
     ohneRaum: [{ ...basis, abweichung: null, korrektur: 0, sollwert: 50 }],
+    gerundet: [{ ...basis, basis: 72, abweichung: 0.1, korrektur: 0, sollwert: 70, rundung: { stufe: 5 } }],
+    aufgerundet: [{ ...basis, strategie: 'vortag', basis: 58, vortag: { prozent: 48, zuschlag: 10 }, abweichung: -1, korrektur: -7, sollwert: 55, rundung: { stufe: 5, auf: true } }],
     unten: [{ ...basis, basis: 42, abweichung: -0.9, korrektur: -6, grenze: 'unter', sollwert: 40 }],
     oben: [{ ...basis, basis: 100, abweichung: 1, korrektur: 7, grenze: 'ober', sollwert: 95 }],
     voll: [{ ...basis, art: 'voll', abweichung: 2.3, korrektur: 20, schwelle: 2, sollwert: 100 }],

@@ -190,6 +190,8 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
             kalt: 'Kennlinie 52 % → Raum 1,7 K zu kalt: +14 → 65 %',
             imZiel: 'Kennlinie 52 % → Raum am Ziel (innerhalb ±0,3 K): ±0 → 50 %',
             ohneRaum: 'Kennlinie 52 % → kein Raumwert: keine Korrektur → 50 %',
+            gerundet: 'Kennlinie 72 % → Raum am Ziel (innerhalb ±0,3 K): ±0 → gerundet auf 5-%-Schritte: 70 %',
+            aufgerundet: 'Vortag 48 % + 10 → Raum 1,0 K zu warm: −7 → aufgerundet auf 5-%-Schritte: 55 %',
             unten: 'Kennlinie 42 % → Raum 0,9 K zu warm: −6 → 40 % (Untergrenze)',
             oben: 'Kennlinie 100 % → Raum 1,0 K zu kalt: +7 → 95 % (Obergrenze)',
             voll: 'Kennlinie 52 % → Raum 2,3 K zu kalt: volle Leistung (ab 2 K) → 100 %',

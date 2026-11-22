@@ -46,6 +46,8 @@ export interface Weg {
     grenze?: 'unter' | 'ober' | null;
     /** die greifende Grenze stammt aus der Strategie "Auto" (Vortag), nicht von der Anlage */
     grenzeVortag?: boolean;
+    /** die Stufung hat den Wert geaendert: Schrittweite in % (aus lib/regel/bedarf.js), auf = aufgerundet */
+    rundung?: { stufe: number; auf?: boolean } | null;
     /** Schwelle in K, ab der "volle Leistung" bzw. der Ueberheizschutz greift */
     schwelle?: number | null;
     sollwert?: number | null;
@@ -131,7 +133,9 @@ export function wegText(weg: Weg | null | undefined, sprache: string, richtung?:
             ? t(vt ? 'grenzeVortagUnter' : 'grenzeUnter', zahl(weg.sollwert))
             : weg.grenze === 'ober'
               ? t(vt ? 'grenzeVortagOber' : 'grenzeOber', zahl(weg.sollwert))
-              : prozent(weg.sollwert),
+              : weg.rundung && Number.isFinite(Number(weg.rundung.stufe))
+                ? t(weg.rundung.auf ? 'aufgerundet' : 'gerundet', zahl(weg.rundung.stufe), zahl(weg.sollwert))
+                : prozent(weg.sollwert),
     );
     if (weg.deckel && Number.isFinite(Number(weg.deckel.wert))) {
         teile.push(t('deckel', String(weg.deckel.stufe ?? ''), zahl(weg.deckel.wert)));
