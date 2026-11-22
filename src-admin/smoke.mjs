@@ -127,7 +127,10 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         // Kennlinie: vier Stuetzpunkte und die beiden Grenzlinien sind ziehbar
         assert.strictEqual(griffe(html.eigene), 6, 'vier ziehbare Punkte und zwei Grenzlinien');
         assert.ok(/Jetzt: außen −4,9\u00a0°C → 95\u00a0%/.test(html.eigene), 'Jetzt-Marker beschriftet');
-        assert.ok(/Obergrenze 95\u00a0% –/.test(html.eigene) && /Untergrenze 40\u00a0% –/.test(html.eigene), 'Grenzen beschriftet');
+        // die Jetzt-Linie (−4,9 °C) liefe durch beide langen Schriften: die der Untergrenze rueckt rechts neben die Linie,
+        // fuer die der Obergrenze ist links kein Platz - dort steht die kurze Fassung (ohne Jetzt-Linie: beide lang)
+        assert.ok(/data-ausgewichen="1"[^>]*>Untergrenze 40\u00a0% –/.test(html.eigene) && />Obergrenze 95\u00a0%</.test(html.eigene), 'Grenzen beschriftet, der Jetzt-Linie ausgewichen');
+        assert.ok(/>Obergrenze 95\u00a0% –/.test(html.grenzeEigen) && !/data-ausgewichen/.test(html.grenzeEigen), 'Grenzen beschriftet (ohne Jetzt-Linie: lange Fassung am Griff)');
         assert.ok(/Werte als Tabelle/.test(html.eigene), 'Tabelle nur eingeklappt');
         // die Grenzen haben keine Eingabefelder mehr: Schrift an der Linie, Zahleneingabe erst auf Doppelklick/Enter
         for (const [name, h] of Object.entries({ eigene: html.eigene, leer: html.leer })) {
@@ -159,7 +162,25 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.ok(/Es gilt die Werksvorgabe/.test(html.werk) && /Eigene Kennlinie anlegen/.test(html.werk) && !/\(globale Kennlinie\)/.test(html.werk), 'Vorlage leer: Werksvorgabe + Knopf, keine Klammer');
         assert.strictEqual(griffe(html.eingeklappt), 0, 'eingeklappt: nur die Titelzeile');
         assert.ok(/Die Heizkennlinie muss fallen/.test(html.falsch), 'Fehler im Klartext');
-        ok('Rendern Kennlinie: eigene Punkte, leere Liste (Vorlage), eingeklappt und ungueltig');
+        // Jetzt-Linie: an keiner Stelle der Achse laeuft sie durch die Schrift einer Grenzlinie - die Schrift weicht aus
+        // (Breite wie im Code geschaetzt: 6,1 px je Zeichen; echte Masse prueft der Pruefstand harnessK/jetzt.mjs)
+        const jetztFaelle = Object.keys(html).filter(k => k.startsWith('jetzt_'));
+        assert.strictEqual(jetztFaelle.length, 72, 'Jetzt-Linie: 36 Stellen je Richtung');
+        let ausgewichen = 0;
+        for (const fall of jetztFaelle) {
+            const gruppe = (html[fall].match(/<g class="fk-jetzt"[\s\S]*?<\/g>/) || [''])[0];
+            const linien = [...gruppe.matchAll(/<line[^>]*x1="([\d.]+)"/g)].map(m => Number(m[1]));
+            assert.ok(linien.length >= 1, `${fall}: Jetzt-Linie gezeichnet`);
+            for (const m of html[fall].matchAll(/<text class="fk-grenztext"([^>]*)>([^<]*)<\/text>/g)) {
+                const x = Number(/ x="([\d.]+)"/.exec(m[1])[1]);
+                const breite = [...m[2]].length * 6.1;
+                const [von, bis] = /text-anchor="end"/.test(m[1]) ? [x - breite, x] : [x, x + breite];
+                ausgewichen += /data-ausgewichen="1"/.test(m[1]) ? 1 : 0;
+                assert.ok(linien.length > 1 || linien[0] <= von - 2 || linien[0] >= bis + 2, `${fall}: Jetzt-Linie ${linien[0]} laeuft durch „${m[2]}“ (${von.toFixed(0)}..${bis.toFixed(0)})`);
+            }
+        }
+        assert.ok(ausgewichen >= 8, `Jetzt-Linie: die Schrift weicht aus (${ausgewichen} Faelle)`);
+        ok('Rendern Kennlinie: eigene Punkte, leere Liste (Vorlage), eingeklappt und ungueltig; Jetzt-Linie laeuft durch keine Grenzbeschriftung');
         // Temperaturstufen
         assert.strictEqual(griffe(html.stufenEigen), 2, 'eine eingeschaltete Stufe: Ziel und Hoechstleistung ziehbar');
         assert.ok(/Werksvorgabe/.test(html.stufenEigen) && /Temperaturstufe hinzufügen/.test(html.stufenEigen), 'Stufen der Vorlage');
