@@ -126,6 +126,36 @@ The power limit (`demand`) only has an effect on a Daikin unit if
 value rejected while the unit is switched off says nothing – the adapter keeps showing "not tested
 yet".
 
+#### Multi split: one power limit per outdoor unit
+
+If several indoor units share one outdoor unit and are assigned in the tab **Multi split** (confirmed
+assignments only, never suggestions), the adapter controls the power limit **per outdoor unit**:
+
+- Every running indoor unit calculates its request as before (curve or previous day, room correction,
+  humidity, frost protection, temperature level, also after a manual change).
+- **All** indoor units of the group – including those switched off – get **the same value: the
+  maximum** of these requests. If one room asks for full power, 100 % applies to all. Whether Daikin
+  takes the highest, the lowest or "the highest below 100" is not proven – with equal values it does
+  not matter, and no room is undersupplied.
+- When no indoor unit is running any more, 100 % is sent to all once, then the limit rests.
+- Hold times and rate (lower after 10 min, raise after 1 min, at least 3 min apart, at most 12
+  commands per hour) apply per outdoor unit; one command goes to all indoor units together.
+- The group only regulates when demand control is switched on at **all** its indoor units and none
+  rejects the value in principle. A dry run at one indoor unit applies to the whole group. A value
+  rejected by a switched-off indoor unit (failed-set) does not mean "not capable"; it is not written
+  again and again and gets the value as soon as it runs.
+- Strategy "Auto" (previous day): based on the meter of the outdoor unit. The reference power is the
+  sum of the reference powers of the indoor units (default 1000 W per unit, units without a module
+  with the instance default); an own value goes into `aussengeraete[].vortagReferenzW`.
+- **Indoor units without a Faikout module** ("further indoor units"): the adapter cannot set anything
+  there, and their value in the Daikin app takes part. **Switch off demand control at these units in
+  the Daikin app.**
+
+Display: `<unit>.regulation.demand.reason` starts with the group, e.g. 'Group "Garden": 65 % = maximum
+of Living room 65, Office 45; Guest room off - follows the group | own request 45 % …'. Below the
+outdoor unit there are `outdoorUnits.<id>.demand`, `.demandReason` and `.leader` (the indoor unit that
+currently determines the value).
+
 ### Demand control (power limit)
 
 Demand control limits the power of the unit in 5 % steps so that it runs evenly instead of

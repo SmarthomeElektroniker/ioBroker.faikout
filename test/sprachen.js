@@ -130,8 +130,8 @@ function alleTexte() {
 describe('Sprachen: Komponententexte src-admin/src/*.texte.ts', () => {
     const dateien = fs.readdirSync(path.join(WURZEL, 'src-admin', 'src')).filter(d => d.endsWith('.texte.ts'));
 
-    it('alle zehn Texttabellen der Komponenten werden gefunden', () => {
-        expect(dateien.sort()).to.eql(['Abschnitt.texte.ts', 'Effizienz.texte.ts', 'Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Geraete.texte.ts', 'Kennlinie.texte.ts', 'Rechenweg.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
+    it('alle elf Texttabellen der Komponenten werden gefunden', () => {
+        expect(dateien.sort()).to.eql(['Abschnitt.texte.ts', 'Aussengeraete.texte.ts', 'Effizienz.texte.ts', 'Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Geraete.texte.ts', 'Kennlinie.texte.ts', 'Rechenweg.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
     });
 
     // Woerter, die in einer Sprache wirklich wie im Englischen heissen ("Datei:schluessel:sprache")
@@ -432,7 +432,7 @@ describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englisch
 
     it('keine fremde Sprache enthaelt den deutschen oder englischen Text unveraendert (gepflegte Ausnahmen)', () => {
         // Maschinenwerte und Eigennamen bleiben in jeder Sprache gleich
-        const TECHNIK = /^((ha|no)\.\w+|livestatus|reporting|Faikout|Firmware \/ hardware|IP|max\.|h|\d+|%s: %s|⌀ 30 min|%s ±%s %|m³\/min|COP|EER|COP\/EER|ok)$/;
+        const TECHNIK = /^((ha|no)\.\w+|livestatus|reporting|Faikout|Firmware \/ hardware|IP|max\.|h|\d+|%s: %s|⌀ 30 min|%s ±%s %|m³\/min|COP|EER|COP\/EER|ok|Multisplit)$/;
         // Woerter, die in der Sprache wirklich so heissen ("sprache:Text")
         const GLEICH = new Set([
             ...['Auto', 'Total', 'Turbo', 'No', 'Error: %s'].map(w => `es:${w}`),

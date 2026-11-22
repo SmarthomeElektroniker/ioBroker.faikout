@@ -92,8 +92,8 @@ walk(jsonConfig);
 const zahl = name => used.filter(u => u.name.endsWith(`/${name}`)).length;
 assert.deepStrictEqual(
     Object.fromEntries(names.map(n => [n, zahl(n)])),
-    { KennlinieHeizen: 2, KennlinieKuehlen: 2, Stufen: 1, Feuchte: 1, Erklaerung: 1, Zeitplaene: 1, Geraete: 1, Abschnitt: 7, Rechenweg: 2, Raumkorrektur: 1, Effizienz: 1 },
-    'Kennlinien je Geraet und in der Vorlage, Temperaturstufen der Vorlage (die je Geraet zeichnet der Reiter Zeitplaene), Feuchte, Erklaerung, Zeitplaene, die Geraeteliste, die sieben aufklappbaren Abschnitte, Rechenweg (Satz bei der Strategie, Zeile bei Vortag), die ziehbare Raumkorrektur und der Reiter Effizienz',
+    { KennlinieHeizen: 2, KennlinieKuehlen: 2, Stufen: 1, Feuchte: 1, Erklaerung: 1, Zeitplaene: 1, Geraete: 1, Abschnitt: 7, Rechenweg: 2, Raumkorrektur: 1, Effizienz: 1, Aussengeraete: 1 },
+    'Kennlinien je Geraet und in der Vorlage, Temperaturstufen der Vorlage (die je Geraet zeichnet der Reiter Zeitplaene), Feuchte, Erklaerung, Zeitplaene, die Geraeteliste, die sieben aufklappbaren Abschnitte, Rechenweg (Satz bei der Strategie, Zeile bei Vortag), die ziehbare Raumkorrektur, der Reiter Effizienz und die Zuordnung der Aussengeraete (Multisplit)',
 );
 for (const u of used) {
     const [set, file, comp] = u.name.split('/');
@@ -233,6 +233,9 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
             neutralHeizen: 'Die Anlage heizt gerade nicht – diese Kennlinie ist nicht im Einsatz.',
             wartet: 'Noch kein Wert – die Regelung hat für diese Anlage noch nicht gerechnet.',
             nochNicht: 'Noch kein Wert – die Regelung hat für diese Anlage noch nicht gerechnet.',
+            gruppeLaeuft: 'Gruppe „Garten“: 65\u00a0% = Maximum aus Wohnzimmer 65, Büro 45; Gast aus – folgt der Gruppe · eigene Anforderung: Kennlinie 52\u00a0% → Raum 1,0\u00a0K zu warm: −7 → 45\u00a0%',
+            gruppeAus: 'Gruppe „Garten“: 65\u00a0% = Maximum aus Wohnzimmer 65, Büro 45; Gast aus – folgt der Gruppe (Probelauf – es wird nichts gesendet)',
+            gruppeNichtAktiv: 'Gruppe „Garten“: Bedarfsregelung an Gast aus – die Gruppe regelt erst, wenn sie an allen Innengeräten eingeschaltet ist',
         };
         assert.deepStrictEqual(Object.fromEntries(Object.keys(WEG).map(k => [k, html[`weg_${k}`]])), WEG, 'Rechenweg als Satz');
         assert.strictEqual(Object.keys(html).filter(k => k.startsWith('weg_')).length, Object.keys(WEG).length, 'jeder Fall geprueft');

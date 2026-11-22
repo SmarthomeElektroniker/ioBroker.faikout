@@ -242,6 +242,13 @@ The power limit (`demand`) only has an effect on a Daikin unit if
 value rejected while the unit is switched off says nothing – the adapter keeps showing "not tested
 yet".
 
+### Multi split: one power limit per outdoor unit
+
+With indoor units assigned to a common outdoor unit (tab **Multi split**), all of them – including
+those switched off – get the same power limit: the maximum of the requests of the running units. When
+none runs, 100 % is sent once. **Indoor units without a Faikout module: switch off demand control
+there in the Daikin app**, otherwise their own value takes part. Details: [docs/en](docs/en/README.md).
+
 ### Changing settings in the module
 
 The tab **Module settings** reads a fixed list of settings from the module (HTTP GET only), shows

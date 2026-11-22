@@ -187,6 +187,8 @@
     "historyRegister": true,
     "historyInstance": "history.0",
     "moduleAddress": "",
+    "aussengeraete": [],
+    "aussengeraeteAbgelehnt": [],
     "effizienzGeraete": [],
     "effizienzModelle": [],
     "effizienzPreis": 0,

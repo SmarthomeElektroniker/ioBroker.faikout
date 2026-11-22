@@ -12,6 +12,7 @@ const felder = require('./lib/fields');
 const namen = require('./lib/namen');
 const verbrauch = require('./lib/verbrauch');
 const { Effizienz } = require('./lib/effizienz');
+const { Verbund } = require('./lib/verbundlauf');
 const { FaikoutDeviceManagement } = require('./lib/devicemanager');
 const discovery = require('./lib/discovery');
 const suche = require('./lib/suche');
@@ -211,6 +212,8 @@ class Faikout extends utils.Adapter {
         this.regelung = new Bedarfsregelung(this);
         // Waermeleistung, COP und Mengen je Geraet (lib/effizienz)
         this.effizienz = new Effizienz(this);
+        // Aussengeraete (Multisplit): Zuordnung aus der Konfiguration, Vorschlag aus den Daten (lib/verbund)
+        this.verbund = new Verbund(this);
         // Systemsprache im Betrieb umgestellt: Begruendungen und Szenennamen folgen ohne Neustart
         if (typeof this.subscribeForeignObjectsAsync === 'function') {
             await this.subscribeForeignObjectsAsync('system.config');
@@ -296,6 +299,9 @@ class Faikout extends utils.Adapter {
             }
             if (this.effizienz) {
                 this.effizienz.takt().catch(e => this.log.warn(`Efficiency: ${e.message}`));
+            }
+            if (this.verbund) {
+                this.verbund.takt().catch(e => this.log.warn(`Outdoor units: ${e.message}`));
             }
         }, 30000);
         this.stundenTaktStarten();
@@ -785,6 +791,9 @@ class Faikout extends utils.Adapter {
         }
 
         await this.zaehlerVerarbeiten(id, g, daten);
+        if (this.verbund) {
+            this.verbund.melden(id, daten);
+        }
         await this.wlanStufeAktualisieren(id, g, daten);
         if (this.effizienz) {
             try {
@@ -1177,6 +1186,9 @@ class Faikout extends utils.Adapter {
         if (this.effizienz) {
             this.effizienz.vergessen(id);
         }
+        if (this.verbund) {
+            this.verbund.vergessen(id);
+        }
         const praefix = `${id}.`;
         for (const speicher of [this.geschrieben, this.reihenStunde]) {
             for (const schluessel of [...speicher.keys()]) {
@@ -1211,6 +1223,9 @@ class Faikout extends utils.Adapter {
         }
         const id = volleId.slice(this.namespace.length + 1);
         const geraetId = id.split('.')[0];
+        if (geraetId === 'outdoorUnits' && this.verbund) {
+            this.verbund.angelegt.clear(); // geloeschte Datenpunkte eines Aussengeraets: beim naechsten Takt neu anlegen
+        }
         const g = this.geraete.get(geraetId);
         if (!g) {
             return;

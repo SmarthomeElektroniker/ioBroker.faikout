@@ -48,7 +48,10 @@ class Welt {
      * @param {string|object} [opt.szenario] Name oder Szenario-Objekt (Vorgabe heizenKalterTag)
      * @param {number} [opt.seed] Zufallsstartwert
      * @param {string} [opt.praefix] Vorsatz der Modulnamen (Vorgabe "sim-")
-     * @param {Array<object>} [opt.module] je Modul {typ, name?, id?, einstellungen?, anlage?, physik?, nimmtDemand?, abtauMeldung?, feuchteFuehler?, austrittSensor?}
+     * @param {Array<object>} [opt.module] je Modul {typ, name?, id?, einstellungen?, anlage?, physik?, nimmtDemand?, abtauMeldung?, feuchteFuehler?, austrittSensor?,
+     *   aussengeraet?, zaehler?} - `aussengeraet`: Name eines gemeinsamen Aussengeraets (Multisplit, siehe verbundAnlegen);
+     *   `zaehler`: Startwerte der Lebensdauer-Zaehler in Wh {heizen, kuehlen, aussen} (aussen: Stand des Aussengeraets,
+     *   bei Multisplit zaehlt der groesste Wert der Gruppe)
      * @param {number} [opt.zeitfaktor] simulierte Sekunden Physik je Modulsekunde
      * @param {(modul: string, topic: string, payload: string, o: {retain: boolean}) => void} opt.senden Ausgang
      * @param {() => number} [opt.uhr] Wanduhr der Module; ohne Angabe Startzeit des Szenarios + Modulzeit
@@ -84,8 +87,63 @@ class Welt {
                 anlage: { ...this.szenario.anlage, ...(m.anlage || {}) },
             });
             modul.physikOpt = m.physik;
+            modul.aussengeraet = typeof m.aussengeraet === 'string' && m.aussengeraet ? m.aussengeraet : null;
+            modul.zaehlerStart = m.zaehler || null;
             this.module.push(modul);
         });
+        this.module.forEach(m => this.verbundAnlegen(m));
+    }
+
+    /**
+     * Zaehlerstaende und Multisplit an der Physik eines Moduls einrichten (nach jedem Neubau der Physik).
+     *
+     * MULTISPLIT: Module mit demselben `aussengeraet` haengen an EINEM Aussengeraet. Jedes Innengeraet hat
+     * weiter seinen eigenen Raum und seine eigenen Zaehler `energyheat`/`energycool` (S21 "U"). Was das
+     * Aussengeraet betrifft, melden alle Module der Gruppe gleich - wie an der echten Anlage (Issue #8):
+     *   energy       EIN gemeinsamer Zaehler: Startwert + Summe des Verbrauchs aller Innengeraete (100-Wh-Schritte)
+     *   consumption  Leistung des Aussengeraets = Summe der Gruppe (10-W-Schritte)
+     *   comp         der eine gemeinsame Verdichter: der groesste Bedarf plus 60 % der uebrigen
+     *   outside      der eine Aussenfuehler (der des ersten Moduls der Gruppe)
+     *
+     * @param {Modul} m Modul
+     */
+    verbundAnlegen(m) {
+        const p = m.physik;
+        const start = m.zaehlerStart || {};
+        const zahl = x => (typeof x === 'number' && Number.isFinite(x) && x > 0 ? x : 0);
+        p.whHeizen += zahl(start.heizen);
+        p.whKuehlen += zahl(start.kuehlen);
+        const gruppe = () => (m.aussengeraet ? this.module.filter(x => x.aussengeraet === m.aussengeraet) : [m]);
+        // Stand des Aussengeraets beim Start: mindestens die Summe der Innengeraete-Zaehler
+        const sockel = () => {
+            const g = gruppe();
+            const innen = g.reduce(
+                (s, x) => s + zahl((x.zaehlerStart || {}).heizen) + zahl((x.zaehlerStart || {}).kuehlen),
+                0,
+            );
+            return Math.max(innen, ...g.map(x => zahl((x.zaehlerStart || {}).aussen)));
+        };
+        if (!m.aussengeraet && !m.zaehlerStart) {
+            return;
+        }
+        const eigen = p.messwerte.bind(p);
+        p.messwerte = () => {
+            const w = eigen();
+            const g = gruppe();
+            // physik.wh zaehlt seit dem Start alles (auch Bereitschaft) - das ist der Zuwachs am Aussengeraet
+            const wh = sockel() + g.reduce((s, x) => s + x.physik.wh, 0);
+            w.Whoutside = Math.floor(wh / 100) * 100;
+            if (g.length > 1) {
+                const comps = g.map(x => x.physik.comp).sort((a, b) => b - a);
+                const gemeinsam = comps[0] + 0.6 * comps.slice(1).reduce((s, c) => s + c, 0);
+                w.comp = Math.round(Math.min(120, gemeinsam));
+                w.consumption = Math.round(g.reduce((s, x) => s + x.physik.watt, 0) / 10) * 10;
+                if (g[0] !== m) {
+                    w.outside = g[0].physik.messwerte().outside;
+                }
+            }
+            return w;
+        };
     }
 
     /** @returns {number} Wanduhr der Module (ms) */
@@ -151,6 +209,7 @@ class Welt {
         this.szenarioLaden(sz);
         this.module.forEach((m, i) => {
             m.physik = this.neuePhysik(i, m.physikOpt);
+            this.verbundAnlegen(m);
             m.unsinn = {};
             m.stumm = false;
             m.handeingriff({ ...this.szenario.anlage });

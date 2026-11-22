@@ -125,6 +125,37 @@ dürfen App und faikout schreiben, der letzte Wert gilt. „Auto“ heißt: die 
 Ablehnung bei ausgeschalteter Anlage sagt nichts aus – der Adapter zeigt dann weiter „noch nicht
 geprüft“.
 
+#### Multisplit: eine Leistungsgrenze je Außengerät
+
+Hängen mehrere Innengeräte an einem gemeinsamen Außengerät und sind sie im Reiter **Multisplit**
+zugeordnet (nur bestätigte Zuordnungen, nie Vorschläge), regelt der Adapter die Leistungsgrenze **je
+Außengerät**:
+
+- Jedes laufende Innengerät rechnet seine Anforderung wie bisher (Kennlinie bzw. Vortag,
+  Raumkorrektur, Feuchte, Frostschutz, Temperaturstufe, auch nach einem Handeingriff).
+- **Alle** Innengeräte der Gruppe – auch die ausgeschalteten – bekommen **denselben Wert: das
+  Maximum** dieser Anforderungen. Verlangt ein Raum volle Leistung, gilt 100 % für alle. Ob Daikin
+  den höchsten, den niedrigsten oder „den höchsten unter 100“ nimmt, ist nicht belegt – bei gleichen
+  Werten ist es egal, und kein Raum wird unterversorgt.
+- Läuft kein Innengerät mehr, geht einmal 100 % an alle, danach ruht die Vorgabe.
+- Haltezeiten und Takt (Senken nach 10 min, Erhöhen nach 1 min, mindestens 3 min Abstand, höchstens
+  12 Befehle je Stunde) gelten je Außengerät; ein Befehl geht an alle Innengeräte zusammen.
+- Die Gruppe regelt nur, wenn die Bedarfsregelung an **allen** ihren Innengeräten eingeschaltet ist
+  und keines den Wert grundsätzlich ablehnt. Ein Probelauf an einem Innengerät gilt für die ganze
+  Gruppe. Lehnt ein ausgeschaltetes Innengerät den Wert ab (failed-set), ist das kein „nicht fähig“;
+  es wird nicht immer wieder beschrieben und bekommt den Wert, sobald es läuft.
+- Strategie „Auto“ (Vortag): Grundlage ist der Zähler des Außengeräts. Bezugsleistung ist die Summe
+  der Bezugsleistungen der Innengeräte (Vorgabe je Gerät 1000 W, Geräte ohne Modul mit der Vorgabe
+  der Instanz); ein eigener Wert steht in `aussengeraete[].vortagReferenzW`.
+- **Innengeräte ohne Faikout-Modul** („weitere Innengeräte“): Dort kann der Adapter nichts setzen, ihr
+  Wert in der Daikin-App bestimmt mit. **Schalte an diesen Geräten die Bedarfssteuerung in der
+  Daikin-App ab.**
+
+Anzeige: `<Gerät>.regulation.demand.reason` beginnt mit dem Gruppenbezug, z. B. „Gruppe „Garten“:
+65 % = Maximum aus Wohnzimmer 65, Büro 45; Gästezimmer aus – folgt der Gruppe | eigene Anforderung
+45 % …“. Unter dem Außengerät stehen `outdoorUnits.<Kennung>.demand`, `.demandReason` und `.leader`
+(das Innengerät, das den Wert gerade bestimmt).
+
 ### Bedarfsregelung (Leistungsgrenze)
 
 Die Bedarfsregelung begrenzt die Leistung der Anlage in 5-%-Stufen, damit sie gleichmäßig

@@ -61,6 +61,52 @@ export interface Weg {
     probelauf?: boolean;
     /** der Wert ist noch nicht gesendet - fertiger Text des Adapters (Haltezeit bis ..., Mindestabstand bis ...) */
     wartet?: string;
+    /** Multisplit: das Geraet gehoert zu einer Gruppe (Aussengeraet) - es gilt der Wert der Gruppe */
+    gruppe?: WegGruppe;
+}
+
+/** Gruppe eines Multisplit-Geraets (lib/regel/index.js gruppenSchrittIntern) */
+export interface WegGruppe {
+    name: string;
+    /** 'max' | 'eins' | 'keinerLaeuft' | 'ruhe' | 'nichtAktiv' | 'nichtFaehig' */
+    art: string;
+    wert: number | null;
+    leader: string | null;
+    /** bei 'nichtAktiv' / 'nichtFaehig': die Innengeraete, an denen es haengt */
+    betroffen?: string[];
+    /** dieses Geraet laeuft und bringt eine eigene Anforderung ein */
+    laeuft: boolean;
+    eigen: number | null;
+    mitglieder: { name: string; laeuft: boolean; anforderung: number | null; voll?: boolean; online: boolean; ist: number | null }[];
+}
+
+/** Satz zur Gruppe: "Gruppe „Garten“: 65 % = Maximum aus Wohnzimmer 65, Büro 45; Gast aus – folgt der Gruppe" */
+function gruppenText(g: WegGruppe, sprache: string): string {
+    const t = (s: Schluessel, ...w: (string | number)[]): string => text(sprache, s, ...w);
+    const zahl = (n: unknown): string => zug.anzeige(Number(n), sprache);
+    const mitglieder = Array.isArray(g.mitglieder) ? g.mitglieder : [];
+    const laufend = mitglieder
+        .filter(m => m.laeuft && m.anforderung !== null && Number.isFinite(Number(m.anforderung)))
+        .sort((a, b) => Number(b.anforderung) - Number(a.anforderung));
+    const eintrag = (m: (typeof mitglieder)[number]): string => `${m.name} ${zahl(Math.round(Number(m.anforderung)))}${m.voll ? ` (${t('gVoll')})` : ''}`;
+    const namen = (l: typeof mitglieder): string => l.map(m => m.name).join(', ');
+    let satz: string;
+    if (g.art === 'max' && laufend.length) {
+        satz = t('gMax', g.name, zahl(g.wert), laufend.map(eintrag).join(', '));
+    } else if (g.art === 'eins' && laufend.length) {
+        satz = t('gEins', g.name, zahl(g.wert), eintrag(laufend[0]));
+    } else if (g.art === 'keinerLaeuft') {
+        satz = t('gKeiner', g.name);
+    } else if (g.art === 'nichtAktiv' || g.art === 'nichtFaehig') {
+        satz = t(g.art === 'nichtAktiv' ? 'gNichtAktiv' : 'gNichtFaehig', g.name, (Array.isArray(g.betroffen) ? g.betroffen : []).join(', ') || '…');
+    } else {
+        satz = t('gRuhe', g.name);
+    }
+    const aus = mitglieder.filter(m => m.online && !m.laeuft);
+    if ((g.art === 'max' || g.art === 'eins') && laufend.length && aus.length) {
+        satz += `; ${t('gAus', namen(aus))}`;
+    }
+    return satz;
 }
 
 /** Vorgaben der Raumkorrektur (lib/regel/bedarf.js VORGABEN) */
@@ -79,6 +125,16 @@ export function wegText(weg: Weg | null | undefined, sprache: string, richtung?:
     const prozent = (n: unknown): string => `${zahl(n)}\u00a0%`;
     if (!weg || typeof weg !== 'object' || !weg.art) {
         return t('wartet');
+    }
+    if (weg.gruppe && typeof weg.gruppe === 'object') {
+        // Multisplit: der Wert der Gruppe gilt; ein laufendes Geraet zeigt dahinter seine eigene Anforderung
+        const { gruppe, ...eigen } = weg;
+        const satz = gruppenText(gruppe, sprache);
+        if (gruppe.laeuft) {
+            return zug.einheitFest(`${satz} · ${t('gEigen')} ${wegText(eigen as Weg, sprache, richtung)}`);
+        }
+        const wartet = typeof weg.wartet === 'string' && weg.wartet && !weg.aus ? ` · ${weg.wartet}` : '';
+        return zug.einheitFest(`${satz}${weg.probelauf && !weg.aus ? ` ${t('probelauf')}` : ''}${wartet}`);
     }
     if (weg.art === 'ruhtAuto') {
         return t('ruhtAuto');

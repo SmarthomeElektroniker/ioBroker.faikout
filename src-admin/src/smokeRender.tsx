@@ -16,6 +16,19 @@ import de from './i18n/de.json';
 
 /** Rechenwege, wie sie der Adapter liefert (lib/regel/bedarf.js, koordinator.js) - [Weg, Richtung des Bildes] */
 const basis = { art: 'normal', strategie: 'kennlinie', richtung: 'heizen', basis: 52, totband: 0.3, grenze: null } as const;
+const GRUPPE = (laeuft: boolean): NonNullable<Weg['gruppe']> => ({
+    name: 'Garten',
+    art: 'max',
+    wert: 65,
+    leader: 'Wohnzimmer',
+    laeuft,
+    eigen: laeuft ? 45 : null,
+    mitglieder: [
+        { name: 'Wohnzimmer', laeuft: true, anforderung: 65, online: true, ist: 65 },
+        { name: 'Büro', laeuft: true, anforderung: 45, online: true, ist: 65 },
+        { name: 'Gast', laeuft: false, anforderung: null, online: true, ist: 65 },
+    ],
+});
 const WEGE: Record<string, [Weg | null | undefined, ('heizen' | 'kuehlen')?]> = {
     warm: [{ ...basis, abweichung: -1, korrektur: -7, sollwert: 45 }, 'heizen'],
     kalt: [{ ...basis, abweichung: 1.7, korrektur: 14, sollwert: 65 }],
@@ -43,6 +56,10 @@ const WEGE: Record<string, [Weg | null | undefined, ('heizen' | 'kuehlen')?]> = 
     neutralHeizen: [{ art: 'neutral' }, 'heizen'],
     wartet: [undefined],
     nochNicht: [null, 'kuehlen'],
+    // Multisplit: der Wert der Gruppe gilt, ein laufendes Geraet zeigt seine eigene Anforderung dahinter
+    gruppeLaeuft: [{ ...basis, abweichung: -1, korrektur: -7, sollwert: 45, gruppe: GRUPPE(true) }],
+    gruppeAus: [{ art: 'neutral', probelauf: true, gruppe: GRUPPE(false) }, 'heizen'],
+    gruppeNichtAktiv: [{ art: 'neutral', gruppe: { ...GRUPPE(false), art: 'nichtAktiv', wert: null, leader: null, betroffen: ['Gast'] } }],
 };
 
 /** Stand des Reiters Effizienz, wie ihn der Adapter liefert - aus der echten Laufzeit ueber einer Attrappe */
