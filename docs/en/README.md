@@ -38,7 +38,8 @@ add, with a confirmation; nothing is saved until you press "Save").
 | **Setup** | step list with ticks: broker, connect module, schedule, climate control |
 | **Schedules** | WHEN which temperature applies: temperature levels of the template (sliders to drag), weekly schedule of the template and per unit preview, switch and “Edit weekly schedule”. Collapsed: manual override and public holidays |
 | **Climate control** | HOW the unit is run: diagram of the control, the global template (strategy, heating and cooling curve with limits in the chart, humidity limits in the chart), below it the units as cards. Collapsed: dry run and fine tuning |
-| **Consumption** | chart and recording |
+| **Consumption** | chart and recording; can switch to heat and a COP line |
+| **Efficiency** | heat output, COP/EER and heat energy per unit: model choice, airflow per fan level, calibration with an outlet sensor or manual measurement |
 | **Find modules**, **MQTT broker (advanced)**, **Module settings (advanced)** | connecting and technical settings |
 
 Per unit the tab *Climate control* shows: who controls, the curves (heating/cooling), the sensors
@@ -406,7 +407,118 @@ legend – a click hides a unit. The tooltip lists the value per unit and the to
 between "All", "Heating only" and "Cooling only" and between chart and table. The data come from the
 adapter's own counters (48 hours, 62 days, 24 months); no history adapter is needed.
 
-## 10. Languages
+## 10. Efficiency: heat output and COP
+
+The tab “Efficiency” answers: **how much heat (or cooling) does the unit deliver for its electricity?**
+The adapter estimates it from values the unit reports anyway – without extra hardware:
+
+    heat = air density × c_p × airflow × (outlet temperature − intake temperature)
+    outlet temperature = intake + ε × (liquid − intake)
+    COP (cooling: EER) = heat ÷ electricity
+
+- **Intake air** is `status.achome`, **liquid** is the refrigerant sensor of the indoor unit (`status.liquid`),
+  **electricity** comes from `status.consumption` or the energy counter `status.energy`.
+- The **airflow** follows the fan level or the reported fan speed (`status.fanfreq`) via the curve of the
+  model (data sheet, heating and cooling separately). Once a fixed level has run for a few minutes the adapter
+  remembers its speed – from then on it also calculates on “auto” from the speed.
+- **ε** says how closely the air follows the heat exchanger. Without a measurement ε comes from the data sheet
+  (bypass factor of the capacity table; a generic value without a model). `liquid` sits on the liquid line, not
+  in the middle of the coil – ε is therefore an empirical factor and can exceed 1. It only becomes accurate
+  through **calibration**.
+
+**To be honest:** without calibration the output is an estimate of roughly ±25–35 %, calibrated roughly
+±10–20 %. The adapter states the uncertainty of every value (`efficiency.uncertainty`) and derives it from the
+actual contributions (ε, airflow, temperature difference, residual error of the calibration). At very small
+load, right after start-up and on “auto” without a learned speed a note is shown.
+
+What is **not** calculated:
+
+- **Defrosting** (heating, coil colder than the room): no heat, flag `efficiency.defrosting`. The electricity
+  of that time still counts towards the daily COP – just like on the bill.
+- **Compressor paused:** output 0.
+- **Cooling:** sensible cooling only. Dehumidification (latent) is added only if a sensor permanently
+  measures temperature and humidity at the outlet and the unit reports its room humidity; otherwise the
+  cooling output is underestimated and marked as such.
+- **Units without the required values** (e.g. IR bridges): “not available – this unit does not report …”.
+  Electricity consumption keeps working.
+
+### The tab
+
+At the top a diagram of the calculation, below one card per unit. The header shows the essentials
+(“COP 3.4 · 1.62 kW · estimated ±28 %”). Opened:
+
+1. **Live values:** heat output, COP now (smoothed), COP today, heat today, airflow and estimated outlet
+   temperature – each with its quality *estimated*, *calibrated* or *measured*.
+2. **Model:** “Choose model” opens the search (text, series, design, size). 96 Daikin indoor units are
+   included with airflow per level, rated output, SEER/SCOP and source. Every entry says how it was checked
+   and lists what the manufacturer table does not state – nothing is guessed or filled in. If your unit is
+   missing: **Create own model** (airflow from the data sheet, m³/min = m³/h ÷ 60). Without a model the adapter
+   uses generic values and a larger uncertainty.
+3. **Airflow per fan level:** bars to drag (also arrow keys or double-click on the number). Own values have
+   an outline; “Reset to the data sheet” takes them back. Intermediate levels without a data sheet value are
+   calculated and marked.
+4. **ε per level** with the uncertainty band and what is in use.
+5. **Calibrate** (see below).
+
+At the bottom: **electricity price per kWh** (optional) – the cards then show what one kWh of heat costs
+today (`efficiency.heatPrice`).
+
+Model, own airflow values and price apply after “Save”. Measurement and calibrations take effect immediately.
+
+### Calibrating with an outlet sensor
+
+Place a wireless temperature sensor about 10 cm in front of the air outlet and in the section “Calibrate”:
+
+1. **Choose sensor** – the data point of the sensor (optionally humidity), then “Start measurement”.
+2. **Measure** – the measurement runs inside the adapter for days and survives a restart. Every two minutes
+   a measuring point is added while the unit runs steadily; defrosting, start-up, pauses and very small load
+   are left out (the count is shown). Bars show the **coverage per fan level** (“Level Medium: 42 points,
+   ok”) and per outdoor temperature range; a hint names the level to run next for about 40 minutes. From
+   20 points a level counts as well covered.
+3. **Result** – ε per level, the residual error and the reasoning: if the measured levels differ by at most
+   5 %, **one value is used for all levels**; otherwise each level keeps its own. Levels without measurement
+   are interpolated between measured ones or carried over from the neighbour – and marked. **Adopt** makes the
+   result the calibration in use, **Discard** deletes the measurement.
+
+**Manual measurement instead of a sensor:** enter time and outlet temperature. The adapter looks up the
+other values (level, intake air, liquid) for that moment – from its own record of the last 24 hours, otherwise
+from the history adapter (if `status.*` is recorded there); if it finds nothing it asks for them. A
+measurement taken during defrosting is rejected with the reason.
+
+Each unit has a list of all calibrations (date, origin, points, uncertainty); one of them is in use. “Reset
+to the data sheet estimate” switches back without deleting anything. If the sensor stays at the outlet
+permanently, the adapter can **measure instead of estimating** (checkbox below the list).
+
+### Data points
+
+| Data point (`<unit>.efficiency.…`) | Content |
+|---|---|
+| `heatOutput`, `coolingOutput` | heat and cooling output in kW |
+| `cop` | COP or EER now, smoothed over about five minutes |
+| `airflow`, `outletTemperature` | airflow in m³/h, outlet temperature (estimated or measured) |
+| `state`, `defrosting` | what the unit is doing (heating, cooling, defrosting, idle, off, unavailable) |
+| `quality`, `uncertainty`, `missing` | quality (estimated, calibrated, measured, unavailable), uncertainty in %, missing values |
+| `heat.today/yesterday/thisMonth/lastMonth`, `cold.…` | heat and cooling energy in kWh |
+| `copToday/Yesterday/ThisMonth/LastMonth`, `eer…` | heat ÷ electricity over the same period |
+| `hoursJson`, `daysJson`, `monthsJson` | series `{hour/day/month, heat, cold, elHeat, elCool}` (48 hours, 62 days, 24 months) |
+| `heatPrice` | cost per kWh of heat today (only with an electricity price) |
+
+Numerator and denominator of the daily COP cover the same time spans: if the adapter or the module was gone
+for more than five minutes, that span counts on neither side. An energy counter that jumped back is not booked
+as consumption, as in the consumption part.
+
+In the tab **Consumption**, “Heat & COP” switches the chart: bars show the heat per unit, the line the COP
+(axis on the right). “Electricity” stays the default. The device card shows “COP today 3.8 (estimated)”.
+
+### Outlook
+
+- **Controlling for the best COP** (keeping the unit in the efficient part-load range, avoiding cycling) is
+  deliberately not built yet – the values should first prove themselves over a winter.
+- **Multi-split** (several indoor units on one outdoor unit) is not split up yet: the electricity of the
+  outdoor unit cannot simply be assigned to one indoor unit. Until then the COP is only right for single-split
+  systems.
+
+## 11. Languages
 
 The interface exists in eleven languages (en, de, ru, pt, nl, fr, it, es, pl, uk, zh-cn) and follows
 the system language of ioBroker; numbers use the decimal separator of the language. German and English

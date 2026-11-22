@@ -272,7 +272,7 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         // laufende Messung
         const mess = text(karte(eff.effizienzMessung, 'Truhe'));
         assert.ok(/Messung läuft: \d\d Punkte/.test(mess) && /Stufe Mittel-hoch: \d\d Messpunkte, ok/.test(mess) && /Stufe Hoch: 0 Messpunkte, zu wenig/.test(mess), `Abdeckung je Stufe (${mess.slice(mess.indexOf('Messpunkte je'), mess.indexOf('Messpunkte je') + 200)})`);
-        assert.ok(/Als Nächstes: Stufe „(Mittel|Hoch|Niedrig)“ etwa 40 Minuten laufen lassen/.test(mess) && /Messung beenden/.test(mess) && /Sensor: 35,2 °C/.test(mess), 'Empfehlung, Sensorwert, Beenden');
+        assert.ok(/Als Nächstes: Stufe „(Mittel|Hoch|Niedrig)“ etwa 40 Minuten laufen lassen/.test(mess) && /Messung beenden/.test(mess) && /Sensor meldet 35,2 °C/.test(mess), 'Empfehlung, Sensorwert, Beenden');
         assert.ok(/Heizen: ε je Stufe, Restfehler ±\d+ %/.test(mess), 'vorlaeufiges Ergebnis');
         assert.ok(/Werte werden geladen/.test(eff.effizienzLaedt) && /Der Adapter läuft nicht/.test(eff.effizienzAus), 'Laden und gestoppte Instanz');
         assert.ok(/Heat output/.test(eff.effizienzEn) && /estimated ±\d\d %/.test(text(eff.effizienzEn)) && !/Wärme/.test(text(eff.effizienzEn)), 'Englisch ohne deutsche Reste');

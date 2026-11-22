@@ -38,7 +38,8 @@ Die Geräteliste lässt sich unter den Karten als JSON-Datei **exportieren** und
 | **Einrichtung** | Schrittliste mit Haken: Broker, Modul verbinden, Zeitplan, Regelung |
 | **Zeitpläne** | WANN welche Temperatur gilt: Temperaturstufen der Vorlage (Regler zum Ziehen), Wochenplan der Vorlage und je Gerät Vorschau, Schalter und „Wochenplan bearbeiten“. Eingeklappt: Handeingriff und Feiertage |
 | **Regelung** | WIE die Anlage gefahren wird: Schaubild der Regelung, die globale Vorlage (Strategie, Heiz- und Kühlkennlinie mit Grenzen im Bild, Feuchte-Grenzen im Bild), darunter die Geräte als Karten. Eingeklappt: Probelauf und Feinabstimmung |
-| **Verbrauch** | Diagramm und Aufzeichnung |
+| **Verbrauch** | Diagramm und Aufzeichnung; umschaltbar auf Wärme und COP-Linie |
+| **Effizienz** | Wärmeleistung, COP/EER und Wärmemenge je Anlage: Modellwahl, Luftstrom je Lüfterstufe, Kalibrierung mit Austrittssensor oder Handmessung |
 | **Module suchen**, **MQTT-Broker (Technik)**, **Moduleinstellungen (Technik)** | Anbinden und Technik |
 
 Je Gerät steht im Reiter *Regelung*: wer regelt, die Kennlinien (Heizen/Kühlen), die Sensoren (mit
@@ -409,7 +410,118 @@ je Anlage und die Summe; umschaltbar sind „Alles“, „Nur Heizen“ und „N
 oder Tabelle. Die Daten kommen aus den eigenen Zählern des Adapters (48 Stunden, 62 Tage,
 24 Monate); ein History-Adapter ist dafür nicht nötig.
 
-## 10. Sprachen
+## 10. Effizienz: Wärmeleistung und COP
+
+Der Reiter „Effizienz“ beantwortet: **Wie viel Wärme (oder Kälte) liefert die Anlage für ihren Strom?**
+Der Adapter schätzt das aus Werten, die die Anlage ohnehin meldet – ohne Zusatzgerät:
+
+    Wärme = Luftdichte × c_p × Luftstrom × (Austrittstemperatur − Ansaugtemperatur)
+    Austrittstemperatur = Ansaug + ε × (liquid − Ansaug)
+    COP (Kühlen: EER) = Wärme ÷ Strom
+
+- **Ansaugluft** ist `status.achome`, **liquid** ist der Kältemittelsensor am Innengerät (`status.liquid`),
+  der **Strom** kommt aus `status.consumption` bzw. dem Energiezähler `status.energy`.
+- Der **Luftstrom** folgt der Lüfterstufe bzw. der gemeldeten Drehzahl (`status.fanfreq`) über die
+  Kennlinie des Modells (Datenblatt, Heizen und Kühlen getrennt). Läuft eine feste Stufe ein paar Minuten,
+  merkt sich der Adapter ihre Drehzahl – danach rechnet er auch bei „Auto“ über die Drehzahl.
+- **ε** sagt, wie stark die Luft dem Register folgt. Ohne Messung stammt ε aus dem Datenblatt (Bypassfaktor der
+  Leistungstabelle; ohne Modell ein generischer Wert). `liquid` sitzt an der Flüssigkeitsleitung, nicht mitten
+  im Register – ε ist deshalb ein Erfahrungswert und kann über 1 liegen. Genau wird er erst durch die
+  **Kalibrierung**.
+
+**Ehrlich gesagt:** Ohne Kalibrierung ist die Leistung eine Schätzung mit etwa ±25–35 %, kalibriert etwa
+±10–20 %. Der Adapter weist die Unsicherheit je Wert aus (`efficiency.uncertainty`) und rechnet sie aus den
+tatsächlichen Anteilen (ε, Luftstrom, Temperaturabstand, Restfehler der Kalibrierung). Bei sehr kleiner Last,
+kurz nach dem Anlauf und bei „Auto“ ohne gelernte Drehzahl steht ein Hinweis dabei.
+
+Was **nicht** gerechnet wird:
+
+- **Abtauen** (Heizen, Register kälter als der Raum): keine Wärme, Kennzeichen `efficiency.defrosting`. Der
+  Strom dieser Zeit zählt aber in den Tages-COP – wie auf der Stromrechnung.
+- **Stillstand** des Verdichters: Leistung 0.
+- **Kühlen:** nur die fühlbare Kälte. Die Entfeuchtung (latent) kommt nur dazu, wenn ein Sensor dauerhaft
+  Temperatur und Feuchte am Austritt misst und die Anlage ihre Raumfeuchte meldet; sonst ist die Kälteleistung
+  unterschätzt und so gekennzeichnet.
+- **Anlagen ohne die nötigen Werte** (z. B. IR-Brücken): „nicht verfügbar – diese Anlage meldet … nicht“.
+  Der Stromverbrauch funktioniert weiter.
+
+### Der Reiter
+
+Oben das Schaubild der Rechnung, darunter je Anlage eine Karte. Die Kopfzeile zeigt das Wichtigste
+(„COP 3,4 · 1,62 kW · geschätzt ±28 %“). Aufgeklappt:
+
+1. **Live-Werte:** Wärmeleistung, COP jetzt (geglättet), COP heute, Wärme heute, Luftstrom und geschätzte
+   Austrittstemperatur – jeweils mit der Güte *geschätzt*, *kalibriert* oder *gemessen*.
+2. **Modell:** „Modell wählen“ öffnet die Suche (Text, Reihe, Bauform, Baugröße). Mitgeliefert sind
+   96 Daikin-Innengeräte mit Luftstrom je Stufe, Nennleistung, SEER/SCOP und Quelle. Jeder Eintrag sagt, wie er
+   geprüft ist, und nennt, was die Herstellertabelle nicht hergibt – es ist nichts geraten oder aufgefüllt.
+   Fehlt dein Gerät: **Eigenes Modell anlegen** (Luftstrom aus dem Datenblatt, m³/min = m³/h ÷ 60). Ohne
+   Modell rechnet der Adapter mit generischen Werten und größerer Unsicherheit.
+3. **Luftstrom je Lüfterstufe:** Balken zum Ziehen (auch Pfeiltasten oder Doppelklick auf die Zahl). Eigene
+   Werte sind umrandet; „Auf das Datenblatt zurücksetzen“ nimmt sie zurück. Zwischenstufen ohne
+   Datenblattwert sind gerechnet und so gekennzeichnet.
+4. **ε je Stufe** mit dem Band der Unsicherheit und der Angabe, was gilt.
+5. **Kalibrieren** (siehe unten).
+
+Ganz unten: **Strompreis je kWh** (optional) – dann zeigen die Karten, was eine kWh Wärme heute kostet
+(`efficiency.heatPrice`).
+
+Modell, eigene Luftstromwerte und Preis gelten nach „Speichern“. Messung und Kalibrierungen wirken sofort.
+
+### Kalibrieren mit einem Austrittssensor
+
+Einen Funk-Temperatursensor etwa 10 cm vor den Luftaustritt legen und im Abschnitt „Kalibrieren“:
+
+1. **Sensor wählen** – den Datenpunkt des Sensors (optional die Feuchte), dann „Messung starten“.
+2. **Messen** – die Messung läuft im Adapter über Tage und übersteht einen Neustart. Alle zwei Minuten kommt
+   ein Messpunkt dazu, solange die Anlage gleichmäßig läuft; Abtauen, Anlauf, Stillstand und sehr kleine Last
+   bleiben draußen (die Zahl steht dabei). Balken zeigen die **Abdeckung je Lüfterstufe** („Stufe Mittel:
+   42 Messpunkte, ok“) und je Außentemperaturbereich; ein Hinweis nennt die Stufe, die man als Nächstes etwa
+   40 Minuten laufen lassen sollte. Ab 20 Punkten gilt eine Stufe als gut abgedeckt.
+3. **Ergebnis** – ε je Stufe, der Restfehler und die Begründung: Liegen die gemessenen Stufen höchstens 5 %
+   auseinander, gilt **ein Wert für alle Stufen**; sonst behält jede Stufe ihren Wert. Nicht gemessene Stufen
+   werden zwischen gemessenen interpoliert bzw. vom Nachbarn übertragen – gekennzeichnet. **Übernehmen** macht
+   das Ergebnis zur geltenden Kalibrierung, **Verwerfen** löscht die Messung.
+
+**Handmessung statt Sensor:** Zeit und Austrittstemperatur eintragen. Die übrigen Werte (Stufe, Ansaugluft,
+liquid) sucht der Adapter für diesen Moment heraus – aus seinem eigenen Verlauf der letzten 24 Stunden, sonst
+aus dem History-Adapter (wenn `status.*` dort aufgezeichnet wird); findet er nichts, fragt er sie ab. Eine
+Messung während des Abtauens lehnt er mit Begründung ab.
+
+Je Anlage gibt es eine Liste aller Kalibrierungen (Datum, Herkunft, Punkte, Unsicherheit); eine davon gilt.
+„Auf die Datenblatt-Schätzung zurücksetzen“ schaltet zurück, ohne etwas zu löschen. Bleibt der Sensor
+dauerhaft am Austritt, kann der Adapter **messen statt schätzen** (Haken unter der Liste).
+
+### Datenpunkte
+
+| Datenpunkt (`<Gerät>.efficiency.…`) | Inhalt |
+|---|---|
+| `heatOutput`, `coolingOutput` | Wärme- bzw. Kälteleistung in kW |
+| `cop` | COP bzw. EER jetzt, über etwa fünf Minuten geglättet |
+| `airflow`, `outletTemperature` | Luftstrom in m³/h, Austrittstemperatur (geschätzt oder gemessen) |
+| `state`, `defrosting` | was die Anlage tut (heating, cooling, defrosting, idle, off, unavailable) |
+| `quality`, `uncertainty`, `missing` | Güte (estimated, calibrated, measured, unavailable), Unsicherheit in %, fehlende Werte |
+| `heat.today/yesterday/thisMonth/lastMonth`, `cold.…` | Wärme- bzw. Kältemenge in kWh |
+| `copToday/Yesterday/ThisMonth/LastMonth`, `eer…` | Wärme ÷ Strom über denselben Zeitraum |
+| `hoursJson`, `daysJson`, `monthsJson` | Reihen `{hour/day/month, heat, cold, elHeat, elCool}` (48 Stunden, 62 Tage, 24 Monate) |
+| `heatPrice` | Kosten je kWh Wärme heute (nur mit Strompreis) |
+
+Zähler und Nenner des Tages-COP laufen über dieselben Zeitabschnitte: War der Adapter oder das Modul länger
+als fünf Minuten weg, zählt dieser Abschnitt auf beiden Seiten nicht. Ein zurückgesprungener Energiezähler
+wird wie beim Verbrauch nicht als Verbrauch gebucht.
+
+Im Reiter **Verbrauch** schaltet „Wärme & COP“ das Diagramm um: Balken zeigen die Wärme je Anlage, die Linie
+den COP (Achse rechts). „Strom“ bleibt die Vorgabe. Die Gerätekarte zeigt „COP heute 3,8 (geschätzt)“.
+
+### Ausblick
+
+- **Regelung auf den besten COP** (die Anlage im effizienten Teillastbereich halten, Takten vermeiden) ist
+  bewusst noch nicht gebaut – erst sollen die Werte über einen Winter belastbar sein.
+- **Multisplit** (mehrere Innengeräte an einem Außengerät) wird noch nicht aufgeteilt: Der Strom des
+  Außengeräts lässt sich nicht einfach einem Innengerät zuordnen. Bis dahin stimmt der COP nur bei
+  Single-Split-Anlagen.
+
+## 11. Sprachen
 
 Die Oberfläche gibt es in elf Sprachen (en, de, ru, pt, nl, fr, it, es, pl, uk, zh-cn); sie folgt der
 Systemsprache des ioBroker, Zahlen stehen mit dem Dezimalzeichen der Sprache. Deutsch und Englisch

@@ -118,6 +118,7 @@ function alleTexte() {
     sammle(require('../lib/anbinden'), 'anbinden', liste);
     sammle(require('../lib/suche'), 'suche', liste);
     sammle(require('../lib/verbrauchbild'), 'verbrauchbild', liste);
+    sammle(require('../lib/effizienz/texte'), 'effizienz', liste);
     sammle(bausteinTexte(), 'widgets', liste);
     sammle(editorTexte(), 'widgets-editor', liste);
     const io = JSON.parse(lies('io-package.json'));
@@ -129,13 +130,13 @@ function alleTexte() {
 describe('Sprachen: Komponententexte src-admin/src/*.texte.ts', () => {
     const dateien = fs.readdirSync(path.join(WURZEL, 'src-admin', 'src')).filter(d => d.endsWith('.texte.ts'));
 
-    it('alle neun Texttabellen der Komponenten werden gefunden', () => {
-        expect(dateien.sort()).to.eql(['Abschnitt.texte.ts', 'Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Geraete.texte.ts', 'Kennlinie.texte.ts', 'Rechenweg.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
+    it('alle zehn Texttabellen der Komponenten werden gefunden', () => {
+        expect(dateien.sort()).to.eql(['Abschnitt.texte.ts', 'Effizienz.texte.ts', 'Erklaerung.texte.ts', 'Feuchte.texte.ts', 'Geraete.texte.ts', 'Kennlinie.texte.ts', 'Rechenweg.texte.ts', 'Stufen.texte.ts', 'Werkzeugleiste.texte.ts', 'Zeitplaene.texte.ts']);
     });
 
     // Woerter, die in einer Sprache wirklich wie im Englischen heissen ("Datei:schluessel:sprache")
     // (nl "curve": niederlaendisches Fachwort, im ganzen Bestand benutzt - die Zeile des Rechenwegs gilt fuer Heizen und Kuehlen)
-    const GLEICH = new Set(['Stufen.texte.ts:komfort:nl', 'Stufen.texte.ts:komfort:it', 'Stufen.texte.ts:betriebsart:fr', 'Rechenweg.texte.ts:kennlinie:nl']);
+    const GLEICH = new Set(['Stufen.texte.ts:komfort:nl', 'Stufen.texte.ts:komfort:it', 'Stufen.texte.ts:betriebsart:fr', 'Rechenweg.texte.ts:kennlinie:nl', 'Effizienz.texte.ts:modell:nl', 'Effizienz.texte.ts:modell:pl', 'Effizienz.texte.ts:quelle:fr', 'Effizienz.texte.ts:fehler:es']);
 
     for (const datei of dateien) {
         it(`${datei}: jeder Schluessel in elf Sprachen, nicht leer, gleiche Platzhalter, uebersetzt`, () => {
@@ -168,7 +169,7 @@ describe('Sprachen: Regeln fuer alle Quellen', () => {
 
     it('es werden wirklich alle Quellen gelesen', () => {
         expect(texte.length).to.be.greaterThan(850);
-        for (const quelle of ['Zeitplaene.texte.ts', 'Stufen.texte.ts', 'admin/i18n', 'src-admin/src/i18n', 'oberflaeche', 'regel', 'anbinden', 'suche', 'verbrauchbild', 'io-package', 'widgets.', 'widgets-editor']) {
+        for (const quelle of ['Zeitplaene.texte.ts', 'Stufen.texte.ts', 'admin/i18n', 'src-admin/src/i18n', 'oberflaeche', 'regel', 'anbinden', 'suche', 'verbrauchbild', 'effizienz', 'io-package', 'widgets.', 'widgets-editor']) {
             expect(texte.filter(([ort]) => ort.startsWith(quelle)).length, quelle).to.be.greaterThan(1);
         }
     });
@@ -431,14 +432,14 @@ describe('Sprachen: keine festen Texte, keine Kopien des deutschen oder englisch
 
     it('keine fremde Sprache enthaelt den deutschen oder englischen Text unveraendert (gepflegte Ausnahmen)', () => {
         // Maschinenwerte und Eigennamen bleiben in jeder Sprache gleich
-        const TECHNIK = /^((ha|no)\.\w+|livestatus|reporting|Faikout|Firmware \/ hardware|IP|max\.|h|\d+|%s: %s|⌀ 30 min)$/;
+        const TECHNIK = /^((ha|no)\.\w+|livestatus|reporting|Faikout|Firmware \/ hardware|IP|max\.|h|\d+|%s: %s|⌀ 30 min|%s ±%s %|m³\/min|COP|EER|COP\/EER|ok)$/;
         // Woerter, die in der Sprache wirklich so heissen ("sprache:Text")
         const GLEICH = new Set([
-            ...['Auto', 'Total', 'Turbo'].map(w => `es:${w}`),
-            ...['Absence', 'Auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Total', 'Turbo', 'active'].map(w => `fr:${w}`),
-            ...['Auto', 'Comfort', 'Turbo'].map(w => `it:${w}`),
-            ...['curve %s %', 'eigen: %s', 'Sensoren', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
-            ...['Auto', 'Komfort', 'Port', 'Punkt %s', 'Status', 'Turbo'].map(w => `pl:${w}`),
+            ...['Auto', 'Total', 'Turbo', 'No', 'Error: %s'].map(w => `es:${w}`),
+            ...['Absence', 'Auto', 'Maximum %', 'Minimum %', 'Mode', 'Module', 'Point %s', 'Port', 'Source', 'Total', 'Turbo', 'active'].map(w => `fr:${w}`),
+            ...['Auto', 'Comfort', 'No', 'Turbo'].map(w => `it:${w}`),
+            ...['curve %s %', 'eigen: %s', 'Sensoren', 'Alles', 'Auto', 'Automatisch', 'Client-ID', 'Comfort', 'Compressor', 'Effect', 'Later', 'Model', 'Module', 'Status', 'Strategie', 'Turbo', 'Ventilator', 'Week', 'morgen'].map(w => `nl:${w}`),
+            ...['Auto', 'Komfort', 'Model', 'Port', 'Punkt %s', 'Status', 'Turbo'].map(w => `pl:${w}`),
             ...['Auto', 'Compressor', 'Total', 'Turbo'].map(w => `pt:${w}`),
         ]);
         const texte = alleTexte();

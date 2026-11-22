@@ -209,7 +209,6 @@ export function KalibrierungAnsicht(props: KalProps): React.JSX.Element {
                                 className="fk-e-feld fk-e-feld-lang"
                                 data-feld="austrittDp"
                                 value={austritt}
-                                placeholder="hm-rpc.0.ABC123.1.ACTUAL_TEMPERATURE"
                                 onChange={e => setAustritt(e.target.value)}
                                 onBlur={() => props.dauerhaft && props.onSensor({ austrittDp: austritt.trim() })}
                             />

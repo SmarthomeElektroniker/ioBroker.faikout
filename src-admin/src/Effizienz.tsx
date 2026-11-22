@@ -298,7 +298,7 @@ function ModellWahl(props: { eigene: Modell[]; gewaehlt: string | null; sprache:
                             <span className="fk-e-blass">
                                 {[m.hersteller, m.eigen ? t(sprache, 'gEigen') : m.reihe].filter(Boolean).join(' · ')}
                                 <br />
-                                {t(sprache, 'luftstromH')}: {zahl(m.luftstromHeizen.H ?? m.luftstromKuehlen.H ?? null, 1, sprache)} m³/min
+                                {t(sprache, 'luftstromH')}: {zahl(m.luftstromHeizen.H ?? m.luftstromKuehlen.H ?? null, 1, sprache)} {t(sprache, 'luftAchse')}
                                 {typeof m.nennHeizenKW === 'number' ? ` · ${zahl(m.nennHeizenKW, 1, sprache)} kW` : ''}
                             </span>
                         </button>

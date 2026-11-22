@@ -277,6 +277,23 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### 1.1.0 (2026-11-22)
+- Efficiency: estimated heat and cooling output, live COP/EER and heat/cooling energy and COP per day and
+  month for every unit (data points `efficiency.*`). Calculated from airflow (fan level or fan speed via the
+  airflow curve of the model) and the temperatures the unit reports; defrosting and pauses are detected and
+  count no heat. Every value carries its quality (estimated, calibrated, measured) and an uncertainty in %.
+  Units that do not report the required values (e.g. IR bridges) show "not available" with the reason.
+- New tab "Efficiency": diagram of the calculation, one card per unit with live values, model choice
+  (list of 96 Daikin indoor units from the manufacturer tables with source and gaps; own models can be added),
+  airflow per fan level as draggable bars, ε per level, optional electricity price → cost per kWh of heat.
+- Calibration assistant: choose an outlet sensor, the adapter measures for days (survives a restart) and shows
+  the coverage per fan level and outdoor temperature; result with ε per level, residual error and reasoning,
+  adopt or discard. Alternatively manual measurements (time and outlet temperature). Several calibrations per
+  unit, reset to the data sheet estimate.
+- Consumption chart: switchable to heat with a COP line (electricity stays the default); device card shows
+  "COP today".
+- Simulator (tests): true heat output, airflow and a simulated outlet sensor.
+
 ### 1.0.0 (2026-11-21)
 - Climate control per unit: power limit by outdoor curve or "Auto" (previous day plus margin),
   weekly schedule with temperature levels, public holidays and absence, humidity and dew point control, manual
