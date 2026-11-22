@@ -13,7 +13,7 @@ const { expect } = require('chai');
 
 const WURZEL = path.join(__dirname, '..');
 const SPRACHEN = ['en', 'de', 'ru', 'pt', 'nl', 'fr', 'it', 'es', 'pl', 'uk', 'zh-cn'];
-const lies = datei => fs.readFileSync(path.join(WURZEL, datei), 'utf8');
+const lies = datei => fs.readFileSync(path.join(WURZEL, datei), 'utf8').replace(/\r\n/g, '\n');
 const platzhalter = t =>
     [...String(t).matchAll(/\{\w+\}|%s|\$\{[^}]*\}/g)]
         .map(m => m[0])
