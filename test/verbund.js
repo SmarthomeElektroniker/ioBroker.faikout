@@ -687,6 +687,23 @@ describe('Multisplit: automatisch zuordnen', () => {
         await vb.beobachtungSichern(true, 1e12 + 5 * MIN);
         expect(a.objekte.get(BEOBACHTUNG_ID).common).to.include({ type: 'string', role: 'json', write: false });
         expect(JSON.parse(speicher.get(BEOBACHTUNG_ID)).paare['sz|wz']).to.have.length(6);
+        const gesichert = speicher.get(BEOBACHTUNG_ID);
+
+        // abweichendes Paar: nur die abweichende Probe wird gesichert und bleibt nach dem Laden "verschieden"
+        const c = adapter();
+        const anders = new Verbund(c);
+        await anders.beobachtungLaden(1e12);
+        for (let m = 0; m < 5; m++) {
+            anders.melden('wz', { energy: 2412300 }, 1e12 + m * MIN);
+            anders.melden('sz', { energy: m === 2 ? 2419900 : 2412300 }, 1e12 + m * MIN);
+            anders.beobachten(1e12 + m * MIN);
+        }
+        await anders.beobachtungSichern(true, 1e12 + 5 * MIN);
+        expect(JSON.parse(speicher.get(BEOBACHTUNG_ID)).paare['sz|wz']).to.have.length(1);
+        const geladen = new Verbund(adapter());
+        await geladen.beobachtungLaden(1e12 + 6 * MIN);
+        expect(v.paarUrteil(geladen.paare.get('sz|wz')).gleich).to.equal(false);
+        speicher.set(BEOBACHTUNG_ID, gesichert);
 
         // Neustart: neue Laufzeit, Beobachtung geladen, vier weitere Minuten genuegen fuer "sicher"
         const b = adapter();
