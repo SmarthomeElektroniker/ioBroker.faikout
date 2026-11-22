@@ -115,6 +115,7 @@ const VERWORFEN: Record<string, Schluessel> = {
     abtauen: 'vAbtauen',
     steht: 'vSteht',
     anlauf: 'vAnlauf',
+    wechsel: 'vWechsel',
     kleinerAbstand: 'vKleinerAbstand',
     sensorAlt: 'vSensorAlt',
 };

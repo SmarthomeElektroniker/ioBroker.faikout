@@ -240,6 +240,33 @@ describe('Effizienz am Adapter', () => {
         expect((await e2.befehl('effizienzKalibrierung', { geraet: 'Truhe', aktion: 'aktivieren', id })).error).to.match(/nicht mehr/);
     });
 
+    it('Kalibriermessung: nach einem Wechsel der Lüfterstufe zählen die Punkte erst wieder nach der Wartezeit', async () => {
+        const a = attrappe();
+        const e = new Effizienz(a);
+        const g = a.geraete.get('Truhe');
+        a.fremd['sensor.0.aus'] = { val: 35, ts: uhr };
+        await e.befehl('effizienzMessung', { geraet: 'Truhe', aktion: 'start', austrittDp: 'sensor.0.aus', abstandSek: 60, anlaufSek: 240 });
+        const runde = async (fan, n) => {
+            for (let i = 0; i < n; i++) {
+                minuten(1);
+                a.fremd['sensor.0.aus'] = { val: 35, ts: uhr };
+                await e.status('Truhe', g, { ...HEIZT, fan });
+                await e.takt();
+            }
+        };
+        await runde('mediumHigh', 10);
+        let m = (await e.befehl('effizienzStand', {})).geraete.find(x => x.id === 'Truhe').messung;
+        const vorher = m.punkte;
+        expect(vorher).to.be.within(5, 7);
+        await runde('high', 3);
+        m = (await e.befehl('effizienzStand', {})).geraete.find(x => x.id === 'Truhe').messung;
+        expect(m.punkte, 'drei Minuten nach dem Wechsel: noch kein neuer Punkt').to.equal(vorher);
+        expect(m.verworfen.wechsel).to.equal(3);
+        await runde('high', 4);
+        m = (await e.befehl('effizienzStand', {})).geraete.find(x => x.id === 'Truhe').messung;
+        expect(m.abdeckung.heizen.stufen.H.n).to.be.within(2, 4);
+    });
+
     it('Messung verwerfen und ein veralteter Sensorwert', async () => {
         const a = attrappe();
         const e = new Effizienz(a);
