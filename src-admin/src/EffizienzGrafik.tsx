@@ -3,7 +3,7 @@
  * Wirksamkeit ε je Stufe und die Abdeckung einer Kalibriermessung. Reine Darstellung - Daten und Rueckrufe
  * kommen von aussen (Effizienz.tsx).
  */
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { t, type Schluessel } from './Effizienz.texte';
 
@@ -96,9 +96,52 @@ export function Erklaerbild(props: { sprache: string; f: Farben }): React.JSX.El
 
 // ------------------------------------------------------------------ Luftstrom je Stufe (ziehbar)
 
-const B = 600;
+const BREIT = 600;
 const H = 230;
-const RAND = { l: 44, r: 12, o: 26, u: 44 };
+
+/**
+ * Breite des Bildes in echten Pixeln: Auf schmalen Fenstern wird das Bild nicht verkleinert (die Schrift
+ * waere unlesbar), sondern schmaler gezeichnet.
+ */
+function useBreite(): [React.RefObject<HTMLDivElement | null>, number] {
+    const huelle = useRef<HTMLDivElement>(null);
+    const [breite, setBreite] = useState(BREIT);
+    useEffect(() => {
+        const messen = (): void => {
+            const w = huelle.current ? huelle.current.clientWidth : BREIT;
+            setBreite(Math.max(280, Math.min(BREIT, Math.round(w))));
+        };
+        messen();
+        window.addEventListener('resize', messen);
+        return () => window.removeEventListener('resize', messen);
+    }, []);
+    return [huelle, breite];
+}
+
+/** Beschriftung einer Stufe unter dem Bild: passt sie nicht in ihr Feld, bricht sie an Bindestrich oder Leerzeichen um */
+function StufenText(props: { x: number; y: number; text: string; platz: number; farbe: string }): React.JSX.Element {
+    const teile = props.text.length * 6.3 > props.platz ? props.text.split(/(?<=-)| /).filter(Boolean) : [props.text];
+    return (
+        <text
+            x={props.x}
+            y={props.y}
+            textAnchor="middle"
+            fontSize={teile.length > 1 ? 10.5 : 11.5}
+            fill={props.farbe}
+        >
+            {teile.slice(0, 2).map((teil, i) => (
+                <tspan
+                    key={i}
+                    x={props.x}
+                    dy={i ? 11.5 : 0}
+                >
+                    {teil}
+                </tspan>
+            ))}
+        </text>
+    );
+}
+const RAND = { l: 38, r: 8, o: 26, u: 48 };
 
 export interface LuftstromProps {
     werte: Partial<Record<Stufe, number>>;
@@ -122,6 +165,7 @@ const HERKUNFT_TEXT: Record<string, Schluessel> = {
 export function LuftstromBild(props: LuftstromProps): React.JSX.Element {
     const { werte, herkunft, sprache, f } = props;
     const svg = useRef<SVGSVGElement>(null);
+    const [huelle, B] = useBreite();
     const [zug, setZug] = useState<{ stufe: Stufe; wert: number; hoechst: number } | null>(null);
     const [eingabe, setEingabe] = useState<{ stufe: Stufe; text: string } | null>(null);
     // waehrend des Ziehens bleibt die Achse stehen - sonst liefe der Wert unter dem Zeiger davon
@@ -162,7 +206,10 @@ export function LuftstromBild(props: LuftstromProps): React.JSX.Element {
     const benutzt = [...new Set(STUFEN.map(s => herkunft[s]).filter(Boolean))] as string[];
 
     return (
-        <div className="fk-e-bild">
+        <div
+            className="fk-e-bild"
+            ref={huelle}
+        >
             <svg
                 ref={svg}
                 viewBox={`0 0 ${B} ${H}`}
@@ -224,14 +271,14 @@ export function LuftstromBild(props: LuftstromProps): React.JSX.Element {
                             {props.jetzt === s ? (
                                 <g>
                                     <circle
-                                        cx={x + b / 2}
-                                        cy={y(0) + 30}
+                                        cx={x + b / 2 - 10}
+                                        cy={y(0) + 36}
                                         r="4"
                                         fill={f.akzent}
                                     />
                                     <text
-                                        x={x + b / 2 + 8}
-                                        y={y(0) + 34}
+                                        x={x + b / 2 - 3}
+                                        y={y(0) + 40}
                                         fontSize="11"
                                         fill={f.akzent}
                                     >
@@ -251,15 +298,13 @@ export function LuftstromBild(props: LuftstromProps): React.JSX.Element {
                             >
                                 {zahl(w, 1, sprache)}
                             </text>
-                            <text
+                            <StufenText
                                 x={x + b / 2}
-                                y={y(0) + 16}
-                                textAnchor="middle"
-                                fontSize="11.5"
-                                fill={f.text}
-                            >
-                                {stufenName(sprache, s)}
-                            </text>
+                                y={y(0) + 15}
+                                text={stufenName(sprache, s)}
+                                platz={breite - 4}
+                                farbe={f.text}
+                            />
                             {ziehbar ? (
                                 <rect
                                     x={x - 3}
@@ -380,12 +425,13 @@ const EPS_TEXT: Record<string, Schluessel> = {
 
 export function EpsBild(props: { satz: EpsSatz; vergleich?: EpsSatz | null; sprache: string; f: Farben; art: Art }): React.JSX.Element {
     const { satz, vergleich, sprache, f } = props;
-    const hoehe = 190;
+    const hoehe = 200;
+    const [huelle, B] = useBreite();
     const alle = [...Object.values(satz.stufen), ...Object.values((vergleich && vergleich.stufen) || {})].map(s => (s ? s.eps : 1));
     const oben = Math.max(1.3, Math.ceil((Math.max(...alle, 1) * (1 + satz.unsicherheit) + 0.05) * 10) / 10);
     const unten = Math.min(0.5, Math.floor(Math.min(...alle, 1) * (1 - satz.unsicherheit) * 10) / 10);
     const breite = (B - RAND.l - RAND.r) / STUFEN.length;
-    const y = (v: number): number => 14 + (1 - (v - unten) / (oben - unten)) * (hoehe - 14 - 34);
+    const y = (v: number): number => 14 + (1 - (v - unten) / (oben - unten)) * (hoehe - 14 - 44);
     const x = (i: number): number => RAND.l + (i + 0.5) * breite;
     const farbe = props.art === 'heizen' ? f.heizen : f.kuehlen;
     const gemessen = (h: string): boolean => h === 'gemessen';
@@ -403,7 +449,10 @@ export function EpsBild(props: { satz: EpsSatz; vergleich?: EpsSatz | null; spra
             : '';
     const benutzt = [...new Set(punkte.map(p => p.e.herkunft))];
     return (
-        <div className="fk-e-bild">
+        <div
+            className="fk-e-bild"
+            ref={huelle}
+        >
             <svg
                 viewBox={`0 0 ${B} ${hoehe}`}
                 className="fk-e-svg"
@@ -495,16 +544,14 @@ export function EpsBild(props: { satz: EpsSatz; vergleich?: EpsSatz | null; spra
                     </g>
                 ))}
                 {STUFEN.map((s, i) => (
-                    <text
+                    <StufenText
                         key={s}
                         x={x(i)}
-                        y={hoehe - 14}
-                        textAnchor="middle"
-                        fontSize="11.5"
-                        fill={f.text}
-                    >
-                        {stufenName(sprache, s)}
-                    </text>
+                        y={hoehe - 24}
+                        text={stufenName(sprache, s)}
+                        platz={breite - 4}
+                        farbe={f.text}
+                    />
                 ))}
             </svg>
             <div className="fk-e-legende">

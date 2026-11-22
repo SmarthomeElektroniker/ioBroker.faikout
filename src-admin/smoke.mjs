@@ -254,7 +254,7 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.ok(/COP 3,\d · 1,\d\d kW · geschätzt ±\d\d %/.test(truhe), `Kopfzeile: COP, Leistung, Guete mit Unsicherheit (${truhe.slice(0, 120)})`);
         assert.ok(/Wärmeleistung 1,\d\d kW/.test(truhe) && /COP heute 3,\d/.test(truhe) && /Wärme heute \d,\d kWh/.test(truhe), 'Live-Kacheln');
         assert.ok(/Luftstrom 510 m³\/h \(Stufe Mittel-hoch\) · Austritt etwa 3\d,\d °C/.test(truhe), 'Zeile Luftstrom/Austritt');
-        assert.ok(/Daikin Perfera Truhe FVXM35A/.test(truhe) && /Truhengerät · Kühlen 3,4 kW · Heizen 4,5 kW · SEER 8,11 · SCOP 4,63/.test(truhe), 'Modell mit Kennwerten');
+        assert.ok(/Daikin Perfera FVXM-A FVXM35A/.test(truhe) && /Truhengerät · Kühlen 3,4 kW · Heizen 4,5 kW · SEER 8,11 · SCOP 4,63/.test(truhe), 'Modell mit Kennwerten');
         assert.ok(/Herstellertabelle/.test(truhe) && /Leistungstabelle/.test(truhe) && /im Original geprüft/.test(truhe), 'Quelle und Pruefstand');
         assert.ok(/daikin-ce\.com\/en_us\/products\/product\.table\.html\/FVXM-A\.html/.test(karte(eff.effizienz, 'Truhe')), 'Verweis auf die Herstellertabelle');
         assert.strictEqual((karte(eff.effizienz, 'Truhe').match(/role="slider"/g) || []).length, 6, 'sechs ziehbare Stufen');

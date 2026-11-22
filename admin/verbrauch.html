@@ -667,7 +667,7 @@
                         const w = g.leistung === null ? '' : `<span class="w">${num(g.leistung, 0)} W</span>`;
                         if (!g.zaehler) {
                             b.disabled = true;
-                            b.innerHTML = `<span class="name">${esc(g.name)}</span><span class="w">${esc(T('ohneZaehler'))}</span>`;
+                            b.innerHTML = `<span class="name">${esc(g.name)}</span><span class="w">${esc(T(heat() ? 'ohneWaerme' : 'ohneZaehler'))}</span>`;
                         } else {
                             b.innerHTML = `<span class="sw" style="background:${colour(g)}"></span><span class="name">${esc(g.name)}</span>${w}`;
                             b.setAttribute('aria-pressed', String(!hidden.has(g.id)));
@@ -791,7 +791,7 @@
                         for (let v = 0; v <= copTop; v += copTop > 6 ? 2 : 1) {
                             s += `<text class="copaxis" x="${W - R + 6}" y="${yc(v) + 4}">${v}</text>`;
                         }
-                        s += `<text class="copaxis" x="${W - 2}" y="${TOP - 2}" text-anchor="end">${esc(copName())}</text>`;
+                        s += `<text class="copaxis" x="${W - R - 4}" y="${TOP - 3}" text-anchor="end">${esc(copName())}</text>`;
                         // line only between neighbouring bars that both have a value
                         let d = '';
                         let open = false;

@@ -1,7 +1,7 @@
 [
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera",
+  "reihe": "Perfera FTXM-R",
   "modell": "FTXM20R",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -34,7 +34,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera",
+  "reihe": "Perfera FTXM-R",
   "modell": "FTXM25R",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -62,7 +62,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera",
+  "reihe": "Perfera FTXM-R",
   "modell": "FTXM35R",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -90,7 +90,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera",
+  "reihe": "Perfera FTXM-R",
   "modell": "FTXM42R",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -118,7 +118,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera",
+  "reihe": "Perfera FTXM-R",
   "modell": "FTXM50R",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -146,7 +146,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera",
+  "reihe": "Perfera FTXM-R",
   "modell": "FTXM60R",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -174,7 +174,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera",
+  "reihe": "Perfera FTXM-R",
   "modell": "FTXM71R",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -202,7 +202,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "reihe": "Perfera FTXM-A",
   "modell": "FTXM20A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -230,7 +230,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "reihe": "Perfera FTXM-A",
   "modell": "FTXM25A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -258,7 +258,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "reihe": "Perfera FTXM-A",
   "modell": "FTXM35A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -286,7 +286,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "reihe": "Perfera FTXM-A",
   "modell": "FTXM42A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -314,7 +314,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "reihe": "Perfera FTXM-A",
   "modell": "FTXM50A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -342,7 +342,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "reihe": "Perfera FTXM-A",
   "modell": "FTXM60A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -370,7 +370,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera (FTXM-A, ältere Generation)",
+  "reihe": "Perfera FTXM-A",
   "modell": "FTXM71A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -398,7 +398,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera Truhe",
+  "reihe": "Perfera FVXM-A",
   "modell": "FVXM25A",
   "bauform": "truhe",
   "einheit": "m3/min",
@@ -426,7 +426,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera Truhe",
+  "reihe": "Perfera FVXM-A",
   "modell": "FVXM35A",
   "bauform": "truhe",
   "einheit": "m3/min",
@@ -457,7 +457,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera Truhe",
+  "reihe": "Perfera FVXM-A",
   "modell": "FVXM50A",
   "bauform": "truhe",
   "einheit": "m3/min",
@@ -490,7 +490,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Emura",
+  "reihe": "Emura FTXJ-A",
   "modell": "FTXJ20A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -518,7 +518,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Emura",
+  "reihe": "Emura FTXJ-A",
   "modell": "FTXJ25A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -546,7 +546,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Emura",
+  "reihe": "Emura FTXJ-A",
   "modell": "FTXJ35A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -574,7 +574,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Emura",
+  "reihe": "Emura FTXJ-A",
   "modell": "FTXJ42A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -602,7 +602,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Emura",
+  "reihe": "Emura FTXJ-A",
   "modell": "FTXJ50A",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -630,7 +630,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Comfora",
+  "reihe": "Comfora FTXP-M",
   "modell": "FTXP20M",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -663,7 +663,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Comfora",
+  "reihe": "Comfora FTXP-M",
   "modell": "FTXP25M",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -696,7 +696,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Comfora",
+  "reihe": "Comfora FTXP-M",
   "modell": "FTXP35M",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -729,7 +729,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Comfora",
+  "reihe": "Comfora FTXP-M",
   "modell": "FTXP50M",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -757,7 +757,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Comfora",
+  "reihe": "Comfora FTXP-M",
   "modell": "FTXP60M",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -790,7 +790,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Comfora",
+  "reihe": "Comfora FTXP-M",
   "modell": "FTXP71M",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -818,7 +818,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-E)",
+  "reihe": "Sensira FTXF-E",
   "modell": "FTXF20E",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -846,7 +846,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-E)",
+  "reihe": "Sensira FTXF-E",
   "modell": "FTXF25E",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -874,7 +874,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-E)",
+  "reihe": "Sensira FTXF-E",
   "modell": "FTXF35E",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -902,7 +902,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-E)",
+  "reihe": "Sensira FTXF-E",
   "modell": "FTXF42E",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -930,7 +930,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-D)",
+  "reihe": "Sensira FTXF-D",
   "modell": "FTXF20D",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -958,7 +958,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-D)",
+  "reihe": "Sensira FTXF-D",
   "modell": "FTXF25D",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -986,7 +986,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-D)",
+  "reihe": "Sensira FTXF-D",
   "modell": "FTXF35D",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -1014,7 +1014,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-D)",
+  "reihe": "Sensira FTXF-D",
   "modell": "FTXF42D",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -1042,7 +1042,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-D)",
+  "reihe": "Sensira FTXF-D",
   "modell": "FTXF50D",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -1070,7 +1070,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-D)",
+  "reihe": "Sensira FTXF-D",
   "modell": "FTXF60D",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -1098,7 +1098,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Sensira (FTXF-D)",
+  "reihe": "Sensira FTXF-D",
   "modell": "FTXF71D",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -1126,7 +1126,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera FTXTM (Optimised Heating)",
+  "reihe": "Optimised Heating FTXTM-R",
   "modell": "FTXTM30R",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -1154,7 +1154,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Perfera FTXTM (Optimised Heating)",
+  "reihe": "Optimised Heating FTXTM-R",
   "modell": "FTXTM40R",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -1182,7 +1182,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Kanal FDXM-F",
+  "reihe": "FDXM-F",
   "modell": "FDXM25F",
   "bauform": "kanal",
   "einheit": "m3/min",
@@ -1219,7 +1219,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Kanal FDXM-F",
+  "reihe": "FDXM-F",
   "modell": "FDXM35F",
   "bauform": "kanal",
   "einheit": "m3/min",
@@ -1256,7 +1256,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Kanal FDXM-F",
+  "reihe": "FDXM-F",
   "modell": "FDXM50F",
   "bauform": "kanal",
   "einheit": "m3/min",
@@ -1293,7 +1293,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "Kanal FDXM-F",
+  "reihe": "FDXM-F",
   "modell": "FDXM60F",
   "bauform": "kanal",
   "einheit": "m3/min",
@@ -2631,7 +2631,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "FTXG-L (Emura 1. Gen.)",
+  "reihe": "Emura FTXG-L",
   "modell": "FTXG20L",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -2664,7 +2664,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "FTXG-L (Emura 1. Gen.)",
+  "reihe": "Emura FTXG-L",
   "modell": "FTXG25L",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -2697,7 +2697,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "FTXG-L (Emura 1. Gen.)",
+  "reihe": "Emura FTXG-L",
   "modell": "FTXG35L",
   "bauform": "wand",
   "einheit": "m3/min",
@@ -2730,7 +2730,7 @@
  },
  {
   "hersteller": "Daikin",
-  "reihe": "FTXG-L (Emura 1. Gen.)",
+  "reihe": "Emura FTXG-L",
   "modell": "FTXG50L",
   "bauform": "wand",
   "einheit": "m3/min",
