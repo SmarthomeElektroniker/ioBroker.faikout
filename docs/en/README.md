@@ -417,7 +417,7 @@ The adapter estimates it from values the unit reports anyway – without extra h
     COP (cooling: EER) = heat ÷ electricity
 
 - **Intake air** is `status.achome`, **liquid** is the refrigerant sensor of the indoor unit (`status.liquid`),
-  **electricity** comes from `status.consumption` or the energy counter `status.energy`.
+  **electricity** comes from the reported power `status.consumption` (the energy counter `status.energy` only counts in 100 Wh steps and serves as a fallback).
 - The **airflow** follows the fan level or the reported fan speed (`status.fanfreq`) via the curve of the
   model (data sheet, heating and cooling separately). Once a fixed level has run for a few minutes the adapter
   remembers its speed – from then on it also calculates on “auto” from the speed.
@@ -504,8 +504,8 @@ permanently, the adapter can **measure instead of estimating** (checkbox below t
 | `heatPrice` | cost per kWh of heat today (only with an electricity price) |
 
 Numerator and denominator of the daily COP cover the same time spans: if the adapter or the module was gone
-for more than five minutes, that span counts on neither side. An energy counter that jumped back is not booked
-as consumption, as in the consumption part.
+for more than five minutes, that span counts on neither side. The counter values of the unit remain
+unchanged under `consumption.*`; over a day the two totals may differ slightly.
 
 In the tab **Consumption**, “Heat & COP” switches the chart: bars show the heat per unit, the line the COP
 (axis on the right). “Electricity” stays the default. The device card shows “COP today 3.8 (estimated)”; the vis widget “Readings” offers the reading “COP today”.

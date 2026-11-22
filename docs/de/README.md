@@ -420,7 +420,7 @@ Der Adapter schätzt das aus Werten, die die Anlage ohnehin meldet – ohne Zusa
     COP (Kühlen: EER) = Wärme ÷ Strom
 
 - **Ansaugluft** ist `status.achome`, **liquid** ist der Kältemittelsensor am Innengerät (`status.liquid`),
-  der **Strom** kommt aus `status.consumption` bzw. dem Energiezähler `status.energy`.
+  der **Strom** kommt aus der gemeldeten Leistung `status.consumption` (der Energiezähler `status.energy` zählt nur in 100-Wh-Schritten und dient als Rückfall).
 - Der **Luftstrom** folgt der Lüfterstufe bzw. der gemeldeten Drehzahl (`status.fanfreq`) über die
   Kennlinie des Modells (Datenblatt, Heizen und Kühlen getrennt). Läuft eine feste Stufe ein paar Minuten,
   merkt sich der Adapter ihre Drehzahl – danach rechnet er auch bei „Auto“ über die Drehzahl.
@@ -507,8 +507,8 @@ dauerhaft am Austritt, kann der Adapter **messen statt schätzen** (Haken unter 
 | `heatPrice` | Kosten je kWh Wärme heute (nur mit Strompreis) |
 
 Zähler und Nenner des Tages-COP laufen über dieselben Zeitabschnitte: War der Adapter oder das Modul länger
-als fünf Minuten weg, zählt dieser Abschnitt auf beiden Seiten nicht. Ein zurückgesprungener Energiezähler
-wird wie beim Verbrauch nicht als Verbrauch gebucht.
+als fünf Minuten weg, zählt dieser Abschnitt auf beiden Seiten nicht. Die Zählerwerte der Anlage
+stehen unverändert unter `consumption.*`; über einen Tag können beide Summen leicht voneinander abweichen.
 
 Im Reiter **Verbrauch** schaltet „Wärme & COP“ das Diagramm um: Balken zeigen die Wärme je Anlage, die Linie
 den COP (Achse rechts). „Strom“ bleibt die Vorgabe. Die Gerätekarte zeigt „COP heute 3,8 (geschätzt)“; im VIS-Baustein „Messwerte“ gibt es den Messwert „COP heute“.

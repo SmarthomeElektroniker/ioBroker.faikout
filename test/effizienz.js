@@ -299,31 +299,35 @@ describe('Effizienz: Mengenzähler', () => {
         expect(s.kaelte).to.equal(0);
     });
 
-    it('nimmt den Energiezähler der Anlage, wenn er da ist (auch in 100-Wh-Schritten)', () => {
+    it('Strom aus der gemeldeten Leistung - der Energiezähler (100-Wh-Schritte) wäre für eine Stunde zu grob', () => {
+        let s = null;
+        for (let i = 0; i <= 50; i++) {
+            // 250 W: der Zaehler springt erst nach 24 min auf 100 Wh
+            s = zaehler.probe(s, { zeit: min(i), richtung: 'heizen', leistung: 800, pEl: 250, energie: 5000000 + Math.floor((i * 250) / 60 / 100) * 100 }).stand;
+        }
+        expect(s.stromHeizen).to.be.closeTo(208.3, 0.5);
+        expect(zaehler.arbeitszahl(s.waerme / 1000, s.stromHeizen / 1000)).to.equal(3.2);
+    });
+
+    it('ohne gemeldete Leistung zählt der Energiezähler der Anlage; ein Rücksprung wird nicht als Verbrauch gebucht', () => {
         let s = null;
         for (let i = 0; i <= 120; i++) {
-            // 600 W: alle 10 min 100 Wh mehr; die gemeldete Leistung waere falsch (0)
-            s = zaehler.probe(s, { zeit: min(i), richtung: 'heizen', leistung: 2000, pEl: 0, energie: 5000000 + Math.floor(i / 10) * 100 }).stand;
+            s = zaehler.probe(s, { zeit: min(i), richtung: 'heizen', leistung: 2000, energie: 5000000 + Math.floor(i / 10) * 100 }).stand;
         }
         expect(s.stromHeizen).to.equal(1200);
         expect(s.waerme).to.be.closeTo(4000, 0.01);
-    });
-
-    it('ein zurückgesprungener Energiezähler wird nicht als Verbrauch gebucht', () => {
-        let s = zaehler.probe(null, { zeit: min(0), richtung: 'heizen', leistung: 1000, energie: 5000000 }).stand;
-        s = zaehler.probe(s, { zeit: min(1), richtung: 'heizen', leistung: 1000, energie: 5000100 }).stand;
-        s = zaehler.probe(s, { zeit: min(2), richtung: 'heizen', leistung: 1000, energie: 12 }).stand;
-        s = zaehler.probe(s, { zeit: min(3), richtung: 'heizen', leistung: 1000, energie: 112 }).stand;
-        expect(s.stromHeizen).to.equal(200);
+        s = zaehler.probe(s, { zeit: min(121), richtung: 'heizen', leistung: 1000, energie: 12 }).stand;
+        s = zaehler.probe(s, { zeit: min(122), richtung: 'heizen', leistung: 1000, energie: 112 }).stand;
+        expect(s.stromHeizen).to.equal(1300);
     });
 
     it('eine Lücke (Adapter weg) zählt auf beiden Seiten nicht', () => {
-        let s = zaehler.probe(null, { zeit: min(0), richtung: 'heizen', leistung: 1000, energie: 1000 }).stand;
-        s = zaehler.probe(s, { zeit: min(1), richtung: 'heizen', leistung: 1000, energie: 1100 }).stand;
-        const r = zaehler.probe(s, { zeit: min(181), richtung: 'heizen', leistung: 1000, energie: 3100 });
+        let s = zaehler.probe(null, { zeit: min(0), richtung: 'heizen', leistung: 1000, pEl: 600 }).stand;
+        s = zaehler.probe(s, { zeit: min(4), richtung: 'heizen', leistung: 1000, pEl: 600 }).stand;
+        const r = zaehler.probe(s, { zeit: min(184), richtung: 'heizen', leistung: 1000, pEl: 600 });
         expect(r.luecke).to.equal(true);
-        expect(r.stand.stromHeizen).to.equal(100);
-        expect(r.stand.waerme).to.be.closeTo(1000 / 60, 0.01);
+        expect(r.stand.stromHeizen).to.be.closeTo(40, 0.01);
+        expect(r.stand.waerme).to.be.closeTo(1000 / 15, 0.01);
         expect(r.stand.luecken).to.equal(1);
     });
 
