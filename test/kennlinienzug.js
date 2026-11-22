@@ -332,7 +332,7 @@ describe('Kennlinie ziehen: Komponente der Einstellungsseite', () => {
 
     // die neuen Texte stehen je Komponente in einer eigenen Datei; ihr Block TEXTE ist reines JavaScript
     const texteAus = datei => {
-        const quelle = fs.readFileSync(path.join(wurzel, 'src-admin', 'src', datei), 'utf8');
+        const quelle = fs.readFileSync(path.join(wurzel, 'src-admin', 'src', datei), 'utf8').replace(/\r\n/g, '\n');
         const block = quelle.match(/\nconst TEXTE = (\{[\s\S]*?\n\});\n/);
         expect(block, datei).not.to.equal(null);
         return new Function(`return ${block[1]}`)();
