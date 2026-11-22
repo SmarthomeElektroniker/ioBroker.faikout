@@ -275,7 +275,7 @@ describe('Adapter am eigenen Broker: Altfall `User`, info.connection', function 
             c.on('error', () => res(null));
         });
 
-    it('`User` + `pass`: der Umzug schreibt `user` und beendet onReady VOR dem Brokerstart - nie ein offener Broker', async () => {
+    it('`User` + `pass`: der Umzug schreibt `user` VOR dem Brokerstart; der Start laeuft weiter - nie ein offener Broker', async () => {
         const gebaut = [];
         class Merker {
             constructor(opts) {
@@ -293,8 +293,11 @@ describe('Adapter am eigenen Broker: Altfall `User`, info.connection', function 
         a.setForeignObjectAsync = async (id, o) => geschrieben.push([id, o]);
         a.extendForeignObjectAsync = async () => {};
         await a.onReady();
-        expect(gebaut, 'in diesem Lauf entsteht kein Broker').to.eql([]);
-        expect(a.broker).to.equal(null);
+        // Der Start wartet nicht auf einen Neustart durch den Controller (den gibt es z. B. in der
+        // Testumgebung nicht): der Broker DIESES Laufs entsteht - aber schon mit der Anmeldung.
+        expect(gebaut, 'genau ein Broker, gestartet').to.have.length(2);
+        expect(gebaut[0], 'nie ein offener Broker').to.include({ user: 'klima', pass: 'geheim' });
+        expect(gebaut[1]).to.equal('gestartet');
         expect(geschrieben).to.have.length(1);
         expect(geschrieben[0][0]).to.equal('system.adapter.faikout.0');
         // das (verschluesselte) Passwort bleibt, wie es gespeichert ist
@@ -303,8 +306,8 @@ describe('Adapter am eigenen Broker: Altfall `User`, info.connection', function 
         // Laesst sich die Instanz nicht schreiben, laeuft der Broker DIESES Laufs trotzdem mit Anmeldung
         const b = adapter({ port: 1888, User: 'klima', pass: 'geheim' }, Merker);
         await b.onReady();
-        expect(gebaut[0]).to.include({ user: 'klima', pass: 'geheim' });
-        expect(gebaut[1]).to.equal('gestartet');
+        expect(gebaut[2]).to.include({ user: 'klima', pass: 'geheim' });
+        expect(gebaut[3]).to.equal('gestartet');
     });
 
     it('nach dem Umzug: ohne Anmeldung abgelehnt, mit den Zugangsdaten angenommen', async () => {

@@ -188,12 +188,13 @@ class Faikout extends utils.Adapter {
         await this.setState('info.connection', { val: false, ack: true });
         this.verbindungStand = false;
         // Der Umzug steht bewusst VOR allem anderen, vor allem vor dem Start des Brokers: Ein Altfall mit
-        // `User` (grosses U) + `pass` liefe sonst einen Lauf lang als offener Broker. Wird geschrieben,
-        // endet onReady hier (die Instanz startet neu); kann nicht geschrieben werden, steht `user`
-        // trotzdem schon in this.config - der Broker dieses Laufs verlangt die Anmeldung.
-        if (await this.konfigUmziehen()) {
-            return; // die Instanz startet mit der umgezogenen Konfiguration neu
-        }
+        // `User` (grosses U) + `pass` liefe sonst einen Lauf lang als offener Broker. konfigUmziehen
+        // stellt this.config vollstaendig um (im Speicher) und schreibt die Aenderung zurueck. Der Start
+        // laeuft danach in JEDEM Fall weiter - mit der umgezogenen Konfiguration: Ob und wann der
+        // Controller die Instanz wegen des geaenderten Objekts neu startet, ist seine Sache; darauf zu
+        // warten hiesse, ohne Controller-Neustart (Testumgebung, compact mode, verzoegerter Host) ohne
+        // Broker und ohne die folgenden Umzuege stehenzubleiben.
+        await this.konfigUmziehen();
         await this.verbrauchUmziehen();
         // Vorabstand von 1.0.0: Datenpunkte der Regelung von regel.* nach regulation.* (lib/regel/umzug.js)
         await regelUmzug.umziehen(this);
@@ -1710,7 +1711,7 @@ class Faikout extends utils.Adapter {
      * beim Geraet. Ein alter Text wird einmal in die Tabelle uebertragen - sonst zeigte die Seite eine
      * leere Tabelle und das naechste Speichern verwuerfe die Kennlinie des Nutzers.
      *
-     * @returns {Promise<boolean>} true, wenn die Konfiguration geschrieben wurde (Neustart folgt)
+     * @returns {Promise<boolean>} true, wenn die Konfiguration geschrieben wurde (der Controller startet die Instanz dann in der Regel einmal neu; der laufende Start geht mit der umgezogenen Konfiguration weiter)
      */
     async konfigUmziehen() {
         const kennlinie = require('./lib/regel/kennlinie');
@@ -1748,7 +1749,9 @@ class Faikout extends utils.Adapter {
         if (!Object.keys(neu).length || typeof this.extendForeignObjectAsync !== 'function') {
             return false;
         }
-        this.log.info(`Settings completed (${Object.keys(neu).join(', ')}). The instance restarts once.`);
+        this.log.info(
+            `Settings completed (${Object.keys(neu).join(', ')}). The controller may restart the instance once.`,
+        );
         const objektId = `system.adapter.${this.namespace}`;
         // Ganz schreiben statt erweitern: extendObject fuehrt Listen elementweise zusammen - ein aus einer
         // Geraetezeile entferntes Feld (szenen) bliebe stehen und der Umzug liefe bei jedem Start erneut.
