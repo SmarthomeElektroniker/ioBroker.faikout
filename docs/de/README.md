@@ -38,6 +38,7 @@ Die Geräteliste lässt sich unter den Karten als JSON-Datei **exportieren** und
 | **Einrichtung** | Schrittliste mit Haken: Broker, Modul verbinden, Zeitplan, Regelung |
 | **Zeitpläne** | WANN welche Temperatur gilt: Temperaturstufen der Vorlage (Regler zum Ziehen), Wochenplan der Vorlage und je Gerät Vorschau, Schalter und „Wochenplan bearbeiten“. Eingeklappt: Handeingriff und Feiertage |
 | **Regelung** | WIE die Anlage gefahren wird: Schaubild der Regelung, die globale Vorlage (Strategie, Heiz- und Kühlkennlinie mit Grenzen im Bild, Feuchte-Grenzen im Bild), darunter die Geräte als Karten. Eingeklappt: Probelauf und Feinabstimmung |
+| **Multisplit** | Welche Innengeräte an einem gemeinsamen Außengerät hängen: Anlagen als Kacheln, Vorschlag aus den Daten, Zuordnen per Ziehen |
 | **Verbrauch** | Diagramm und Aufzeichnung; umschaltbar auf Wärme und COP-Linie |
 | **Effizienz** | Wärmeleistung, COP/EER und Wärmemenge je Anlage: Modellwahl, Luftstrom je Lüfterstufe, Kalibrierung mit Austrittssensor oder Handmessung |
 | **Module suchen**, **MQTT-Broker (Technik)**, **Moduleinstellungen (Technik)** | Anbinden und Technik |
@@ -116,14 +117,21 @@ ob ein Feuchtewert vorhanden ist.
 Die Leistungsgrenze (`demand`) wirkt bei Daikin nur, wenn
 
 1. das **originale Daikin-WLAN-Modul eingeschaltet** ist (Fernbedienung: „Powerful“ 5 Sekunden
-   halten, bis „SP 1“ erscheint). Internet oder Cloud ist dafür nicht nötig, die App darf offline
-   sein – und
-2. in der Daikin-App die **Leistungssteuerung auf „Ein“** steht.
+   halten, bis „SP 1“ erscheint) und
+2. die **Bedarfs- bzw. Leistungssteuerung in der Daikin-App (Onecta)** passend steht.
 
-„Aus“ bedeutet in der App immer 100 %; Werte vom faikout-Modul sind dann wirkungslos. Bei „Ein“
-dürfen App und faikout schreiben, der letzte Wert gilt. „Auto“ heißt: die Cloud regelt. Eine
-Ablehnung bei ausgeschalteter Anlage sagt nichts aus – der Adapter zeigt dann weiter „noch nicht
-geprüft“.
+Welche Einstellung in der App richtig ist, hängt nach bisherigen Erfahrungen davon ab, ob das
+Daikin-Modul Internet hat. **Das ist ein Erfahrungswert aus zwei Installationen, noch nicht
+bestätigt:**
+
+| Daikin-WLAN-Modul | Bedarfssteuerung in Onecta | Beobachtet |
+|---|---|---|
+| mit Cloud-Verbindung (Internet) | **„Aus“** | an einer Multisplit-Anlage: erst mit „Aus“ übernahm die Anlage den Wert des faikout-Moduls |
+| ohne Internet (eigenes Netz, App offline) | **„Ein“** | an den Anlagen des Entwicklers (Internet für das Daikin-Modul gesperrt): mit „Ein“ wirkt der Wert |
+
+Wirkt die Leistungsgrenze nicht, die andere Einstellung ausprobieren – und gern im Forum berichten,
+welche Kombination bei dir gilt. „Auto“ heißt: die Cloud regelt selbst. Eine Ablehnung bei
+ausgeschalteter Anlage sagt nichts aus – der Adapter zeigt dann weiter „noch nicht geprüft“.
 
 #### Multisplit: eine Leistungsgrenze je Außengerät
 
@@ -148,8 +156,8 @@ Außengerät**:
   der Bezugsleistungen der Innengeräte (Vorgabe je Gerät 1000 W, Geräte ohne Modul mit der Vorgabe
   der Instanz); ein eigener Wert steht in `aussengeraete[].vortagReferenzW`.
 - **Innengeräte ohne Faikout-Modul** („weitere Innengeräte“): Dort kann der Adapter nichts setzen, ihr
-  Wert in der Daikin-App bestimmt mit. **Schalte an diesen Geräten die Bedarfssteuerung in der
-  Daikin-App ab.**
+  Wert in der Daikin-App bestimmt mit. **Stelle an diesen Geräten in der Daikin-App keine eigene
+  Leistungsgrenze ein** (Bedarfssteuerung ab bzw. 100 %), sonst redet ihr Wert mit.
 
 Anzeige: `<Gerät>.regulation.demand.reason` beginnt mit dem Gruppenbezug, z. B. „Gruppe „Garten“:
 65 % = Maximum aus Wohnzimmer 65, Büro 45; Gästezimmer aus – folgt der Gruppe | eigene Anforderung
@@ -441,6 +449,35 @@ je Anlage und die Summe; umschaltbar sind „Alles“, „Nur Heizen“ und „N
 oder Tabelle. Die Daten kommen aus den eigenen Zählern des Adapters (48 Stunden, 62 Tage,
 24 Monate); ein History-Adapter ist dafür nicht nötig.
 
+### Multisplit: Innengeräte einem Außengerät zuordnen
+
+Hängen mehrere Innengeräte an **einem** Außengerät, melden ihre Module denselben Zähler des
+Außengeräts. Damit Verbrauch, COP und Leistungsgrenze stimmen, sagst du dem Adapter im Reiter
+**Multisplit**, welche Innengeräte zusammengehören. Der Adapter ordnet **nie selbst** zu.
+
+1. **Ansehen:** Jede Anlage ist eine Kachel – oben das Außengerät (der Lüfter dreht, wenn es läuft),
+   an der Leitung darunter die Innengeräte. Einzelne Anlagen stehen grau darunter.
+2. **Vorschlag:** Erkennt der Adapter gleiche Zähler, erscheint ein Vorschlag (sonst Knopf
+   **„Zuordnung vorschlagen“**). Pfeile und Kennungen (A1, A2, B1 …) zeigen, welches Innengerät wohin
+   wandert; jede vorgeschlagene Anlage hat ihre eigene Farbe. Die Stufe sagt, wie belastbar er ist:
+   *sicher* (Zähler über 10 kWh, höchstens 200 Wh auseinander, 10 Minuten lang beobachtet), *wird noch
+   geprüft* oder *unsicher* (nur Verdichter und Außentemperatur laufen gleich). Die Beobachtung
+   übersteht einen Neustart des Adapters.
+3. **Übernehmen:** Mit dem grünen **✓** an der vorgeschlagenen Kachel übernimmst du genau dieses
+   Außengerät. **„Vorschlag schließen“** verwirft den Rest; Abgelehntes kommt erst über „Zuordnung
+   vorschlagen“ oder bei einer geänderten Gruppe wieder.
+4. **Von Hand:** Ein Innengerät auf ein Außengerät, auf eine einzelne Anlage oder auf „Neues
+   Außengerät“ ziehen; herausziehen und irgendwo loslassen löst es wieder (mit „Rückgängig“). Das
+   Menü ⌄ an jeder kleinen Kachel kann dasselbe.
+5. **Speichern** – erst dann gilt die Zuordnung.
+
+Danach zeigt die Kachel Leistung, Energie heute, den Anteil jedes Innengeräts, den **Rest** (Verbrauch
+des Außengeräts, den die Innengeräte nicht erklären, z. B. Abtauen oder Innengeräte ohne Modul) und den **System-COP**. Innengeräte
+ohne Faikout-Modul trägst du als Zahl unter „Weitere Innengeräte ohne Faikout-Modul“ ein. Jedes
+Außengerät bekommt eine eigene **Gerätekarte** (nur Anzeige) und die Datenpunkte
+`outdoorUnits.<Kennung>.*`. Mit eingeschalteter Bedarfsregelung gilt die Leistungsgrenze je
+Außengerät (siehe „Multisplit: eine Leistungsgrenze je Außengerät“).
+
 ## 10. Effizienz: Wärmeleistung und COP
 
 Der Reiter „Effizienz“ beantwortet: **Wie viel Wärme (oder Kälte) liefert die Anlage für ihren Strom?**
@@ -548,9 +585,9 @@ den COP (Achse rechts). „Strom“ bleibt die Vorgabe. Die Gerätekarte zeigt �
 
 - **Regelung auf den besten COP** (die Anlage im effizienten Teillastbereich halten, Takten vermeiden) ist
   bewusst noch nicht gebaut – erst sollen die Werte über einen Winter belastbar sein.
-- **Multisplit** (mehrere Innengeräte an einem Außengerät) wird noch nicht aufgeteilt: Der Strom des
-  Außengeräts lässt sich nicht einfach einem Innengerät zuordnen. Bis dahin stimmt der COP nur bei
-  Single-Split-Anlagen.
+- **Multisplit** (mehrere Innengeräte an einem Außengerät): Der COP je Innengerät kommt aus dessen
+  eigenen Heiz-/Kühlzählern (100-Wh-Stufen, kein Momentanwert). Für die ganze Anlage gibt es seit 1.2.0
+  den **System-COP** am Außengerät (Reiter Multisplit, `outdoorUnits.<Kennung>.copToday`).
 
 ## 11. Sprachen
 

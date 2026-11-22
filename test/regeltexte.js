@@ -151,8 +151,9 @@ describe('Regeltexte (mehrsprachig)', () => {
     it('Deutsch ist zeichengenau der bisherige Text (Stichproben)', () => {
         expect(faehigkeit.bewerten(null, { art: 'abgelehnt', power: true, wert: 80 }).grund).to.equal(
             'demand 80 im Betrieb abgelehnt (failed-set). Bei Daikin wirkt die Leistungsgrenze nur, ' +
-                'wenn das originale Daikin-WLAN-Modul eingeschaltet ist (Fernbedienung: Powerful 5 s, Anzeige „SP 1“) ' +
-                'und in der Daikin-App die Leistungssteuerung auf „Ein“ steht („Aus“ = immer 100 %, „Auto“ = die Cloud regelt)',
+                'wenn das originale Daikin-WLAN-Modul eingeschaltet ist (Fernbedienung: Powerful 5 s, Anzeige „SP 1“). ' +
+                'Außerdem die Leistungssteuerung in der Daikin-App prüfen (Erfahrungswert: Modul ohne Internet „Ein“, ' +
+                'mit Cloud-Verbindung „Aus“)',
         );
         expect(faehigkeit.bewerten(null, { art: 'abgelehnt', power: false, wert: 80 }).grund).to.equal(
             'noch keine Rückmeldung; demand 80 bei Gerät aus abgelehnt – nicht aussagekräftig',
@@ -173,7 +174,7 @@ describe('Regeltexte (mehrsprachig)', () => {
         );
     });
 
-    it('Daikin-Hinweis nennt in jeder Sprache WLAN-Modul, Powerful 5 s, „SP 1“, 100 % und Auto', () => {
+    it('Daikin-Hinweis nennt in jeder Sprache WLAN-Modul, Powerful 5 s, „SP 1“ und die Cloud-Unterscheidung', () => {
         for (const s of SPRACHEN) {
             const v = texte.TEXTE['faehig.abgelehntBetrieb'][s];
             expect(v, s).to.match(/failed-set/);
@@ -182,8 +183,8 @@ describe('Regeltexte (mehrsprachig)', () => {
             expect(v, s).to.match(/Powerful/);
             expect(v, s).to.match(/5\s?(s|с|秒)/);
             expect(v, s).to.match(/SP 1/);
-            expect(v, s).to.match(/100\s?%/);
-            expect(v, s).to.match(/Auto|Авто|自动/);
+            expect(v, s).to.match(/cloud|облак|nube|chmur|хмар|云/i);
+            expect(v, s).to.match(/internet|интернет|інтернет|联网/i);
         }
     });
 

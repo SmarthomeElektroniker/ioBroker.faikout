@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -74,6 +74,19 @@
       }
     ],
     "news": {
+      "1.2.0": {
+        "en": "New tab “Multi split”: every system as a tile; assign indoor units to a common outdoor unit by dragging or apply a suggestion from the data per outdoor unit with ✓. Device card and data points per outdoor unit with system COP. Climate control: one power limit per outdoor unit (maximum of the running units). Daikin app: demand control “Off” with cloud connection, “On” without internet (experience, not yet confirmed).",
+        "de": "Neuer Reiter „Multisplit“: jede Anlage als Kachel; Innengeräte per Ziehen einem gemeinsamen Außengerät zuordnen oder einen Vorschlag aus den Daten je Außengerät mit ✓ übernehmen. Gerätekarte und Datenpunkte je Außengerät mit System-COP. Regelung: eine Leistungsgrenze je Außengerät (Maximum der laufenden Geräte). Daikin-App: Bedarfssteuerung bei Cloud-Verbindung „Aus“, ohne Internet „Ein“ (Erfahrungswert, noch nicht bestätigt).",
+        "ru": "Новая вкладка «Мультисплит»: каждая система в виде плитки; назначайте внутренние блоки общему наружному блоку перетаскиванием или принимайте предложение по данным для каждого наружного блока кнопкой ✓. Карточка устройства и точки данных для каждого наружного блока с COP системы. Регулирование: одно ограничение мощности на наружный блок (максимум работающих блоков). Приложение Daikin: управление мощностью «Выкл.» при подключении к облаку, «Вкл.» без интернета (по опыту, ещё не подтверждено).",
+        "pt": "Novo separador «Multi-split»: cada sistema como mosaico; atribua unidades interiores a uma unidade exterior comum arrastando, ou aceite uma sugestão a partir dos dados por unidade exterior com ✓. Cartão de dispositivo e pontos de dados por unidade exterior com COP do sistema. Regulação: um limite de potência por unidade exterior (máximo das unidades em funcionamento). App Daikin: controlo de potência «Desligado» com ligação à cloud, «Ligado» sem internet (experiência, ainda não confirmada).",
+        "nl": "Nieuw tabblad “Multisplit”: elk systeem als tegel; binnenunits door slepen aan een gemeenschappelijke buitenunit toewijzen of een voorstel uit de gegevens per buitenunit met ✓ overnemen. Apparaatkaart en datapunten per buitenunit met systeem-COP. Regeling: één vermogensgrens per buitenunit (maximum van de draaiende units). Daikin-app: vermogensregeling “Uit” met cloudverbinding, “Aan” zonder internet (ervaring, nog niet bevestigd).",
+        "fr": "Nouvel onglet « Multisplit » : chaque installation sous forme de tuile ; affectez les unités intérieures à une unité extérieure commune par glisser-déposer ou acceptez une proposition issue des données par unité extérieure avec ✓. Carte d’appareil et points de données par unité extérieure avec COP du système. Régulation : une limite de puissance par unité extérieure (maximum des unités en marche). Application Daikin : contrôle de la puissance « Désactivé » avec connexion cloud, « Activé » sans internet (constat, pas encore confirmé).",
+        "it": "Nuova scheda «Multisplit»: ogni impianto come riquadro; assegna le unità interne a un’unità esterna comune trascinandole o accetta con ✓ un suggerimento dai dati per ogni unità esterna. Scheda dispositivo e punti dati per unità esterna con COP di sistema. Regolazione: un limite di potenza per unità esterna (massimo delle unità in funzione). App Daikin: controllo della potenza «Disattivo» con connessione al cloud, «Attivo» senza internet (esperienza, non ancora confermata).",
+        "es": "Nueva pestaña «Multisplit»: cada equipo como mosaico; asigne unidades interiores a una unidad exterior común arrastrándolas o acepte con ✓ una sugerencia a partir de los datos por unidad exterior. Tarjeta de dispositivo y puntos de datos por unidad exterior con COP del sistema. Regulación: un límite de potencia por unidad exterior (máximo de las unidades en marcha). App de Daikin: control de potencia «Desactivado» con conexión a la nube, «Activado» sin internet (experiencia, aún sin confirmar).",
+        "pl": "Nowa karta „Multisplit”: każdy układ jako kafelek; przypisuj jednostki wewnętrzne do wspólnej jednostki zewnętrznej przeciąganiem lub przyjmij przyciskiem ✓ propozycję z danych dla każdej jednostki zewnętrznej. Karta urządzenia i punkty danych dla każdej jednostki zewnętrznej z COP systemu. Regulacja: jeden limit mocy na jednostkę zewnętrzną (maksimum pracujących jednostek). Aplikacja Daikin: sterowanie mocą „Wył.” przy połączeniu z chmurą, „Wł.” bez internetu (z doświadczenia, jeszcze niepotwierdzone).",
+        "uk": "Нова вкладка «Мультиспліт»: кожна система у вигляді плитки; призначайте внутрішні блоки спільному зовнішньому блоку перетягуванням або приймайте пропозицію з даних для кожного зовнішнього блока кнопкою ✓. Картка пристрою та точки даних для кожного зовнішнього блока з COP системи. Регулювання: одне обмеження потужності на зовнішній блок (максимум працюючих блоків). Застосунок Daikin: керування потужністю «Вимк.» при підключенні до хмари, «Увімк.» без інтернету (з досвіду, ще не підтверджено).",
+        "zh-cn": "新选项卡“一拖多”：每套系统显示为一个磁贴；通过拖动将室内机分配到共用的室外机，或按室外机用 ✓ 采纳根据数据得出的建议。每台室外机有设备卡片和数据点，含系统 COP。调节：每台室外机一个功率上限（取运行中机组的最大值）。Daikin 应用：模块连接云端时功率控制设为“关”，不联网时设为“开”（经验值，尚未确认）。"
+      },
       "1.1.1": {
         "en": "Fix for multi split systems (issue #8): the module field “energy” is the outdoor unit meter. Device card and consumption chart (“All”) now show heating + cooling per indoor unit, so the total no longer counts the outdoor unit twice. With a shared outdoor unit, COP/EER are calculated from the indoor unit meters (new data point efficiency.sharedOutdoorUnit). consumption.total.* stays, now named “Outdoor unit (module meter)”.",
         "de": "Korrektur für Multisplit-Anlagen (Issue #8): Das Modulfeld „energy“ ist der Zähler des Außengeräts. Gerätekarte und Verbrauchsdiagramm („Alles“) zeigen jetzt Heizen + Kühlen je Innengerät, die Summe zählt das Außengerät nicht mehr doppelt. Bei gemeinsamem Außengerät wird COP/EER aus den Zählern des Innengeräts berechnet (neuer Datenpunkt efficiency.sharedOutdoorUnit). consumption.total.* bleibt und heißt jetzt „Außengerät (Zähler des Moduls)“.",
@@ -151,19 +164,6 @@
         "pl": "Karty urządzeń w panelu admina (menedżer urządzeń): włączanie/wyłączanie z potwierdzeniem, tryb pracy, temperatura zadana i prędkość wentylatora bezpośrednio na karcie, sygnał Wi-Fi i bieżące wartości; nowy stan control.selectedMode",
         "uk": "Картки пристроїв в адмінці (менеджер пристроїв): увімк./вимк. з підтвердженням, режим роботи, задана температура та швидкість вентилятора прямо на картці, сигнал Wi-Fi і поточні значення; нова точка даних control.selectedMode",
         "zh-cn": "管理界面中的设备卡片（设备管理器）：带确认的开关、运行模式、目标温度和风扇转速可直接在卡片上设置，显示 Wi-Fi 信号和实时数值；新增状态 control.selectedMode"
-      },
-      "0.0.19": {
-        "en": "Much lower CPU and database load: states are only written when they change; rejected settings (failed-set) are logged clearly and stored in info.failedSet",
-        "de": "Deutlich weniger CPU- und Datenbanklast: Datenpunkte werden nur bei Änderung geschrieben; abgelehnte Einstellungen (failed-set) im Klartext geloggt und in info.failedSet abgelegt",
-        "ru": "Значительно меньшая нагрузка на ЦП и базу данных: состояния записываются только при изменении; отклонённые настройки (failed-set) понятно записываются в журнал и сохраняются в info.failedSet",
-        "pt": "Carga de CPU e base de dados muito menor: os estados só são escritos quando mudam; definições rejeitadas (failed-set) são registadas de forma clara e guardadas em info.failedSet",
-        "nl": "Veel minder CPU- en databasebelasting: states worden alleen bij wijziging geschreven; geweigerde instellingen (failed-set) worden duidelijk gelogd en opgeslagen in info.failedSet",
-        "fr": "Charge CPU et base de données nettement réduite : les états ne sont écrits que lorsqu’ils changent ; les réglages refusés (failed-set) sont journalisés clairement et enregistrés dans info.failedSet",
-        "it": "Carico di CPU e database molto inferiore: gli stati vengono scritti solo quando cambiano; le impostazioni rifiutate (failed-set) vengono registrate chiaramente e salvate in info.failedSet",
-        "es": "Mucha menos carga de CPU y de base de datos: los estados solo se escriben cuando cambian; los ajustes rechazados (failed-set) se registran con claridad y se guardan en info.failedSet",
-        "pl": "Znacznie mniejsze obciążenie CPU i bazy danych: stany są zapisywane tylko przy zmianie; odrzucone ustawienia (failed-set) są czytelnie logowane i zapisywane w info.failedSet",
-        "uk": "Значно менше навантаження на ЦП і базу даних: стани записуються лише при зміні; відхилені налаштування (failed-set) зрозуміло записуються в журнал і зберігаються в info.failedSet",
-        "zh-cn": "大幅降低 CPU 和数据库负载：状态仅在变化时写入；被拒绝的设置（failed-set）以清晰的日志记录并保存在 info.failedSet 中"
       }
     },
     "restartAdapters": [

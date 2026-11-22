@@ -697,20 +697,17 @@ export function AussengeraeteAnsicht(props: AnsichtProps): React.JSX.Element {
     };
 
     // ---------- Vorschlag ----------
-    const offeneVorschlaege = vorschlaege.filter(v => v.art !== 'widerspruch');
-    /** Vorschlagsmodus: es gibt einen offenen Vorschlag - Band, Rahmen, Pfeile; alles andere tritt zurueck */
-    const modus = offeneVorschlaege.length > 0;
-    const zielGruppen = new Set(offeneVorschlaege.filter(v => v.art === 'dazu').map(v => v.gruppe));
+    const offenRoh = vorschlaege.filter(v => v.art !== 'widerspruch');
     /** Innengeraete, die durch den Vorschlag wandern wuerden: Nummer (an Quelle und Ziel gleich) und Name des Ziels */
     // Die Farbe gehoert zum Vorschlag, nicht zu seinem Platz in der Liste: wird einer uebernommen, behalten die
     // uebrigen ihre Farbe. Vergeben wird die erste Farbe, die gerade kein offener Vorschlag traegt.
     const farbPlatz = useRef(new Map<string, number>());
     for (const k of [...farbPlatz.current.keys()]) {
-        if (!offeneVorschlaege.some(v => v.schluessel === k)) {
+        if (!offenRoh.some(v => v.schluessel === k)) {
             farbPlatz.current.delete(k);
         }
     }
-    for (const v of offeneVorschlaege) {
+    for (const v of offenRoh) {
         if (!farbPlatz.current.has(v.schluessel)) {
             const belegt = new Set(farbPlatz.current.values());
             let platz = 0;
@@ -720,6 +717,14 @@ export function AussengeraeteAnsicht(props: AnsichtProps): React.JSX.Element {
             farbPlatz.current.set(v.schluessel, platz);
         }
     }
+    // Angezeigt wird in der Reihenfolge der Kennbuchstaben (A oben, dann B ...) - Band, Buendel und Kennungen
+    // stimmen so ueberein, auch wenn ein spaeterer Suchlauf die Vorschlaege anders sortiert liefert.
+    const offeneVorschlaege = [...offenRoh].sort(
+        (x, y) => (farbPlatz.current.get(x.schluessel) ?? 0) - (farbPlatz.current.get(y.schluessel) ?? 0),
+    );
+    /** Vorschlagsmodus: es gibt einen offenen Vorschlag - Band, Rahmen, Pfeile; alles andere tritt zurueck */
+    const modus = offeneVorschlaege.length > 0;
+    const zielGruppen = new Set(offeneVorschlaege.filter(v => v.art === 'dazu').map(v => v.gruppe));
     const vFarbe = (n: number): string => {
         const platz = farbPlatz.current.get(offeneVorschlaege[n]?.schluessel) ?? n;
         return VORSCHLAG_FARBEN[platz % VORSCHLAG_FARBEN.length][f.dunkel ? 'dunkel' : 'hell'];

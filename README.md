@@ -233,21 +233,41 @@ it would do, but sends nothing. Instances from older versions keep their dry run
 The power limit (`demand`) only has an effect on a Daikin unit if
 
 1. the **original Daikin Wi-Fi module is switched on** (remote control: hold "Powerful" for
-   5 seconds until "SP 1" appears). No internet and no cloud connection are needed – the app may be
-   offline – and
-2. **demand control is set to "On"** in the Daikin app.
+   5 seconds until "SP 1" appears) and
+2. **demand control in the Daikin app (Onecta)** is set appropriately.
 
-"Off" in the app always means 100 %; values sent by the faikout module then have no effect. With
-"On", both the app and faikout may write, the last value wins. "Auto" means the cloud controls. A
-value rejected while the unit is switched off says nothing – the adapter keeps showing "not tested
-yet".
+Which app setting is right seems to depend on whether the Daikin module has internet access – **experience
+from two installations, not yet confirmed:**
 
-### Multi split: one power limit per outdoor unit
+| Daikin Wi-Fi module | Demand control in Onecta | Observed |
+|---|---|---|
+| with cloud connection (internet) | **"Off"** | multi split system: only with "Off" did the unit follow the faikout value |
+| without internet (own network, app offline) | **"On"** | developer's units (internet blocked for the Daikin module) |
 
-With indoor units assigned to a common outdoor unit (tab **Multi split**), all of them – including
-those switched off – get the same power limit: the maximum of the requests of the running units. When
-none runs, 100 % is sent once. **Indoor units without a Faikout module: switch off demand control
-there in the Daikin app**, otherwise their own value takes part. Details: [docs/en](docs/en/README.md).
+If the limit has no effect, try the other setting and report it in the forum. "Auto" means the cloud
+controls. A value rejected while the unit is switched off says nothing – the adapter keeps showing "not
+tested yet".
+
+### Multi split: assigning indoor units to an outdoor unit
+
+Several indoor units on one outdoor unit report the same outdoor unit meter. In the tab **Multi split**
+every system is a tile (outdoor unit at the top, indoor units on the line below). The adapter never
+assigns by itself:
+
+1. A **suggestion** appears when the meters match (or press "Suggest assignment"); arrows and labels
+   (A1, A2, B1 …) show what would move where, the level says how reliable it is (*certain* after 10 minutes
+   of matching meters – the observation survives a restart).
+2. Apply a suggested outdoor unit with the green **✓**; "Close suggestion" discards the rest.
+3. Or **drag** an indoor unit onto an outdoor unit, a single system or "New outdoor unit"; drag it out to
+   release it (with "Undo"). Then **Save**.
+
+Every outdoor unit gets a device card and the data points `outdoorUnits.<id>.*` (power, energy today and
+this month, rest, shares, **system COP**).
+
+**Power limit per outdoor unit:** with demand control on, all assigned indoor units – including those
+switched off – get the same power limit: the maximum of the requests of the running units. When none
+runs, 100 % is sent once. **Indoor units without a Faikout module: do not set an own power limit for
+them in the Daikin app**, otherwise their value takes part. Details: [docs/en](docs/en/README.md).
 
 ### Changing settings in the module
 
@@ -284,6 +304,20 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### 1.2.0 (2026-11-22)
+- New tab **Multi split**: every system as a tile (outdoor unit, line, indoor units). Assign indoor units to a
+  common outdoor unit by dragging, or apply a suggestion from the data per outdoor unit with ✓ (levels certain /
+  still being checked / uncertain, arrows and labels A1, B1 …); the adapter never assigns by itself. The meter
+  observation behind the suggestion survives an adapter restart.
+- Device card per outdoor unit and data points `outdoorUnits.<id>.*`: power, energy today/this month, rest,
+  shares of the indoor units and **system COP**.
+- Climate control: one power limit per outdoor unit – all assigned indoor units (also those switched off) get the
+  same value, the maximum of the requests of the running units; 100 % once when none runs
+  (`outdoorUnits.<id>.demand`, `.demandReason`, `.leader`).
+- Note for indoor units without a Faikout module: do not set an own power limit for them in the Daikin app.
+- Daikin app (Onecta): the recommended demand control setting now depends on the Daikin module – with cloud
+  connection "Off", without internet "On" (experience, not yet confirmed); README, guide and hints updated.
+
 ### 1.1.1 (2026-11-22)
 - Fix for multi split systems ([#8](https://github.com/SmarthomeElektroniker/ioBroker.faikout/issues/8)):
   according to the Faikout firmware the module field `energy` is the meter of the **outdoor unit**, while

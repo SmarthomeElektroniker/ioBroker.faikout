@@ -45,7 +45,16 @@ describe('Multisplit: Konfiguration', () => {
 
     it('umbenanntes Modul: die Zuordnung folgt der Hardware-ID', () => {
         const r = v.aufloesen(
-            [{ id: 'a1', name: 'Garten', innen: [{ geraet: 'Schlafzimmer', modulId: 'M2' }, { geraet: 'wz', modulId: 'M1' }] }],
+            [
+                {
+                    id: 'a1',
+                    name: 'Garten',
+                    innen: [
+                        { geraet: 'Schlafzimmer', modulId: 'M2' },
+                        { geraet: 'wz', modulId: 'M1' },
+                    ],
+                },
+            ],
             geraete(['wz', 'Wohnzimmer', 'M1'], ['Eltern', 'Eltern', 'M2']),
         );
         expect(r.gruppen[0].innen.map(i => [i.id, i.umbenannt, i.fehlt])).to.deep.equal([
@@ -95,42 +104,93 @@ describe('Multisplit: Vorschlag aus den Daten', () => {
         verlauf(vl, 'wz', lauf);
         verlauf(vl, 'sz', lauf);
         verlauf(vl, 'gast', m => ({ comp: 30 + (m % 5) * 6, outside: 6.5 }));
-        const r = v.vorschlaege({ zaehler: new Map([['wz', 300], ['sz', 300], ['gast', 300]]), verlauf: vl });
+        const r = v.vorschlaege({
+            zaehler: new Map([
+                ['wz', 300],
+                ['sz', 300],
+                ['gast', 300],
+            ]),
+            verlauf: vl,
+        });
         expect(r).to.have.length(1);
         expect(r[0]).to.deep.include({ art: 'neu', ids: ['sz', 'wz'], sicherheit: 'mittel' });
         expect(r[0].gruende).to.deep.equal(['verdichter']);
     });
 
     it('Gleichlauf: beide aus oder immer dieselbe Frequenz reicht nicht', () => {
-        const aus = verlauf(verlauf(new Map(), 'a', () => ({ comp: 0, outside: 5 })), 'b', () => ({ comp: 0, outside: 5 }));
+        const aus = verlauf(
+            verlauf(new Map(), 'a', () => ({ comp: 0, outside: 5 })),
+            'b',
+            () => ({ comp: 0, outside: 5 }),
+        );
         expect(v.gleichlauf(aus.get('a'), aus.get('b')).sicher).to.equal(false);
-        const fest = verlauf(verlauf(new Map(), 'a', () => ({ comp: 60, outside: 5 })), 'b', () => ({ comp: 60, outside: 5 }));
+        const fest = verlauf(
+            verlauf(new Map(), 'a', () => ({ comp: 60, outside: 5 })),
+            'b',
+            () => ({ comp: 60, outside: 5 }),
+        );
         expect(v.gleichlauf(fest.get('a'), fest.get('b'))).to.include({ sicher: false, stufen: 1 });
     });
 
     it('verschiedene bekannte Zähler schließen ein gemeinsames Außengerät aus - auch bei gleichem Verdichterlauf', () => {
         const lauf = m => ({ comp: 30 + (m % 7) * 4, outside: 6.5 });
         const vl = verlauf(verlauf(new Map(), 'wz', lauf), 'og', lauf);
-        expect(v.vorschlaege({ zaehler: new Map([['wz', 3131200], ['og', 3970200]]), verlauf: vl })).to.deep.equal([]);
+        expect(
+            v.vorschlaege({
+                zaehler: new Map([
+                    ['wz', 3131200],
+                    ['og', 3970200],
+                ]),
+                verlauf: vl,
+            }),
+        ).to.deep.equal([]);
     });
 
     it('schon zugeordnet: kein Vorschlag; ein neues Innengerät wird dem bestehenden Außengerät vorgeschlagen', () => {
-        const zaehler = new Map([['wz', 50000], ['sz', 50000], ['az', 50000]]);
-        const alle = new Map([['wz', 'a1'], ['sz', 'a1'], ['az', 'a1']]);
+        const zaehler = new Map([
+            ['wz', 50000],
+            ['sz', 50000],
+            ['az', 50000],
+        ]);
+        const alle = new Map([
+            ['wz', 'a1'],
+            ['sz', 'a1'],
+            ['az', 'a1'],
+        ]);
         expect(v.vorschlaege({ zaehler, vonGeraet: alle })).to.deep.equal([]);
-        const r = v.vorschlaege({ zaehler, vonGeraet: new Map([['wz', 'a1'], ['sz', 'a1']]) });
+        const r = v.vorschlaege({
+            zaehler,
+            vonGeraet: new Map([
+                ['wz', 'a1'],
+                ['sz', 'a1'],
+            ]),
+        });
         expect(r[0]).to.deep.include({ art: 'dazu', gruppe: 'a1', neu: ['az'] });
     });
 
     it('abgelehnter Vorschlag kommt nicht wieder; über zwei Außengeräte verteilt = Widerspruch', () => {
-        const zaehler = new Map([['wz', 50000], ['sz', 50000]]);
+        const zaehler = new Map([
+            ['wz', 50000],
+            ['sz', 50000],
+        ]);
         expect(v.vorschlaege({ zaehler, abgelehnt: [v.schluessel(['wz', 'sz'])] })).to.deep.equal([]);
-        const r = v.vorschlaege({ zaehler, vonGeraet: new Map([['wz', 'a1'], ['sz', 'a2']]) });
+        const r = v.vorschlaege({
+            zaehler,
+            vonGeraet: new Map([
+                ['wz', 'a1'],
+                ['sz', 'a2'],
+            ]),
+        });
         expect(r[0].art).to.equal('widerspruch');
     });
 
     it('Prüfung einer Zuordnung: bestätigt, widerspricht, unbekannt', () => {
-        const z = new Map([['wz', 50000], ['sz', 50100], ['og', 90000], ['neu', 200]]);
+        const z = new Map([
+            ['wz', 50000],
+            ['sz', 50100],
+            ['og', 90000],
+            ['neu', 200],
+        ]);
         expect(v.pruefung(['wz', 'sz'], z)).to.equal('bestaetigt');
         expect(v.pruefung(['wz', 'og'], z)).to.equal('widerspricht');
         expect(v.pruefung(['wz', 'neu'], z)).to.equal('unbekannt');
@@ -157,27 +217,50 @@ describe('Multisplit: Aufteilung', () => {
         ]);
         expect(r).to.deep.include({ aussen: 0.9, summeInnen: 0.9, rest: 0 });
         expect(r.innen.map(i => i.anteil)).to.deep.equal([0.667, 0.333]);
-        const mitRest = v.aufteilung(6.3 + 0.7, [{ id: 'b', kwh: 4 }, { id: 'a', kwh: 2.5 }]);
+        const mitRest = v.aufteilung(6.3 + 0.7, [
+            { id: 'b', kwh: 4 },
+            { id: 'a', kwh: 2.5 },
+        ]);
         expect(mitRest.rest).to.equal(0.5);
         expect(mitRest.innen.map(i => i.anteil)).to.deep.equal([0.571, 0.357]);
     });
 
     it('Innengeräte zählen mehr als das Außengerät (Zählerstufen): kein negativer Rest, Anteile an der Summe', () => {
-        const r = v.aufteilung(6.3, [{ id: 'b', kwh: 4 }, { id: 'a', kwh: 2.5 }]);
+        const r = v.aufteilung(6.3, [
+            { id: 'b', kwh: 4 },
+            { id: 'a', kwh: 2.5 },
+        ]);
         expect(r.rest).to.equal(0);
         expect(r.innen.map(i => i.anteil)).to.deep.equal([0.615, 0.385]);
     });
 
     it('nur ein Innengerät läuft, ohne Außenzähler, alles null', () => {
-        expect(v.aufteilung(1.2, [{ id: 'a', kwh: 1.1 }, { id: 'b', kwh: 0 }]).innen.map(i => i.anteil)).to.deep.equal([0.917, 0]);
-        expect(v.aufteilung(null, [{ id: 'a', kwh: 1 }, { id: 'b', kwh: 3 }])).to.deep.include({ aussen: null, rest: 0, summeInnen: 4 });
+        expect(
+            v
+                .aufteilung(1.2, [
+                    { id: 'a', kwh: 1.1 },
+                    { id: 'b', kwh: 0 },
+                ])
+                .innen.map(i => i.anteil),
+        ).to.deep.equal([0.917, 0]);
+        expect(
+            v.aufteilung(null, [
+                { id: 'a', kwh: 1 },
+                { id: 'b', kwh: 3 },
+            ]),
+        ).to.deep.include({ aussen: null, rest: 0, summeInnen: 4 });
         expect(v.aufteilung(0, [{ id: 'a', kwh: null }]).innen[0].anteil).to.equal(null);
     });
 
     it('Diagramm: höchste Reihe der Module als Außengerät, Rest je Abschnitt', () => {
         const aussen = v.hoechste([[1, null, 0.5], [0.9, null, 0.6], null]);
         expect(aussen).to.deep.equal([1, null, 0.6]);
-        expect(v.restReihe(aussen, [[0.6, 0.1, 0.4], [0.3, null, 0.3]])).to.deep.equal([0.1, null, 0]);
+        expect(
+            v.restReihe(aussen, [
+                [0.6, 0.1, 0.4],
+                [0.3, null, 0.3],
+            ]),
+        ).to.deep.equal([0.1, null, 0]);
     });
 
     it('System-Arbeitszahl: Wärme aller Innengeräte durch den Strom des Außengeräts', () => {
@@ -190,7 +273,14 @@ describe('Multisplit: Aufteilung', () => {
 describe('Multisplit: Verbrauchsansicht', () => {
     const bild = require('../lib/verbrauchbild');
     const jetzt = new Date(2026, 10, 22, 14, 30);
-    const tage = kwh => ({ hours: '[]', months: '[]', currentHour: 0, thisMonth: kwh, today: kwh, days: JSON.stringify([{ day: '2026-11-21', kwh: kwh * 2 }]) });
+    const tage = kwh => ({
+        hours: '[]',
+        months: '[]',
+        currentHour: 0,
+        thisMonth: kwh,
+        today: kwh,
+        days: JSON.stringify([{ day: '2026-11-21', kwh: kwh * 2 }]),
+    });
     const geraet = (id, platz, total, heizen) => ({
         id,
         name: id,
@@ -198,7 +288,12 @@ describe('Multisplit: Verbrauchsansicht', () => {
         leistung: 900,
         arten: { total: tage(total), heating: tage(heizen), cooling: null },
     });
-    const liste = () => [geraet('gast', 0, 2, 1.9), geraet('wz', 1, 5, 2.5), geraet('sz', 2, 5, 1.5), geraet('az', 3, 4.9, 0.6)];
+    const liste = () => [
+        geraet('gast', 0, 2, 1.9),
+        geraet('wz', 1, 5, 2.5),
+        geraet('sz', 2, 5, 1.5),
+        geraet('az', 3, 4.9, 0.6),
+    ];
     const aussen = [{ id: 'a1', name: 'Garten', innen: ['wz', 'sz', 'az'] }];
 
     it('zugeordnet: Innengeräte stehen zusammen, dahinter der Rest; der Stapel ergibt das Außengerät einmal', () => {
@@ -241,7 +336,10 @@ describe('Multisplit am Adapter', () => {
             config,
             geraete: new Map([
                 ['wz', { name: 'Wohnzimmer', modulId: 'M1', up: true, zaehler: { energy: { letzterWert: 2412300 } } }],
-                ['sz', { name: 'Schlafzimmer', modulId: 'M2', up: true, zaehler: { energy: { letzterWert: 2412300 } } }],
+                [
+                    'sz',
+                    { name: 'Schlafzimmer', modulId: 'M2', up: true, zaehler: { energy: { letzterWert: 2412300 } } },
+                ],
                 ['gast', { name: 'Gast', modulId: 'M3', up: true, zaehler: { energy: { letzterWert: 815500 } } }],
             ]),
             objekte: new Map(),
@@ -280,8 +378,31 @@ describe('Multisplit am Adapter', () => {
         expect(vb.aussengeraetVon('wz')).to.equal(null);
     });
 
+    it('aufgelöstes Außengerät mit Aufzeichnung (common.custom): Datenpunkte bleiben, Warnung im Log', async () => {
+        const a = attrappe({}, werte);
+        a.getObjectViewAsync = async (_d, _s, opt) => ({
+            rows:
+                opt.startkey === 'faikout.0.outdoorUnits.alt.'
+                    ? [
+                          {
+                              id: 'faikout.0.outdoorUnits.alt.power',
+                              value: { common: { custom: { 'history.0': { enabled: true } } } },
+                          },
+                      ]
+                    : [],
+        });
+        await new Verbund(a).takt();
+        expect(a.objekte.has('geloescht:outdoorUnits.alt')).to.equal(false);
+        expect(
+            a.meldungen.some(m => m.startsWith('WARN Outdoor unit "alt"') && m.includes('outdoorUnits.alt.power')),
+        ).to.equal(true);
+    });
+
     it('zugeordnet: Datenpunkte des Außengeräts - Leistung und Energie einmal, Anteile, System-COP; Altes wird gelöscht', async () => {
-        const a = attrappe({ aussengeraete: [{ id: 'a1', name: 'Garten', innen: [{ geraet: 'wz' }, { geraet: 'sz' }] }] }, werte);
+        const a = attrappe(
+            { aussengeraete: [{ id: 'a1', name: 'Garten', innen: [{ geraet: 'wz' }, { geraet: 'sz' }] }] },
+            werte,
+        );
         a.effizienz = {
             zustand: new Map([
                 ['wz', { werte: { waerme: { today: 2.4 }, stromHeizen: { today: 0.6 } } }],
@@ -322,7 +443,9 @@ describe('Multisplit am Adapter', () => {
         expect(leer.geraete[2]).to.deep.include({ id: 'wz', heute: 0.6, laeuft: true, zaehler: true });
         expect(leer.gruppen).to.deep.equal([]);
         expect(leer.vorschlaege).to.have.length(1);
-        const r = await vb.befehl({ aussengeraete: [{ id: 'a1', name: '', innen: [{ geraet: 'wz' }, { geraet: 'sz' }, { geraet: 'weg' }] }] });
+        const r = await vb.befehl({
+            aussengeraete: [{ id: 'a1', name: '', innen: [{ geraet: 'wz' }, { geraet: 'sz' }, { geraet: 'weg' }] }],
+        });
         expect(r.vorschlaege).to.deep.equal([]);
         expect(r.gruppen[0]).to.deep.include({ id: 'a1', pruefung: 'bestaetigt', heute: 0.9, rest: 0.1 });
         expect(r.gruppen[0].innen.map(i => i.fehlt)).to.deep.equal([false, false, true]);
@@ -333,7 +456,10 @@ describe('Multisplit am Adapter', () => {
         werte['outdoorUnits.a1.leader'] = 'Wohnzimmer';
         a.config.aussengeraete = [{ id: 'a1', innen: ['wz', 'sz'] }];
         expect((await vb.befehl({})).gruppen[0]).to.deep.include({ grenze: 60, leitgeraet: 'Wohnzimmer' });
-        expect((await vb.befehl({ aussengeraete: [{ id: 'a1', innen: ['wz', 'gast'] }] })).gruppen[0]).to.deep.include({ grenze: null, leitgeraet: null });
+        expect((await vb.befehl({ aussengeraete: [{ id: 'a1', innen: ['wz', 'gast'] }] })).gruppen[0]).to.deep.include({
+            grenze: null,
+            leitgeraet: null,
+        });
         a.config.aussengeraete = [];
         const falsch = await vb.befehl({ aussengeraete: [{ id: 'a1', innen: ['wz', 'gast'] }], abgelehnt: ['sz|wz'] });
         expect(falsch.gruppen[0].pruefung).to.equal('widerspricht');
@@ -349,8 +475,19 @@ describe('Simulator: Multisplit', () => {
             praefix: '',
             senden: () => {},
             module: [
-                { typ: 's21', name: 'Wohnen', aussengeraet: 'A', zaehler: { heizen: 1120000, kuehlen: 150000, aussen: 2412300 } },
-                { typ: 's21', name: 'Schlafen', aussengeraet: 'A', zaehler: { heizen: 640000, kuehlen: 60000 }, anlage: { power: false } },
+                {
+                    typ: 's21',
+                    name: 'Wohnen',
+                    aussengeraet: 'A',
+                    zaehler: { heizen: 1120000, kuehlen: 150000, aussen: 2412300 },
+                },
+                {
+                    typ: 's21',
+                    name: 'Schlafen',
+                    aussengeraet: 'A',
+                    zaehler: { heizen: 640000, kuehlen: 60000 },
+                    anlage: { power: false },
+                },
                 { typ: 's21', name: 'Arbeiten', aussengeraet: 'A', zaehler: { heizen: 380000, kuehlen: 20000 } },
                 { typ: 's21', name: 'Gast', zaehler: { heizen: 700000, kuehlen: 100000, aussen: 815500 } },
             ],
@@ -370,7 +507,9 @@ describe('Simulator: Multisplit', () => {
         expect(wo.consumption).to.be.above(gast.consumption); // zwei laufende Innengeraete
         expect(gast.Whoutside).to.be.within(815500, 2000000);
         // die Kernlogik erkennt daraus genau die eine Gruppe
-        const r = v.vorschlaege({ zaehler: new Map(w.module.map((m, i) => [m.name, [wo, sl, ar, gast][i].Whoutside])) });
+        const r = v.vorschlaege({
+            zaehler: new Map(w.module.map((m, i) => [m.name, [wo, sl, ar, gast][i].Whoutside])),
+        });
         expect(r.map(x => x.ids)).to.deep.equal([['Arbeiten', 'Schlafen', 'Wohnen']]);
     });
 });
@@ -381,7 +520,12 @@ describe('Multisplit: automatisch zuordnen', () => {
     function beobachte(n, staende, paare = new Map(), ab = 0) {
         for (let m = ab; m < ab + n; m++) {
             const jetzt = 1e12 + m * MIN;
-            const z = new Map(Object.entries(staende(m)).map(([id, [wh, online = true, alt = 0]]) => [id, { wh, online, zeit: jetzt - alt * MIN }]));
+            const z = new Map(
+                Object.entries(staende(m)).map(([id, [wh, online = true, alt = 0]]) => [
+                    id,
+                    { wh, online, zeit: jetzt - alt * MIN },
+                ]),
+            );
             v.paarMerken(paare, z, jetzt);
         }
         return paare;
@@ -397,7 +541,10 @@ describe('Multisplit: automatisch zuordnen', () => {
             gast: [815500],
         }));
         const r = v.automatisch({ paare });
-        expect(r.gruppen.map(g => g.ids)).to.deep.equal([['az', 'sz', 'wz'], ['bad', 'flur']]);
+        expect(r.gruppen.map(g => g.ids)).to.deep.equal([
+            ['az', 'sz', 'wz'],
+            ['bad', 'flur'],
+        ]);
         expect(r.gruppen[0]).to.deep.include({ gruppe: null, gewandert: true });
         expect(r.gruppen[1].gewandert).to.equal(false);
         expect(r.wartend).to.deep.equal([]);
@@ -433,21 +580,44 @@ describe('Multisplit: automatisch zuordnen', () => {
     });
 
     it('bestehende Zuordnungen bleiben: freies Gerät kommt dazu, fertige Gruppen und Widersprüche werden nicht angefasst', () => {
-        const paare = beobachte(12, () => ({ wz: [50000], sz: [50000], az: [50000], x: [90000], y: [90000], p: [70000], q: [70000] }));
+        const paare = beobachte(12, () => ({
+            wz: [50000],
+            sz: [50000],
+            az: [50000],
+            x: [90000],
+            y: [90000],
+            p: [70000],
+            q: [70000],
+        }));
         const r = v.automatisch({
             paare,
-            vonGeraet: new Map([['wz', 'a1'], ['sz', 'a1'], ['x', 'a2'], ['y', 'a2'], ['p', 'a3'], ['q', 'a4']]),
+            vonGeraet: new Map([
+                ['wz', 'a1'],
+                ['sz', 'a1'],
+                ['x', 'a2'],
+                ['y', 'a2'],
+                ['p', 'a3'],
+                ['q', 'a4'],
+            ]),
         });
         expect(r.gruppen).to.deep.equal([{ ids: ['az', 'sz', 'wz'], neu: ['az'], gruppe: 'a1', gewandert: false }]);
     });
 
     it('Einstufung: sicher nur mit bestätigtem Zähler, sonst "wird noch geprüft"; Verdichter-Gleichlauf bleibt unsicher', () => {
-        const zaehler = new Map([['wz', 50000], ['sz', 50000], ['x', 300], ['y', 300]]);
+        const zaehler = new Map([
+            ['wz', 50000],
+            ['sz', 50000],
+            ['x', 300],
+            ['y', 300],
+        ]);
         const lauf = m => ({ comp: 30 + (m % 7) * 4, outside: 6.5 });
         const vl = verlauf(verlauf(new Map(), 'x', lauf), 'y', lauf);
         const liste = v.vorschlaege({ zaehler, verlauf: vl });
         const kurz = v.einstufen(liste, v.automatisch({ paare: beobachte(4, () => ({ wz: [50000], sz: [50000] })) }));
-        expect(kurz.map(e => [e.ids.join('+'), e.stufe, e.minuten])).to.deep.equal([['sz+wz', 'pruefung', 4], ['x+y', 'unsicher', 0]]);
+        expect(kurz.map(e => [e.ids.join('+'), e.stufe, e.minuten])).to.deep.equal([
+            ['sz+wz', 'pruefung', 4],
+            ['x+y', 'unsicher', 0],
+        ]);
         const lang = v.einstufen(liste, v.automatisch({ paare: beobachte(12, () => ({ wz: [50000], sz: [50000] })) }));
         expect(lang.map(e => e.stufe)).to.deep.equal(['sicher', 'unsicher']);
     });
@@ -476,11 +646,71 @@ describe('Multisplit: automatisch zuordnen', () => {
         a.geraete.get('wz').zaehler = { energy: { letzterWert: 2412300 } };
         a.geraete.get('sz').zaehler = { energy: { letzterWert: 2412300 } };
         const frueh = new Verbund(a);
-        expect((await frueh.befehl({})).vorschlaege[0]).to.deep.include({ stufe: 'pruefung', minuten: 0, noetig: v.AUTO_MINUTEN });
+        expect((await frueh.befehl({})).vorschlaege[0]).to.deep.include({
+            stufe: 'pruefung',
+            minuten: 0,
+            noetig: v.AUTO_MINUTEN,
+        });
         const r = await vb.befehl({}, 1e12 + 10 * MIN);
         expect(r.vorschlaege).to.have.length(1);
         expect(r.vorschlaege[0]).to.deep.include({ ids: ['sz', 'wz'], stufe: 'sicher', art: 'neu' });
         vb.vergessen('sz');
         expect(vb.paare.size).to.equal(1); // nur noch gast|wz
+    });
+
+    it('Beobachtung übersteht einen Neustart: gesichert im Datenpunkt, nach dem Laden weiter "sicher"; Altes verfällt', async () => {
+        const { Verbund, BEOBACHTUNG_ID } = require('../lib/verbundlauf');
+        const speicher = new Map();
+        const adapter = () => ({
+            config: {},
+            geraete: new Map([
+                ['wz', { name: 'Wohnzimmer', up: true, zaehler: { energy: { letzterWert: 2412300 } } }],
+                ['sz', { name: 'Schlafzimmer', up: true, zaehler: { energy: { letzterWert: 2412300 } } }],
+            ]),
+            objekte: new Map(),
+            log: { info: () => {}, warn: () => {}, debug: () => {} },
+            getStateAsync: async id => (speicher.has(id) ? { val: speicher.get(id) } : null),
+            setStateAsync: async (id, st) => speicher.set(id, st.val),
+            extendObject: async function (id, o) {
+                this.objekte.set(id, o);
+            },
+        });
+        const a = adapter();
+        const vb = new Verbund(a);
+        await vb.beobachtungLaden(1e12);
+        for (let m = 0; m < 6; m++) {
+            const jetzt = 1e12 + m * MIN;
+            vb.melden('wz', { energy: 2412300 }, jetzt - 20000);
+            vb.melden('sz', { energy: 2412300 }, jetzt - 5000);
+            vb.beobachten(jetzt);
+        }
+        await vb.beobachtungSichern(true, 1e12 + 5 * MIN);
+        expect(a.objekte.get(BEOBACHTUNG_ID).common).to.include({ type: 'string', role: 'json', write: false });
+        expect(JSON.parse(speicher.get(BEOBACHTUNG_ID)).paare['sz|wz']).to.have.length(6);
+
+        // Neustart: neue Laufzeit, Beobachtung geladen, vier weitere Minuten genuegen fuer "sicher"
+        const b = adapter();
+        const neu = new Verbund(b);
+        await neu.beobachtungLaden(1e12 + 7 * MIN);
+        expect(neu.paare.get('sz|wz').proben).to.have.length(6);
+        for (let m = 7; m < 11; m++) {
+            const jetzt = 1e12 + m * MIN;
+            neu.melden('wz', { energy: 2412300 }, jetzt - 20000);
+            neu.melden('sz', { energy: 2412300 }, jetzt - 5000);
+            neu.beobachten(jetzt);
+        }
+        const r = await neu.befehl({}, 1e12 + 10 * MIN);
+        expect(r.vorschlaege[0]).to.deep.include({ ids: ['sz', 'wz'], stufe: 'sicher' });
+
+        // nach langer Pause (laenger als der Ring) beginnt die Beobachtung neu
+        const spaet = new Verbund(adapter());
+        await spaet.beobachtungLaden(1e12 + (v.AUTO_RING + 20) * MIN);
+        expect(spaet.paare.size).to.equal(0);
+
+        // kaputter Inhalt stoert nicht
+        speicher.set(BEOBACHTUNG_ID, '{kaputt');
+        const kaputt = new Verbund(adapter());
+        await kaputt.beobachtungLaden(1e12);
+        expect(kaputt.paare.size).to.equal(0);
     });
 });

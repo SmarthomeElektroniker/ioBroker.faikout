@@ -2306,6 +2306,10 @@ class Faikout extends utils.Adapter {
                 this.effizienz.stoppen();
                 await this.effizienz.sichernAlle();
             }
+            // Multisplit-Erkennung: Zaehler-Beobachtung sichern, damit der Vorschlag nach dem Neustart nicht neu wartet.
+            if (this.verbund) {
+                await this.verbund.beobachtungSichern(true);
+            }
             // Zaehlerstaende sichern, damit nach dem Neustart weitergezaehlt wird.
             for (const [id, g] of this.geraete) {
                 await this.zaehlerstandSichern(id, g);

@@ -38,6 +38,7 @@ add, with a confirmation; nothing is saved until you press "Save").
 | **Setup** | step list with ticks: broker, connect module, schedule, climate control |
 | **Schedules** | WHEN which temperature applies: temperature levels of the template (sliders to drag), weekly schedule of the template and per unit preview, switch and “Edit weekly schedule”. Collapsed: manual override and public holidays |
 | **Climate control** | HOW the unit is run: diagram of the control, the global template (strategy, heating and cooling curve with limits in the chart, humidity limits in the chart), below it the units as cards. Collapsed: dry run and fine tuning |
+| **Multi split** | Which indoor units share one outdoor unit: systems as tiles, suggestion from the data, assigning by dragging |
 | **Consumption** | chart and recording; can switch to heat and a COP line |
 | **Efficiency** | heat output, COP/EER and heat energy per unit: model choice, airflow per fan level, calibration with an outlet sensor or manual measurement |
 | **Find modules**, **MQTT broker (advanced)**, **Module settings (advanced)** | connecting and technical settings |
@@ -117,14 +118,20 @@ module and whether a humidity value is available.
 The power limit (`demand`) only has an effect on a Daikin unit if
 
 1. the **original Daikin Wi-Fi module is switched on** (remote control: hold "Powerful" for
-   5 seconds until "SP 1" appears). No internet and no cloud connection are needed, the app may be
-   offline – and
-2. **demand control is set to "On"** in the Daikin app.
+   5 seconds until "SP 1" appears) and
+2. **demand control in the Daikin app (Onecta)** is set appropriately.
 
-"Off" in the app always means 100 %; values from the faikout module then have no effect. With
-"On", both the app and faikout may write, the last value wins. "Auto" means the cloud controls. A
-value rejected while the unit is switched off says nothing – the adapter keeps showing "not tested
-yet".
+Which app setting is right seems to depend on whether the Daikin module has internet access. **This is
+experience from two installations, not yet confirmed:**
+
+| Daikin Wi-Fi module | Demand control in Onecta | Observed |
+|---|---|---|
+| with cloud connection (internet) | **"Off"** | on a multi split system: only with "Off" did the unit follow the faikout module's value |
+| without internet (own network, app offline) | **"On"** | on the developer's units (internet blocked for the Daikin module): with "On" the value works |
+
+If the power limit has no effect, try the other setting – and feel free to report in the forum which
+combination applies to you. "Auto" means the cloud controls by itself. A value rejected while the
+unit is switched off says nothing – the adapter keeps showing "not tested yet".
 
 #### Multi split: one power limit per outdoor unit
 
@@ -148,8 +155,8 @@ assignments only, never suggestions), the adapter controls the power limit **per
   sum of the reference powers of the indoor units (default 1000 W per unit, units without a module
   with the instance default); an own value goes into `aussengeraete[].vortagReferenzW`.
 - **Indoor units without a Faikout module** ("further indoor units"): the adapter cannot set anything
-  there, and their value in the Daikin app takes part. **Switch off demand control at these units in
-  the Daikin app.**
+  there, and their value in the Daikin app takes part. **Do not set an own power limit for these units
+  in the Daikin app** (demand control off or 100 %), otherwise their value interferes.
 
 Display: `<unit>.regulation.demand.reason` starts with the group, e.g. 'Group "Garden": 65 % = maximum
 of Living room 65, Office 45; Guest room off - follows the group | own request 45 % …'. Below the
@@ -437,6 +444,34 @@ legend – a click hides a unit. The tooltip lists the value per unit and the to
 between "All", "Heating only" and "Cooling only" and between chart and table. The data come from the
 adapter's own counters (48 hours, 62 days, 24 months); no history adapter is needed.
 
+### Multi split: assigning indoor units to an outdoor unit
+
+If several indoor units are connected to **one** outdoor unit, their modules report the same outdoor
+unit meter. For consumption, COP and power limit to be right, tell the adapter in the tab **Multi
+split** which indoor units belong together. The adapter **never assigns by itself**.
+
+1. **Look:** every system is a tile – the outdoor unit at the top (the fan turns while it runs), the
+   indoor units on the line below. Single systems are shown in grey below.
+2. **Suggestion:** if the adapter sees equal meters, a suggestion appears (otherwise use **"Suggest
+   assignment"**). Arrows and labels (A1, A2, B1 …) show which indoor unit would move where; every
+   suggested system has its own colour. The level says how reliable it is: *certain* (meters above
+   10 kWh, at most 200 Wh apart, observed for 10 minutes), *still being checked* or *uncertain* (only
+   compressor and outside temperature run alike). The observation survives an adapter restart.
+3. **Apply:** the green **✓** on a suggested tile applies exactly this outdoor unit. **"Close
+   suggestion"** discards the rest; rejected suggestions only return via "Suggest assignment" or when
+   the group changes.
+4. **By hand:** drag an indoor unit onto an outdoor unit, onto a single system or onto "New outdoor
+   unit"; drag it out and drop it anywhere to release it (with "Undo"). The ⌄ menu on every small tile
+   does the same.
+5. **Save** – only then the assignment applies.
+
+The tile then shows power, energy today, the share of every indoor unit, the **rest** (consumption of the
+outdoor unit not explained by the indoor units, e.g. defrosting or indoor units without a module) and the **system COP**. Indoor units
+without a Faikout module are entered as a number under "Further indoor units without a Faikout module".
+Every outdoor unit gets its own **device card** (display only) and the data points
+`outdoorUnits.<id>.*`. With demand control switched on, the power limit applies per outdoor unit (see
+"Multi split: one power limit per outdoor unit").
+
 ## 10. Efficiency: heat output and COP
 
 The tab “Efficiency” answers: **how much heat (or cooling) does the unit deliver for its electricity?**
@@ -544,9 +579,9 @@ In the tab **Consumption**, “Heat & COP” switches the chart: bars show the h
 
 - **Controlling for the best COP** (keeping the unit in the efficient part-load range, avoiding cycling) is
   deliberately not built yet – the values should first prove themselves over a winter.
-- **Multi-split** (several indoor units on one outdoor unit) is not split up yet: the electricity of the
-  outdoor unit cannot simply be assigned to one indoor unit. Until then the COP is only right for single-split
-  systems.
+- **Multi split** (several indoor units on one outdoor unit): the COP per indoor unit comes from its own
+  heating/cooling meters (100 Wh steps, no momentary value). For the whole system there is the **system
+  COP** of the outdoor unit since 1.2.0 (tab Multi split, `outdoorUnits.<id>.copToday`).
 
 ## 11. Languages
 
