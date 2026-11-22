@@ -95,6 +95,60 @@ describe('Effizienz am Adapter', () => {
         expect(a.objekte['Truhe.efficiency.heatPrice'], 'ohne Preis kein Kosten-Datenpunkt').to.equal(undefined);
     });
 
+    describe('Multisplit (Issue #8)', () => {
+        /**
+         * 30 min Heizen. Das Modul meldet 1200 W und energy des gemeinsamen Aussengeraets (beide Raeume),
+         * energyheat zaehlt nur dieses Innengeraet: +100 Wh alle 10 min = 0,3 kWh.
+         *
+         * @param {number} nachbarEnergy  energy-Zaehlerstand (Wh) des zweiten Moduls
+         */
+        const lauf = async nachbarEnergy => {
+            const a = attrappe();
+            a.geraete.get('Truhe').zaehler = { energy: { letzterWert: 5000000 } };
+            a.geraete.set('Nachbar', {
+                name: 'Nachbar',
+                angelegt: new Set(),
+                up: true,
+                zaehler: { energy: { letzterWert: nachbarEnergy } },
+            });
+            const e = new Effizienz(a);
+            a.einheiten.set('Truhe', { fanfreq: 'rpm' });
+            for (let i = 0; i <= 30; i++) {
+                await e.status('Truhe', a.geraete.get('Truhe'), {
+                    ...HEIZT,
+                    consumption: 1200,
+                    energy: 5000000,
+                    energyheat: 2000000 + Math.floor(i / 10) * 100,
+                    energycool: 1000000,
+                });
+                minuten(1);
+            }
+            return { a, w: k => a.werte[`Truhe.efficiency.${k}`] };
+        };
+
+        it('gleicher Außengeräte-Zähler: COP heute aus dem Heizzähler des Innengeräts, kein Momentan-COP, Kennzeichen gesetzt', async () => {
+            const { a, w } = await lauf(5000000);
+            expect(w('sharedOutdoorUnit')).to.equal(true);
+            expect(w('cop')).to.equal(null);
+            // Waerme ~0,9 kWh gegen 0,3 kWh Strom des Innengeraets (nicht 0,6 kWh des Aussengeraets)
+            expect(w('heat.today')).to.be.within(0.85, 1.0);
+            expect(w('copToday')).to.be.within(2.8, 3.4);
+            expect(a.logs.filter(t => /multi split/.test(t))).to.have.length(1);
+            expect(a.objekte['Truhe.efficiency.sharedOutdoorUnit'].common.name).to.include({
+                de: 'Gemeinsames Außengerät (Multisplit)',
+            });
+        });
+
+        it('Single-Split (Regression): eigener Außengeräte-Zähler, Strom wie bisher aus der Leistung', async () => {
+            const { a, w } = await lauf(3131200);
+            expect(w('sharedOutdoorUnit')).to.equal(false);
+            expect(w('cop')).to.be.within(1.4, 1.7);
+            // 1200 W x 30 min = 0,6 kWh
+            expect(w('copToday')).to.be.within(1.4, 1.7);
+            expect(a.logs.filter(t => /multi split/.test(t))).to.have.length(0);
+        });
+    });
+
     it('Schreiblast: schnelle Folgemeldungen schreiben nicht jedes Mal, ein Wechsel des Zustands sofort', async () => {
         const a = attrappe();
         const e = new Effizienz(a);

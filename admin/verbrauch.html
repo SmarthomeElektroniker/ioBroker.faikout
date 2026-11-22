@@ -12,7 +12,7 @@
             EIN gestapeltes Balkendiagramm: je Geraet eine dauerhaft gleiche Farbe, die Balkenhoehe ist die Summe.
             Die Seite fragt den Adapter selbst (sendTo verbrauchDaten {zeitraum, versatz, art}) und bekommt
               {zeitraum, versatz, art, raster, schluessel[], laufend, zurueck, vor, hinweis, lang, texte{},
-               geraete[{id, name, platz, farbe{hell,dunkel}|null, leistung, zaehler, werte[], summe, hatWerte}]}
+               geraete[{id, name, platz, farbe{hell,dunkel}|null, leistung, aussengeraet, zaehler, werte[], summe, hatWerte}]}
             (lib/verbrauchbild.js). Sie schreibt nichts und aendert keine Einstellung.
             Kein fremder Code: reines HTML, CSS und JavaScript; der Socket kommt vom Admin (/lib/js/socket.io.js).
         -->
@@ -687,7 +687,17 @@
                     const sum = data.schluessel.reduce((s, _, i) => s + totalAt(ss, i), 0);
                     const shown = data.geraete.filter(g => g.zaehler && !hidden.has(g.id));
                     const watts = shown.filter(g => g.leistung !== null);
-                    const power = watts.reduce((s, g) => s + g.leistung, 0);
+                    // Multisplit: Geraete am selben Aussengeraet melden dessen Leistung - sie zaehlt nur einmal
+                    const outdoor = new Set();
+                    const power = watts.reduce((s, g) => {
+                        if (g.aussengeraet) {
+                            if (outdoor.has(g.aussengeraet)) {
+                                return s;
+                            }
+                            outdoor.add(g.aussengeraet);
+                        }
+                        return s + g.leistung;
+                    }, 0);
                     if (heat()) {
                         const el = data.schluessel.reduce((s, _, i) => s + powerAt(ss, i), 0);
                         const c = ratio(sum, el);

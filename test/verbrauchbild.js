@@ -145,7 +145,9 @@ describe('Verbrauchsansicht', () => {
         it('liefert je Gerät Werte, Summe, feste Farbe und gerundete Leistung', () => {
             const r = vb.sammeln(geraete(), { zeitraum: 'woche' }, JETZT);
             expect(r.geraete.map(g => g.id)).to.deep.equal(['a', 'b', 'c']);
-            expect(r.geraete[0].summe).to.equal(6.7);
+            // "alles" = Heizen + Kuehlen des Innengeraets (2 + 4,2 + 0,4 + 0), nicht total (Issue #8);
+            // b meldet keinen Heiz-/Kuehlzaehler und behaelt total
+            expect(r.geraete[0].summe).to.equal(6.6);
             expect(r.geraete[1].summe).to.equal(12.5);
             expect(r.geraete[0].farbe).to.deep.equal(vb.PALETTE[0]);
             expect(r.geraete[1].farbe).to.deep.equal(vb.PALETTE[1]);
@@ -194,6 +196,96 @@ describe('Verbrauchsansicht', () => {
         it('mehr als acht Geräte: ab dem neunten keine eigene Farbe (Seite fasst sie als „Weitere“ zusammen)', () => {
             const g = { id: 'z', name: 'z', platz: 8, leistung: 0, arten: { total: quelle() } };
             expect(vb.sammeln([g], {}, JETZT).geraete[0].farbe).to.equal(null);
+        });
+    });
+
+    describe('Multisplit (Issue #8)', () => {
+        // Zwei Innengeraete an einem Aussengeraet: beide Module melden denselben total-Zaehler (Aussengeraet),
+        // heating je Innengeraet. Vorher zaehlte die Summe das Aussengeraet doppelt.
+        const multi = () => [
+            {
+                id: 'bedroom',
+                name: 'Bedroom',
+                platz: 0,
+                leistung: 200,
+                aussengeraet: 'attic',
+                arten: {
+                    total: quelle({ today: 0.9, days: '[]', hours: '[]', months: '[]' }),
+                    heating: quelle({ today: 0.6, days: '[]', hours: '[]', months: '[]' }),
+                    cooling: quelle({ today: 0, days: '[]', hours: '[]', months: '[]' }),
+                },
+            },
+            {
+                id: 'attic',
+                name: 'Attic',
+                platz: 1,
+                leistung: 200,
+                aussengeraet: 'attic',
+                arten: {
+                    total: quelle({ today: 0.9, days: '[]', hours: '[]', months: '[]' }),
+                    heating: quelle({ today: 0.3, days: '[]', hours: '[]', months: '[]' }),
+                    cooling: null,
+                },
+            },
+        ];
+
+        it('Alles je Innengerät = Heizen + Kühlen, die Summe zählt das Außengerät nicht doppelt', () => {
+            const r = vb.sammeln(multi(), { zeitraum: 'woche' }, JETZT);
+            expect(r.geraete.map(g => g.summe)).to.deep.equal([0.6, 0.3]);
+            expect(r.geraete.reduce((x, g) => x + g.summe, 0)).to.be.closeTo(0.9, 1e-9);
+            expect(r.geraete.map(g => g.aussengeraet)).to.deep.equal(['attic', 'attic']);
+        });
+
+        it('die Seite zählt die Leistung eines gemeinsamen Außengeräts nur einmal', () => {
+            const html = require('node:fs').readFileSync(
+                require('node:path').join(__dirname, '..', 'admin', 'verbrauch.html'),
+                'utf8',
+            );
+            expect(html).to.match(/outdoor\.has\(g\.aussengeraet\)/);
+        });
+
+        it('Single-Split (Regression): ein Gerät ohne gemeinsames Außengerät, Alles = Heizen + Kühlen', () => {
+            const r = vb.sammeln(
+                [
+                    {
+                        id: 'og',
+                        name: 'OG',
+                        platz: 0,
+                        leistung: 420,
+                        arten: {
+                            total: quelle({ today: 1.1, days: '[]', hours: '[]', months: '[]' }),
+                            heating: quelle({ today: 0.7, days: '[]', hours: '[]', months: '[]' }),
+                            cooling: quelle({ today: 0.4, days: '[]', hours: '[]', months: '[]' }),
+                        },
+                    },
+                ],
+                { zeitraum: 'woche' },
+                JETZT,
+            );
+            expect(r.geraete[0].summe).to.equal(1.1);
+            expect(r.geraete[0].aussengeraet).to.equal(null);
+            expect(r.geraete[0].zaehler).to.equal(true);
+        });
+
+        it('antwort erkennt das gemeinsame Außengerät am gleichen energy-Zählerstand', async () => {
+            const st = { 'x.consumption.heating.today': 0.6, 'y.consumption.heating.today': 0.3 };
+            const a = {
+                geraete: new Map([
+                    ['x', { name: 'X', zaehler: { energy: { letzterWert: 812300 } } }],
+                    ['y', { name: 'Y', zaehler: { energy: { letzterWert: 812300 } } }],
+                    ['z', { name: 'Z', zaehler: { energy: { letzterWert: 3970200 } } }],
+                ]),
+                sprache: async () => 'en',
+                getStateAsync: async id => (id in st ? { val: st[id] } : null),
+                getObjectAsync: async () => ({ native: {} }),
+                extendObjectAsync: async () => {},
+            };
+            const r = await vb.antwort(a, { zeitraum: 'woche' }, JETZT);
+            const g = Object.fromEntries(r.geraete.map(x => [x.id, x]));
+            expect(g.x.aussengeraet).to.equal('x');
+            expect(g.y.aussengeraet).to.equal('x');
+            expect(g.z.aussengeraet).to.equal(null);
+            expect(g.x.summe).to.equal(0.6);
         });
     });
 

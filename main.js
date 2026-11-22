@@ -34,7 +34,13 @@ const CONSUMPTION = 'consumption';
  * `alt` ist der Zweig bis 0.0.13 - siehe verbrauchUmziehen().
  */
 const ZAEHLER = [
-    { feld: 'energy', zweig: 'total', alt: 'gesamt', name: { en: 'Total', de: 'Gesamt' } },
+    // energy = Zaehler des Aussengeraets (Faikout-Firmware), bei Multisplit in jedem Modul derselbe (Issue #8)
+    {
+        feld: 'energy',
+        zweig: 'total',
+        alt: 'gesamt',
+        name: { en: 'Outdoor unit (module meter)', de: 'Außengerät (Zähler des Moduls)' },
+    },
     { feld: 'energyheat', zweig: 'heating', alt: 'heizen', name: { en: 'Heating', de: 'Heizen' } },
     { feld: 'energycool', zweig: 'cooling', alt: 'kuehlen', name: { en: 'Cooling', de: 'Kühlen' } },
 ];

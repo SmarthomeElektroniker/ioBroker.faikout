@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -74,6 +74,19 @@
       }
     ],
     "news": {
+      "1.1.1": {
+        "en": "Fix for multi split systems (issue #8): the module field “energy” is the outdoor unit meter. Device card and consumption chart (“All”) now show heating + cooling per indoor unit, so the total no longer counts the outdoor unit twice. With a shared outdoor unit, COP/EER are calculated from the indoor unit meters (new data point efficiency.sharedOutdoorUnit). consumption.total.* stays, now named “Outdoor unit (module meter)”.",
+        "de": "Korrektur für Multisplit-Anlagen (Issue #8): Das Modulfeld „energy“ ist der Zähler des Außengeräts. Gerätekarte und Verbrauchsdiagramm („Alles“) zeigen jetzt Heizen + Kühlen je Innengerät, die Summe zählt das Außengerät nicht mehr doppelt. Bei gemeinsamem Außengerät wird COP/EER aus den Zählern des Innengeräts berechnet (neuer Datenpunkt efficiency.sharedOutdoorUnit). consumption.total.* bleibt und heißt jetzt „Außengerät (Zähler des Moduls)“.",
+        "ru": "Исправление для мультисплит-систем (issue #8): поле модуля «energy» — это счётчик наружного блока. Карточка устройства и график потребления («Всё») теперь показывают обогрев + охлаждение для каждого внутреннего блока, итог больше не учитывает наружный блок дважды. При общем наружном блоке COP/EER рассчитываются по счётчикам внутреннего блока (новая точка данных efficiency.sharedOutdoorUnit). consumption.total.* сохраняется и теперь называется «Наружный блок (счётчик модуля)».",
+        "pt": "Correção para sistemas multi-split (issue #8): o campo do módulo «energy» é o contador da unidade exterior. O cartão do aparelho e o gráfico de consumo («Tudo») mostram agora aquecimento + arrefecimento por unidade interior, o total já não conta a unidade exterior duas vezes. Com unidade exterior partilhada, o COP/EER é calculado a partir dos contadores da unidade interior (novo ponto de dados efficiency.sharedOutdoorUnit). consumption.total.* mantém-se e chama-se agora «Unidade exterior (contador do módulo)».",
+        "nl": "Correctie voor multisplit-installaties (issue #8): het moduleveld “energy” is de meter van de buitenunit. Apparaatkaart en verbruiksdiagram (“Alles”) tonen nu verwarmen + koelen per binnendeel, het totaal telt de buitenunit niet meer dubbel. Bij een gedeelde buitenunit wordt COP/EER berekend uit de meters van het binnendeel (nieuw datapunt efficiency.sharedOutdoorUnit). consumption.total.* blijft en heet nu “Buitenunit (meter van de module)”.",
+        "fr": "Correction pour les systèmes multisplit (issue #8) : le champ « energy » du module est le compteur de l’unité extérieure. La carte de l’appareil et le graphique de consommation (« Tout ») affichent désormais chauffage + refroidissement par unité intérieure ; le total ne compte plus l’unité extérieure deux fois. Avec une unité extérieure partagée, le COP/EER est calculé à partir des compteurs de l’unité intérieure (nouveau point de données efficiency.sharedOutdoorUnit). consumption.total.* est conservé et s’appelle désormais « Unité extérieure (compteur du module) ».",
+        "it": "Correzione per impianti multisplit (issue #8): il campo del modulo «energy» è il contatore dell'unità esterna. La scheda dell'apparecchio e il grafico dei consumi («Tutto») mostrano ora riscaldamento + raffreddamento per unità interna, il totale non conta più due volte l'unità esterna. Con unità esterna condivisa, COP/EER sono calcolati dai contatori dell'unità interna (nuovo punto dati efficiency.sharedOutdoorUnit). consumption.total.* resta e ora si chiama «Unità esterna (contatore del modulo)».",
+        "es": "Corrección para sistemas multisplit (issue #8): el campo del módulo «energy» es el contador de la unidad exterior. La tarjeta del equipo y el gráfico de consumo («Todo») muestran ahora calefacción + refrigeración por unidad interior; el total ya no cuenta dos veces la unidad exterior. Con unidad exterior compartida, el COP/EER se calcula a partir de los contadores de la unidad interior (nuevo punto de datos efficiency.sharedOutdoorUnit). consumption.total.* se mantiene y ahora se llama «Unidad exterior (contador del módulo)».",
+        "pl": "Poprawka dla instalacji multisplit (issue #8): pole modułu „energy” to licznik jednostki zewnętrznej. Karta urządzenia i wykres zużycia („Wszystko”) pokazują teraz grzanie + chłodzenie dla każdej jednostki wewnętrznej, suma nie liczy już jednostki zewnętrznej podwójnie. Przy wspólnej jednostce zewnętrznej COP/EER jest liczony z liczników jednostki wewnętrznej (nowy punkt danych efficiency.sharedOutdoorUnit). consumption.total.* pozostaje i nazywa się teraz „Jednostka zewnętrzna (licznik modułu)”.",
+        "uk": "Виправлення для мультиспліт-систем (issue #8): поле модуля «energy» — це лічильник зовнішнього блока. Картка пристрою та графік споживання («Усе») тепер показують обігрів + охолодження для кожного внутрішнього блока, підсумок більше не враховує зовнішній блок двічі. Зі спільним зовнішнім блоком COP/EER обчислюються за лічильниками внутрішнього блока (нова точка даних efficiency.sharedOutdoorUnit). consumption.total.* залишається і тепер називається «Зовнішній блок (лічильник модуля)».",
+        "zh-cn": "修复一拖多系统（issue #8）：模块字段“energy”是室外机的计量。设备卡片和用电图表（“全部”）现在按每台室内机显示制热 + 制冷，合计不再重复计算室外机。共用室外机时，COP/EER 按室内机计量计算（新数据点 efficiency.sharedOutdoorUnit）。consumption.total.* 保留，现名为“室外机（模块计量）”。"
+      },
       "1.1.0": {
         "en": "Efficiency: estimated heat and cooling output, live COP/EER and daily/monthly heat and COP per unit (data points efficiency.*). New tab “Efficiency” with a list of 96 Daikin indoor units, airflow per fan level, and a calibration assistant (outlet sensor or manual measurement). The consumption chart can show heat and a COP line; the device card shows “COP today”.",
         "de": "Effizienz: geschätzte Wärme- und Kälteleistung, Live-COP/EER sowie Wärme und COP je Tag/Monat für jede Anlage (Datenpunkte efficiency.*). Neuer Reiter „Effizienz“ mit einer Liste von 96 Daikin-Innengeräten, Luftstrom je Lüfterstufe und einem Kalibrierassistenten (Austrittssensor oder Handmessung). Das Verbrauchsdiagramm zeigt auf Wunsch Wärme und eine COP-Linie; die Gerätekarte zeigt „COP heute“.",
@@ -151,32 +164,6 @@
         "pl": "Znacznie mniejsze obciążenie CPU i bazy danych: stany są zapisywane tylko przy zmianie; odrzucone ustawienia (failed-set) są czytelnie logowane i zapisywane w info.failedSet",
         "uk": "Значно менше навантаження на ЦП і базу даних: стани записуються лише при зміні; відхилені налаштування (failed-set) зрозуміло записуються в журнал і зберігаються в info.failedSet",
         "zh-cn": "大幅降低 CPU 和数据库负载：状态仅在变化时写入；被拒绝的设置（failed-set）以清晰的日志记录并保存在 info.failedSet 中"
-      },
-      "0.0.18": {
-        "en": "VIS widgets render again in the vis runtime and show live values; mode colour on all widgets; energy history with fixed ranges; new vis templates",
-        "de": "VIS-Widgets werden in der vis-Laufzeit wieder gezeichnet und zeigen Live-Werte; Farbe der Betriebsart auf allen Widgets; Energieverlauf mit festen Zeiträumen; neue vis-Vorlagen",
-        "ru": "Виджеты VIS снова отображаются в среде выполнения vis и показывают текущие значения; цвет режима на всех виджетах; история энергии с фиксированными периодами; новые шаблоны vis",
-        "pt": "Os widgets VIS voltam a ser apresentados no runtime do vis e mostram valores em tempo real; cor do modo em todos os widgets; histórico de energia com períodos fixos; novos modelos vis",
-        "nl": "VIS-widgets worden weer weergegeven in de vis-runtime en tonen live waarden; kleur van de bedrijfsmodus op alle widgets; energieverloop met vaste perioden; nieuwe vis-sjablonen",
-        "fr": "Les widgets VIS s’affichent à nouveau dans le runtime vis et montrent les valeurs en direct ; couleur du mode sur tous les widgets ; historique d’énergie sur des périodes fixes ; nouveaux modèles vis",
-        "it": "I widget VIS vengono di nuovo visualizzati nel runtime di vis e mostrano i valori in tempo reale; colore della modalità su tutti i widget; storico energia con periodi fissi; nuovi modelli vis",
-        "es": "Los widgets VIS vuelven a mostrarse en el runtime de vis con valores en directo; color del modo en todos los widgets; historial de energía con periodos fijos; nuevas plantillas vis",
-        "pl": "Widżety VIS znów renderują się w środowisku vis i pokazują bieżące wartości; kolor trybu pracy na wszystkich widżetach; historia energii ze stałymi okresami; nowe szablony vis",
-        "uk": "Віджети VIS знову відображаються в середовищі vis і показують поточні значення; колір режиму на всіх віджетах; історія енергії з фіксованими періодами; нові шаблони vis",
-        "zh-cn": "VIS 小部件可在 vis 运行时中重新正常显示并显示实时数值；所有小部件显示运行模式颜色；能耗历史采用固定时间范围；新增 vis 模板"
-      },
-      "0.0.17": {
-        "en": "Units of compressor and fan speed detected from the module (Hz or rpm), all module fields described, new tab \"Module settings\"",
-        "de": "Einheit von Verdichter- und Lüfterdrehzahl wird am Modul erkannt (Hz oder rpm), alle Modulfelder beschrieben, neuer Reiter „Moduleinstellungen“",
-        "ru": "Единицы частоты компрессора и вентилятора определяются по модулю (Гц или об/мин), описаны все поля модуля, новая вкладка «Настройки модуля»",
-        "pt": "Unidades da velocidade do compressor e do ventilador detetadas a partir do módulo (Hz ou rpm), todos os campos do módulo descritos, novo separador «Definições do módulo»",
-        "nl": "Eenheid van compressor- en ventilatortoerental wordt uit de module herkend (Hz of rpm), alle modulevelden beschreven, nieuw tabblad \"Module-instellingen\"",
-        "fr": "Unités des régimes du compresseur et du ventilateur détectées depuis le module (Hz ou tr/min), tous les champs du module décrits, nouvel onglet « Réglages du module »",
-        "it": "Unità della velocità di compressore e ventilatore rilevate dal modulo (Hz o giri/min), descritti tutti i campi del modulo, nuova scheda \"Impostazioni del modulo\"",
-        "es": "Unidades de la velocidad del compresor y del ventilador detectadas desde el módulo (Hz o rpm), descritos todos los campos del módulo, nueva pestaña «Ajustes del módulo»",
-        "pl": "Jednostki prędkości sprężarki i wentylatora rozpoznawane z modułu (Hz lub obr./min), opisane wszystkie pola modułu, nowa karta „Ustawienia modułu”",
-        "uk": "Одиниці частоти компресора й вентилятора визначаються з модуля (Гц або об/хв), описано всі поля модуля, нова вкладка «Налаштування модуля»",
-        "zh-cn": "压缩机和风扇转速的单位由模块识别（Hz 或 rpm），已描述全部模块字段，新增“模块设置”选项卡"
       }
     },
     "restartAdapters": [

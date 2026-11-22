@@ -330,6 +330,62 @@ describe('Device-Manager: Karte', () => {
         expect(a.objekte.get('Wohnzimmer_AC.status.consumption').common.name.de).to.equal('Momentanleistung');
     });
 
+    describe('Energie heute/Monat je Innengerät (Issue #8)', () => {
+        /** Wertet ein Muster der Karte so aus wie der Admin (Vorlage mit _states). */
+        const auswerten = (muster, states) => new Function('_states', `return \`${muster}\`;`)(states);
+
+        it('Multisplit: Heizen + Kühlen des Innengeräts statt des Außengeräte-Zählers total', async () => {
+            const a = await adapterMitGeraet({ ...MELDUNG, energy: 812300, energyheat: 400000, energycool: 100000 });
+            const items = (await kartenLaden(a)).karten[0].customInfo.schema.items;
+            for (const [k, feld] of [
+                ['energyToday', 'today'],
+                ['energyMonth', 'thisMonth'],
+            ]) {
+                expect(items[k].type, k).to.equal('staticText');
+                expect(items[k].dependsOnStates).to.deep.equal({
+                    h: `faikout.0.Wohnzimmer_AC.consumption.heating.${feld}`,
+                    c: `faikout.0.Wohnzimmer_AC.consumption.cooling.${feld}`,
+                });
+                expect(JSON.stringify(items[k])).to.not.match(/consumption\.total/);
+            }
+            const html = items.energyToday.text.func;
+            expect(Object.keys(html)).to.have.length(11);
+            const st = { h: { val: 0.6 }, c: { val: 0 } };
+            expect(auswerten(html.de, st)).to.match(/Energie heute.*<span>0,60<\/span>.*kWh/);
+            expect(auswerten(html.en, st)).to.match(/Energy today.*<span>0\.60<\/span>/);
+            expect(auswerten(items.energyMonth.text.func.de, { h: { val: 4 }, c: { val: 0.25 } })).to.match(
+                /<span>4,3<\/span>/,
+            );
+            // nur ein Teil vorhanden: der fehlende zaehlt 0
+            expect(auswerten(html.de, { h: { val: 0.3 } })).to.match(/<span>0,30<\/span>/);
+        });
+
+        it('Single-Split ohne Heiz-/Kühlzähler (Regression): bleibt beim Modulzähler total', async () => {
+            const a = await adapterMitGeraet();
+            const items = (await kartenLaden(a)).karten[0].customInfo.schema.items;
+            expect(items.energyToday).to.include({
+                type: 'state',
+                oid: 'faikout.0.Wohnzimmer_AC.consumption.total.today',
+            });
+            expect(items.energyMonth).to.include({
+                type: 'state',
+                oid: 'faikout.0.Wohnzimmer_AC.consumption.total.thisMonth',
+            });
+        });
+
+        it('total heißt jetzt „Außengerät (Zähler des Moduls)“ in allen elf Sprachen, die Datenpunkte bleiben', async () => {
+            const a = await adapterMitGeraet({ ...MELDUNG, energyheat: 400000 });
+            const kanal = a.objekte.get('Wohnzimmer_AC.consumption.total');
+            expect(kanal.common.name.de).to.equal('Außengerät (Zähler des Moduls)');
+            expect(kanal.common.name.en).to.equal('Outdoor unit (module meter)');
+            expect(Object.keys(kanal.common.name)).to.have.length(11);
+            expect(a.objekte.has('Wohnzimmer_AC.consumption.total.today')).to.equal(true);
+            expect(a.objekte.get('Wohnzimmer_AC.status.energy').common.name.de).to.equal(
+                'Energie gesamt Außengerät (Zähler des Moduls)',
+            );
+        });
+    });
+
     describe('Luefterstufe als Stufenregler', () => {
         const regler = async (meldung = MELDUNG) => {
             const a = await adapterMitGeraet(meldung);

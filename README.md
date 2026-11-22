@@ -277,6 +277,19 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### 1.1.1 (2026-11-22)
+- Fix for multi split systems ([#8](https://github.com/SmarthomeElektroniker/ioBroker.faikout/issues/8)):
+  according to the Faikout firmware the module field `energy` is the meter of the **outdoor unit**, while
+  `energyheat`/`energycool` count per indoor unit. Several indoor units on one outdoor unit therefore all showed
+  the same value. Device card ("Energy today/this month") and consumption chart ("All") now use heating +
+  cooling per indoor unit, the chart total no longer counts the outdoor unit twice, and the power of a shared
+  outdoor unit is added only once. Modules without heating/cooling meters keep `consumption.total`.
+- Efficiency: if two modules report the same outdoor unit meter (multi split), COP/EER are calculated from the
+  indoor unit's own heating/cooling meters (100 Wh steps) instead of the outdoor unit's power; there is no current
+  COP in that case. New data point `efficiency.sharedOutdoorUnit`. Assigning indoor units to an outdoor unit
+  (system COP) follows in a later version.
+- `consumption.total.*` and `status.energy` stay unchanged, their names now say "Outdoor unit (module meter)".
+
 ### 1.1.0 (2026-11-22)
 - Efficiency: estimated heat and cooling output, live COP/EER and heat/cooling energy and COP per day and
   month for every unit (data points `efficiency.*`). Calculated from airflow (fan level or fan speed via the

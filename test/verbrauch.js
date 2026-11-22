@@ -151,3 +151,68 @@ describe('Verbrauchsrechnung', () => {
         expect(r.werte.today, 'die Tagesbasis ist erhalten geblieben').to.equal(0.9);
     });
 });
+
+describe('Gemeinsames Außengerät (Multisplit, Issue #8)', () => {
+    it('gleiche energy-Zähler (auf eine 100-Wh-Stufe) bilden eine Gruppe, die kleinste ID ist die Kennung', () => {
+        const g = v.gemeinsameZaehler(
+            new Map([
+                ['faik-bedroom', 812300],
+                ['faik-attic', 812400],
+                ['og', 3970200],
+                ['wz', 3131200],
+            ]),
+        );
+        expect([...g].sort()).to.deep.equal([
+            ['faik-attic', 'faik-attic'],
+            ['faik-bedroom', 'faik-attic'],
+        ]);
+    });
+    it('Single-Split: verschiedene Zähler, kleine Zähler (neue Geräte) und fehlende Werte bilden keine Gruppe', () => {
+        expect(
+            v.gemeinsameZaehler(
+                new Map([
+                    ['a', 3970200],
+                    ['b', 3131200],
+                ]),
+            ).size,
+        ).to.equal(0);
+        expect(
+            v.gemeinsameZaehler(
+                new Map([
+                    ['a', 500],
+                    ['b', 500],
+                ]),
+            ).size,
+        ).to.equal(0);
+        expect(
+            v.gemeinsameZaehler(
+                new Map([
+                    ['a', null],
+                    ['b', undefined],
+                    ['c', 20000],
+                ]),
+            ).size,
+        ).to.equal(0);
+        expect(
+            v.gemeinsameZaehler(
+                new Map([
+                    ['a', 20000],
+                    ['b', 20101],
+                ]),
+            ).size,
+        ).to.equal(0);
+        expect(v.gemeinsameZaehler(undefined).size).to.equal(0);
+    });
+    it('liest den letzten Rohwert aus dem gemerkten Zählerstand der Geräte', () => {
+        const m = v.aussenZaehler(
+            new Map([
+                ['a', { zaehler: { energy: { letzterWert: 12345 } } }],
+                ['b', { zaehler: {} }],
+            ]),
+        );
+        expect([...m]).to.deep.equal([
+            ['a', 12345],
+            ['b', null],
+        ]);
+    });
+});
