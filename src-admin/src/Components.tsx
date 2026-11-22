@@ -7,5 +7,6 @@ import Geraete from './Geraete';
 import Abschnitt from './Abschnitt';
 import Rechenweg from './Rechenweg';
 import Raumkorrektur from './Raumkorrektur';
+import Effizienz from './Effizienz';
 
-export default { KennlinieHeizen, KennlinieKuehlen, Stufen, Feuchte, Erklaerung, Zeitplaene, Geraete, Abschnitt, Rechenweg, Raumkorrektur };
+export default { KennlinieHeizen, KennlinieKuehlen, Stufen, Feuchte, Erklaerung, Zeitplaene, Geraete, Abschnitt, Rechenweg, Raumkorrektur, Effizienz };

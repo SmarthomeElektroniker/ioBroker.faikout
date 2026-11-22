@@ -92,8 +92,8 @@ walk(jsonConfig);
 const zahl = name => used.filter(u => u.name.endsWith(`/${name}`)).length;
 assert.deepStrictEqual(
     Object.fromEntries(names.map(n => [n, zahl(n)])),
-    { KennlinieHeizen: 2, KennlinieKuehlen: 2, Stufen: 1, Feuchte: 1, Erklaerung: 1, Zeitplaene: 1, Geraete: 1, Abschnitt: 7, Rechenweg: 2, Raumkorrektur: 1 },
-    'Kennlinien je Geraet und in der Vorlage, Temperaturstufen der Vorlage (die je Geraet zeichnet der Reiter Zeitplaene), Feuchte, Erklaerung, Zeitplaene, die Geraeteliste, die sieben aufklappbaren Abschnitte, Rechenweg (Satz bei der Strategie, Zeile bei Vortag) und die ziehbare Raumkorrektur',
+    { KennlinieHeizen: 2, KennlinieKuehlen: 2, Stufen: 1, Feuchte: 1, Erklaerung: 1, Zeitplaene: 1, Geraete: 1, Abschnitt: 7, Rechenweg: 2, Raumkorrektur: 1, Effizienz: 1 },
+    'Kennlinien je Geraet und in der Vorlage, Temperaturstufen der Vorlage (die je Geraet zeichnet der Reiter Zeitplaene), Feuchte, Erklaerung, Zeitplaene, die Geraeteliste, die sieben aufklappbaren Abschnitte, Rechenweg (Satz bei der Strategie, Zeile bei Vortag), die ziehbare Raumkorrektur und der Reiter Effizienz',
 );
 for (const u of used) {
     const [set, file, comp] = u.name.split('/');
@@ -245,6 +245,42 @@ if (process.argv.includes('--render') || fs.existsSync(path.join(here, 'node_mod
         assert.ok(/Werksplan \(nicht angepasst\)/.test(html.zeitplaeneAus) && /Vorlage bearbeiten/.test(html.zeitplaeneAus), 'Vorlage als eigene Zeile');
         assert.ok(/Die Instanz läuft nicht/.test(html.zeitplaeneAus), 'gestoppte Instanz wird erklaert');
         ok('Rendern Stufen, Feuchte, Erklaerung und Zeitplaene');
+        // Reiter Effizienz: Stand aus der echten Laufzeit (lib/effizienz) ueber einer Attrappe
+        const eff = await mod.renderEffizienz();
+        const text = h => h.replace(/<style>[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+        const karte = (h, id) => (h.split(`data-geraet="${id}"`)[1] || '').split('data-geraet="')[0];
+        const truhe = text(karte(eff.effizienz, 'Truhe'));
+        assert.ok(/Wärme = Luftstrom × Erwärmung der Luft/.test(eff.effizienz) && /COP = Wärme ÷ Strom/.test(eff.effizienz), 'Erklaerbild mit beiden Formeln');
+        assert.ok(/COP 3,\d · 1,\d\d kW · geschätzt ±\d\d %/.test(truhe), `Kopfzeile: COP, Leistung, Guete mit Unsicherheit (${truhe.slice(0, 120)})`);
+        assert.ok(/Wärmeleistung 1,\d\d kW/.test(truhe) && /COP heute 3,\d/.test(truhe) && /Wärme heute \d,\d kWh/.test(truhe), 'Live-Kacheln');
+        assert.ok(/Luftstrom 510 m³\/h \(Stufe Mittel-hoch\) · Austritt etwa 3\d,\d °C/.test(truhe), 'Zeile Luftstrom/Austritt');
+        assert.ok(/Daikin Perfera Truhe FVXM35A/.test(truhe) && /Truhengerät · Kühlen 3,4 kW · Heizen 4,5 kW · SEER 8,11 · SCOP 4,63/.test(truhe), 'Modell mit Kennwerten');
+        assert.ok(/Herstellertabelle/.test(truhe) && /Leistungstabelle/.test(truhe) && /im Original geprüft/.test(truhe), 'Quelle und Pruefstand');
+        assert.ok(/daikin-ce\.com\/en_us\/products\/product\.table\.html\/FVXM-A\.html/.test(karte(eff.effizienz, 'Truhe')), 'Verweis auf die Herstellertabelle');
+        assert.strictEqual((karte(eff.effizienz, 'Truhe').match(/role="slider"/g) || []).length, 6, 'sechs ziehbare Stufen');
+        assert.ok(/\(aus dem Datenblatt\)/.test(truhe) && /Balken ziehen, Pfeiltasten nutzen oder doppelt auf die Zahl klicken/.test(truhe), 'Kennlinie: Herkunft und Bedienhinweis');
+        assert.ok(/<button[^>]*data-aktion="luftZurueck"[^>]*disabled/.test(karte(eff.effizienz, 'Truhe')), 'nichts Eigenes: Zuruecksetzen gesperrt');
+        assert.ok(/Es gilt: Schätzung aus dem Datenblatt, ε ±25 %/.test(truhe), 'ε: was gilt');
+        assert.ok(/Kalibrieren \(genauer mit Austrittssensor\)/.test(truhe) && /1 · Sensor wählen/.test(truhe) && /wirkt sofort – ohne „Speichern“/.test(truhe), 'Assistent Schritt 1');
+        assert.ok(!/Wärme kostet heute/.test(eff.effizienz) && /Wärme kostet heute 0,\d\d\d € je kWh/.test(text(eff.effizienzPreis)), 'Kosten nur mit Preis');
+        // ohne Modell: generisch, deutlich gekennzeichnet
+        const wand = text(karte(eff.effizienz, 'Wand'));
+        assert.ok(/Modell wählen/.test(wand) && /wartet auf die ersten Werte/.test(wand) && /generischen Werten und größerer Unsicherheit/.test(wand) && /\(generische Werte\)/.test(wand), 'ohne Modell');
+        // IR-Geraet
+        const ir = text(karte(eff.effizienz, 'IR'));
+        assert.ok(/nicht verfügbar/.test(ir) && /Diese Anlage meldet achome, liquid nicht/.test(ir) && !/Kalibrieren/.test(ir) && !/role="slider"/.test(karte(eff.effizienz, 'IR')), 'IR: nicht verfuegbar, keine Einstellungen');
+        // laufende Messung
+        const mess = text(karte(eff.effizienzMessung, 'Truhe'));
+        assert.ok(/Messung läuft: \d\d Punkte/.test(mess) && /Stufe Mittel-hoch: \d\d Messpunkte, ok/.test(mess) && /Stufe Hoch: 0 Messpunkte, zu wenig/.test(mess), `Abdeckung je Stufe (${mess.slice(mess.indexOf('Messpunkte je'), mess.indexOf('Messpunkte je') + 200)})`);
+        assert.ok(/Als Nächstes: Stufe „(Mittel|Hoch|Niedrig)“ etwa 40 Minuten laufen lassen/.test(mess) && /Messung beenden/.test(mess) && /Sensor: 35,2 °C/.test(mess), 'Empfehlung, Sensorwert, Beenden');
+        assert.ok(/Heizen: ε je Stufe, Restfehler ±\d+ %/.test(mess), 'vorlaeufiges Ergebnis');
+        assert.ok(/Werte werden geladen/.test(eff.effizienzLaedt) && /Der Adapter läuft nicht/.test(eff.effizienzAus), 'Laden und gestoppte Instanz');
+        assert.ok(/Heat output/.test(eff.effizienzEn) && /estimated ±\d\d %/.test(text(eff.effizienzEn)) && !/Wärme/.test(text(eff.effizienzEn)), 'Englisch ohne deutsche Reste');
+        const z = JSON.parse(eff.zeilen);
+        assert.deepStrictEqual(z.eigen, [{ geraet: 'Truhe', modell: 'FVXM35A', luftstromHeizen: { H: 10.5 } }]);
+        assert.deepStrictEqual(z.neu, [{ geraet: 'Truhe', modell: 'FVXM35A' }, { geraet: 'Wand', modell: 'FTXM35R' }]);
+        assert.deepStrictEqual(z.leer, [], 'eine Zeile ohne Inhalt verschwindet aus den Einstellungen');
+        ok('Rendern Effizienz: Erklaerbild, Karten (geschaetzt, ohne Modell, nicht verfuegbar), Kennlinie, Assistent, Messung');
     } finally {
         await GlobalRegistrator.unregister();
         await server.close();

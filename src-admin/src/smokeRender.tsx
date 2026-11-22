@@ -10,6 +10,8 @@ import { ErklaerungAnsicht } from './Erklaerung';
 import { ZeitplaeneAnsicht } from './Zeitplaene';
 import { RechenwegZeile, satzText, wegText, type Weg } from './Rechenweg';
 import { RaumkorrekturAnsicht } from './Raumkorrektur';
+import { EffizienzAnsicht, zeileSetzen, type Stand } from './Effizienz';
+import effizienzKern from '../../lib/effizienz/index.js';
 import de from './i18n/de.json';
 
 /** Rechenwege, wie sie der Adapter liefert (lib/regel/bedarf.js, koordinator.js) - [Weg, Richtung des Bildes] */
@@ -40,6 +42,93 @@ const WEGE: Record<string, [Weg | null | undefined, ('heizen' | 'kuehlen')?]> = 
     wartet: [undefined],
     nochNicht: [null, 'kuehlen'],
 };
+
+/** Stand des Reiters Effizienz, wie ihn der Adapter liefert - aus der echten Laufzeit ueber einer Attrappe */
+async function effizienzStand(mitMessung: boolean): Promise<Stand> {
+    const { Effizienz } = effizienzKern as any;
+    const objekte: Record<string, any> = {};
+    const a: any = {
+        namespace: 'faikout.0',
+        config: { effizienzGeraete: [{ geraet: 'Truhe', modell: 'FVXM35A' }], effizienzModelle: [] },
+        geraete: new Map([
+            ['Truhe', { name: 'Truhe', angelegt: new Set(), up: true }],
+            ['Wand', { name: 'Wand', angelegt: new Set(), up: true }],
+            ['IR', { name: 'IR', angelegt: new Set(), up: true }],
+        ]),
+        einheiten: new Map([['Truhe', { fanfreq: 'rpm' }]]),
+        log: { info() {}, debug() {}, warn() {} },
+        sprache: async () => 'de',
+        getObjectAsync: async (id: string) => objekte[id] || null,
+        extendObject: async (id: string, o: any) => {
+            objekte[id] = { ...(objekte[id] || {}), ...o };
+        },
+        zaehlerObjekt: async () => {},
+        wertSchreiben: async () => {},
+        getForeignStateAsync: async () => ({ val: 35.2, ts: Date.now() }),
+        geraetNochDa: async () => true,
+    };
+    const e = new Effizienz(a);
+    const heizt = { power: true, mode: 'heat', fan: 'mediumHigh', fanfreq: 980, comp: 2400, achome: 22, liquid: 34, outside: 2, consumption: 600, energy: 5000000 };
+    const echt = Date.now;
+    let uhr = new Date(2026, 10, 22, 10, 0, 0).getTime();
+    Date.now = () => uhr;
+    try {
+        if (mitMessung) {
+            await e.befehl('effizienzMessung', { geraet: 'Truhe', aktion: 'start', austrittDp: 'sensor.0.austritt', abstandSek: 60, anlaufSek: 0 });
+        }
+        for (let i = 0; i < 45; i++) {
+            await e.status('Truhe', a.geraete.get('Truhe'), { ...heizt, energy: 5000000 + i * 10 });
+            await e.status('IR', a.geraete.get('IR'), { power: true, mode: 'heat', fan: 'auto' });
+            await e.takt();
+            uhr += 60000;
+        }
+        return (await e.befehl('effizienzStand', {})) as Stand;
+    } finally {
+        Date.now = echt;
+    }
+}
+
+export async function renderEffizienz(): Promise<Record<string, string>> {
+    I18n.extendTranslations(de as any, 'de');
+    I18n.setLanguage('de');
+    const theme = Theme('light' as any);
+    const f = { text: '#222', blass: '#666', linie: '#ccc', flaeche: '#fff', karte: '#f7f7f7', akzent: '#3399cc', gut: '#3d9a50', warn: '#d98a00', fehler: '#d9534f', heizen: '#d8572a', kuehlen: '#2a7fd8' };
+    const ansicht = (stand: Stand | null, mehr: Record<string, unknown> = {}): string =>
+        renderToString(
+            <ThemeProvider theme={theme}>
+                <EffizienzAnsicht
+                    stand={stand}
+                    zeilen={[{ geraet: 'Truhe', modell: 'FVXM35A' }]}
+                    eigene={[]}
+                    preis={0}
+                    sprache="de"
+                    f={f}
+                    alive
+                    offen={['Truhe', 'Wand', 'IR']}
+                    onZeilen={() => {}}
+                    onPreis={() => {}}
+                    onBeides={() => {}}
+                    befehl={async () => ({})}
+                    {...mehr}
+                />
+            </ThemeProvider>,
+        ).replace(/<!-- -->/g, '');
+    const stand = await effizienzStand(false);
+    const zeilen = [{ geraet: 'Truhe', modell: 'FVXM35A' }];
+    return {
+        effizienz: ansicht(stand),
+        effizienzPreis: ansicht(stand, { preis: 0.3 }),
+        effizienzMessung: ansicht(await effizienzStand(true)),
+        effizienzLaedt: ansicht(null),
+        effizienzAus: ansicht(null, { alive: false }),
+        effizienzEn: ansicht(stand, { sprache: 'en' }),
+        zeilen: JSON.stringify({
+            eigen: zeileSetzen(zeilen, { id: 'Truhe', name: 'Truhe' }, { luftstromHeizen: { H: 10.5 } }),
+            neu: zeileSetzen(zeilen, { id: 'Wand', name: 'Wand' }, { modell: 'FTXM35R' }),
+            leer: zeileSetzen(zeilen, { id: 'Truhe', name: 'Truhe' }, { modell: '', luftstromHeizen: {} }),
+        }),
+    };
+}
 
 export function renderAll(): Record<string, string> {
     I18n.extendTranslations(de as any, 'de');

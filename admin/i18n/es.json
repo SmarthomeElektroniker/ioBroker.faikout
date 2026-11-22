@@ -16,6 +16,7 @@
   "headerLive": "Para usuarios avanzados: respuesta más rápida",
   "textLive": "De fábrica, un módulo informa de su estado cada 60 segundos («reporting»), por lo que un comando solo se confirma con el siguiente informe. Activar «livestatus» en los ajustes Extra del módulo hace que informe de inmediato.",
   "tabConsumption": "Consumo energético",
+  "tabEfficiency": "Eficiencia",
   "headerConsumption": "Historial de consumo",
   "textConsumption": "Los equipos solo informan de contadores acumulados. El adaptador deriva de ellos el consumo por hora y por día (consumption.*), mantiene los totales sin cambios (status.*) y guarda las últimas 48 horas como JSON para el widget.",
   "labelHistoryRegister": "Registrar el consumo con el adaptador history",

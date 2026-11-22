@@ -199,6 +199,20 @@
                 stroke: var(--line);
                 stroke-width: 1;
             }
+            .copline {
+                fill: none;
+                stroke: var(--fg);
+                stroke-width: 2;
+                stroke-linejoin: round;
+            }
+            .copdot {
+                fill: var(--surface);
+                stroke: var(--fg);
+                stroke-width: 2;
+            }
+            .copaxis {
+                fill: var(--fg2);
+            }
             .hit {
                 fill: transparent;
                 cursor: default;
@@ -357,6 +371,11 @@
                 ></div>
                 <div
                     class="seg"
+                    id="segMass"
+                    role="group"
+                ></div>
+                <div
+                    class="seg"
                     id="segView"
                     role="group"
                 ></div>
@@ -401,7 +420,7 @@
 
                 const PERIODS = ['tag', 'woche', 'monat', 'jahr'];
                 const KINDS = ['alles', 'heizen', 'kuehlen'];
-                const state = { zeitraum: 'woche', versatz: 0, art: 'alles', view: 'diagramm' };
+                const state = { zeitraum: 'woche', versatz: 0, art: 'alles', view: 'diagramm', mass: 'strom' };
                 /** hidden device ids - survives period changes, the colour stays with the device */
                 const hidden = new Set();
                 let data = null;
@@ -510,7 +529,7 @@
                         }
                         (g.farbe ? own : rest).push(g);
                     }
-                    const out = own.map(g => ({ id: g.id, name: g.name, colour: colour(g), werte: g.werte }));
+                    const out = own.map(g => ({ id: g.id, name: g.name, colour: colour(g), werte: g.werte, strom: g.strom }));
                     if (rest.length) {
                         out.push({
                             id: '*',
@@ -521,11 +540,22 @@
                                     ? rest.reduce((s, g) => s + (g.werte[i] || 0), 0)
                                     : null,
                             ),
+                            strom: data.schluessel.map((_, i) =>
+                                rest.reduce((s, g) => s + ((g.strom && g.strom[i]) || 0), 0),
+                            ),
                         });
                     }
                     return out;
                 }
                 const totalAt = (ss, i) => ss.reduce((s, x) => s + (x.werte[i] || 0), 0);
+                // ---------- heat view: COP/EER = heat of the shown devices / their electricity (same time spans) ----------
+                const heat = () => !!data && data.ansicht === 'waerme';
+                const powerAt = (ss, i) => ss.reduce((s, x) => s + ((x.strom && x.strom[i]) || 0), 0);
+                const ratio = (q, p) => (p >= 0.05 ? q / p : null);
+                const copAt = (ss, i) => ratio(totalAt(ss, i), powerAt(ss, i));
+                const copName = () => T(state.art === 'heizen' ? 'cop' : state.art === 'kuehlen' ? 'eer' : 'arbeitszahl');
+                const heatTitle = () =>
+                    T(state.art === 'heizen' ? 'waermeTitel' : state.art === 'kuehlen' ? 'kaelteTitel' : 'waermeKaelteTitel');
 
                 // ---------- talking to the adapter ----------
                 function send(message) {
@@ -545,7 +575,12 @@
                 async function load() {
                     const mine = ++loading;
                     try {
-                        const r = await send({ zeitraum: state.zeitraum, versatz: state.versatz, art: state.art });
+                        const r = await send({
+                            zeitraum: state.zeitraum,
+                            versatz: state.versatz,
+                            art: state.art,
+                            ansicht: state.mass,
+                        });
                         if (mine !== loading) {
                             return; // a newer request is on its way
                         }
@@ -592,6 +627,12 @@
                     seg($('segView'), ['diagramm', 'tabelle'], state.view, k => {
                         state.view = k;
                         render();
+                    });
+                    // electricity (default) or heat & COP - only offered when a unit delivers heat values
+                    $('segMass').style.display = data.waermeDa ? '' : 'none';
+                    seg($('segMass'), ['strom', 'waerme'], state.mass, k => {
+                        state.mass = k;
+                        load();
                     });
                     $('title').textContent = titleText();
                     // page title in the admin language (the static title is the neutral adapter name)
@@ -647,6 +688,18 @@
                     const shown = data.geraete.filter(g => g.zaehler && !hidden.has(g.id));
                     const watts = shown.filter(g => g.leistung !== null);
                     const power = watts.reduce((s, g) => s + g.leistung, 0);
+                    if (heat()) {
+                        const el = data.schluessel.reduce((s, _, i) => s + powerAt(ss, i), 0);
+                        const c = ratio(sum, el);
+                        $('head').innerHTML =
+                            `<div class="hero"><span class="cap">${esc(heatTitle())}</span>` +
+                            `<span class="num">${num(sum)}</span> <span class="unit">kWh</span></div>` +
+                            `<div class="hero"><span class="cap">${esc(copName())}</span>` +
+                            `<span class="num">${c === null ? '–' : num(c, 1)}</span></div>` +
+                            `<div class="hero"><span class="cap">${esc(T('strom'))}</span>` +
+                            `<span class="num">${num(el)}</span> <span class="unit">kWh</span></div>`;
+                        return;
+                    }
                     $('head').innerHTML =
                         `<div class="hero"><span class="cap">${esc(T('titel'))} · ${esc(T(state.art))}</span>` +
                         `<span class="num">${num(sum)}</span> <span class="unit">kWh</span></div>` +
@@ -686,7 +739,11 @@
                         );
                     }
                     const L = Math.max(...yLabels.map(s => s.length)) * 6.5 + 10;
-                    const R = 6;
+                    // heat view: second axis on the right for COP/EER
+                    const cops = heat() ? data.schluessel.map((_, i) => copAt(ss, i)) : [];
+                    const hasCop = cops.some(c => c !== null);
+                    const copTop = hasCop ? Math.max(4, Math.ceil(Math.max(...cops.filter(c => c !== null)))) : 0;
+                    const R = hasCop ? 30 : 6;
                     const TOP = 12;
                     const B = 24;
                     const pw = W - L - R;
@@ -729,6 +786,30 @@
                         });
                         s += `<rect class="hit${i === pinned ? ' on' : ''}" data-i="${i}" x="${x0}" y="${TOP}" width="${band}" height="${ph}"/>`;
                     }
+                    if (hasCop) {
+                        const yc = v => TOP + ph - (v / copTop) * ph;
+                        for (let v = 0; v <= copTop; v += copTop > 6 ? 2 : 1) {
+                            s += `<text class="copaxis" x="${W - R + 6}" y="${yc(v) + 4}">${v}</text>`;
+                        }
+                        s += `<text class="copaxis" x="${W - 2}" y="${TOP - 2}" text-anchor="end">${esc(copName())}</text>`;
+                        // line only between neighbouring bars that both have a value
+                        let d = '';
+                        let open = false;
+                        cops.forEach((c, i) => {
+                            if (c === null) {
+                                open = false;
+                                return;
+                            }
+                            d += `${open ? 'L' : 'M'}${L + i * band + band / 2},${yc(c)}`;
+                            open = true;
+                        });
+                        s += `<path class="copline" d="${d}"/>`;
+                        cops.forEach((c, i) => {
+                            if (c !== null) {
+                                s += `<circle class="copdot" cx="${L + i * band + band / 2}" cy="${yc(c)}" r="3.5"/>`;
+                            }
+                        });
+                    }
                     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
                     svg.setAttribute('height', H);
                     svg.setAttribute('aria-label', `${T('titel')} – ${titleText()}`);
@@ -753,7 +834,11 @@
                         `<div class="th">${esc(fullLabel(data.schluessel[i]))}</div>` +
                         (rows.length
                             ? rows.join('') +
-                              `<div class="ts"><span class="n">${esc(T('summe'))}</span><span class="v">${num(totalAt(ss, i))} kWh</span></div>`
+                              `<div class="ts"><span class="n">${esc(T('summe'))}</span><span class="v">${num(totalAt(ss, i))} kWh</span></div>` +
+                              (heat()
+                                  ? `<div class="tr"><span class="n">${esc(T('strom'))}</span><span class="v">${num(powerAt(ss, i))} kWh</span></div>` +
+                                    `<div class="ts"><span class="n">${esc(copName())}</span><span class="v">${copAt(ss, i) === null ? '–' : num(copAt(ss, i), 1)}</span></div>`
+                                  : '')
                             : `<div class="tr"><span class="n">–</span></div>`);
                     tip.style.display = 'block';
                     if (getComputedStyle(tip).position === 'static') {
@@ -780,7 +865,9 @@
                             return (
                                 `<tr><td>${esc(fullLabel(k))}</td>` +
                                 ss.map(x => `<td>${x.werte[i] === null ? '–' : num(x.werte[i])}</td>`).join('') +
-                                `<td>${num(totalAt(ss, i))}</td></tr>`
+                                `<td>${num(totalAt(ss, i))}</td>` +
+                                (heat() ? `<td>${copAt(ss, i) === null ? '–' : num(copAt(ss, i), 1)}</td>` : '') +
+                                `</tr>`
                             );
                         })
                         .join('');
@@ -790,9 +877,13 @@
                         ss
                             .map(x => `<th><span class="sw" style="background:${x.colour}"></span>${esc(x.name)}</th>`)
                             .join('') +
-                        `<th>${esc(T('summe'))}</th></tr></thead><tbody>${rows}</tbody>` +
+                        `<th>${esc(T('summe'))}</th>${heat() ? `<th>${esc(copName())}</th>` : ''}</tr></thead><tbody>${rows}</tbody>` +
                         `<tfoot><tr><td>${esc(T('summe'))} (kWh)</td>${sums.map(v => `<td>${num(v)}</td>`).join('')}` +
-                        `<td>${num(sums.reduce((a, b) => a + b, 0))}</td></tr></tfoot></table>`;
+                        `<td>${num(sums.reduce((a, b) => a + b, 0))}</td>` +
+                        (heat()
+                            ? `<td>${(c => (c === null ? '–' : num(c, 1)))(ratio(sums.reduce((a, b) => a + b, 0), data.schluessel.reduce((s, _, i) => s + powerAt(ss, i), 0)))}</td>`
+                            : '') +
+                        `</tr></tfoot></table>`;
                 }
                 function render() {
                     if (!data) {
@@ -819,7 +910,13 @@
                             table(ss);
                         }
                     }
-                    $('foot').textContent = T('reichweite');
+                    // heat view: say plainly that these are estimates, with the weakest quality among the shown units
+                    const shownUnits = data.geraete.filter(g => g.zaehler && !hidden.has(g.id));
+                    const quality = ['estimated', 'calibrated', 'measured'].find(q => shownUnits.some(g => g.guete === q));
+                    const unc = Math.max(0, ...shownUnits.map(g => g.unsicherheit || 0));
+                    $('foot').textContent = heat()
+                        ? `${T('waermeFuss').replace('{guete}', T(`guete${(quality || 'estimated').replace(/^./, c => c.toUpperCase())}`) + (unc ? ` ±${unc} %` : ''))} ${T('reichweite')}`
+                        : T('reichweite');
                     fit();
                 }
                 /** the page is same-origin: it sizes its own frame to its content and removes the frame border */

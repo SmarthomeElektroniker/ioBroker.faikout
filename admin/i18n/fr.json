@@ -16,6 +16,7 @@
   "headerLive": "Pour utilisateurs avancés : retour plus rapide",
   "textLive": "En réglage d’usine, un module signale son état toutes les 60 secondes (« reporting ») ; une commande n’est donc confirmée qu’au rapport suivant. Activer « livestatus » dans les réglages Extra du module le fait répondre immédiatement.",
   "tabConsumption": "Consommation",
+  "tabEfficiency": "Efficacité",
   "headerConsumption": "Historique de consommation",
   "textConsumption": "Les appareils ne fournissent que des compteurs cumulés. L’adaptateur en déduit la consommation horaire et journalière (consumption.*), conserve les totaux inchangés (status.*) et enregistre les 48 dernières heures en JSON pour le widget.",
   "labelHistoryRegister": "Enregistrer la consommation avec l’adaptateur history",

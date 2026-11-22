@@ -16,6 +16,7 @@
   "headerLive": "Para utilizadores avançados: resposta mais rápida",
   "textLive": "De fábrica, um módulo comunica o seu estado a cada 60 segundos («reporting»), pelo que um comando só é confirmado na comunicação seguinte. A definição «livestatus» nas definições Extra do módulo faz com que comunique de imediato.",
   "tabConsumption": "Consumo",
+  "tabEfficiency": "Eficiência",
   "headerConsumption": "Histórico de consumo",
   "textConsumption": "Os aparelhos comunicam apenas contadores totais. O adaptador calcula a partir deles o consumo horário e diário (consumption.*), deixa os contadores totais inalterados (status.*) e guarda as últimas 48 horas em JSON para o widget.",
   "labelHistoryRegister": "Registar o consumo com o adaptador history",

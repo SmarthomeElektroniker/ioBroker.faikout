@@ -1771,6 +1771,42 @@
                 }
             }
         },
+        "tabEfficiency": {
+            "type": "panel",
+            "label": "tabEfficiency",
+            "items": {
+                "_nichtAktiv": {
+                    "type": "staticText",
+                    "text": "textNichtAktiv",
+                    "hidden": "_alive",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "style": {
+                        "border": "1px solid #d98a00",
+                        "borderRadius": 6,
+                        "padding": "8px 12px",
+                        "backgroundColor": "rgba(217,138,0,0.12)"
+                    }
+                },
+                "effizienzGeraete": {
+                    "type": "custom",
+                    "url": "custom/customComponents.js",
+                    "name": "ConfigCustomFaikoutSet/Components/Effizienz",
+                    "i18n": true,
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                }
+            }
+        },
         "tabSearch": {
             "type": "panel",
             "label": "tabSearch",

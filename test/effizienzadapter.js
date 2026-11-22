@@ -301,4 +301,33 @@ describe('Effizienz am Adapter', () => {
         expect(r.ergebnis.art).to.equal('heizen');
         expect(r.ergebnis.eingang.tRef).to.equal(36);
     });
+
+    it('Verbrauchsansicht bekommt Wärme und Strom aus der Laufzeit', async () => {
+        const a = attrappe();
+        const e = new Effizienz(a);
+        a.effizienz = e;
+        a.einheiten.set('Truhe', { fanfreq: 'rpm' });
+        a.getStateAsync = async () => null;
+        for (let i = 0; i <= 30; i++) {
+            await e.status('Truhe', a.geraete.get('Truhe'), { ...HEIZT, energy: 5000000 + i * 10 });
+            await e.status('IR', a.geraete.get('IR'), { power: true, mode: 'heat', fan: 'auto' });
+            minuten(1);
+        }
+        const r = await require('../lib/verbrauchbild').antwort(a, { zeitraum: 'woche', art: 'heizen', ansicht: 'waerme' }, new Date(uhr));
+        const truhe = r.geraete.find(g => g.id === 'Truhe');
+        expect(r.waermeDa).to.equal(true);
+        expect(truhe.zaehler).to.equal(true);
+        expect(truhe.summe).to.be.within(0.85, 1.0);
+        expect(truhe.strom.reduce((s, v) => s + (v || 0), 0)).to.be.closeTo(0.3, 0.01);
+        expect(truhe.guete).to.equal('estimated');
+        expect(r.geraete.find(g => g.id === 'IR').zaehler, 'ohne Werte keine Waerme').to.equal(false);
+        expect(r.texte.waerme).to.equal('Wärme & COP');
+    });
+
+    it('Gerätekarte: Zeile "COP heute" mit Güte, sobald es den Datenpunkt gibt', () => {
+        const quelle = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'lib', 'devicemanager.js'), 'utf8');
+        expect(quelle).to.match(/items\.copToday = \{/);
+        expect(quelle).to.match(/efficiency\.copToday/);
+        expect(quelle).to.match(/efficiency\.quality/);
+    });
 });

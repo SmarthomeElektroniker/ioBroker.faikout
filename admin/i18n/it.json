@@ -16,6 +16,7 @@
   "headerLive": "Per utenti esperti: riscontro più rapido",
   "textLive": "Per impostazione predefinita un modulo comunica il proprio stato ogni 60 secondi («reporting»), quindi un comando viene confermato solo con la segnalazione successiva. Attivando «livestatus» nelle impostazioni Extra del modulo la segnalazione è immediata.",
   "tabConsumption": "Consumo energetico",
+  "tabEfficiency": "Efficienza",
   "headerConsumption": "Storico dei consumi",
   "textConsumption": "Gli apparecchi comunicano solo contatori cumulativi. L’adattatore ne ricava il consumo orario e giornaliero (consumption.*), lascia invariati i totali (status.*) e memorizza le ultime 48 ore in JSON per il widget.",
   "labelHistoryRegister": "Registrare il consumo con l’adattatore history",

@@ -16,6 +16,7 @@
   "headerLive": "高级用户：更快的反馈",
   "textLive": "模块默认每 60 秒上报一次状态（reporting），因此指令要到下一次上报才被确认。在模块的 Extra 设置中启用 livestatus 可让其立即上报。",
   "tabConsumption": "能耗",
+  "tabEfficiency": "能效",
   "headerConsumption": "能耗历史",
   "textConsumption": "设备只上报累计计数。适配器由此推算每小时和每天的能耗（consumption.*），保持累计计数不变（status.*），并将最近 48 小时以 JSON 保存供小部件使用。",
   "labelHistoryRegister": "使用 history 适配器记录能耗",

@@ -16,6 +16,7 @@
   "headerLive": "Dla zaawansowanych: szybsza informacja zwrotna",
   "textLive": "Domyślnie moduł zgłasza swój stan co 60 sekund („reporting”), więc polecenie zostaje potwierdzone dopiero przy kolejnym zgłoszeniu. Włączenie „livestatus” w ustawieniach Extra modułu powoduje natychmiastowe zgłaszanie.",
   "tabConsumption": "Zużycie",
+  "tabEfficiency": "Efektywność",
   "headerConsumption": "Historia zużycia",
   "textConsumption": "Urządzenia podają wyłącznie liczniki sumaryczne. Adapter wylicza z nich zużycie godzinowe i dobowe (consumption.*), pozostawia liczniki sumaryczne bez zmian (status.*) i zapisuje ostatnie 48 godzin jako JSON dla widżetu.",
   "labelHistoryRegister": "Rejestruj zużycie w adapterze history",

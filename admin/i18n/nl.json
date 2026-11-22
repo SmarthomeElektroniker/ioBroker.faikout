@@ -16,6 +16,7 @@
   "headerLive": "Voor gevorderden: snellere terugkoppeling",
   "textLive": "Standaard meldt een module zijn status elke 60 seconden (“reporting”), waardoor een commando pas bij de volgende melding wordt bevestigd. Met “livestatus” in de Extra-instellingen van de module meldt hij direct.",
   "tabConsumption": "Verbruik",
+  "tabEfficiency": "Efficiëntie",
   "headerConsumption": "Verbruiksgeschiedenis",
   "textConsumption": "De toestellen melden alleen tellerstanden. De adapter leidt daaruit het uur- en dagverbruik af (consumption.*), laat de totalen ongewijzigd (status.*) en bewaart de laatste 48 uur als JSON voor de widget.",
   "labelHistoryRegister": "Verbruik vastleggen met de history-adapter",

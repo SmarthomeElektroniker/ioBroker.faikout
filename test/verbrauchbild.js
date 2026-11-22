@@ -122,24 +122,25 @@ describe('Verbrauchsansicht', () => {
         });
     });
 
+    const geraete = () => [
+        {
+            id: 'a',
+            name: 'Wohnzimmer',
+            platz: 0,
+            leistung: 1190.4,
+            arten: { total: quelle(), heating: quelle({ today: 0.4 }), cooling: quelle({ today: 0, days: '[]' }) },
+        },
+        {
+            id: 'b',
+            name: 'OG',
+            platz: 1,
+            leistung: null,
+            arten: { total: quelle({ today: 6.3 }), heating: null, cooling: null },
+        },
+        { id: 'c', name: 'IR', platz: 2, leistung: null, arten: { total: null, heating: null, cooling: null } },
+    ];
+
     describe('Sammeln', () => {
-        const geraete = () => [
-            {
-                id: 'a',
-                name: 'Wohnzimmer',
-                platz: 0,
-                leistung: 1190.4,
-                arten: { total: quelle(), heating: quelle({ today: 0.4 }), cooling: quelle({ today: 0, days: '[]' }) },
-            },
-            {
-                id: 'b',
-                name: 'OG',
-                platz: 1,
-                leistung: null,
-                arten: { total: quelle({ today: 6.3 }), heating: null, cooling: null },
-            },
-            { id: 'c', name: 'IR', platz: 2, leistung: null, arten: { total: null, heating: null, cooling: null } },
-        ];
 
         it('liefert je Gerät Werte, Summe, feste Farbe und gerundete Leistung', () => {
             const r = vb.sammeln(geraete(), { zeitraum: 'woche' }, JETZT);
@@ -193,6 +194,67 @@ describe('Verbrauchsansicht', () => {
         it('mehr als acht Geräte: ab dem neunten keine eigene Farbe (Seite fasst sie als „Weitere“ zusammen)', () => {
             const g = { id: 'z', name: 'z', platz: 8, leistung: 0, arten: { total: quelle() } };
             expect(vb.sammeln([g], {}, JETZT).geraete[0].farbe).to.equal(null);
+        });
+    });
+
+    describe('Ansicht Wärme & COP', () => {
+        // Mengen wie aus lib/effizienz: je Menge dieselbe Form wie eine Zaehlerquelle
+        const menge = (tage, heute) => ({ hours: [], days: tage.map(([day, kwh]) => ({ day, kwh })), months: [], today: heute, currentHour: 0, thisMonth: 0 });
+        const mit = () => {
+            const g = geraete();
+            g[0].effizienz = {
+                waerme: menge([['2026-11-16', 6], ['2026-11-20', 12]], 3),
+                stromHeizen: menge([['2026-11-16', 2], ['2026-11-20', 3]], 1),
+                kaelte: menge([['2026-11-16', 1]], 0),
+                stromKuehlen: menge([['2026-11-16', 0.25]], 0),
+            };
+            g[0].guete = 'calibrated';
+            g[0].unsicherheit = 14;
+            return g;
+        };
+
+        it('die bisherige Ansicht bleibt Vorgabe; die Umschaltung gibt es nur, wenn ein Gerät Wärme liefert', () => {
+            const ohne = vb.sammeln(geraete(), { zeitraum: 'woche' }, JETZT);
+            expect(ohne.ansicht).to.equal('strom');
+            expect(ohne.waermeDa).to.equal(false);
+            const r = vb.sammeln(mit(), { zeitraum: 'woche' }, JETZT);
+            expect(r.ansicht).to.equal('strom');
+            expect(r.waermeDa).to.equal(true);
+            expect(r.geraete[0].strom).to.equal(undefined);
+            expect(r.geraete[0].werte).to.deep.equal(ohne.geraete[0].werte);
+        });
+
+        it('Wärme je Balken, dazu der Strom derselben Zeitabschnitte für den COP; Güte reist mit', () => {
+            const r = vb.sammeln(mit(), { zeitraum: 'woche', art: 'heizen', ansicht: 'waerme' }, JETZT);
+            expect(r.ansicht).to.equal('waerme');
+            // Woche 16.-22.11.: Mo 6, Fr 12, Sa (laufend) 3
+            expect(r.geraete[0].werte).to.deep.equal([6, null, null, null, 12, 3, null]);
+            expect(r.geraete[0].strom).to.deep.equal([2, null, null, null, 3, 1, null]);
+            expect(r.geraete[0]).to.include({ zaehler: true, guete: 'calibrated', unsicherheit: 14, summe: 21 });
+            // Geraete ohne Effizienzwerte zaehlen in dieser Ansicht nicht mit
+            expect(r.geraete[1].zaehler).to.equal(false);
+            expect(r.hinweis).to.equal('');
+        });
+
+        it('Alles = Wärme + Kälte gegen den Strom beider Richtungen; nur Kühlen = Kälte', () => {
+            const alles = vb.sammeln(mit(), { zeitraum: 'woche', ansicht: 'waerme' }, JETZT);
+            expect(alles.geraete[0].werte[0]).to.equal(7);
+            expect(alles.geraete[0].strom[0]).to.equal(2.25);
+            const kalt = vb.sammeln(mit(), { zeitraum: 'woche', art: 'kuehlen', ansicht: 'waerme' }, JETZT);
+            expect(kalt.geraete[0].werte[0]).to.equal(1);
+            expect(kalt.geraete[0].strom[0]).to.equal(0.25);
+        });
+
+        it('kein Gerät mit Wärmewerten: klarer Hinweis', () => {
+            expect(vb.sammeln(geraete(), { ansicht: 'waerme' }, JETZT).hinweis).to.equal('keineWaerme');
+        });
+
+        it('die Seite zeichnet COP-Linie und Umschalter (Strom bleibt Vorgabe)', () => {
+            const seite = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'admin', 'verbrauch.html'), 'utf8');
+            expect(seite).to.match(/mass: 'strom'/);
+            expect(seite).to.match(/id="segMass"/);
+            expect(seite).to.match(/class="copline"/);
+            expect(seite).to.match(/ansicht: state\.mass/);
         });
     });
 

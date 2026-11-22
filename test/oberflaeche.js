@@ -1147,6 +1147,7 @@ describe('Oberflaeche: Texte in allen elf Sprachen', () => {
             regelFeuchteDtpEin: 'Feuchte', regelFeuchteDtpAus: 'Feuchte', regelFeuchteRhEin: 'Feuchte', regelFeuchteRhAus: 'Feuchte',
             regelUmzugStand: 'Adapter', externClientIdStandard: 'Adapter', regelQuellen: 'Altbestand',
             regelTotband: 'Raumkorrektur',
+            effizienzModelle: 'Effizienz', effizienzPreis: 'Effizienz',
         };
         expect(Object.keys(io.native).filter(k => !felder.has(k) && !OHNE_FELD[k])).to.eql([]);
         expect(Object.keys(OHNE_FELD).filter(k => felder.has(k))).to.eql([]);
@@ -1297,7 +1298,7 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
         expect(such.moduleAddress.hidden).to.equal("data.brokerModus === 'extern'");
         // Reiter: Wichtiges zuerst (Einrichtung, Regelung, Verbrauch), dahinter Module suchen und die
         // technischen Reiter, die im Namen als solche erkennbar sind
-        expect(Object.keys(konfig.items)).to.eql(['tabHelp', 'tabZeitplaene', 'tabRegelung', 'tabConsumption', 'tabSearch', 'tabBroker', 'tabModule']);
+        expect(Object.keys(konfig.items)).to.eql(['tabHelp', 'tabZeitplaene', 'tabRegelung', 'tabConsumption', 'tabEfficiency', 'tabSearch', 'tabBroker', 'tabModule']);
         expect(Object.keys(konfig.items)[1]).to.equal(o.REITER_ZEITPLAENE);
         // Passwort: immer sichtbar, ohne Benutzername gesperrt - und das steht im Hilfetext
         expect(b.pass).to.include({ hidden: "data.brokerModus === 'extern'", disabled: '!data.user', help: 'helpPass' });

@@ -16,6 +16,7 @@
   "headerLive": "Für Fortgeschrittene: Schnellere Rückmeldung",
   "textLive": "Ab Werk meldet ein Modul seinen Zustand alle 60 Sekunden („reporting“) – ein Befehl wird deshalb erst mit der nächsten Meldung bestätigt. Die Einstellung „livestatus“ in den Extra-Einstellungen des Moduls lässt es sofort melden.",
   "tabConsumption": "Verbrauch",
+  "tabEfficiency": "Effizienz",
   "headerConsumption": "Verbrauchshistorie",
   "textConsumption": "Die Anlagen melden nur Gesamtzähler. Der Adapter bildet daraus Stunden- und Tagesverbrauch (consumption.*), lässt die Gesamtzähler unangetastet (status.*) und legt die letzten 48 Stunden als JSON für das Widget ab.",
   "labelHistoryRegister": "Verbrauch über den History-Adapter aufzeichnen",
