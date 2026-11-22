@@ -95,6 +95,34 @@ describe('Effizienz am Adapter', () => {
         expect(a.objekte['Truhe.efficiency.heatPrice'], 'ohne Preis kein Kosten-Datenpunkt').to.equal(undefined);
     });
 
+    it('Schreiblast: schnelle Folgemeldungen schreiben nicht jedes Mal, ein Wechsel des Zustands sofort', async () => {
+        const a = attrappe();
+        const e = new Effizienz(a);
+        const g = a.geraete.get('Truhe');
+        let n = 0;
+        const schreiben = a.wertSchreiben;
+        a.wertSchreiben = async (id, val) => {
+            n++;
+            return schreiben(id, val);
+        };
+        await e.status('Truhe', g, HEIZT);
+        const erste = n;
+        expect(erste).to.be.greaterThan(10);
+        for (let i = 0; i < 5; i++) {
+            uhr += 3000;
+            await e.status('Truhe', g, { ...HEIZT, liquid: 34 + i * 0.5 });
+        }
+        expect(n, 'fuenf Meldungen in 15 s: nichts geschrieben').to.equal(erste);
+        uhr += 3000;
+        await e.status('Truhe', g, { ...HEIZT, fanfreq: 0, liquid: 5 });
+        expect(n, 'Abtauen beginnt: sofort').to.be.greaterThan(erste);
+        expect(a.werte['Truhe.efficiency.defrosting']).to.equal(true);
+        const danach = n;
+        minuten(1);
+        await e.status('Truhe', g, { ...HEIZT, fanfreq: 0, liquid: 5 });
+        expect(n).to.be.greaterThan(danach);
+    });
+
     it('mit Strompreis: Kosten je kWh Wärme', async () => {
         const a = attrappe({ effizienzPreis: 0.3 });
         const e = new Effizienz(a);

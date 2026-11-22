@@ -511,7 +511,7 @@ als fünf Minuten weg, zählt dieser Abschnitt auf beiden Seiten nicht. Ein zur�
 wird wie beim Verbrauch nicht als Verbrauch gebucht.
 
 Im Reiter **Verbrauch** schaltet „Wärme & COP“ das Diagramm um: Balken zeigen die Wärme je Anlage, die Linie
-den COP (Achse rechts). „Strom“ bleibt die Vorgabe. Die Gerätekarte zeigt „COP heute 3,8 (geschätzt)“.
+den COP (Achse rechts). „Strom“ bleibt die Vorgabe. Die Gerätekarte zeigt „COP heute 3,8 (geschätzt)“; im VIS-Baustein „Messwerte“ gibt es den Messwert „COP heute“.
 
 ### Ausblick
 

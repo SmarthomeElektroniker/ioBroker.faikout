@@ -508,7 +508,7 @@ for more than five minutes, that span counts on neither side. An energy counter 
 as consumption, as in the consumption part.
 
 In the tab **Consumption**, “Heat & COP” switches the chart: bars show the heat per unit, the line the COP
-(axis on the right). “Electricity” stays the default. The device card shows “COP today 3.8 (estimated)”.
+(axis on the right). “Electricity” stays the default. The device card shows “COP today 3.8 (estimated)”; the vis widget “Readings” offers the reading “COP today”.
 
 ### Outlook
 

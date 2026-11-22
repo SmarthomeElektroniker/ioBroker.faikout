@@ -84,6 +84,7 @@ vis.binds.faikout = {
         zusatzfunktionen: ['Extra functions', 'Zusatzfunktionen', 'Доп. функции', 'Funções extra', 'Extra functies', 'Fonctions supplémentaires', 'Funzioni extra', 'Funciones extra', 'Funkcje dodatkowe', 'Додаткові функції', '附加功能'],
         heute: ['Today', 'Heute', 'Сегодня', 'Hoje', 'Vandaag', 'Aujourd’hui', 'Oggi', 'Hoy', 'Dziś', 'Сьогодні', '今日'],
         gestern: ['Yesterday', 'Gestern', 'Вчера', 'Ontem', 'Gisteren', 'Hier', 'Ieri', 'Ayer', 'Wczoraj', 'Учора', '昨日'],
+        copHeute: ['COP today', 'COP heute', 'COP сегодня', 'COP hoje', 'COP vandaag', 'COP du jour', 'COP oggi', 'COP hoy', 'COP dziś', 'COP сьогодні', '今日 COP'],
         dieseStunde: ['This hour', 'Diese Stunde', 'Этот час', 'Esta hora', 'Dit uur', 'Cette heure', 'Quest’ora', 'Esta hora', 'Ta godzina', 'Ця година', '本小时'],
         dieserMonat: ['This month', 'Dieser Monat', 'Этот месяц', 'Este mês', 'Deze maand', 'Ce mois-ci', 'Questo mese', 'Este mes', 'Ten miesiąc', 'Цей місяць', '本月'],
         verdichter: ['Compressor', 'Verdichter', 'Компрессор', 'Compressor', 'Compressor', 'Compresseur', 'Compressore', 'Compresor', 'Sprężarka', 'Компресор', '压缩机'],
@@ -220,7 +221,9 @@ vis.binds.faikout = {
         { key: 'humidity', legacy: 'feuchte', feld: 'status.hum', name: 'luftfeuchte', einheit: '%', stellen: 0 },
         { key: 'energy', legacy: 'energie', feld: 'status.energy', name: 'energieGesamt', einheit: 'kWh', stellen: 1 },
         { key: 'yesterday', legacy: 'gestern', feld: 'consumption.total.yesterday', name: 'gestern', einheit: 'kWh', stellen: 1 },
-        { key: 'hour', legacy: 'stunde', feld: 'consumption.total.currentHour', name: 'dieseStunde', einheit: 'kWh', stellen: 2 }
+        { key: 'hour', legacy: 'stunde', feld: 'consumption.total.currentHour', name: 'dieseStunde', einheit: 'kWh', stellen: 2 },
+        // geschaetzte Arbeitszahl des Tages (lib/effizienz) - nur bei Anlagen, die die noetigen Werte melden
+        { key: 'copToday', legacy: 'copHeute', feld: 'efficiency.copToday', name: 'copHeute', einheit: '', stellen: 1 }
     ],
 
     /** Werte, die Ansichten aus 0.0.13 und frueher fuer `bereich` gespeichert haben. */

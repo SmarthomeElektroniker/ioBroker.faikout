@@ -49,6 +49,7 @@
             'show_energy': { 'en': 'Energy total', 'de': 'Energie gesamt', 'ru': 'Энергия всего', 'pt': 'Energia total', 'nl': 'Energie totaal', 'fr': 'Énergie totale', 'it': 'Energia totale', 'es': 'Energía total', 'pl': 'Energia łącznie', 'uk': 'Енергія загалом', 'zh-cn': '总能耗' },
             'show_yesterday': { 'en': 'Yesterday', 'de': 'Gestern', 'ru': 'Вчера', 'pt': 'Ontem', 'nl': 'Gisteren', 'fr': 'Hier', 'it': 'Ieri', 'es': 'Ayer', 'pl': 'Wczoraj', 'uk': 'Учора', 'zh-cn': '昨日' },
             'show_hour': { 'en': 'This hour', 'de': 'Diese Stunde', 'ru': 'Этот час', 'pt': 'Esta hora', 'nl': 'Dit uur', 'fr': 'Cette heure', 'it': 'Quest’ora', 'es': 'Esta hora', 'pl': 'Ta godzina', 'uk': 'Ця година', 'zh-cn': '本小时' },
+            'show_copToday': { 'en': 'COP today', 'de': 'COP heute', 'ru': 'COP сегодня', 'pt': 'COP hoje', 'nl': 'COP vandaag', 'fr': 'COP du jour', 'it': 'COP oggi', 'es': 'COP hoy', 'pl': 'COP dziś', 'uk': 'COP сьогодні', 'zh-cn': '今日 COP' },
             'range': { 'en': 'Initial range', 'de': 'Zeitraum beim Start', 'ru': 'Начальный период', 'pt': 'Período inicial', 'nl': 'Startperiode', 'fr': 'Période initiale', 'it': 'Periodo iniziale', 'es': 'Periodo inicial', 'pl': 'Okres początkowy', 'uk': 'Початковий період', 'zh-cn': '初始时间范围' },
             'rangeSwitch': { 'en': 'Range switch', 'de': 'Umschalter zeigen', 'ru': 'Переключатель периода', 'pt': 'Seletor de período', 'nl': 'Periodeschakelaar', 'fr': 'Sélecteur de période', 'it': 'Mostra selettore periodo', 'es': 'Selector de periodo', 'pl': 'Przełącznik okresu', 'uk': 'Перемикач періоду', 'zh-cn': '显示时间范围切换' },
             'seriesSelect': { 'en': 'Series selection', 'de': 'Reihenauswahl zeigen', 'ru': 'Выбор рядов', 'pt': 'Seleção de séries', 'nl': 'Reeksselectie', 'fr': 'Sélection des séries', 'it': 'Mostra selezione serie', 'es': 'Selección de series', 'pl': 'Wybór serii', 'uk': 'Вибір рядів', 'zh-cn': '显示数据系列选择' },
@@ -72,7 +73,8 @@
             'humidity': { 'en': 'Humidity', 'de': 'Luftfeuchte', 'ru': 'Влажность', 'pt': 'Humidade', 'nl': 'Luchtvochtigheid', 'fr': 'Humidité', 'it': 'Umidità', 'es': 'Humedad', 'pl': 'Wilgotność', 'uk': 'Вологість', 'zh-cn': '湿度' },
             'energy': { 'en': 'Energy total', 'de': 'Energie gesamt', 'ru': 'Энергия всего', 'pt': 'Energia total', 'nl': 'Energie totaal', 'fr': 'Énergie totale', 'it': 'Energia totale', 'es': 'Energía total', 'pl': 'Energia łącznie', 'uk': 'Енергія загалом', 'zh-cn': '总能耗' },
             'yesterday': { 'en': 'Yesterday', 'de': 'Gestern', 'ru': 'Вчера', 'pt': 'Ontem', 'nl': 'Gisteren', 'fr': 'Hier', 'it': 'Ieri', 'es': 'Ayer', 'pl': 'Wczoraj', 'uk': 'Учора', 'zh-cn': '昨日' },
-            'hour': { 'en': 'This hour', 'de': 'Diese Stunde', 'ru': 'Этот час', 'pt': 'Esta hora', 'nl': 'Dit uur', 'fr': 'Cette heure', 'it': 'Quest’ora', 'es': 'Esta hora', 'pl': 'Ta godzina', 'uk': 'Ця година', 'zh-cn': '本小时' }
+            'hour': { 'en': 'This hour', 'de': 'Diese Stunde', 'ru': 'Этот час', 'pt': 'Esta hora', 'nl': 'Dit uur', 'fr': 'Cette heure', 'it': 'Quest’ora', 'es': 'Esta hora', 'pl': 'Ta godzina', 'uk': 'Ця година', 'zh-cn': '本小时' },
+            'copToday': { 'en': 'COP today', 'de': 'COP heute', 'ru': 'COP сегодня', 'pt': 'COP hoje', 'nl': 'COP vandaag', 'fr': 'COP du jour', 'it': 'COP oggi', 'es': 'COP hoy', 'pl': 'COP dziś', 'uk': 'COP сьогодні', 'zh-cn': '今日 COP' },
         });
     }
 </script>
@@ -85,7 +87,7 @@
         data-vis-type="ctrl"
         data-vis-name="Climate tile (complete)"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox;symbole/checkbox;ziehen/checkbox;zusatz/checkbox;beschriftung/checkbox"
-        data-vis-attrs0="group.readings;show_outdoor/checkbox;show_power/checkbox;show_today/checkbox;show_compressor/checkbox;show_fan/checkbox;show_refrigerant/checkbox;show_room/checkbox;show_humidity/checkbox;show_energy/checkbox;show_yesterday/checkbox;show_hour/checkbox">
+        data-vis-attrs0="group.readings;show_outdoor/checkbox;show_power/checkbox;show_today/checkbox;show_compressor/checkbox;show_fan/checkbox;show_refrigerant/checkbox;show_room/checkbox;show_humidity/checkbox;show_energy/checkbox;show_yesterday/checkbox;show_hour/checkbox;show_copToday/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:820px">
         <% vis.binds.faikout.kachel(this.data.wid, this.view, this.data, this.style); %>
     </div>
@@ -233,7 +235,7 @@
         data-vis-type="val"
         data-vis-name="Readings (block, selectable)"
         data-vis-attrs="deviceOid/id;titel;untertitel;theme/select,light,dark;rahmen/checkbox;kopf/checkbox;schalter/checkbox;fuss/checkbox"
-        data-vis-attrs0="group.readings;show_outdoor/checkbox;show_power/checkbox;show_today/checkbox;show_compressor/checkbox;show_fan/checkbox;show_refrigerant/checkbox;show_room/checkbox;show_humidity/checkbox;show_energy/checkbox;show_yesterday/checkbox;show_hour/checkbox">
+        data-vis-attrs0="group.readings;show_outdoor/checkbox;show_power/checkbox;show_today/checkbox;show_compressor/checkbox;show_fan/checkbox;show_refrigerant/checkbox;show_room/checkbox;show_humidity/checkbox;show_energy/checkbox;show_yesterday/checkbox;show_hour/checkbox;show_copToday/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:380px;height:200px">
         <% vis.binds.faikout.messwerte(this.data.wid, this.view, this.data, this.style); %>
     </div>
@@ -260,7 +262,7 @@
         data-vis-set="faikout"
         data-vis-type="val"
         data-vis-name="Reading (single)"
-        data-vis-attrs="deviceOid/id;reading/select,outdoor,power,today,compressor,fan,refrigerant,room,humidity,energy,yesterday,hour;titel;theme/select,light,dark;rahmen/checkbox;etikett/checkbox">
+        data-vis-attrs="deviceOid/id;reading/select,outdoor,power,today,compressor,fan,refrigerant,room,humidity,energy,yesterday,hour,copToday;titel;theme/select,light,dark;rahmen/checkbox;etikett/checkbox">
     <div id="<%= this.data.attr('wid') %>" class="vis-widget <%== this.data.attr('class') %>" style="width:150px;height:100px">
         <% vis.binds.faikout.einzelwert(this.data.wid, this.view, this.data, this.style); %>
     </div>
