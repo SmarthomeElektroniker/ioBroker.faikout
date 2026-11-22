@@ -2279,6 +2279,7 @@ class Faikout extends utils.Adapter {
             }
             // Mengen, gelernte Drehzahlen und eine laufende Kalibriermessung sichern.
             if (this.effizienz) {
+                this.effizienz.stoppen();
                 await this.effizienz.sichernAlle();
             }
             // Zaehlerstaende sichern, damit nach dem Neustart weitergezaehlt wird.
