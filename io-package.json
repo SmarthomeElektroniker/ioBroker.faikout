@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -74,6 +74,19 @@
       }
     ],
     "news": {
+      "1.2.1": {
+        "en": "Multi split: the reported power (consumption) is that of each indoor unit (compressor “comp” is shared) – power of the outdoor unit, consumption header and system COP now use the sum of the indoor units; the current COP per indoor unit is available again, checked against its own meter. Equal meters and equal compressor make a suggestion “certain” right away.",
+        "de": "Multisplit: Die gemeldete Leistung (consumption) ist die des jeweiligen Innengeräts (der Verdichter „comp“ ist gemeinsam) – Leistung des Außengeräts, Kopfzeile im Verbrauch und System-COP nehmen jetzt die Summe der Innengeräte; der Momentan-COP je Innengerät ist wieder da, geprüft gegen dessen eigenen Zähler. Gleiche Zähler und gleicher Verdichter machen einen Vorschlag sofort „sicher“.",
+        "ru": "Мультисплит: передаваемая мощность (consumption) относится к каждому внутреннему блоку (компрессор «comp» общий) – мощность наружного блока, заголовок потребления и COP системы теперь берут сумму внутренних блоков; текущий COP каждого внутреннего блока снова доступен и проверяется по его собственному счётчику. Одинаковые счётчики и одинаковый компрессор сразу делают предложение «надёжным».",
+        "pt": "Multi-split: a potência comunicada (consumption) é a de cada unidade interior (o compressor «comp» é comum) – a potência da unidade exterior, o cabeçalho do consumo e o COP do sistema usam agora a soma das unidades interiores; o COP atual por unidade interior volta a estar disponível, verificado com o seu próprio contador. Contadores iguais e compressor igual tornam uma sugestão «segura» de imediato.",
+        "nl": "Multisplit: het gemelde vermogen (consumption) is dat van de betreffende binnenunit (de compressor “comp” is gedeeld) – vermogen van de buitenunit, kopregel van het verbruik en systeem-COP gebruiken nu de som van de binnenunits; de actuele COP per binnenunit is er weer, gecontroleerd tegen zijn eigen teller. Gelijke tellers en gelijke compressor maken een voorstel meteen “zeker”.",
+        "fr": "Multisplit : la puissance transmise (consumption) est celle de chaque unité intérieure (le compresseur « comp » est commun) – la puissance de l’unité extérieure, l’en-tête de la consommation et le COP du système utilisent désormais la somme des unités intérieures ; le COP instantané par unité intérieure est de retour, vérifié par rapport à son propre compteur. Des compteurs et un compresseur identiques rendent une proposition « sûre » immédiatement.",
+        "it": "Multisplit: la potenza comunicata (consumption) è quella della singola unità interna (il compressore «comp» è comune) – potenza dell’unità esterna, intestazione dei consumi e COP di sistema usano ora la somma delle unità interne; il COP istantaneo per unità interna è di nuovo disponibile, verificato con il suo contatore. Contatori uguali e compressore uguale rendono un suggerimento subito «sicuro».",
+        "es": "Multisplit: la potencia comunicada (consumption) es la de cada unidad interior (el compresor «comp» es común): la potencia de la unidad exterior, la cabecera del consumo y el COP del sistema usan ahora la suma de las unidades interiores; el COP actual por unidad interior vuelve a estar disponible, comprobado con su propio contador. Contadores iguales y compresor igual hacen que una sugerencia sea «segura» al instante.",
+        "pl": "Multisplit: zgłaszana moc (consumption) to moc danej jednostki wewnętrznej (sprężarka „comp” jest wspólna) – moc jednostki zewnętrznej, nagłówek zużycia i COP systemu korzystają teraz z sumy jednostek wewnętrznych; bieżący COP każdej jednostki wewnętrznej znów jest dostępny, sprawdzany względem jej własnego licznika. Jednakowe liczniki i jednakowa sprężarka od razu czynią propozycję „pewną”.",
+        "uk": "Мультиспліт: передана потужність (consumption) належить кожному внутрішньому блоку (компресор «comp» спільний) – потужність зовнішнього блока, заголовок споживання та COP системи тепер беруть суму внутрішніх блоків; поточний COP кожного внутрішнього блока знову доступний і перевіряється за його власним лічильником. Однакові лічильники й однаковий компресор одразу роблять пропозицію «надійною».",
+        "zh-cn": "一拖多：上报的功率（consumption）是各台室内机自己的功率（压缩机“comp”为共用）——室外机功率、用电页标题和系统 COP 现在取各室内机之和；每台室内机的实时 COP 重新可用，并以其自身计量值校验。计量值相同且压缩机相同的建议立即标为“可靠”。"
+      },
       "1.2.0": {
         "en": "New tab “Multi split”: every system as a tile; assign indoor units to a common outdoor unit by dragging or apply a suggestion from the data per outdoor unit with ✓. Device card and data points per outdoor unit with system COP. Climate control: one power limit per outdoor unit (maximum of the running units). Daikin app: demand control “Off” with cloud connection, “manual (fixed value)” without internet (experience, not yet confirmed).",
         "de": "Neuer Reiter „Multisplit“: jede Anlage als Kachel; Innengeräte per Ziehen einem gemeinsamen Außengerät zuordnen oder einen Vorschlag aus den Daten je Außengerät mit ✓ übernehmen. Gerätekarte und Datenpunkte je Außengerät mit System-COP. Regelung: eine Leistungsgrenze je Außengerät (Maximum der laufenden Geräte). Daikin-App: Bedarfssteuerung bei Cloud-Verbindung „Aus“, ohne Internet „manuell (fester Wert)“ (Erfahrungswert, noch nicht bestätigt).",
@@ -151,19 +164,6 @@
         "pl": "Liczbowe odpowiedniki tekstowych stanów sterujących (modeNum, fanNum, swingNum, presetNum) z rolami level.mode dla Lovelace i detektora typów; jedno polecenie na zapis, ack dopiero po potwierdzeniu przez moduł",
         "uk": "Числові відповідники текстових керувальних станів (modeNum, fanNum, swingNum, presetNum) з ролями level.mode для Lovelace і детектора типів; одна команда на кожен запис, ack лише після підтвердження модуля",
         "zh-cn": "为文本控制状态新增数值对应项（modeNum、fanNum、swingNum、presetNum），带 level.mode 角色，适用于 Lovelace 和类型检测器；每次写入只发送一条命令，模块确认后才设置 ack"
-      },
-      "0.1.0": {
-        "en": "Device cards in the admin (device manager): on/off with confirmation, operating mode, target temperature and fan speed directly on the card, Wi-Fi signal and live values; new state control.selectedMode",
-        "de": "Gerätekarten im Admin (Geräteverwaltung): Ein/Aus mit Rückfrage, Betriebsart, Solltemperatur und Lüfterstufe direkt auf der Karte, WLAN-Signal und laufende Werte; neuer Datenpunkt control.selectedMode",
-        "ru": "Карточки устройств в админке (менеджер устройств): вкл./выкл. с подтверждением, режим работы, заданная температура и скорость вентилятора прямо на карточке, сигнал Wi-Fi и текущие значения; новая точка данных control.selectedMode",
-        "pt": "Cartões de dispositivo no admin (gestor de dispositivos): ligar/desligar com confirmação, modo de funcionamento, temperatura desejada e velocidade do ventilador diretamente no cartão, sinal Wi-Fi e valores atuais; novo estado control.selectedMode",
-        "nl": "Apparaatkaarten in de admin (apparaatbeheer): aan/uit met bevestiging, bedrijfsmodus, streeftemperatuur en ventilatorstand direct op de kaart, wifi-signaal en actuele waarden; nieuw datapunt control.selectedMode",
-        "fr": "Cartes d’appareil dans l’admin (gestionnaire d’appareils) : marche/arrêt avec confirmation, mode de fonctionnement, température de consigne et vitesse du ventilateur directement sur la carte, signal Wi-Fi et valeurs actuelles ; nouvel état control.selectedMode",
-        "it": "Schede dispositivo nell’admin (gestione dispositivi): accensione/spegnimento con conferma, modalità operativa, temperatura desiderata e velocità ventola direttamente sulla scheda, segnale Wi-Fi e valori attuali; nuovo stato control.selectedMode",
-        "es": "Tarjetas de dispositivo en el admin (gestor de dispositivos): encendido/apagado con confirmación, modo de funcionamiento, temperatura objetivo y velocidad del ventilador directamente en la tarjeta, señal Wi-Fi y valores actuales; nuevo estado control.selectedMode",
-        "pl": "Karty urządzeń w panelu admina (menedżer urządzeń): włączanie/wyłączanie z potwierdzeniem, tryb pracy, temperatura zadana i prędkość wentylatora bezpośrednio na karcie, sygnał Wi-Fi i bieżące wartości; nowy stan control.selectedMode",
-        "uk": "Картки пристроїв в адмінці (менеджер пристроїв): увімк./вимк. з підтвердженням, режим роботи, задана температура та швидкість вентилятора прямо на картці, сигнал Wi-Fi і поточні значення; нова точка даних control.selectedMode",
-        "zh-cn": "管理界面中的设备卡片（设备管理器）：带确认的开关、运行模式、目标温度和风扇转速可直接在卡片上设置，显示 Wi-Fi 信号和实时数值；新增状态 control.selectedMode"
       }
     },
     "restartAdapters": [

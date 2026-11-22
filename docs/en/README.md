@@ -456,8 +456,8 @@ split** which indoor units belong together. The adapter **never assigns by itsel
 2. **Suggestion:** if the adapter sees equal meters, a suggestion appears (otherwise use **"Suggest
    assignment"**). Arrows and labels (A1, A2, B1 …) show which indoor unit would move where; every
    suggested system has its own colour. The level says how reliable it is: *certain* (meters above
-   10 kWh, at most 200 Wh apart, observed for 10 minutes), *still being checked* or *uncertain* (only
-   compressor and outside temperature run alike). The observation survives an adapter restart.
+   10 kWh, at most 200 Wh apart, observed for 10 minutes – or equal meters **and** compressors running
+   alike), *still being checked* or *uncertain* (only compressor and outside temperature run alike). The observation survives an adapter restart.
 3. **Apply:** the green **✓** on a suggested tile applies exactly this outdoor unit. **"Close
    suggestion"** discards the rest; rejected suggestions only return via "Suggest assignment" or when
    the group changes.
@@ -466,7 +466,7 @@ split** which indoor units belong together. The adapter **never assigns by itsel
    does the same.
 5. **Save** – only then the assignment applies.
 
-The tile then shows power, energy today, the share of every indoor unit, the **rest** (consumption of the
+The tile then shows power (sum of the indoor units), energy today, the share of every indoor unit, the **rest** (consumption of the
 outdoor unit not explained by the indoor units, e.g. defrosting or indoor units without a module) and the **system COP**. Indoor units
 without a Faikout module are entered as a number under "Further indoor units without a Faikout module".
 Every outdoor unit gets its own **device card** (display only) and the data points
@@ -580,9 +580,13 @@ In the tab **Consumption**, “Heat & COP” switches the chart: bars show the h
 
 - **Controlling for the best COP** (keeping the unit in the efficient part-load range, avoiding cycling) is
   deliberately not built yet – the values should first prove themselves over a winter.
-- **Multi split** (several indoor units on one outdoor unit): the COP per indoor unit comes from its own
-  heating/cooling meters (100 Wh steps, no momentary value). For the whole system there is the **system
-  COP** of the outdoor unit since 1.2.0 (tab Multi split, `outdoorUnits.<id>.copToday`).
+- **Multi split** (several indoor units on one outdoor unit): every module reports the power of **its own**
+  indoor unit (`status.consumption`, S21 "FX60"; the compressor `status.comp` is the same on all of them).
+  Since 1.2.1 the COP per indoor unit, including the current COP, uses this power. The adapter checks it
+  against the indoor unit's own heating/cooling meter: if the power turns out to be that of the whole outdoor
+  unit (measured over 1 kWh of meter increase: more than 1.5 times), it falls back to the meter (100 Wh steps, no
+  current COP) and counts the power once per outdoor unit. For the whole system there is the **system COP**
+  of the outdoor unit (tab Multi split, `outdoorUnits.<id>.copToday`).
 
 ## 11. Languages
 

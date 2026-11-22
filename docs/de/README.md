@@ -460,8 +460,9 @@ Außengeräts. Damit Verbrauch, COP und Leistungsgrenze stimmen, sagst du dem Ad
 2. **Vorschlag:** Erkennt der Adapter gleiche Zähler, erscheint ein Vorschlag (sonst Knopf
    **„Zuordnung vorschlagen“**). Pfeile und Kennungen (A1, A2, B1 …) zeigen, welches Innengerät wohin
    wandert; jede vorgeschlagene Anlage hat ihre eigene Farbe. Die Stufe sagt, wie belastbar er ist:
-   *sicher* (Zähler über 10 kWh, höchstens 200 Wh auseinander, 10 Minuten lang beobachtet), *wird noch
-   geprüft* oder *unsicher* (nur Verdichter und Außentemperatur laufen gleich). Die Beobachtung
+   *sicher* (Zähler über 10 kWh, höchstens 200 Wh auseinander, 10 Minuten lang beobachtet – oder gleiche
+   Zähler **und** gleich laufende Verdichter), *wird noch geprüft* oder *unsicher* (nur Verdichter und
+   Außentemperatur laufen gleich). Die Beobachtung
    übersteht einen Neustart des Adapters.
 3. **Übernehmen:** Mit dem grünen **✓** an der vorgeschlagenen Kachel übernimmst du genau dieses
    Außengerät. **„Vorschlag schließen“** verwirft den Rest; Abgelehntes kommt erst über „Zuordnung
@@ -471,7 +472,7 @@ Außengeräts. Damit Verbrauch, COP und Leistungsgrenze stimmen, sagst du dem Ad
    Menü ⌄ an jeder kleinen Kachel kann dasselbe.
 5. **Speichern** – erst dann gilt die Zuordnung.
 
-Danach zeigt die Kachel Leistung, Energie heute, den Anteil jedes Innengeräts, den **Rest** (Verbrauch
+Danach zeigt die Kachel Leistung (Summe der Innengeräte), Energie heute, den Anteil jedes Innengeräts, den **Rest** (Verbrauch
 des Außengeräts, den die Innengeräte nicht erklären, z. B. Abtauen oder Innengeräte ohne Modul) und den **System-COP**. Innengeräte
 ohne Faikout-Modul trägst du als Zahl unter „Weitere Innengeräte ohne Faikout-Modul“ ein. Jedes
 Außengerät bekommt eine eigene **Gerätekarte** (nur Anzeige) und die Datenpunkte
@@ -585,9 +586,13 @@ den COP (Achse rechts). „Strom“ bleibt die Vorgabe. Die Gerätekarte zeigt �
 
 - **Regelung auf den besten COP** (die Anlage im effizienten Teillastbereich halten, Takten vermeiden) ist
   bewusst noch nicht gebaut – erst sollen die Werte über einen Winter belastbar sein.
-- **Multisplit** (mehrere Innengeräte an einem Außengerät): Der COP je Innengerät kommt aus dessen
-  eigenen Heiz-/Kühlzählern (100-Wh-Stufen, kein Momentanwert). Für die ganze Anlage gibt es seit 1.2.0
-  den **System-COP** am Außengerät (Reiter Multisplit, `outdoorUnits.<Kennung>.copToday`).
+- **Multisplit** (mehrere Innengeräte an einem Außengerät): Jedes Modul meldet die Leistung **seines**
+  Innengeräts (`status.consumption`, S21 „FX60“; der Verdichter `status.comp` ist an allen gleich). Seit
+  1.2.1 rechnet der COP je Innengerät, auch der Momentan-COP, mit dieser Leistung. Der Adapter prüft sie
+  gegen den eigenen Heiz-/Kühlzähler des Innengeräts: Stellt sie sich als Leistung des ganzen Außengeräts
+  heraus (gemessen über 1 kWh Zählerzuwachs: mehr als das 1,5-Fache), nimmt er wieder den Zähler (100-Wh-Stufen,
+  kein Momentan-COP) und zählt die Leistung je Außengerät einmal. Für die ganze Anlage gibt es den
+  **System-COP** am Außengerät (Reiter Multisplit, `outdoorUnits.<Kennung>.copToday`).
 
 ## 11. Sprachen
 

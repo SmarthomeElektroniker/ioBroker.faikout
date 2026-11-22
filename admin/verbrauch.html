@@ -12,7 +12,8 @@
             EIN gestapeltes Balkendiagramm: je Geraet eine dauerhaft gleiche Farbe, die Balkenhoehe ist die Summe.
             Die Seite fragt den Adapter selbst (sendTo verbrauchDaten {zeitraum, versatz, art}) und bekommt
               {zeitraum, versatz, art, raster, schluessel[], laufend, zurueck, vor, hinweis, lang, texte{},
-               geraete[{id, name, platz, farbe{hell,dunkel}|null, leistung, aussengeraet, zaehler, werte[], summe, hatWerte}]}
+               geraete[{id, name, platz, farbe{hell,dunkel}|null, leistung, aussengeraet, leistungGemeinsam, zaehler, werte[],
+               summe, hatWerte}]}
             (lib/verbrauchbild.js). Sie schreibt nichts und aendert keine Einstellung.
             Kein fremder Code: reines HTML, CSS und JavaScript; der Socket kommt vom Admin (/lib/js/socket.io.js).
         -->
@@ -692,7 +693,7 @@
                         el.appendChild(all);
                     }
                     // Multisplit: the indoor units of an assigned outdoor unit stand together behind its label;
-                    // the label carries the power of the outdoor unit (every module reports the same value)
+                    // the label carries the power of the outdoor unit (sum of its indoor units), each chip its own
                     const groups = new Map((data.aussengeraete || []).map(a => [a.id, a]));
                     let lastGroup = null;
                     let box = el;
@@ -717,7 +718,11 @@
                         const b = document.createElement('button');
                         b.type = 'button';
                         b.className = 'chip';
-                        const w = g.leistung === null || grp ? '' : `<span class="w">${num(g.leistung, 0)}&nbsp;W</span>`;
+                        // own power of the indoor unit (S21 "FX60"); only hidden when it is that of the whole outdoor unit
+                        const w =
+                            g.leistung === null || (grp && g.leistungGemeinsam)
+                                ? ''
+                                : `<span class="w">${num(g.leistung, 0)}&nbsp;W</span>`;
                         const name = g.rest ? T('aussenRest') : g.name;
                         if (g.rest) {
                             b.title = T('aussenRestTipp');
@@ -744,17 +749,23 @@
                     const sum = data.schluessel.reduce((s, _, i) => s + totalAt(ss, i), 0);
                     const shown = data.geraete.filter(g => g.zaehler && !hidden.has(g.id));
                     const watts = shown.filter(g => g.leistung !== null);
-                    // Multisplit: Geraete am selben Aussengeraet melden dessen Leistung - sie zaehlt nur einmal
-                    const outdoor = new Set();
-                    const power = watts.reduce((s, g) => {
+                    // Jedes Modul meldet die Leistung SEINES Innengeraets (S21 "FX60") - die Summe ist die Anlage.
+                    // Nur wenn die Plausibilitaet zeigt, dass ein Modul die des ganzen Aussengeraets meldet
+                    // (leistungGemeinsam), zaehlt dieses Aussengeraet einmal (groesster Wert; wie lib/verbund.systemLeistung)
+                    const outdoor = new Map();
+                    let power = 0;
+                    for (const g of watts) {
                         if (g.aussengeraet) {
-                            if (outdoor.has(g.aussengeraet)) {
-                                return s;
-                            }
-                            outdoor.add(g.aussengeraet);
+                            outdoor.set(g.aussengeraet, [...(outdoor.get(g.aussengeraet) || []), g]);
+                        } else {
+                            power += g.leistung;
                         }
-                        return s + g.leistung;
-                    }, 0);
+                    }
+                    for (const list of outdoor.values()) {
+                        power = list.some(g => g.leistungGemeinsam)
+                            ? power + Math.max(...list.map(g => g.leistung))
+                            : list.reduce((s, g) => s + g.leistung, power);
+                    }
                     if (heat()) {
                         const el = data.schluessel.reduce((s, _, i) => s + powerAt(ss, i), 0);
                         const c = ratio(sum, el);

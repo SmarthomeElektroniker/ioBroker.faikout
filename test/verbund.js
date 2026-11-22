@@ -299,7 +299,8 @@ describe('Multisplit: Verbrauchsansicht', () => {
     it('zugeordnet: Innengeräte stehen zusammen, dahinter der Rest; der Stapel ergibt das Außengerät einmal', () => {
         const r = bild.sammeln(liste(), { zeitraum: 'woche', art: 'alles' }, jetzt, aussen);
         expect(r.geraete.map(g => g.id)).to.deep.equal(['gast', 'wz', 'sz', 'az', 'outdoor:a1']);
-        expect(r.aussengeraete).to.deep.equal([{ id: 'a1', name: 'Garten', innen: ['wz', 'sz', 'az'], leistung: 900 }]);
+        // Leistung je Innengeraet (S21 "FX60") - die Anlage ist die Summe: 3 x 900 W
+        expect(r.aussengeraete).to.deep.equal([{ id: 'a1', name: 'Garten', innen: ['wz', 'sz', 'az'], leistung: 2700 }]);
         const rest = r.geraete[4];
         expect(rest).to.deep.include({ rest: true, gruppe: 'a1', aussengeraet: 'cfg:a1', leistung: null });
         const heute = r.schluessel.indexOf(r.laufend);
@@ -308,6 +309,22 @@ describe('Multisplit: Verbrauchsansicht', () => {
         expect(Math.round(summeGruppe * 100) / 100).to.equal(5);
         expect(r.geraete.every(g => !('aussenWerte' in g))).to.equal(true);
         expect(r.geraete[0].gruppe).to.equal(undefined);
+    });
+
+    it('1.2.1: verschiedene Leistungen der Innengeräte ergeben die Summe; als gemeinsam erkannt zählt sie einmal', () => {
+        const l = liste();
+        l[1].leistung = 400;
+        l[2].leistung = 250;
+        l[3].leistung = 0;
+        const r = bild.sammeln(l, { zeitraum: 'woche', art: 'alles' }, jetzt, aussen);
+        expect(r.aussengeraete[0].leistung).to.equal(650);
+        expect(r.geraete.filter(g => g.gruppe === 'a1' && !g.rest).map(g => g.leistung)).to.deep.equal([400, 250, 0]);
+        // Plausibilitaet: ein Modul meldet nachweislich die Leistung des ganzen Aussengeraets
+        l[1].leistungGemeinsam = true;
+        const g = bild.sammeln(l, { zeitraum: 'woche', art: 'alles' }, jetzt, aussen);
+        expect(g.aussengeraete[0].leistung).to.equal(400);
+        expect(g.geraete.find(x => x.id === 'wz').leistungGemeinsam).to.equal(true);
+        expect(g.geraete.find(x => x.id === 'sz').leistungGemeinsam).to.equal(false);
     });
 
     it('ohne Zuordnung bleibt alles wie bisher; in der Ansicht Heizen gibt es keinen Rest', () => {
@@ -415,7 +432,8 @@ describe('Multisplit am Adapter', () => {
         vb.melden('sz', { consumption: 210, comp: 40, outside: 7 }, jetzt - 5000);
         await vb.takt(jetzt);
         const g = k => a.geschrieben.get(`outdoorUnits.a1.${k}`);
-        expect(g('power')).to.equal(210);
+        // Leistung je Innengeraet (S21 "FX60", Tester 22.11.2026: verschieden, comp gleich) - Summe
+        expect(g('power')).to.equal(410);
         expect(g('energyToday')).to.equal(0.9);
         expect(g('energyThisMonth')).to.equal(6.3);
         expect(g('otherToday')).to.equal(0.1);
@@ -620,6 +638,33 @@ describe('Multisplit: automatisch zuordnen', () => {
         ]);
         const lang = v.einstufen(liste, v.automatisch({ paare: beobachte(12, () => ({ wz: [50000], sz: [50000] })) }));
         expect(lang.map(e => e.stufe)).to.deep.equal(['sicher', 'unsicher']);
+    });
+
+    it('Einstufung 1.2.1: gleicher Zähler UND gleicher Verdichter ist sofort sicher (ohne Wartezeit)', () => {
+        const zaehler = new Map([
+            ['wz', 50000],
+            ['sz', 50000],
+        ]);
+        const lauf = m => ({ comp: 30 + (m % 7) * 4, outside: 6.5 });
+        const gleich = v.vorschlaege({ zaehler, verlauf: verlauf(verlauf(new Map(), 'wz', lauf), 'sz', lauf) });
+        expect(gleich[0].gruende).to.deep.equal(['zaehler', 'verdichter']);
+        const ohneBeobachtung = v.einstufen(gleich, v.automatisch({ paare: new Map() }));
+        expect(ohneBeobachtung.map(e => e.stufe)).to.deep.equal(['sicher']);
+        // Verdichter laufen verschieden (getrennte Anlagen mit zufaellig gleichem Zaehler): bleibt "wird geprueft"
+        const anders = m => ({ comp: 20 + (m % 5) * 9, outside: 6.5 });
+        const verschieden = v.vorschlaege({ zaehler, verlauf: verlauf(verlauf(new Map(), 'wz', lauf), 'sz', anders) });
+        expect(verschieden[0].gruende).to.deep.equal(['zaehler']);
+        expect(v.einstufen(verschieden, v.automatisch({ paare: new Map() })).map(e => e.stufe)).to.deep.equal([
+            'pruefung',
+        ]);
+    });
+
+    it('Systemleistung: Summe der Innengeräte; als gemeinsam erkannt der größte Wert; ohne Wert null', () => {
+        expect(v.systemLeistung([{ leistung: 200 }, { leistung: 210 }])).to.equal(410);
+        expect(v.systemLeistung([{ leistung: 200 }, { leistung: null }])).to.equal(200);
+        expect(v.systemLeistung([{ leistung: 200, gemeinsam: true }, { leistung: 210 }])).to.equal(210);
+        expect(v.systemLeistung([])).to.equal(null);
+        expect(v.systemLeistung([{ leistung: null }])).to.equal(null);
     });
 
     it('am Adapter: Meldungen und Takt füllen die Beobachtung, verbundStand liefert das Ergebnis', async () => {

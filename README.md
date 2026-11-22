@@ -305,6 +305,21 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### 1.2.1 (2026-11-22)
+- Multi split: the reported power `status.consumption` (S21 "FX60") is that of **each indoor unit** – the
+  modules of one system report different values while the compressor `status.comp` is the same (tester
+  report, Faikout wiki: "Power consumption of indoor unit"). Up to 1.2.0 the adapter took it as the power of
+  the shared outdoor unit. Now the power of the outdoor unit (tile, device card, `outdoorUnits.<id>.power`),
+  the header "Power" in the consumption chart and the system COP use the **sum** of the indoor units; the
+  device card of an indoor unit shows "Power" (its own) instead of "Power outdoor unit".
+- COP per indoor unit on multi split: electricity again from the reported power, so the **current COP** is
+  available again. A plausibility check compares it with the indoor unit's own heating/cooling meter (window
+  1 kWh); if the power turns out to be that of the whole outdoor unit (more than 1.5 times), the adapter falls
+  back to the meter and counts the power once per outdoor unit (log entry).
+- Multi split suggestion: equal outdoor unit meters **and** compressors running alike make it *certain*
+  right away (no waiting for the meter observation).
+- Energy is not affected: `energy` stays the meter of the outdoor unit, `energyheat`/`energycool` per indoor unit.
+
 ### 1.2.0 (2026-11-22)
 - New tab **Multi split**: every system as a tile (outdoor unit, line, indoor units). Assign indoor units to a
   common outdoor unit by dragging, or apply a suggestion from the data per outdoor unit with ✓ (levels certain /

@@ -284,6 +284,59 @@ describe('Effizienz: Schätzung', () => {
     });
 });
 
+describe('Effizienz: Plausibilität der Leistung bei Multisplit (1.2.1)', () => {
+    const t0 = Date.UTC(2026, 10, 22, 10, 0, 0);
+    const min = n => t0 + n * 60000;
+    // Innenzaehler: 600 W = +100 Wh alle 10 min
+    const lauf = (pEl, minuten, s = null, start = 0, aktiv = true) => {
+        for (let i = start; i <= start + minuten; i++) {
+            s = zaehler.leistungPruefen(s, { zeit: min(i), pEl, energie: 2000000 + Math.floor(i / 10) * 100, aktiv });
+        }
+        return s;
+    };
+
+    it('Leistung des Innengeräts passt zum eigenen Zähler: "innen"', () => {
+        const s = lauf(600, 110);
+        expect(s.bezug).to.equal('innen');
+        expect(s.faktor).to.be.within(0.9, 1.1);
+    });
+
+    it('Leistung doppelt so groß wie der Zuwachs (gemeinsames Außengerät): "aussen"', () => {
+        const s = lauf(1200, 110);
+        expect(s.bezug).to.equal('aussen');
+        expect(s.faktor).to.be.within(1.8, 2.2);
+    });
+
+    it('vor 1 kWh Zuwachs kein Urteil; Lücke und Rücksprung beginnen das Fenster neu, das Urteil bleibt', () => {
+        expect(lauf(1200, 90).bezug).to.equal(null);
+        let s = lauf(600, 110);
+        // Luecke 10 min: das Fenster beginnt neu, danach kein neues Urteil vor weiteren 1000 Wh
+        s = zaehler.leistungPruefen(s, { zeit: min(200), pEl: 1200, energie: 2002000, aktiv: true });
+        expect(s.wh).to.equal(0);
+        expect(s.bezug).to.equal('innen');
+        s = zaehler.leistungPruefen(s, { zeit: min(201), pEl: 1200, energie: 100, aktiv: true });
+        expect(s.e0).to.equal(100);
+        expect(s.bezug).to.equal('innen');
+    });
+
+    it('gezählt wird nur im Heiz-/Kühlbetrieb (Bereitschaft verfälscht das Verhältnis nicht)', () => {
+        let s = lauf(600, 60);
+        // 10 h aus: 15 W Bereitschaft, Zaehler steht
+        for (let i = 61; i <= 661; i += 4) {
+            s = zaehler.leistungPruefen(s, { zeit: min(i), pEl: 15, energie: 2000600, aktiv: false });
+        }
+        for (let i = 662; i <= 720; i++) {
+            s = zaehler.leistungPruefen(s, {
+                zeit: min(i),
+                pEl: 600,
+                energie: 2000600 + Math.floor((i - 662) / 10) * 100,
+                aktiv: true,
+            });
+        }
+        expect(s.bezug).to.equal('innen');
+    });
+});
+
 describe('Effizienz: Mengenzähler', () => {
     const t0 = Date.UTC(2026, 10, 22, 10, 0, 0);
     const min = n => t0 + n * 60000;

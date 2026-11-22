@@ -236,12 +236,13 @@ describe('Verbrauchsansicht', () => {
             expect(r.geraete.map(g => g.aussengeraet)).to.deep.equal(['attic', 'attic']);
         });
 
-        it('die Seite zählt die Leistung eines gemeinsamen Außengeräts nur einmal', () => {
+        it('die Seite summiert die Leistung der Innengeräte und zählt nur eine als gemeinsam erkannte einmal', () => {
             const html = require('node:fs').readFileSync(
                 require('node:path').join(__dirname, '..', 'admin', 'verbrauch.html'),
                 'utf8',
             );
-            expect(html).to.match(/outdoor\.has\(g\.aussengeraet\)/);
+            expect(html).to.match(/list\.some\(g => g\.leistungGemeinsam\)/);
+            expect(html).to.not.match(/outdoor\.has\(g\.aussengeraet\)/);
         });
 
         it('Single-Split (Regression): ein Gerät ohne gemeinsames Außengerät, Alles = Heizen + Kühlen', () => {

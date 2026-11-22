@@ -97,12 +97,15 @@ describe('Effizienz am Adapter', () => {
 
     describe('Multisplit (Issue #8)', () => {
         /**
-         * 30 min Heizen. Das Modul meldet 1200 W und energy des gemeinsamen Aussengeraets (beide Raeume),
-         * energyheat zaehlt nur dieses Innengeraet: +100 Wh alle 10 min = 0,3 kWh.
+         * Heizen. Das Modul meldet energy des gemeinsamen Aussengeraets (beide Raeume), energyheat zaehlt nur
+         * dieses Innengeraet: +100 Wh alle 10 min (600 W). consumption ist die Leistung des Innengeraets (S21
+         * "FX60", 1.2.1) - 600 W passt zum Zaehler, 1200 W waere die des ganzen Aussengeraets.
          *
          * @param {number} nachbarEnergy  energy-Zaehlerstand (Wh) des zweiten Moduls
+         * @param {number} [leistung]  gemeldete Leistung (W)
+         * @param {number} [dauer]  Minuten
          */
-        const lauf = async nachbarEnergy => {
+        const lauf = async (nachbarEnergy, leistung = 1200, dauer = 30) => {
             const a = attrappe();
             a.geraete.get('Truhe').zaehler = { energy: { letzterWert: 5000000 } };
             a.geraete.set('Nachbar', {
@@ -113,30 +116,47 @@ describe('Effizienz am Adapter', () => {
             });
             const e = new Effizienz(a);
             a.einheiten.set('Truhe', { fanfreq: 'rpm' });
-            for (let i = 0; i <= 30; i++) {
+            for (let i = 0; i <= dauer; i++) {
                 await e.status('Truhe', a.geraete.get('Truhe'), {
                     ...HEIZT,
-                    consumption: 1200,
+                    consumption: leistung,
                     energy: 5000000,
                     energyheat: 2000000 + Math.floor(i / 10) * 100,
                     energycool: 1000000,
                 });
                 minuten(1);
             }
-            return { a, w: k => a.werte[`Truhe.efficiency.${k}`] };
+            return { a, e, w: k => a.werte[`Truhe.efficiency.${k}`] };
         };
 
-        it('gleicher Außengeräte-Zähler: COP heute aus dem Heizzähler des Innengeräts, kein Momentan-COP, Kennzeichen gesetzt', async () => {
-            const { a, w } = await lauf(5000000);
+        it('gleicher Außengeräte-Zähler: Strom aus der Leistung des Innengeräts, Momentan-COP da, Kennzeichen gesetzt', async () => {
+            const { a, w } = await lauf(5000000, 600);
             expect(w('sharedOutdoorUnit')).to.equal(true);
-            expect(w('cop')).to.equal(null);
-            // Waerme ~0,9 kWh gegen 0,3 kWh Strom des Innengeraets (nicht 0,6 kWh des Aussengeraets)
+            // Waerme ~0,9 kWh gegen 0,3 kWh Strom des Innengeraets (600 W x 30 min)
+            expect(w('cop')).to.be.within(2.8, 3.4);
             expect(w('heat.today')).to.be.within(0.85, 1.0);
             expect(w('copToday')).to.be.within(2.8, 3.4);
             expect(a.logs.filter(t => /multi split/.test(t))).to.have.length(1);
             expect(a.objekte['Truhe.efficiency.sharedOutdoorUnit'].common.name).to.include({
                 de: 'Gemeinsames Außengerät (Multisplit)',
             });
+        });
+
+        it('Plausibilität: Leistung doppelt so groß wie der Innenzähler -> gemeinsam, ab dann Strom aus dem Innenzähler', async () => {
+            const { a, e, w } = await lauf(5000000, 1200, 130);
+            const z = e.zustand.get('Truhe');
+            expect(z.leistungPruef.bezug).to.equal('aussen');
+            expect(z.leistungPruef.faktor).to.be.within(1.8, 2.2);
+            expect(w('cop')).to.equal(null);
+            expect(a.logs.filter(t => /power of the whole outdoor unit/.test(t))).to.have.length(1);
+            // gesichert im Geraeteobjekt (uebersteht den Neustart)
+            expect(a.objekte.Truhe.native.effizienz.leistungPruef.bezug).to.equal('aussen');
+        });
+
+        it('Plausibilität: Leistung passt zum Innenzähler -> bleibt die des Innengeräts', async () => {
+            const { e, w } = await lauf(5000000, 600, 130);
+            expect(e.zustand.get('Truhe').leistungPruef.bezug).to.equal('innen');
+            expect(w('cop')).to.be.within(2.8, 3.4);
         });
 
         it('Single-Split (Regression): eigener Außengeräte-Zähler, Strom wie bisher aus der Leistung', async () => {
