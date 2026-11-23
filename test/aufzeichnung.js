@@ -160,10 +160,10 @@ describe('Aufzeichnung: Lesen per getHistory (Handmessung) - history, influxdb 1
     const zeit = Date.UTC(2026, 10, 23, 6, 0);
     const min = 60000;
 
-    it('Anfrage: Rohwerte, count und limit, die juengsten Einträge, ohne Randwerte, 24 h zurück', () => {
+    it('Anfrage: Rohwerte, count und limit, die juengsten Einträge, ohne Randwerte, 30 Tage zurück', () => {
         const o = au.anfrage(zeit);
         expect(o).to.deep.include({ aggregate: 'none', count: 10, limit: 10, returnNewestEntries: true, removeBorderValues: true, ignoreNull: true });
-        expect(o.start).to.equal(zeit - 24 * 3600000);
+        expect(o.start).to.equal(zeit - 30 * 24 * 3600000);
         expect(o.end).to.equal(zeit + min);
     });
 
@@ -181,8 +181,18 @@ describe('Aufzeichnung: Lesen per getHistory (Handmessung) - history, influxdb 1
             expect(au.wertBei(quelle(daten, au.anfrage(zeit)), zeit)).to.equal('heat');
         });
 
+        it(`${name}: ein Wert, der sich tagelang nicht geändert hat (nur Änderungen), gilt weiter`, () => {
+            // Testumgebung 23.11.2026: Betriebsart einmal vor 30 h geschrieben, danach erst wieder nach dem Zeitpunkt
+            const daten = [
+                { ts: zeit - 30 * 3600000, val: 'heat' },
+                { ts: zeit + 3 * 3600000, val: 'cool' },
+            ];
+            expect(au.wertBei(quelle(daten, au.anfrage(zeit)), zeit)).to.equal('heat');
+            expect(au.wertBei(quelle([{ ts: zeit - 20 * 24 * 3600000, val: 'fan' }], au.anfrage(zeit)), zeit)).to.equal('fan');
+        });
+
         it(`${name}: leerer Zeitraum ergibt null, ein Wert kurz nach dem Zeitpunkt zählt noch`, () => {
-            expect(au.wertBei(quelle([{ ts: zeit - 30 * 3600000, val: 1 }], au.anfrage(zeit)), zeit)).to.equal(null);
+            expect(au.wertBei(quelle([{ ts: zeit - 31 * 24 * 3600000, val: 1 }], au.anfrage(zeit)), zeit)).to.equal(null);
             expect(au.wertBei(quelle([], au.anfrage(zeit)), zeit)).to.equal(null);
             expect(au.wertBei(quelle([{ ts: zeit - min, val: 1 }, { ts: zeit + 30000, val: 2 }], au.anfrage(zeit)), zeit)).to.equal(2);
         });

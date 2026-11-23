@@ -491,7 +491,7 @@ einen Eintrag – wer jeden Tag braucht, stellt beim History-Adapter „gleiche 
 86400 s. Monatswerte: `lastMonth`.
 
 Der Adapter liest aus dem History-Adapter nur bei der Handmessung im Reiter Effizienz (siehe dort): je Wert
-den jüngsten Eintrag bis 24 Stunden vor dem Zeitpunkt, und nur von Datenpunkten, die diese Instanz aufzeichnet.
+den jüngsten Eintrag bis 30 Tage vor dem Zeitpunkt (ein Wert, der tagelang gleich bleibt, steht mit „nur Änderungen“ nur einmal in der Datenbank), und nur von Datenpunkten, die diese Instanz aufzeichnet.
 Die Diagramme im Reiter Verbrauch nutzen allein die eigenen Reihen.
 
 ### Multisplit: Innengeräte einem Außengerät zuordnen

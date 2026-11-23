@@ -485,7 +485,7 @@ adapter does not register them again. Two equal days in a row (e.g. 0 kWh) give 
 every day, set "record the same values anyway" of the history adapter to 86400 s. Monthly values: `lastMonth`.
 
 The adapter reads from the history adapter only for the manual measurement in the tab Efficiency (see there):
-per value the newest entry up to 24 hours before the moment, and only from data points this instance records.
+per value the newest entry up to 30 days before the moment (a value that stays the same for days is stored only once with "only changes"), and only from data points this instance records.
 The charts in the tab Consumption use its own series only.
 
 ### Multi split: assigning indoor units to an outdoor unit
