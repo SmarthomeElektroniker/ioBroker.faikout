@@ -234,7 +234,9 @@ Feuchte-Grenzen gelten erst mit „Speichern“; ein Wochenplan am Gerät wirkt 
 
 - **Handeingriff:** Bedient jemand die Anlage am Gerät oder in einer App, warten Plan und Temperaturstufen –
   bis zum nächsten Schaltpunkt, eine feste Dauer oder gar nicht. Bedarfs- und Feuchteregelung
-  arbeiten weiter. „Handeingriff beenden“ auf der Karte beendet das Warten sofort.
+  arbeiten weiter. „Handeingriff beenden“ auf der Karte beendet das Warten sofort. Die erste Meldung nach
+  dem Adapterstart, einem Brokerwechsel, dem Neuverbinden oder wenn ein Modul wieder online ist, zählt
+  nicht als Handeingriff: Der Adapter übernimmt den Stand und stellt seinen Sollwert wieder her.
 - **Feuchte und Taupunkt:** ΔTP ist der Abstand zwischen Raumtemperatur und Taupunkt. Wird er zu
   klein oder die Feuchte zu hoch, schaltet der Adapter auf Entfeuchten, senkt beim Kühlen das Ziel
   um 1 K oder meldet nur – je nach Einstellung, mit Mindestlaufzeit und Pause.

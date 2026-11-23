@@ -234,7 +234,9 @@ apply with “Save”; a weekly schedule at a unit takes effect at once.
 
 - **Manual override:** if someone operates the unit at the device or in an app, schedule and
   temperature levels wait – until the next switching time, for a fixed time, or not at all. Demand and
-  humidity control keep working. "End manual override" on the card ends the wait at once.
+  humidity control keep working. "End manual override" on the card ends the wait at once. The first
+  report after an adapter start, a broker change, a reconnect or when a module is back online does not
+  count as a manual override: the adapter takes the state over and restores its set point.
 - **Humidity and dew point:** ΔDP (dew-point spread) is the distance between room temperature and
   dew point. If it becomes too small or the humidity too high, the adapter switches to dry mode,
   lowers the target by 1 K when cooling, or only reports – depending on the setting, with a minimum

@@ -349,17 +349,23 @@ describe('Regelung: Handeingriff', () => {
         expect(handeingriff.konfigPruefen({ stunden: 99 }).stunden).to.equal(handeingriff.STUNDEN_MAX);
     });
 
-    it('nach einem Neustart: Abweichung vom erwarteten Planstand zaehlt als Handeingriff', () => {
-        const r = handeingriff.auswerten({ ...st, target: 24 }, null, k, T, {
+    it('erste Meldung nach Start/Neuverbinden: Stand wird uebernommen, kein Handeingriff; danach zaehlt er', () => {
+        const vorher = handeingriff.auswerten(st, null, k, T).zustand; // Stand vom alten Broker
+        const r = handeingriff.auswerten({ ...st, target: 24, fan: 'night' }, vorher, k, T + 60000, {
             ersteMeldung: true,
-            erwartet: { power: true, mode: 'heat', target: 21, fan: 'auto' },
         });
-        expect(r.neu).to.eql(['target']);
-        const gleich = handeingriff.auswerten(st, null, k, T, {
-            ersteMeldung: true,
-            erwartet: { power: true, mode: 'heat', target: 21, fan: 'auto' },
-        });
-        expect(gleich.neu).to.eql([]);
+        expect(r.neu).to.eql([]);
+        expect(r.uebernommen).to.eql(['target', 'fan']);
+        expect(r.gesperrt).to.equal(false);
+        expect(r.zustand.bekannt).to.include({ target: 24, fan: 'night' });
+        // ganz ohne Vorwissen (neues Geraet): nichts
+        expect(handeingriff.auswerten({ ...st, target: 24 }, null, k, T, { ersteMeldung: true }).neu).to.eql([]);
+        // eine bestehende Sperre bleibt
+        const gesperrt = handeingriff.auswerten({ ...st, target: 25 }, vorher, k, T + 60000).zustand;
+        const nach = handeingriff.auswerten(st, gesperrt, k, T + 120000, { ersteMeldung: true });
+        expect(nach.gesperrt).to.equal(true);
+        // laufender Betrieb danach: Aenderung von Hand wird erkannt
+        expect(handeingriff.auswerten({ ...st, target: 22, fan: 'night' }, r.zustand, k, T + 120000).neu).to.eql(['target']);
     });
 });
 
@@ -1080,7 +1086,7 @@ describe('Regelung: Einstellungen je Geraet', () => {
 });
 
 describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
-    const { Anlage, aufbau, laufen } = require('./sim/simulator');
+    const { Anlage, aufbau, laufen, warte } = require('./sim/simulator');
     const planText = JSON.stringify(plan);
     const START = ort(2026, 11, 20, 21, 30); // Freitag, Komfort bis 22:00
     const scharf = async (a, id) => {
@@ -1513,6 +1519,129 @@ describe('Regelung: Zusammenspiel im Adapter (main.js + Anlage)', () => {
         await laufen(neu.a, neu.uhr, anlage, 15);
         expect(anlage.mode).to.equal('cool');
         expect(neu.a.wert('Plan_H.regulation.humidity.intervention')).to.equal(false);
+    });
+
+    // Befund 23.11.2026 (Testcontainer): nach einem Brokerwechsel meldeten zwei Geraete "manual change
+    // detected (target)" - der erste Zustand am neuen Broker wurde mit dem letzten am alten verglichen.
+    const handLog = a => a.zeilen.filter(z => /manual change detected/.test(z.text));
+
+    it('Brokerwechsel/Neustart: anderer Sollwert in der ersten Meldung ist kein Handeingriff, der Plan stellt durch', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const alt = new Anlage({ name: 'Plan R', target: 21, mode: 'heat' });
+        await laufen(a, uhr, alt, 2);
+        await scharf(a, 'Plan_R');
+        await laufen(a, uhr, alt, 3);
+        await a.regelung.sichernAlle();
+        // neuer Adapterlauf, gleiche Datenbank; am anderen Broker haengt eine Anlage mit anderem Sollwert
+        const neu = aufbau({ regelProbelauf: false }, uhr.t + 60000);
+        neu.a.werte = a.werte;
+        neu.a.objekte = a.objekte;
+        const andere = new Anlage({ name: 'Plan R', target: 23, mode: 'heat', fan: 'night' });
+        await laufen(neu.a, neu.uhr, andere, 3);
+        expect(handLog(neu.a)).to.eql([]);
+        expect(neu.a.wert('Plan_R.regulation.manual.locked')).to.equal(false);
+        expect(neu.a.wert('Plan_R.regulation.state')).to.equal('ok');
+        expect([andere.target, andere.fan]).to.eql([21, 'auto']); // Sollwert neu gesendet
+        // danach im laufenden Betrieb: echter Handeingriff wird erkannt
+        andere.target = 25;
+        await laufen(neu.a, neu.uhr, andere, 2);
+        expect(neu.a.wert('Plan_R.regulation.manual.locked')).to.equal(true);
+        expect(handLog(neu.a)).to.have.length(1);
+        expect(andere.target).to.equal(25);
+    });
+
+    it('Neustart des Adapters ohne Aenderung: kein Handeingriff, kein Befehl', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const anlage = new Anlage({ name: 'Plan S', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        await scharf(a, 'Plan_S');
+        await laufen(a, uhr, anlage, 3);
+        await a.regelung.sichernAlle();
+        const neu = aufbau({ regelProbelauf: false }, uhr.t + 60000);
+        neu.a.werte = a.werte;
+        neu.a.objekte = a.objekte;
+        const davor = anlage.befehle.length;
+        await laufen(neu.a, neu.uhr, anlage, 3);
+        expect(anlage.befehle.length).to.equal(davor);
+        expect(handLog(neu.a)).to.eql([]);
+        expect(neu.a.wert('Plan_S.regulation.manual.locked')).to.equal(false);
+    });
+
+    it('Sperre aus dem letzten Lauf uebersteht den Neustart (echter Handeingriff vor dem Neustart)', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const anlage = new Anlage({ name: 'Plan T', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        await scharf(a, 'Plan_T');
+        await laufen(a, uhr, anlage, 3);
+        anlage.target = 24;
+        await laufen(a, uhr, anlage, 2);
+        expect(a.wert('Plan_T.regulation.manual.locked')).to.equal(true);
+        await a.regelung.sichernAlle();
+        const neu = aufbau({ regelProbelauf: false }, uhr.t + 60000);
+        neu.a.werte = a.werte;
+        neu.a.objekte = a.objekte;
+        await laufen(neu.a, neu.uhr, anlage, 3);
+        expect(neu.a.wert('Plan_T.regulation.manual.locked')).to.equal(true);
+        expect(anlage.target).to.equal(24);
+    });
+
+    it('Modul meldet sich ab (LWT) und kommt mit anderem Stand wieder: kein Handeingriff', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const anlage = new Anlage({ name: 'Plan L', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        await scharf(a, 'Plan_L');
+        await laufen(a, uhr, anlage, 3);
+        a.onMqtt('state/Plan L', Buffer.from('{"up":false,"reason":"LWT"}'));
+        await warte();
+        anlage.target = 18; // Neustart des Moduls / der Anlage
+        await laufen(a, uhr, anlage, 3);
+        expect(handLog(a)).to.eql([]);
+        expect(a.wert('Plan_L.regulation.manual.locked')).to.equal(false);
+        expect(anlage.target).to.equal(21);
+        // echter Handeingriff danach wird weiter erkannt
+        anlage.target = 24;
+        await laufen(a, uhr, anlage, 2);
+        expect(a.wert('Plan_L.regulation.manual.locked')).to.equal(true);
+    });
+
+    it('Modul war offline (keine Meldung > 5 min) und kommt mit anderem Stand wieder: kein Handeingriff', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const anlage = new Anlage({ name: 'Plan O', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        await scharf(a, 'Plan_O');
+        await laufen(a, uhr, anlage, 3);
+        anlage.verbunden = false;
+        await laufen(a, uhr, anlage, 7);
+        anlage.verbunden = true;
+        anlage.target = 18;
+        await laufen(a, uhr, anlage, 3);
+        expect(handLog(a)).to.eql([]);
+        expect(a.wert('Plan_O.regulation.manual.locked')).to.equal(false);
+        expect(anlage.target).to.equal(21);
+        // kurze Luecke (unter 5 min) ohne Abmeldung ist laufender Betrieb: Handeingriff zaehlt
+        anlage.verbunden = false;
+        await laufen(a, uhr, anlage, 2);
+        anlage.verbunden = true;
+        anlage.target = 24;
+        await laufen(a, uhr, anlage, 2);
+        expect(a.wert('Plan_O.regulation.manual.locked')).to.equal(true);
+    });
+
+    it('Verbindung zum externen Broker abgerissen und wieder da: erste Meldung ist kein Handeingriff', async () => {
+        const { a, uhr } = aufbau({ regelProbelauf: false }, START);
+        const anlage = new Anlage({ name: 'Plan E', target: 21, mode: 'heat' });
+        await laufen(a, uhr, anlage, 2);
+        await scharf(a, 'Plan_E');
+        await laufen(a, uhr, anlage, 3);
+        a.regelung.verbindungVerloren();
+        anlage.target = 23;
+        await laufen(a, uhr, anlage, 3);
+        expect(handLog(a)).to.eql([]);
+        expect(a.wert('Plan_E.regulation.manual.locked')).to.equal(false);
+        expect(anlage.target).to.equal(21);
+        anlage.target = 24;
+        await laufen(a, uhr, anlage, 2);
+        expect(a.wert('Plan_E.regulation.manual.locked')).to.equal(true);
     });
 
     it('BLE an/aus: Quelle wechselt, Zielband ohne env solange BLE meldet', async () => {

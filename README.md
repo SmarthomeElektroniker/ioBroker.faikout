@@ -305,6 +305,14 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- Climate control: after an adapter start, a broker change (internal ↔ external), a reconnect or when a module
+  is back online (online after offline, also after a module restart), the first reported state no longer counts
+  as a manual override. Up to 1.2.1 it was compared with the last state before (possibly another unit at the
+  other broker) and could lock schedule and levels for hours ("manual change detected (target)"). The adapter
+  now takes the state over and sends its set point again; real manual changes during operation are still detected.
+  A lock from a real manual change before the restart is kept.
+
 ### 1.2.1 (2026-11-22)
 - Multi split: the reported power `status.consumption` (S21 "FX60") is that of **each indoor unit** – the
   modules of one system report different values while the compressor `status.comp` is the same (tester

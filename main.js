@@ -238,6 +238,10 @@ class Faikout extends utils.Adapter {
                 // wird false, bis sich das Modul wieder meldet.
                 onClient: (id, verbunden) => {
                     if (!verbunden) {
+                        // erste Meldung nach dem Neuverbinden ist kein Handeingriff (lib/regel)
+                        if (this.regelung) {
+                            this.regelung.verbindungVerloren();
+                        }
                         this.moduleGetrenntMelden().catch(e => this.log.debug(`info.up: ${e.message}`));
                     }
                     this.verbindungPruefen();
