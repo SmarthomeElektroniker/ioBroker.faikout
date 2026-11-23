@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -74,6 +74,19 @@
       }
     ],
     "news": {
+      "1.2.2": {
+        "en": "History (InfluxDB, SQL, history): the manual measurement now also finds values that have not changed for a long time (up to 30 days back). Tested with history, InfluxDB 1.8/2.7/3 and SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "de": "History (InfluxDB, SQL, history): Die Handmessung findet jetzt auch Werte, die sich lange nicht geändert haben (bis 30 Tage zurück). Getestet mit history, InfluxDB 1, 2 und 3 und SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "ru": "История (InfluxDB, SQL, history): ручное измерение теперь находит и значения, которые долго не менялись (до 30 дней назад). Проверено с history, InfluxDB 1, 2 и 3 и SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "pt": "Histórico (InfluxDB, SQL, history): a medição manual encontra agora também valores que não mudam há muito tempo (até 30 dias). Testado com history, InfluxDB 1, 2 e 3 e SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "nl": "Historie (InfluxDB, SQL, history): de handmatige meting vindt nu ook waarden die lang niet veranderd zijn (tot 30 dagen terug). Getest met history, InfluxDB 1, 2 en 3 en SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "fr": "Historique (InfluxDB, SQL, history) : la mesure manuelle trouve désormais aussi les valeurs inchangées depuis longtemps (jusqu'à 30 jours). Testé avec history, InfluxDB 1, 2 et 3 et SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "it": "Cronologia (InfluxDB, SQL, history): la misurazione manuale trova ora anche valori invariati da molto tempo (fino a 30 giorni). Testato con history, InfluxDB 1, 2 e 3 e SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "es": "Historial (InfluxDB, SQL, history): la medición manual encuentra ahora también valores sin cambios durante mucho tiempo (hasta 30 días). Probado con history, InfluxDB 1, 2 y 3 y SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "pl": "Historia (InfluxDB, SQL, history): pomiar ręczny znajduje teraz także wartości, które długo się nie zmieniały (do 30 dni wstecz). Przetestowano z history, InfluxDB 1, 2 i 3 i SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "uk": "Історія (InfluxDB, SQL, history): ручне вимірювання тепер знаходить і значення, які довго не змінювалися (до 30 днів назад). Перевірено з history, InfluxDB 1, 2 і 3 і SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
+        "zh-cn": "历史记录（InfluxDB、SQL、history）：手动测量现在也能找到长时间未变化的值（最多回溯 30 天）。已在 history、InfluxDB 1.8/2.7/3 和 SQL（SQLite、MariaDB、PostgreSQL、MS-SQL）上测试。"
+      },
       "1.2.1": {
         "en": "Multi split: power and system COP now use the sum of the indoor units, current COP per indoor unit is back. Calmer assignment check without warning colour. Manual override no longer triggered after restart or reconnect. History (#12): influxdb and sql supported, your recording settings are kept.",
         "de": "Multisplit: Leistung und System-COP nehmen die Summe der Innengeräte, der Momentan-COP je Innengerät ist zurück. Ruhigere Prüfung der Zuordnung ohne Warnfarbe. Kein falscher Handeingriff mehr nach Neustart oder Neuverbinden. History (#12): influxdb und sql werden unterstützt, eigene Aufzeichnungseinstellungen bleiben erhalten.",
@@ -151,19 +164,6 @@
         "pl": "Moduły o zmienionej nazwie są rozpoznawane po identyfikatorze sprzętowym: brak zapisów do usuniętych obiektów, liczniki zużycia działają dalej pod nową nazwą (issue #6); usunięte obiekty są wykrywane w trakcie działania; nowa wartość ruchu żaluzji H+C (komfort z ruchem poziomym)",
         "uk": "Перейменовані модулі розпізнаються за апаратним ID: більше немає запису у видалені об’єкти, лічильники споживання продовжуються під новою назвою (issue #6); видалені об’єкти виявляються під час роботи; нове значення гойдання H+C (комфорт із горизонтальним гойданням)",
         "zh-cn": "重命名的模块通过硬件 ID 识别：不再写入已删除的对象，用电计数器在新名称下继续（issue #6）；运行时可识别已删除的对象；新的摆风值 H+C（舒适模式加水平摆风）"
-      },
-      "0.2.0": {
-        "en": "Numeric twins of the text control states (modeNum, fanNum, swingNum, presetNum) with level.mode roles for Lovelace and the type detector; one command per write, ack only with the module confirmation",
-        "de": "Zahl-Datenpunkte neben den Text-Steuerfeldern (modeNum, fanNum, swingNum, presetNum) mit level.mode-Rollen für Lovelace und den Type-Detector; ein Befehl pro Schreibvorgang, ack erst mit der Bestätigung des Moduls",
-        "ru": "Числовые аналоги текстовых управляющих состояний (modeNum, fanNum, swingNum, presetNum) с ролями level.mode для Lovelace и детектора типов; одна команда на каждую запись, ack только после подтверждения модуля",
-        "pt": "Estados numéricos ao lado dos estados de controlo em texto (modeNum, fanNum, swingNum, presetNum) com funções level.mode para o Lovelace e o detetor de tipos; um comando por escrita, ack apenas com a confirmação do módulo",
-        "nl": "Numerieke tegenhangers van de tekstuele besturingsdatapunten (modeNum, fanNum, swingNum, presetNum) met level.mode-rollen voor Lovelace en de typedetector; één commando per schrijfactie, ack pas na bevestiging door de module",
-        "fr": "Équivalents numériques des états de commande textuels (modeNum, fanNum, swingNum, presetNum) avec les rôles level.mode pour Lovelace et le détecteur de type ; une seule commande par écriture, ack uniquement après confirmation du module",
-        "it": "Stati numerici accanto agli stati di controllo testuali (modeNum, fanNum, swingNum, presetNum) con ruoli level.mode per Lovelace e il rilevatore di tipo; un solo comando per scrittura, ack solo con la conferma del modulo",
-        "es": "Estados numéricos junto a los estados de control de texto (modeNum, fanNum, swingNum, presetNum) con roles level.mode para Lovelace y el detector de tipos; un solo comando por escritura, ack solo con la confirmación del módulo",
-        "pl": "Liczbowe odpowiedniki tekstowych stanów sterujących (modeNum, fanNum, swingNum, presetNum) z rolami level.mode dla Lovelace i detektora typów; jedno polecenie na zapis, ack dopiero po potwierdzeniu przez moduł",
-        "uk": "Числові відповідники текстових керувальних станів (modeNum, fanNum, swingNum, presetNum) з ролями level.mode для Lovelace і детектора типів; одна команда на кожен запис, ack лише після підтвердження модуля",
-        "zh-cn": "为文本控制状态新增数值对应项（modeNum、fanNum、swingNum、presetNum），带 level.mode 角色，适用于 Lovelace 和类型检测器；每次写入只发送一条命令，模块确认后才设置 ack"
       }
     },
     "restartAdapters": [

@@ -305,6 +305,11 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### 1.2.2 (2026-11-23)
+- History (InfluxDB, SQL, history): the manual measurement in the Efficiency tab now reads the newest value up to 30 days back
+  instead of 24 h, so values that have not changed for a long time (e.g. `control.mode`, `control.fan` with "only changes")
+  are found. Tested against history 5.5, InfluxDB 1.8/2.7/3 (influxdb 5.5) and SQL 4.7 with SQLite, MariaDB, PostgreSQL and MS-SQL.
+
 ### 1.2.1 (2026-11-23)
 - Multi split: the reported power `status.consumption` (S21 "FX60") is that of **each indoor unit** – the
   modules of one system report different values while the compressor `status.comp` is the same (tester
