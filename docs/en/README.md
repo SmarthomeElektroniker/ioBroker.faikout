@@ -447,6 +447,47 @@ legend – a click hides a unit. The tooltip lists the value per unit and the to
 between "All", "Heating only" and "Cooling only" and between chart and table. The data come from the
 adapter's own counters (48 hours, 62 days, 24 months); no history adapter is needed.
 
+### Recording in history, InfluxDB or SQL
+
+For longer periods a history adapter can record the values. **Settings → Consumption** offers every instance
+that the admin knows as a data source (`history`, `influxdb`, `sql` with MySQL/MariaDB, PostgreSQL, SQLite or
+MS-SQL – any instance number). If the chosen instance does not exist, the adapter takes the default history of
+the system (admin → system settings), otherwise none. With the check box "Record consumption with a history
+adapter" the adapter registers the counters there **once**: all `consumption.<branch>.*` (branch `heating`,
+`cooling`, `total`) and `efficiency.heat.*` / `efficiency.cold.*`, each with "only changes"; retention,
+debounce etc. come from the defaults of the instance (with InfluxDB the retention of the bucket or database
+applies). Whatever you change or switch off at a data point in the admin afterwards is kept – also after a
+restart.
+
+How often the adapter writes (to the objects; with "only changes" the database only gets what changes):
+
+| Data point | written | entries in the database with "only changes" |
+|---|---|---|
+| `consumption.*.today`, `thisMonth`, `currentHour` | with every meter step of the module (100 Wh), plus at the change of the hour | about one per 100 Wh used, plus the drop to 0 at midnight or on the first of the month |
+| `consumption.*.lastHour` | at the change of the hour | at most 24 a day |
+| `consumption.*.yesterday` | at the change of the day (first report after midnight) | **one a day** |
+| `consumption.*.lastMonth` | at the change of the month | one a month |
+| `consumption.*.hoursJson` | at the change of the hour | (not registered) |
+| `consumption.*.daysJson`, `monthsJson` | when the current day/month changes | (not registered) |
+| `efficiency.*` (output, COP, state, `heat.*`, `cold.*` …) | at most every 30 s, at once when the state changes (heating/defrosting/idle) | `heat.today` etc. per change |
+| `efficiency.daysJson`, `monthsJson` | every 5 min and at the change of the hour | (not registered) |
+| `efficiency.hoursJson` | at the change of the hour | (not registered) |
+| `outdoorUnits.<id>.*` | on change (30 s cycle) | (not registered) |
+
+An unchanged value is written again at the latest every 5 minutes so that its time stamp stays alive (monitors
+such as device-watcher). Without "only changes" the history adapter records these repetitions as well.
+
+**Daily values only (e.g. 2–3 years retention):** `consumption.heating.yesterday` and
+`consumption.cooling.yesterday` per indoor unit are enough (on a multi split count the outdoor unit once:
+`consumption.total.yesterday` of **one** module), for the heat `efficiency.heat.yesterday`. With "only changes"
+that is one entry a day, about 365 a year per data point. Switch the other data points off in the admin; the
+adapter does not register them again. Two equal days in a row (e.g. 0 kWh) give only one entry – if you need
+every day, set "record the same values anyway" of the history adapter to 86400 s. Monthly values: `lastMonth`.
+
+The adapter reads from the history adapter only for the manual measurement in the tab Efficiency (see there):
+per value the newest entry up to 24 hours before the moment, and only from data points this instance records.
+The charts in the tab Consumption use its own series only.
+
 ### Multi split: assigning indoor units to an outdoor unit
 
 If several indoor units are connected to **one** outdoor unit, their modules report the same outdoor
@@ -474,6 +515,19 @@ without a Faikout module are entered as a number under "Further indoor units wit
 Every outdoor unit gets its own **device card** (display only) and the data points
 `outdoorUnits.<id>.*`. With demand control switched on, the power limit applies per outdoor unit (see
 "Multi split: one power limit per outdoor unit").
+
+**Colours and symbols in the tile:** the colour bar at every indoor unit is its colour in the consumption chart –
+not a status. Below the tile the adapter checks the saved assignment against the data:
+
+- green ✓ **"Meters match"** – the outdoor unit meters of the modules are at most 200 Wh apart (the modules
+  report at different times and in 100 Wh steps);
+- grey ⓘ **"Compressors run in step – the assignment fits"** – the meters differ more, but the compressor speed
+  `comp` is the same at all of them (it comes from the outdoor unit);
+- grey ⓘ **note** – only if the meters differ **and** the compressors ran mostly differently over at least
+  30 minutes of operation (plus one info entry in the log).
+
+While the system is idle there are no compressor data and the adapter shows nothing. The assignment always stays
+as you saved it; there is no error colour here.
 
 ## 10. Efficiency: heat output and COP
 

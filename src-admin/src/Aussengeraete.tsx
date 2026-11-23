@@ -61,7 +61,8 @@ interface GruppeStand {
     monat: number | null;
     rest: number;
     cop: number | null;
-    pruefung: 'bestaetigt' | 'widerspricht' | 'unbekannt';
+    /** bestaetigt: Zaehler gleich; versatz: Zaehler verschieden, Verdichter gleich; widerspricht: lange verschieden (nur Hinweis) */
+    pruefung: 'bestaetigt' | 'versatz' | 'widerspricht' | 'unbekannt';
     /** aktuelle Leistungsgrenze der Gruppe (%) und ihr Leitgeraet - aus der Gruppenregelung */
     grenze?: number | null;
     leitgeraet?: string | null;
@@ -167,6 +168,7 @@ const SYMBOL = {
     idee: 'M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.3 1 2.1h5c0-.8.4-1.6 1-2.1A6 6 0 0012 3z',
     haken: 'M5 12.5l4.5 4.5L19 7.5',
     warn: 'M12 4l9 16H3zM12 10v4M12 17h.01',
+    info: 'M12 21a9 9 0 100-18 9 9 0 000 18zM12 11v6M12 7.5h.01',
     weg: 'M6 6l12 12M18 6L6 18',
     stift: 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',
     plus: 'M12 5v14M5 12h14',
@@ -425,6 +427,7 @@ export function AussengeraeteAnsicht(props: AnsichtProps): React.JSX.Element {
                 {opt.farbe ? (
                     <span
                         className="fk-ag-farbe"
+                        title={t('farbeTipp')}
                         style={{ background: opt.farbe }}
                     />
                 ) : null}
@@ -548,10 +551,10 @@ export function AussengeraeteAnsicht(props: AnsichtProps): React.JSX.Element {
                     {w && w.pruefung !== 'unbekannt' ? (
                         <div
                             className={`fk-ag-pruef fk-ag-${w.pruefung}`}
-                            title={w.pruefung === 'bestaetigt' ? t('bestaetigtTipp') : undefined}
+                            title={t(w.pruefung === 'bestaetigt' ? 'bestaetigtTipp' : w.pruefung === 'versatz' ? 'versatzTipp' : 'widersprichtTipp')}
                         >
                             <Zeichen
-                                d={w.pruefung === 'bestaetigt' ? SYMBOL.haken : SYMBOL.warn}
+                                d={w.pruefung === 'bestaetigt' ? SYMBOL.haken : SYMBOL.info}
                                 groesse={16}
                                 dick={2.2}
                             />
@@ -1124,7 +1127,10 @@ export function AussengeraeteAnsicht(props: AnsichtProps): React.JSX.Element {
                 '& .fk-ag-afuss': { padding: '8px 12px 10px 14px' },
                 '& .fk-ag-pruef': { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8125rem', marginBottom: '8px' },
                 '& .fk-ag-bestaetigt': { color: f.gut },
-                '& .fk-ag-widerspricht': { color: f.warn },
+                // Die Zuordnung hat der Nutzer gespeichert: Abweichungen sind nur ein neutraler Hinweis, nie Warnfarbe
+                '& .fk-ag-versatz': { color: f.blass },
+                '& .fk-ag-widerspricht': { color: f.blass },
+                '& .fk-ag-legende': { fontSize: '0.8125rem', color: f.blass, margin: '8px 0 0' },
                 '& .fk-ag-balken': { display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', backgroundColor: f.dunkel ? '#69737e' : '#a9b1ba' },
                 '& .fk-ag-balken span': { display: 'block', height: '100%' },
                 '& .fk-ag-fuss': { display: 'flex', flexWrap: 'wrap', gap: '2px 16px', fontSize: '0.8125rem', color: f.blass, marginTop: '4px', minHeight: '1.2em' },
@@ -1307,6 +1313,7 @@ export function AussengeraeteAnsicht(props: AnsichtProps): React.JSX.Element {
                     </div>
                 </div>
             </div>
+            {hatMulti ? <p className="fk-ag-legende">{t('legende')}</p> : null}
 
             {/* Je Vorschlag ein Buendel: oben die vorgeschlagene Kachel, direkt darunter die einzelnen Anlagen, die dorthin
                 wandern wuerden - so bleiben die Pfeile kurz und die Gruppen kreuzen sich nicht. Die Anlagen stehen in

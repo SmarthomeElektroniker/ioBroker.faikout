@@ -394,19 +394,28 @@ describe('Effizienz am Adapter', () => {
         // von Hand ergaenzt
         const mit = await e.befehl('effizienzHand', { geraet: 'Truhe', aktion: 'hinzufuegen', zeit: alt, tAus: 33, werte: { art: 'heizen', stufe: 'M', tEin: 21, tRef: 31 } });
         expect(mit.geraet.hand.punkte[0]).to.deep.include({ stufe: 'M', tEin: 21, tRef: 31, tAus: 33 });
-        // History-Adapter
-        a.config.historyInstance = 'history.0';
+        // History-Adapter: gefragt werden nur Datenpunkte, die die Instanz aufzeichnet (custom.enabled)
+        a.config.historyInstance = 'influxdb.0';
         const historie = { 'control.mode': 'heat', 'control.fan': 'high', 'status.achome': 20.5, 'status.liquid': 33, 'status.fanfreq': 19, 'status.comp': 2100, 'status.outside': 3, 'status.consumption': 700 };
+        const gefragt = [];
+        a.getForeignObjectAsync = async id => {
+            const rel = id.replace('faikout.0.Truhe.', '');
+            return rel in historie ? { common: { custom: { 'influxdb.0': { enabled: true } } } } : { common: {} };
+        };
         a.sendToAsync = async (inst, befehl, msg) => {
-            expect(inst).to.equal('history.0');
-            expect(msg.options.aggregate).to.equal('none');
+            expect(inst).to.equal('influxdb.0');
+            expect(befehl).to.equal('getHistory');
+            expect(msg.options).to.deep.include({ aggregate: 'none', returnNewestEntries: true });
             const rel = msg.id.replace('faikout.0.Truhe.', '');
-            return { result: rel in historie ? [{ ts: msg.options.end - 120000, val: historie[rel] }] : [] };
+            gefragt.push(rel);
+            // wie influxdb: Wert vor dem Beginn als Randwert, dann der eigentliche
+            return { result: [{ ts: msg.options.start - 1000, val: 'alt' }, { ts: msg.options.end - 120000, val: historie[rel] }] };
         };
         a.einheiten.set('Truhe', { fanfreq: 'Hz' });
         const h = await e.befehl('effizienzHand', { geraet: 'Truhe', aktion: 'suchen', zeit: alt - 3600000, tAus: 34 });
         expect(h.quelle).to.equal('history');
         expect(h.gefunden).to.deep.include({ art: 'heizen', stufe: 'H', tEin: 20.5, tRef: 33, rpm: 1140 });
+        expect(gefragt).not.to.include('status.home'); // nicht aufgezeichnet: nicht gefragt
     });
 
     it('Stand rechnet mit den ungespeicherten Werten des Formulars (Modell, eigene Kennlinie)', async () => {

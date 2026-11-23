@@ -184,17 +184,66 @@ describe('Multisplit: Vorschlag aus den Daten', () => {
         expect(r[0].art).to.equal('widerspruch');
     });
 
-    it('Prüfung einer Zuordnung: bestätigt, widerspricht, unbekannt', () => {
+    it('Prüfung einer Zuordnung: bestätigt, unbekannt; Zählerabstand allein ist kein Widerspruch', () => {
         const z = new Map([
             ['wz', 50000],
             ['sz', 50100],
+            ['az', 50200], // zwei Stufen: zeitversetzt gemeldet
             ['og', 90000],
             ['neu', 200],
         ]);
         expect(v.pruefung(['wz', 'sz'], z)).to.equal('bestaetigt');
-        expect(v.pruefung(['wz', 'og'], z)).to.equal('widerspricht');
+        expect(v.pruefung(['wz', 'sz', 'az'], z)).to.equal('bestaetigt');
+        // ohne Verdichterdaten (Anlage aus): nichts anzeigen statt "vermutlich nicht dasselbe Aussengeraet"
+        expect(v.pruefung(['wz', 'og'], z)).to.equal('unbekannt');
+        expect(v.pruefung(['wz', 'og'], z, { verlauf: new Map() })).to.equal('unbekannt');
         expect(v.pruefung(['wz', 'neu'], z)).to.equal('unbekannt');
         expect(v.pruefung(['wz'], z)).to.equal('unbekannt');
+        expect(v.PRUEF_TOLERANZ_WH).to.equal(200);
+    });
+
+    it('Prüfung: Tester 2MXM50A - Zähler 1 kWh auseinander, Verdichter gleich = Versatz, keine Warnung', () => {
+        // FernetMenta 23.11.2026: faik-attic 621,2 kWh, faik-bedroom 620,2 kWh, comp an beiden immer gleich
+        const z = new Map([
+            ['attic', 621200],
+            ['bedroom', 620200],
+        ]);
+        const lauf = m => ({ comp: m < 5 ? 0 : 20 + (m % 6) * 5, outside: 1.5 });
+        const vl = verlauf(verlauf(new Map(), 'attic', lauf), 'bedroom', lauf);
+        expect(v.pruefung(['attic', 'bedroom'], z, { verlauf: vl })).to.equal('versatz');
+        // Anlage aus (comp 0): kein Beleg in keine Richtung - kein Hinweis
+        const aus = m => ({ comp: 0, outside: 1.5 + 0 * m });
+        const still = verlauf(verlauf(new Map(), 'attic', aus), 'bedroom', aus);
+        expect(v.pruefung(['attic', 'bedroom'], z, { verlauf: still })).to.equal('unbekannt');
+    });
+
+    it('Oberfläche: Hinweise zur Zuordnung in neutraler Farbe, Farbstreifen und Legende erklärt (Forum 23.11.2026)', () => {
+        const fs = require('node:fs');
+        const path = require('node:path');
+        const quelle = fs.readFileSync(path.join(__dirname, '..', 'src-admin', 'src', 'Aussengeraete.tsx'), 'utf8');
+        expect(quelle).to.contain("'& .fk-ag-widerspricht': { color: f.blass }");
+        expect(quelle).to.contain("'& .fk-ag-versatz': { color: f.blass }");
+        expect(quelle).not.to.match(/fk-ag-(widerspricht|versatz)'?: \{ color: f\.warn/);
+        expect(quelle).to.match(/className="fk-ag-farbe"\s+title=\{t\('farbeTipp'\)\}/);
+        expect(quelle).to.contain("t('legende')");
+        const texte = fs.readFileSync(path.join(__dirname, '..', 'src-admin', 'src', 'Aussengeraete.texte.ts'), 'utf8');
+        expect(texte).not.to.contain('probably do not share an outdoor unit');
+    });
+
+    it('Prüfung: erst lange verschieden laufende Verdichter ergeben einen (neutralen) Widerspruch', () => {
+        const z = new Map([
+            ['wz', 3131200],
+            ['og', 3970200],
+        ]);
+        const a = m => ({ comp: 30 + (m % 7) * 4, outside: 6.5 });
+        const b = m => ({ comp: m % 3 ? 0 : 55, outside: 6.5 });
+        // kurz (10 Minuten): noch kein Urteil
+        const kurz = verlauf(verlauf(new Map(), 'wz', a, 10), 'og', b, 10);
+        expect(v.pruefung(['wz', 'og'], z, { verlauf: kurz })).to.equal('unbekannt');
+        // lang (60 Minuten, mehr als WIDERSPRUCH_MIN mit laufendem Verdichter): Widerspruch
+        const lang = verlauf(verlauf(new Map(), 'wz', a), 'og', b);
+        expect(v.WIDERSPRUCH_MIN).to.equal(30);
+        expect(v.pruefung(['wz', 'og'], z, { verlauf: lang })).to.equal('widerspricht');
     });
 
     it('Verlauf: ein Wert je Minute, Teilmeldungen ergänzen, alte Minuten fallen heraus', () => {
@@ -479,6 +528,12 @@ describe('Multisplit am Adapter', () => {
             leitgeraet: null,
         });
         a.config.aussengeraete = [];
+        // verschiedene Zaehler ohne Verdichterdaten: kein Urteil (Tester FernetMenta, 23.11.2026)
+        const offen = await vb.befehl({ aussengeraete: [{ id: 'a1', innen: ['wz', 'gast'] }], abgelehnt: ['sz|wz'] });
+        expect(offen.gruppen[0].pruefung).to.equal('unbekannt');
+        // ... erst wenn die Verdichter ueber laengere Zeit verschieden laufen
+        verlauf(vb.verlauf, 'wz', m => ({ comp: 30 + (m % 7) * 4, outside: 6.5 }));
+        verlauf(vb.verlauf, 'gast', m => ({ comp: m % 3 ? 0 : 55, outside: 6.5 }));
         const falsch = await vb.befehl({ aussengeraete: [{ id: 'a1', innen: ['wz', 'gast'] }], abgelehnt: ['sz|wz'] });
         expect(falsch.gruppen[0].pruefung).to.equal('widerspricht');
     });

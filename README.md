@@ -305,15 +305,7 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
-- Climate control: after an adapter start, a broker change (internal ↔ external), a reconnect or when a module
-  is back online (online after offline, also after a module restart), the first reported state no longer counts
-  as a manual override. Up to 1.2.1 it was compared with the last state before (possibly another unit at the
-  other broker) and could lock schedule and levels for hours ("manual change detected (target)"). The adapter
-  now takes the state over and sends its set point again; real manual changes during operation are still detected.
-  A lock from a real manual change before the restart is kept.
-
-### 1.2.1 (2026-11-22)
+### 1.2.1 (2026-11-23)
 - Multi split: the reported power `status.consumption` (S21 "FX60") is that of **each indoor unit** – the
   modules of one system report different values while the compressor `status.comp` is the same (tester
   report, Faikout wiki: "Power consumption of indoor unit"). Up to 1.2.0 the adapter took it as the power of
@@ -327,6 +319,25 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 - Multi split suggestion: equal outdoor unit meters **and** compressors running alike make it *certain*
   right away (no waiting for the meter observation).
 - Energy is not affected: `energy` stays the meter of the outdoor unit, `energyheat`/`energycool` per indoor unit.
+- Multi split, check of a saved assignment: meters up to 200 Wh apart count as equal (the modules report at
+  different times in 100 Wh steps). Meters that differ more are no longer a warning on their own – with the same
+  compressor speed (`comp`) the tile says "Compressors run in step – the assignment fits". Only if the meters
+  differ and the compressors ran mostly differently for at least 30 minutes, a neutral note appears (info in the
+  log instead of a warning). No error colour for an assignment the user saved; the colour bar at each indoor unit
+  has a tooltip and the tab a legend (tester report, forum).
+- Climate control: after an adapter start, a broker change (internal ↔ external), a reconnect or when a module
+  is back online (online after offline, also after a module restart), the first reported state no longer counts
+  as a manual override. Up to 1.2.0 it was compared with the last state before (possibly another unit at the
+  other broker) and could lock schedule and levels for hours ("manual change detected (target)"). The adapter
+  now takes the state over and sends its set point again; real manual changes during operation are still detected.
+  A lock from a real manual change before the restart is kept.
+- History (issue #12): the instance selection offers every data source the admin knows (`common.getHistory`:
+  history, influxdb, sql …) instead of only `history`; if the chosen instance does not exist, the system's
+  default history applies. The counters are registered once with "only changes" (retention etc. from the
+  instance – no more forced "keep forever"); settings changed in the admin are no longer overwritten at the next
+  start. The manual measurement reads history, InfluxDB 1.x/2.x and SQL alike: newest raw value before the
+  moment (`returnNewestEntries`, `count`/`limit`, border values dropped), only from recorded data points, in
+  parallel. Guide: which data points are written how often and what is needed for daily values only.
 
 ### 1.2.0 (2026-11-22)
 - New tab **Multi split**: every system as a tile (outdoor unit, line, indoor units). Assign indoor units to a

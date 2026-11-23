@@ -1792,7 +1792,7 @@
                 },
                 "historyInstance": {
                     "type": "instance",
-                    "adapter": "history",
+                    "adapter": "_dataSources",
                     "hidden": "!data.historyRegister",
                     "allowDeactivate": false,
                     "label": "labelHistoryInstance",

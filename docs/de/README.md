@@ -451,6 +451,49 @@ je Anlage und die Summe; umschaltbar sind „Alles“, „Nur Heizen“ und „N
 oder Tabelle. Die Daten kommen aus den eigenen Zählern des Adapters (48 Stunden, 62 Tage,
 24 Monate); ein History-Adapter ist dafür nicht nötig.
 
+### Aufzeichnung in history, InfluxDB oder SQL
+
+Für längere Zeiträume kann ein History-Adapter mitschreiben. Unter **Einstellungen → Verbrauch** stehen alle
+Instanzen zur Auswahl, die der Admin als Datenquelle kennt (`history`, `influxdb`, `sql` mit MySQL/MariaDB,
+PostgreSQL, SQLite oder MS-SQL – jede Instanznummer). Gibt es die gewählte Instanz nicht, nimmt der Adapter die
+Standard-History des Systems (Admin → Systemeinstellungen), sonst keine. Mit dem Haken „Verbrauch mit einem
+History-Adapter aufzeichnen“ meldet der Adapter die Zähler **einmal** dort an: alle `consumption.<Zweig>.*`
+(Zweig `heating`, `cooling`, `total`) und `efficiency.heat.*` / `efficiency.cold.*`, je mit „nur Änderungen
+aufzeichnen“; Aufbewahrung, Entprellen usw. kommen aus den Vorgaben der Instanz (bei InfluxDB gilt die
+Aufbewahrung des Buckets bzw. der Datenbank). Was du danach im Admin an einem Datenpunkt änderst oder
+abschaltest, bleibt – auch nach einem Neustart.
+
+Wie oft der Adapter schreibt (in den Objekten; in der Datenbank landet bei „nur Änderungen“ nur, was sich ändert):
+
+| Datenpunkt | geschrieben | Einträge in der Datenbank bei „nur Änderungen“ |
+|---|---|---|
+| `consumption.*.today`, `thisMonth`, `currentHour` | bei jeder Zählerstufe des Moduls (100 Wh), dazu zum Stundenwechsel | etwa eine je 100 Wh Verbrauch, dazu der Sprung auf 0 um Mitternacht bzw. am Monatsersten |
+| `consumption.*.lastHour` | zum Stundenwechsel | höchstens 24 am Tag |
+| `consumption.*.yesterday` | zum Tageswechsel (erste Meldung nach Mitternacht) | **einer am Tag** |
+| `consumption.*.lastMonth` | zum Monatswechsel | einer im Monat |
+| `consumption.*.hoursJson` | zum Stundenwechsel | (nicht angemeldet) |
+| `consumption.*.daysJson`, `monthsJson` | bei Änderung des laufenden Tages/Monats | (nicht angemeldet) |
+| `efficiency.*` (Leistung, COP, Zustand, `heat.*`, `cold.*` …) | höchstens alle 30 s, sofort bei Zustandswechsel (heizt/taut ab/steht) | `heat.today` usw. je Änderung |
+| `efficiency.daysJson`, `monthsJson` | alle 5 min und zum Stundenwechsel | (nicht angemeldet) |
+| `efficiency.hoursJson` | zum Stundenwechsel | (nicht angemeldet) |
+| `outdoorUnits.<Kennung>.*` | bei Änderung (Takt 30 s) | (nicht angemeldet) |
+
+Ein unveränderter Wert wird spätestens alle 5 Minuten noch einmal geschrieben, damit sein Zeitstempel lebt
+(Überwachungen wie device-watcher). Ohne „nur Änderungen“ zeichnet der History-Adapter auch diese
+Wiederholungen auf.
+
+**Nur Tageswerte (z. B. 2–3 Jahre Aufbewahrung):** Es genügen `consumption.heating.yesterday` und
+`consumption.cooling.yesterday` je Innengerät (bei Multisplit das Außengerät nur einmal:
+`consumption.total.yesterday` **eines** Moduls), für die Wärme `efficiency.heat.yesterday`. Mit „nur Änderungen“
+ist das ein Eintrag am Tag, etwa 365 im Jahr je Datenpunkt. Die übrigen Datenpunkte kannst du im Admin
+abschalten; der Adapter meldet sie nicht wieder an. Zwei gleiche Tage hintereinander (z. B. 0 kWh) ergeben nur
+einen Eintrag – wer jeden Tag braucht, stellt beim History-Adapter „gleiche Werte trotzdem aufzeichnen“ auf
+86400 s. Monatswerte: `lastMonth`.
+
+Der Adapter liest aus dem History-Adapter nur bei der Handmessung im Reiter Effizienz (siehe dort): je Wert
+den jüngsten Eintrag bis 24 Stunden vor dem Zeitpunkt, und nur von Datenpunkten, die diese Instanz aufzeichnet.
+Die Diagramme im Reiter Verbrauch nutzen allein die eigenen Reihen.
+
 ### Multisplit: Innengeräte einem Außengerät zuordnen
 
 Hängen mehrere Innengeräte an **einem** Außengerät, melden ihre Module denselben Zähler des
@@ -480,6 +523,19 @@ ohne Faikout-Modul trägst du als Zahl unter „Weitere Innengeräte ohne Faikou
 Außengerät bekommt eine eigene **Gerätekarte** (nur Anzeige) und die Datenpunkte
 `outdoorUnits.<Kennung>.*`. Mit eingeschalteter Bedarfsregelung gilt die Leistungsgrenze je
 Außengerät (siehe „Multisplit: eine Leistungsgrenze je Außengerät“).
+
+**Farben und Zeichen in der Kachel:** Der Farbstreifen an jedem Innengerät ist seine Farbe im Verbrauchsdiagramm –
+kein Zustand. Unter der Kachel prüft der Adapter die gespeicherte Zuordnung gegen die Daten:
+
+- grünes ✓ **„Zähler stimmen überein“** – die Außengeräte-Zähler der Module liegen höchstens 200 Wh auseinander
+  (die Module melden zeitversetzt und in 100-Wh-Stufen);
+- graues ⓘ **„Verdichter laufen gleich – die Zuordnung passt“** – die Zähler weichen weiter ab, die
+  Verdichterdrehzahl `comp` ist aber an allen gleich (sie kommt vom Außengerät);
+- graues ⓘ **Hinweis** – nur wenn die Zähler abweichen **und** die Verdichter über mindestens 30 Minuten
+  Laufzeit überwiegend verschieden liefen (dazu einmal ein Info-Eintrag im Log).
+
+Steht die Anlage, gibt es keine Verdichterdaten und der Adapter zeigt nichts. Die Zuordnung bleibt in jedem
+Fall so, wie du sie gespeichert hast; eine Fehlerfarbe gibt es hier nicht.
 
 ## 10. Effizienz: Wärmeleistung und COP
 

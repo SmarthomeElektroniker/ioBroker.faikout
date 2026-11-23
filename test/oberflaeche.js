@@ -1601,6 +1601,9 @@ describe('UX-Funde 21.11.2026', () => {
         zeilen = [{ id: 'system.adapter.sql.0', value: { common: { getHistory: true } } }];
         expect((await frage(a, 'historyHinweis', { instanz: 'history.0', an: true })).antwort).to.contain('Die gewählte Instanz history.0 gibt es nicht');
         expect((await frage(a, 'historyHinweis', { instanz: 'sql.0', an: true })).antwort).to.equal('');
+        // Standard-History des Systems vorhanden: sie gilt (lib/aufzeichnung.waehlen), der Hinweis sagt es
+        a.getForeignObjectAsync = async id => (id === 'system.config' ? { common: { defaultHistory: 'sql.0' } } : null);
+        expect((await frage(a, 'historyHinweis', { instanz: 'history.0', an: true })).antwort).to.contain('der Adapter nimmt die Standard-History des Systems, sql.0');
     });
 
     it('Obergrenze 95 % plus volle Freigabe: eigenes Etikett statt "100 % · roh 102,5 %"', () => {

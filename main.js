@@ -11,6 +11,7 @@ const brokerextern = require('./lib/brokerextern');
 const felder = require('./lib/fields');
 const namen = require('./lib/namen');
 const verbrauch = require('./lib/verbrauch');
+const aufzeichnung = require('./lib/aufzeichnung');
 const { Effizienz } = require('./lib/effizienz');
 const { Verbund } = require('./lib/verbundlauf');
 const { FaikoutDeviceManagement } = require('./lib/devicemanager');
@@ -202,6 +203,8 @@ class Faikout extends utils.Adapter {
         // warten hiesse, ohne Controller-Neustart (Testumgebung, compact mode, verzoegerter Host) ohne
         // Broker und ohne die folgenden Umzuege stehenzubleiben.
         await this.konfigUmziehen();
+        // Geltende History-Instanz (eingestellt, sonst Standard-History des Systems) - vor dem ersten Anlegen der Zaehler
+        await aufzeichnung.ermitteln(this);
         await this.verbrauchUmziehen();
         // Vorabstand von 1.0.0: Datenpunkte der Regelung von regel.* nach regulation.* (lib/regel/umzug.js)
         await regelUmzug.umziehen(this);
@@ -1036,9 +1039,9 @@ class Faikout extends utils.Adapter {
     }
 
     /**
-     * Legt einen Verbrauchs-Datenpunkt an und meldet ihn - wenn gewuenscht - gleich beim
-     * History-Adapter zur Aufzeichnung an. Das erspart es, jeden Punkt von Hand im Admin
-     * einzuschalten.
+     * Legt einen Verbrauchs-Datenpunkt an und meldet ihn - wenn gewuenscht - beim ersten Anlegen beim
+     * gewaehlten History-Adapter (history, influxdb, sql ...) zur Aufzeichnung an. Das erspart es, jeden Punkt
+     * von Hand im Admin einzuschalten; was der Nutzer danach im Admin aendert, bleibt (lib/aufzeichnung.js).
      *
      * @param {string} stateId   vollstaendige Objekt-ID
      * @param {string} name      Anzeigename
@@ -1054,16 +1057,20 @@ class Faikout extends utils.Adapter {
             read: true,
             write: false,
         };
-        // historyInstanz/historyAnmelden sind die Schluessel bis 0.0.13 - eine bestehende
-        // Konfiguration gilt weiter, bis sie im Admin neu gespeichert wird.
-        const instanz = String(this.config.historyInstance ?? this.config.historyInstanz ?? '').trim();
-        const anmelden = this.config.historyRegister ?? this.config.historyAnmelden;
-        if (anmelden && instanz) {
-            common.custom = {
-                [instanz]: { enabled: true, changesOnly: false, debounce: 0, retention: 0 },
-            };
+        let vorhanden = null;
+        try {
+            vorhanden = await this.getObjectAsync(stateId);
+        } catch {
+            // nicht lesbar: wie neu behandeln
         }
-        await this.extendObject(stateId, { type: 'state', common, native: {} });
+        const zusatz = aufzeichnung.anmeldung(vorhanden, {
+            instanz: aufzeichnung.instanzVon(this),
+            anmelden: aufzeichnung.konfig(this.config).anmelden,
+        });
+        if (zusatz.custom) {
+            common.custom = zusatz.custom;
+        }
+        await this.extendObject(stateId, { type: 'state', common, native: zusatz.native || {} });
     }
 
     /**
