@@ -349,7 +349,9 @@ describe('Multisplit: Verbrauchsansicht', () => {
         const r = bild.sammeln(liste(), { zeitraum: 'woche', art: 'alles' }, jetzt, aussen);
         expect(r.geraete.map(g => g.id)).to.deep.equal(['gast', 'wz', 'sz', 'az', 'outdoor:a1']);
         // Leistung je Innengeraet (S21 "FX60") - die Anlage ist die Summe: 3 x 900 W
-        expect(r.aussengeraete).to.deep.equal([{ id: 'a1', name: 'Garten', innen: ['wz', 'sz', 'az'], leistung: 2700 }]);
+        expect(r.aussengeraete).to.deep.equal([
+            { id: 'a1', name: 'Garten', innen: ['wz', 'sz', 'az'], leistung: 2700 },
+        ]);
         const rest = r.geraete[4];
         expect(rest).to.deep.include({ rest: true, gruppe: 'a1', aussengeraet: 'cfg:a1', leistung: null });
         const heute = r.schluessel.indexOf(r.laufend);
@@ -621,6 +623,37 @@ describe('Multisplit: automatisch zuordnen', () => {
         expect(r.gruppen[0]).to.deep.include({ gruppe: null, gewandert: true });
         expect(r.gruppen[1].gewandert).to.equal(false);
         expect(r.wartend).to.deep.equal([]);
+    });
+
+    it('Überlauf bei 6553,5 kWh: zwei Module beiderseits der Grenze bleiben gleich (Abstand auf dem Kreis)', () => {
+        const MOD = 6553600;
+        // wz laeuft schon ueber (fortlaufend: + MOD), sz meldet noch knapp unter dem Maximum
+        const paare = beobachte(12, m => ({
+            wz: [m < 6 ? 6553400 + 100 * Math.floor(m / 3) : MOD + 100 * Math.floor((m - 6) / 3)],
+            sz: [m < 7 ? 6553400 + 100 * Math.floor(m / 3) : MOD + 100 * Math.floor((m - 7) / 3)],
+        }));
+        const r = v.automatisch({ paare });
+        expect(r.gruppen.map(g => g.ids)).to.deep.equal([['sz', 'wz']]);
+        expect(r.gruppen[0].gewandert).to.equal(true);
+        // Pruefung einer Zuordnung mit Rohwerten beiderseits der Grenze (ohne gemerkten Ueberlauf)
+        expect(
+            v.pruefung(
+                ['wz', 'sz'],
+                new Map([
+                    ['wz', 6553500],
+                    ['sz', MOD + 100],
+                ]),
+            ),
+        ).to.equal('bestaetigt');
+        expect(
+            v.pruefung(
+                ['wz', 'sz'],
+                new Map([
+                    ['wz', 6553500],
+                    ['sz', 2 * MOD + 50000],
+                ]),
+            ),
+        ).to.equal('unbekannt');
     });
 
     it('ein Schnappschuss genügt nie: erst nach zehn Minuten gleicher Zähler', () => {

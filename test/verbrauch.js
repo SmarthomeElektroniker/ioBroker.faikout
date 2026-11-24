@@ -152,6 +152,104 @@ describe('Verbrauchsrechnung', () => {
     });
 });
 
+describe('Überlauf des 16-Bit-Zählers bei 6553,5 kWh (Codeberg RevK/ESP32-Faikout #682)', () => {
+    const MAX = 6553500; // 0xFFFF * 100 Wh
+
+    it('Überlauf: der Zuwachs bis zum Maximum und ab 0 zählt weiter (Stunde, Tag, Monat)', () => {
+        let s = v.verarbeiten(null, MAX - 1000, zeit(17, 10)).stand;
+        s = v.verarbeiten(s, MAX - 300, zeit(17, 10)).stand; // 0,7 kWh gezaehlt
+        const r = v.verarbeiten(s, 200, zeit(17, 10)); // 300 Wh bis FFFF, 100 Wh FFFF -> 0, dann 200 Wh
+        expect(r.hinweise.join(' ')).to.match(/wrapped around/);
+        expect(r.werte.currentHour).to.equal(1.3);
+        expect(r.werte.today).to.equal(1.3);
+        expect(r.werte.thisMonth).to.equal(1.3);
+        expect(r.werte.total, 'der Rohwert des Moduls bleibt sichtbar').to.equal(0.2);
+        expect(r.stand.ueberlaeufe).to.equal(1);
+    });
+
+    it('Überlauf über einen Stunden- und Tageswechsel: Werte stimmen zueinander, Ring ohne Minuswerte', () => {
+        let s = v.verarbeiten(null, MAX - 2000, zeit(17, 23)).stand;
+        s = v.verarbeiten(s, MAX - 500, zeit(17, 23)).stand; // 1,5 kWh am 17.
+        const r = v.verarbeiten(s, 400, zeit(18, 0)); // 0,5 + 0,1 + 0,4 = 1,0 kWh ueber den Ueberlauf
+        expect(r.werte.yesterday).to.equal(1.5);
+        expect(r.werte.today).to.equal(1);
+        expect(r.werte.hours.every(h => h.kwh === null || h.kwh >= 0)).to.equal(true);
+        expect(r.werte.thisMonth).to.equal(2.5);
+    });
+
+    it('Neustart nach dem Überlauf: gespeicherter Zustand zählt weiter, Überläufe bleiben gemerkt', () => {
+        let s = v.verarbeiten(null, MAX - 100, zeit(17, 10)).stand;
+        s = v.verarbeiten(s, 100, zeit(17, 10)).stand;
+        const gespeichert = JSON.parse(JSON.stringify(s));
+        const r = v.verarbeiten(gespeichert, 600, zeit(17, 10));
+        expect(r.werte.today).to.equal(0.8);
+        expect(r.stand.ueberlaeufe).to.equal(1);
+        expect(r.hinweise).to.be.empty;
+        // Modul-Neustart meldet denselben Stand: nichts passiert
+        expect(v.verarbeiten(r.stand, 600, zeit(17, 10)).werte.today).to.equal(0.8);
+    });
+
+    it('echter Reset bleibt Neuaufsetzen: alter Wert nicht am oberen Ende oder neuer Wert nicht nahe 0', () => {
+        // alter Wert mitten im Bereich (Modul-/Platinentausch, Reset)
+        let s = v.verarbeiten(null, 3000000, zeit(17, 10)).stand;
+        let r = v.verarbeiten(s, 100, zeit(17, 10));
+        expect(r.hinweise.join(' ')).to.match(/went backwards/);
+        expect(r.werte.today).to.equal(0);
+        expect(r.stand.ueberlaeufe).to.equal(0);
+        // alter Wert am oberen Ende, neuer aber nicht nahe 0 (> 50 kWh): kein Ueberlauf
+        s = v.verarbeiten(null, MAX - 1000, zeit(17, 10)).stand;
+        r = v.verarbeiten(s, 60000, zeit(17, 10));
+        expect(r.hinweise.join(' ')).to.match(/went backwards/);
+        expect(r.werte.today).to.equal(0);
+        // kleiner Ruecksprung am oberen Ende (Modul meldet kurz einen aelteren Stand): kein Ueberlauf
+        s = v.verarbeiten(null, MAX - 1000, zeit(17, 10)).stand;
+        r = v.verarbeiten(s, MAX - 1200, zeit(17, 10));
+        expect(r.hinweise.join(' ')).to.match(/went backwards/);
+    });
+
+    it('Grenzen des Fensters: alt > Maximum − 50 kWh und neu < 50 kWh', () => {
+        expect(v.istUeberlauf(MAX, 0)).to.equal(true);
+        expect(v.istUeberlauf(MAX - 49900, 49900)).to.equal(true);
+        expect(v.istUeberlauf(MAX - 50000, 100)).to.equal(false);
+        expect(v.istUeberlauf(MAX - 100, 50000)).to.equal(false);
+        expect(v.istUeberlauf(100, 50)).to.equal(false);
+        expect(v.istUeberlauf(MAX - 100, MAX)).to.equal(false);
+    });
+
+    it('zaehlerAbstand rechnet auf dem Kreis, auch mit fortlaufenden Werten', () => {
+        expect(v.zaehlerAbstand(MAX, 100)).to.equal(200);
+        expect(v.zaehlerAbstand(100, MAX)).to.equal(200);
+        expect(v.zaehlerAbstand(v.ZAEHLER_MODUL_WH + 100, 300)).to.equal(200);
+        expect(v.zaehlerAbstand(1000000, 1001000)).to.equal(1000);
+    });
+
+    it('aussenZaehler liefert den fortlaufenden Stand, gemeinsameZaehler gruppiert über den Überlauf', () => {
+        const geraete = new Map([
+            ['a', { zaehler: { energy: { letzterWert: 0, ueberlaeufe: 1 } } }],
+            ['b', { zaehler: { energy: { letzterWert: MAX } } }],
+            ['c', { zaehler: { energy: { letzterWert: 2000000 } } }],
+        ]);
+        const z = v.aussenZaehler(geraete);
+        expect(z.get('a')).to.equal(v.ZAEHLER_MODUL_WH);
+        expect([...v.gemeinsameZaehler(z)]).to.deep.equal([
+            ['a', 'a'],
+            ['b', 'a'],
+        ]);
+        // auch ohne gemerkten Ueberlauf (z. B. frisch angelegtes Geraet) ueber die Kreisgrenze
+        expect(
+            [
+                ...v.gemeinsameZaehler(
+                    new Map([
+                        ['x', 50100],
+                        ['y', 50000],
+                        ['z', MAX],
+                    ]),
+                ),
+            ].length,
+        ).to.equal(2);
+    });
+});
+
 describe('Gemeinsames Außengerät (Multisplit, Issue #8)', () => {
     it('gleiche energy-Zähler (auf eine 100-Wh-Stufe) bilden eine Gruppe, die kleinste ID ist die Kennung', () => {
         const g = v.gemeinsameZaehler(

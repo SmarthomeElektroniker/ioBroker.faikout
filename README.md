@@ -312,6 +312,11 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
   the Daikin Wi-Fi modules switched off). Whether the module has internet does not matter: module on ("SP 1") and Onecta
   demand control "off" → works; "fixed value" → the adapter overwrites it; "auto" → the cloud keeps overwriting it (not
   recommended); module off ("SP oFF") → no effect. Recommendation: module on, app "off" (or "fixed value"), not "auto".
+- Energy meters: the module counters `energy`, `energyheat` and `energycool` are 16 bit in steps of 100 Wh and wrap
+  around at 6553.5 kWh ([RevK/ESP32-Faikout #682](https://codeberg.org/RevK/ESP32-Faikout/issues/682)). The consumption
+  values now count on across the wrap (old value within 50 kWh of the maximum, new value below 50 kWh) instead of
+  losing the consumption up to it; any other step backwards is still treated as a reset. The multi split comparison of
+  the outdoor unit meters also tolerates the wrap.
 
 ### 1.2.2 (2026-11-23)
 - History (InfluxDB, SQL, history): the manual measurement in the Efficiency tab now reads the newest value up to 30 days back
