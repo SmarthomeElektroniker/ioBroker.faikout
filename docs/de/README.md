@@ -128,8 +128,8 @@ Zwei Dinge sind zu unterscheiden:
 | aus („SP oFF“) | egal | wirkt **nicht**, gleich was vorher in der App eingestellt war (eigene Messung) |
 
 Ob das Modul Internet hat, ist nicht entscheidend – es kommt darauf an, dass das Modul an ist, und auf die
-Einstellung in der App. (Bis 1.2.2 stand hier eine Unterscheidung nach Internet; sie beruhte auf einer Messung
-mit ausgeschalteten WLAN-Modulen und war falsch.)
+Einstellung in der App. (Bis 1.2.2 stand hier eine Unterscheidung nach Internet; sie war unpräzise, weil ich
+mit ausgeschalteten WLAN-Modulen gemessen hatte.)
 
 **Empfehlung:** Modul an („SP 1“); in der App „Aus“ (oder „Fester Wert“), **nicht** „Auto“.
 Rückmeldungen im Forum sind willkommen. Eine Ablehnung bei ausgeschalteter Anlage sagt nichts aus – der

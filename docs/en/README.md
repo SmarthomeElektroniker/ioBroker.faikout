@@ -129,8 +129,8 @@ Two different things matter:
 | off ("SP oFF") | any | has **no** effect, whatever was set in the app before (own measurement) |
 
 Whether the module has internet does not matter – what counts is that the module is on, and the setting in the
-app. (Up to 1.2.2 this section distinguished by internet access; that was based on a measurement with the Wi-Fi
-modules switched off and was wrong.)
+app. (Up to 1.2.2 this section distinguished by internet access; that was imprecise because I had measured with
+the Wi-Fi modules switched off.)
 
 **Recommendation:** module on ("SP 1"); in the app "off" (or "fixed value"), **not** "auto".
 Feedback in the forum is welcome. A value rejected while the unit is switched off says nothing –
