@@ -151,9 +151,9 @@ describe('Regeltexte (mehrsprachig)', () => {
     it('Deutsch ist zeichengenau der bisherige Text (Stichproben)', () => {
         expect(faehigkeit.bewerten(null, { art: 'abgelehnt', power: true, wert: 80 }).grund).to.equal(
             'demand 80 im Betrieb abgelehnt (failed-set). Bei Daikin wirkt die Leistungsgrenze nur, ' +
-                'wenn das originale Daikin-WLAN-Modul eingeschaltet ist (Fernbedienung: Powerful 5 s, Anzeige „SP 1“). ' +
-                'Außerdem die Leistungssteuerung in der Daikin-App prüfen (Erfahrungswert: Modul ohne Internet „manuell (fester Wert)“, ' +
-                'mit Cloud-Verbindung „Aus“)',
+                'wenn das originale Daikin-WLAN-Modul eingeschaltet ist (Fernbedienung: Powerful 5 s, Anzeige „SP 1“), mit oder ohne Internet. ' +
+                'Außerdem die Leistungssteuerung in der Daikin-App prüfen: „Aus“ oder „Fester Wert“, nicht „Auto“ ' +
+                '(bei „Auto“ überschreibt die Cloud den Wert)',
         );
         expect(faehigkeit.bewerten(null, { art: 'abgelehnt', power: false, wert: 80 }).grund).to.equal(
             'noch keine Rückmeldung; demand 80 bei Gerät aus abgelehnt – nicht aussagekräftig',
@@ -174,7 +174,7 @@ describe('Regeltexte (mehrsprachig)', () => {
         );
     });
 
-    it('Daikin-Hinweis nennt in jeder Sprache WLAN-Modul, Powerful 5 s, „SP 1“ und die Cloud-Unterscheidung', () => {
+    it('Daikin-Hinweis nennt in jeder Sprache WLAN-Modul, Powerful 5 s, „SP 1“, Internet egal und „Auto“ (Cloud) als Ausnahme', () => {
         for (const s of SPRACHEN) {
             const v = texte.TEXTE['faehig.abgelehntBetrieb'][s];
             expect(v, s).to.match(/failed-set/);
@@ -185,6 +185,9 @@ describe('Regeltexte (mehrsprachig)', () => {
             expect(v, s).to.match(/SP 1/);
             expect(v, s).to.match(/cloud|облак|nube|chmur|хмар|云/i);
             expect(v, s).to.match(/internet|интернет|інтернет|联网/i);
+            expect(v, s).to.match(/Auto|Авто|自动/);
+            // Messung 24.11.2026: keine Unterscheidung mehr nach Internet, kein "manuell" als Empfehlung
+            expect(v, s).not.to.match(/manu|вручн|ręcz|handmatig|手动/i);
         }
     });
 

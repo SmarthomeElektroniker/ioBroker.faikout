@@ -232,21 +232,23 @@ it would do, but sends nothing. Instances from older versions keep their dry run
 
 Two different things matter:
 
-- **A) The setting "demand control" in the Daikin app (Onecta):** off / manual (fixed value) / auto.
+- **A) The setting "demand control" in the Daikin app (Onecta):** off / fixed value / auto.
 - **B) The Daikin Wi-Fi module itself**, switched on or off with the remote control (SP menu: hold
   "Powerful" → "SP 1" = Wi-Fi on, "SP oFF" = off; manual 3P649406) – independent of the app.
 
 | B) Daikin Wi-Fi module | A) Demand control in Onecta | Power limit from the adapter |
 |---|---|---|
-| off ("SP oFF") | any | has **no** effect (own measurement) |
-| on, without internet (own network) | manual (fixed value) | works; adapter and app may both write, the last value wins (own measurement) |
-| on, without internet | off | the unit stays at 100 % (own measurement) |
-| on, without internet | auto | not useful without the cloud |
-| on, with cloud (e.g. built-in modules of the Perfera) | auto or manual | the cloud resets its value after seconds, the adapter's value does not hold (tester report) |
-| on, with cloud | off | the adapter's values hold (tester report, not yet cross-checked) |
+| on ("SP 1") | off | works (own measurement; tester report: also with internet blocked, the app then shows "not connected") |
+| on ("SP 1") | fixed value | works; the adapter overwrites the set value, after a few minutes the app also shows the adapter's value (own measurement) |
+| on ("SP 1") | auto | the cloud regularly overwrites the adapter's value – not recommended (own measurement) |
+| off ("SP oFF") | any | has **no** effect, whatever was set in the app before (own measurement) |
 
-**Recommendation:** module on ("SP 1"); with cloud → app "off"; without internet → app "manual (fixed
-value)". Feedback in the forum is welcome. A value rejected while the unit is switched off says nothing –
+Whether the module has internet does not matter – what counts is that the module is on, and the setting in the
+app. (Up to 1.2.2 this section distinguished by internet access; that was based on a measurement with the Wi-Fi
+modules switched off and was wrong.)
+
+**Recommendation:** module on ("SP 1"); in the app "off" (or "fixed value"), **not** "auto".
+Feedback in the forum is welcome. A value rejected while the unit is switched off says nothing –
 the adapter keeps showing "not tested yet".
 
 ### Multi split: assigning indoor units to an outdoor unit
@@ -305,6 +307,12 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- Daikin power limit: corrected table, hints and recommendation after a new measurement (the earlier one was made with
+  the Daikin Wi-Fi modules switched off). Whether the module has internet does not matter: module on ("SP 1") and Onecta
+  demand control "off" → works; "fixed value" → the adapter overwrites it; "auto" → the cloud keeps overwriting it (not
+  recommended); module off ("SP oFF") → no effect. Recommendation: module on, app "off" (or "fixed value"), not "auto".
+
 ### 1.2.2 (2026-11-23)
 - History (InfluxDB, SQL, history): the manual measurement in the Efficiency tab now reads the newest value up to 30 days back
   instead of 24 h, so values that have not changed for a long time (e.g. `control.mode`, `control.fan` with "only changes")

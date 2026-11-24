@@ -116,20 +116,22 @@ ob ein Feuchtewert vorhanden ist.
 
 Zwei Dinge sind zu unterscheiden:
 
-- **A) Einstellung „Bedarfssteuerung“ in der Daikin-App (Onecta):** Aus / manuell (fester Wert) / Auto.
+- **A) Einstellung „Bedarfssteuerung“ in der Daikin-App (Onecta):** Aus / Fester Wert / Auto.
 - **B) Das Daikin-WLAN-Modul selbst**, per Fernbedienung ein- oder ausgeschaltet (SP-Menü: „Powerful“
   gedrückt halten → „SP 1“ = WLAN an, „SP oFF“ = aus; Handbuch 3P649406) – unabhängig von der App.
 
 | B) Daikin-WLAN-Modul | A) Bedarfssteuerung in Onecta | Leistungsgrenze vom Adapter |
 |---|---|---|
-| aus („SP oFF“) | egal | wirkt **nicht** (eigene Messung) |
-| an, ohne Internet (eigenes Netz) | manuell (fester Wert) | wirkt; Adapter und App dürfen schreiben, der letzte Wert gilt (eigene Messung) |
-| an, ohne Internet | Aus | Anlage bleibt bei 100 % (eigene Messung) |
-| an, ohne Internet | Auto | ohne Cloud nicht sinnvoll |
-| an, mit Cloud (z. B. fest eingebaute Module der Perfera) | Auto oder manuell | die Cloud setzt ihren Wert nach Sekunden zurück, der Wert des Adapters hält nicht (Tester-Bericht) |
-| an, mit Cloud | Aus | Werte des Adapters halten (Tester-Bericht, noch nicht gegengeprüft) |
+| an („SP 1“) | Aus | wirkt (eigene Messung; Tester-Bericht: auch bei gesperrtem Internet, die App zeigt dann „nicht verbunden“) |
+| an („SP 1“) | Fester Wert | wirkt; der Adapter überschreibt den eingestellten Wert, nach einigen Minuten zeigt auch die App den Wert des Adapters (eigene Messung) |
+| an („SP 1“) | Auto | die Cloud überschreibt den Wert des Adapters regelmäßig – nicht empfohlen (eigene Messung) |
+| aus („SP oFF“) | egal | wirkt **nicht**, gleich was vorher in der App eingestellt war (eigene Messung) |
 
-**Empfehlung:** Modul an („SP 1“); mit Cloud → App „Aus“; ohne Internet → App „manuell (fester Wert)“.
+Ob das Modul Internet hat, ist nicht entscheidend – es kommt darauf an, dass das Modul an ist, und auf die
+Einstellung in der App. (Bis 1.2.2 stand hier eine Unterscheidung nach Internet; sie beruhte auf einer Messung
+mit ausgeschalteten WLAN-Modulen und war falsch.)
+
+**Empfehlung:** Modul an („SP 1“); in der App „Aus“ (oder „Fester Wert“), **nicht** „Auto“.
 Rückmeldungen im Forum sind willkommen. Eine Ablehnung bei ausgeschalteter Anlage sagt nichts aus – der
 Adapter zeigt dann weiter „noch nicht geprüft“.
 
