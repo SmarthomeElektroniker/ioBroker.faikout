@@ -114,26 +114,14 @@ ob ein Feuchtewert vorhanden ist.
 
 #### Leistungsgrenze bei Daikin
 
-Zwei Dinge sind zu unterscheiden:
+Damit die Leistungsgrenze vom Adapter wirkt, braucht es zwei Dinge:
 
-- **A) Einstellung „Bedarfssteuerung“ in der Daikin-App (Onecta):** Aus / Fester Wert / Auto.
-- **B) Das Daikin-WLAN-Modul selbst**, per Fernbedienung ein- oder ausgeschaltet (SP-Menü: „Powerful“
-  gedrückt halten → „SP 1“ = WLAN an, „SP oFF“ = aus; Handbuch 3P649406) – unabhängig von der App.
+1. **Das Daikin-WLAN-Modul muss eingeschaltet sein** (Fernbedienung, SP-Menü: „Powerful“ gedrückt halten,
+   bis „SP 1“ = WLAN an erscheint; „SP oFF“ = aus; Handbuch 3P649406).
+2. **Die Bedarfssteuerung in der Daikin-App (Onecta) darf nicht auf „Auto“ stehen** – bei „Auto“ überschreibt
+   die Cloud den Wert des Adapters immer wieder.
 
-| B) Daikin-WLAN-Modul | A) Bedarfssteuerung in Onecta | Leistungsgrenze vom Adapter |
-|---|---|---|
-| an („SP 1“) | Aus | wirkt (eigene Messung; Tester-Bericht: auch bei gesperrtem Internet, die App zeigt dann „nicht verbunden“) |
-| an („SP 1“) | Fester Wert | wirkt; der Adapter überschreibt den eingestellten Wert, nach einigen Minuten zeigt auch die App den Wert des Adapters (eigene Messung) |
-| an („SP 1“) | Auto | die Cloud überschreibt den Wert des Adapters regelmäßig – nicht empfohlen (eigene Messung) |
-| aus („SP oFF“) | egal | wirkt **nicht**, gleich was vorher in der App eingestellt war (eigene Messung) |
-
-Ob das Modul Internet hat, ist nicht entscheidend – es kommt darauf an, dass das Modul an ist, und auf die
-Einstellung in der App. (Bis 1.2.2 stand hier eine Unterscheidung nach Internet; sie war unpräzise, weil ich
-mit ausgeschalteten WLAN-Modulen gemessen hatte.)
-
-**Empfehlung:** Modul an („SP 1“); in der App „Aus“ (oder „Fester Wert“), **nicht** „Auto“.
-Rückmeldungen im Forum sind willkommen. Eine Ablehnung bei ausgeschalteter Anlage sagt nichts aus – der
-Adapter zeigt dann weiter „noch nicht geprüft“.
+Eine Ablehnung bei ausgeschalteter Anlage sagt nichts aus – der Adapter zeigt dann weiter „noch nicht geprüft“.
 
 #### Multisplit: eine Leistungsgrenze je Außengerät
 

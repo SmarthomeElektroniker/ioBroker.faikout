@@ -342,8 +342,8 @@ describe('Oberflaeche: Geraetename statt ID, Hinweise', () => {
 
     it('Daikin-Hinweis haengt am Wert "nein" der Leistungsgrenze', async () => {
         const nein = (await frage(adapter({ 'wz.info.demandCapable': 'no' }), 'regelKann', { geraet: 'wz' })).antwort;
-        expect(nein).to.contain('SP 1').and.to.contain('mit oder ohne Internet').and.to.contain('„Aus“ (oder „Fester Wert“), nicht „Auto“');
-        expect(nein).not.to.contain('Modul ohne Internet').and.not.to.contain('manuell');
+        expect(nein).to.contain('SP 1').and.to.contain('1. Das originale Daikin-WLAN-Modul muss eingeschaltet sein').and.to.contain('(Onecta) darf nicht auf „Auto“ stehen');
+        expect(nein).not.to.contain('Internet').and.not.to.contain('manuell').and.not.to.contain('Fester Wert');
         for (const wert of ['yes', 'unknown']) {
             expect((await frage(adapter({ 'wz.info.demandCapable': wert }), 'regelKann', { geraet: 'wz' })).antwort).not.to.contain('SP 1');
         }

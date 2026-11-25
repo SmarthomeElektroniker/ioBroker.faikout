@@ -1052,7 +1052,7 @@ describe('Device-Manager: Regelung auf der Karte', () => {
         expect(grenze({}).match(/opacity:1"/g)).to.have.length(4); // 30, 35, 40, 45 %
         expect(grenze({ f: 'no' })).to.contain('nicht unterstützt').and.to.contain('>–<');
         // Tooltip am Etikett: warum eine Daikin die Leistungsgrenze nicht uebernimmt
-        expect(grenze({ f: 'no' })).to.contain('title="Bei Daikin wirkt die Leistungsgrenze nur').and.to.contain('SP 1');
+        expect(grenze({ f: 'no' })).to.contain('title="Damit die Leistungsgrenze bei Daikin wirkt').and.to.contain('SP 1');
         expect(grenze({ b: 'faikout' })).to.contain('ruht (Modul regelt selbst)').and.to.contain('>–<');
         expect(grenze({ b: 'faikout', st: 'previousDay' })).to.contain('>45<').and.not.to.contain('ruht');
         expect(grenze({ a: false })).to.contain('nicht begrenzt');
