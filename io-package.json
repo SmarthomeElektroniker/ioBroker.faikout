@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -74,6 +74,19 @@
       }
     ],
     "news": {
+      "1.2.3": {
+        "en": "Multi split (#14): the outdoor unit gets values for yesterday and last month, today's COP no longer keeps yesterday's value. Repeated module errors are summarised in the log (#15). Energy meters count on across the 16-bit wrap. Daikin power limit hints clarified.",
+        "de": "Multisplit (#14): Das Außengerät hat Werte für gestern und den Vormonat, der COP von heute behält nicht mehr den Wert des Vortags. Wiederholte Modulfehler werden im Log zusammengefasst (#15). Energiezähler zählen über den 16-Bit-Überlauf weiter. Hinweise zur Daikin-Leistungsgrenze präzisiert.",
+        "ru": "Мультисплит (#14): у наружного блока есть значения за вчера и прошлый месяц, COP за сегодня больше не сохраняет вчерашнее значение. Повторяющиеся ошибки модуля объединяются в журнале (#15). Счётчики энергии продолжают счёт после переполнения 16 бит. Уточнены подсказки по ограничению мощности Daikin.",
+        "pt": "Multi split (#14): a unidade exterior tem valores de ontem e do mês passado, o COP de hoje já não mantém o valor de ontem. Erros repetidos do módulo são resumidos no registo (#15). Os contadores de energia continuam após o transbordo de 16 bits. Indicações sobre o limite de potência Daikin clarificadas.",
+        "nl": "Multisplit (#14): de buitenunit heeft waarden voor gisteren en vorige maand, de COP van vandaag houdt de waarde van gisteren niet meer vast. Herhaalde modulefouten worden in het log samengevat (#15). Energiemeters tellen door na de 16-bit-overloop. Aanwijzingen voor de Daikin-vermogensgrens verduidelijkt.",
+        "fr": "Multi split (#14) : l’unité extérieure a des valeurs pour hier et le mois dernier, le COP du jour ne garde plus la valeur de la veille. Les erreurs répétées d’un module sont résumées dans le journal (#15). Les compteurs d’énergie continuent après le débordement 16 bits. Indications sur la limite de puissance Daikin précisées.",
+        "it": "Multi split (#14): l’unità esterna ha valori per ieri e il mese scorso, il COP di oggi non mantiene più il valore di ieri. Gli errori ripetuti di un modulo sono riassunti nel log (#15). I contatori di energia proseguono oltre l’overflow a 16 bit. Indicazioni sul limite di potenza Daikin precisate.",
+        "es": "Multi split (#14): la unidad exterior tiene valores de ayer y del mes pasado, el COP de hoy ya no conserva el valor de ayer. Los errores repetidos de un módulo se resumen en el registro (#15). Los contadores de energía siguen contando tras el desbordamiento de 16 bits. Indicaciones sobre el límite de potencia Daikin precisadas.",
+        "pl": "Multi split (#14): jednostka zewnętrzna ma wartości za wczoraj i poprzedni miesiąc, dzisiejszy COP nie zachowuje już wartości z wczoraj. Powtarzające się błędy modułu są podsumowywane w logu (#15). Liczniki energii liczą dalej po przepełnieniu 16 bitów. Doprecyzowano wskazówki dotyczące limitu mocy Daikin.",
+        "uk": "Мультиспліт (#14): зовнішній блок має значення за вчора та минулий місяць, COP за сьогодні більше не зберігає вчорашнє значення. Повторювані помилки модуля об’єднуються в журналі (#15). Лічильники енергії рахують далі після переповнення 16 біт. Уточнено підказки щодо обмеження потужності Daikin.",
+        "zh-cn": "多联机 #14：室外机新增昨日和上月数值，今日 COP 不再保留前一天的值。模块重复出现的错误会在日志中汇总 #15。能耗计数器在 16 位溢出后继续计数。Daikin 功率上限提示已细化。"
+      },
       "1.2.2": {
         "en": "History (InfluxDB, SQL, history): the manual measurement now also finds values that have not changed for a long time (up to 30 days back). Tested with history, InfluxDB 1.8/2.7/3 and SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
         "de": "History (InfluxDB, SQL, history): Die Handmessung findet jetzt auch Werte, die sich lange nicht geändert haben (bis 30 Tage zurück). Getestet mit history, InfluxDB 1, 2 und 3 und SQL (SQLite, MariaDB, PostgreSQL, MS-SQL).",
@@ -151,19 +164,6 @@
         "pl": "Regulacja klimatu: limit mocy według krzywej temperatury zewnętrznej lub poprzedniego dnia, harmonogram tygodniowy z poziomami temperatury, szablon globalny lub własne wartości dla każdego urządzenia, regulacja wilgotności i punktu rosy, ingerencja ręczna, źródła czujników z rozwiązaniem awaryjnym i korekta czujnika dla zewnętrznych czujników pomieszczenia; wyszukiwanie i podłączanie modułów; odczyt i zapis ustawień modułu; karty urządzeń z oknami harmonogramu tygodniowego i szczegółów; nowy widżet VIS; tryb próbny domyślnie; opcjonalnie zewnętrzny broker MQTT zamiast wbudowanego",
         "uk": "Керування кліматом: обмеження потужності за зовнішньою кривою або попереднім днем, тижневий розклад із температурними рівнями, загальний шаблон або власні значення для кожного пристрою, регулювання вологості й точки роси, ручне втручання, джерела датчиків із резервом і корекція датчика для сторонніх кімнатних датчиків; пошук і підключення модулів; читання й запис налаштувань модуля; картки пристроїв із діалогами тижневого розкладу та подробиць; новий віджет VIS; пробний режим як типове налаштування; за вибором зовнішній MQTT-брокер замість вбудованого",
         "zh-cn": "气候调节：按室外曲线或前一日设定功率上限，带温度档位的周计划，全局模板或每台设备的自有设置，湿度/露点调节，手动干预，带回退的传感器来源以及针对外部室内传感器的传感器修正；搜索并连接模块；读取和写入模块设置；带周计划和详情对话框的设备卡片；新的 VIS 小部件；默认试运行；可选用外部 MQTT 代理代替自带代理"
-      },
-      "0.2.1": {
-        "en": "Renamed modules are recognised by their hardware ID: no more writes to deleted objects, consumption counters continue under the new name (issue #6); deleted objects are noticed at runtime; new swing value H+C (comfort with horizontal swing)",
-        "de": "Umbenannte Module werden an ihrer Hardware-ID erkannt: keine Schreibzugriffe mehr auf gelöschte Objekte, Verbrauchszähler laufen unter dem neuen Namen weiter (Issue #6); gelöschte Objekte werden zur Laufzeit erkannt; neuer Schwenkwert H+C (Komfort mit waagerechtem Schwenken)",
-        "ru": "Переименованные модули распознаются по аппаратному ID: больше нет записи в удалённые объекты, счётчики потребления продолжаются под новым именем (issue #6); удалённые объекты обнаруживаются во время работы; новое значение качания H+C (комфорт с горизонтальным качанием)",
-        "pt": "Módulos renomeados são reconhecidos pelo ID de hardware: sem escritas em objetos eliminados, os contadores de consumo continuam com o novo nome (issue #6); objetos eliminados são detetados em execução; novo valor de oscilação H+C (conforto com oscilação horizontal)",
-        "nl": "Hernoemde modules worden herkend aan hun hardware-ID: geen schrijfacties meer naar verwijderde objecten, verbruikstellers lopen door onder de nieuwe naam (issue #6); verwijderde objecten worden tijdens het draaien opgemerkt; nieuwe zwenkwaarde H+C (comfort met horizontaal zwenken)",
-        "fr": "Les modules renommés sont reconnus par leur ID matériel : plus d'écriture vers des objets supprimés, les compteurs de consommation continuent sous le nouveau nom (issue #6) ; les objets supprimés sont détectés en cours d'exécution ; nouvelle valeur d'oscillation H+C (confort avec oscillation horizontale)",
-        "it": "I moduli rinominati vengono riconosciuti dall'ID hardware: nessuna scrittura su oggetti eliminati, i contatori di consumo proseguono con il nuovo nome (issue #6); gli oggetti eliminati vengono rilevati durante l'esecuzione; nuovo valore di oscillazione H+C (comfort con oscillazione orizzontale)",
-        "es": "Los módulos renombrados se reconocen por su ID de hardware: ya no se escribe en objetos eliminados, los contadores de consumo continúan con el nuevo nombre (issue #6); los objetos eliminados se detectan en ejecución; nuevo valor de oscilación H+C (confort con oscilación horizontal)",
-        "pl": "Moduły o zmienionej nazwie są rozpoznawane po identyfikatorze sprzętowym: brak zapisów do usuniętych obiektów, liczniki zużycia działają dalej pod nową nazwą (issue #6); usunięte obiekty są wykrywane w trakcie działania; nowa wartość ruchu żaluzji H+C (komfort z ruchem poziomym)",
-        "uk": "Перейменовані модулі розпізнаються за апаратним ID: більше немає запису у видалені об’єкти, лічильники споживання продовжуються під новою назвою (issue #6); видалені об’єкти виявляються під час роботи; нове значення гойдання H+C (комфорт із горизонтальним гойданням)",
-        "zh-cn": "重命名的模块通过硬件 ID 识别：不再写入已删除的对象，用电计数器在新名称下继续（issue #6）；运行时可识别已删除的对象；新的摆风值 H+C（舒适模式加水平摆风）"
       }
     },
     "restartAdapters": [

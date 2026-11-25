@@ -295,7 +295,7 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 1.2.3 (2026-11-25)
 - Daikin power limit: hints and guide shortened to two points (suggestion from a tester) – the Daikin Wi-Fi module must
   be switched on ("SP 1"), and demand control in the Daikin app (Onecta) must not be set to "Auto". The table with four
   cases is gone; up to 1.2.2 the texts distinguished by internet access, which was imprecise.
