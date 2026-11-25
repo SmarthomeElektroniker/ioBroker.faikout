@@ -504,6 +504,147 @@ describe('Multisplit am Adapter', () => {
         }
     });
 
+    it('Mitternacht (Fake-Uhr, Issue #14): Außengerät verschiebt Energie und COP nach *Yesterday, copToday wird geleert', async () => {
+        const sinon = require('sinon');
+        const verbrauch = require('../lib/verbrauch');
+        const uhr = sinon.useFakeTimers({ now: new Date(2026, 10, 24, 22, 0, 0).getTime(), toFake: ['Date'] });
+        try {
+            // Zaehler wie im Adapter: verbrauch.verarbeiten je Zaehler, Ausgabe in die Datenpunkte
+            const zustaende = new Map();
+            const states = {};
+            const zaehlen = (schluessel, wh, ziel) => {
+                const r = verbrauch.verarbeiten(zustaende.get(schluessel) || null, wh);
+                zustaende.set(schluessel, r.stand);
+                if (ziel) {
+                    for (const f of ['today', 'yesterday', 'thisMonth', 'lastMonth']) {
+                        states[`${ziel}.${f}`] = r.werte[f];
+                    }
+                }
+                return r.werte;
+            };
+            const stossen = () => {
+                // wie main.stundenwechsel(): verbrauch.pruefen ohne neuen Zaehlerstand
+                for (const [k, st] of zustaende) {
+                    const r = verbrauch.pruefen(st);
+                    if (r.werte) {
+                        zustaende.set(k, r.stand);
+                        const ziel = k.includes('|') ? k.split('|')[1] : null;
+                        if (ziel) {
+                            for (const f of ['today', 'yesterday', 'thisMonth', 'lastMonth']) {
+                                states[`${ziel}.${f}`] = r.werte[f];
+                            }
+                        }
+                    }
+                }
+            };
+            const mengen = new Map([
+                ['wz', {}],
+                ['sz', {}],
+            ]);
+            const effizienzStand = new Map();
+            const effizienz = (id, m, wh) => {
+                const k = `${id}:${m}`;
+                const r = verbrauch.verarbeiten(effizienzStand.get(k) || null, wh);
+                effizienzStand.set(k, r.stand);
+                mengen.get(id)[m] = r.werte;
+            };
+            const effizienzStossen = () => {
+                for (const [k, st] of effizienzStand) {
+                    const r = verbrauch.pruefen(st);
+                    if (r.werte) {
+                        effizienzStand.set(k, r.stand);
+                        const [id, m] = k.split(':');
+                        mengen.get(id)[m] = r.werte;
+                    }
+                }
+            };
+            const melden = (aussenWh, wzHeiz, szHeiz, wzWaerme, szWaerme) => {
+                zaehlen('wz|wz.consumption.total', aussenWh, 'wz.consumption.total');
+                zaehlen('sz|sz.consumption.total', aussenWh, 'sz.consumption.total');
+                zaehlen('wz|wz.consumption.heating', wzHeiz, 'wz.consumption.heating');
+                zaehlen('sz|sz.consumption.heating', szHeiz, 'sz.consumption.heating');
+                effizienz('wz', 'waerme', wzWaerme);
+                effizienz('wz', 'stromHeizen', wzHeiz);
+                effizienz('sz', 'waerme', szWaerme);
+                effizienz('sz', 'stromHeizen', szHeiz);
+            };
+            const a = attrappe(
+                { aussengeraete: [{ id: 'a1', name: 'Garten', innen: [{ geraet: 'wz' }, { geraet: 'sz' }] }] },
+                states,
+            );
+            a.effizienz = {
+                zustand: new Map([
+                    ['wz', { werte: mengen.get('wz') }],
+                    ['sz', { werte: mengen.get('sz') }],
+                ]),
+            };
+            const vb = new Verbund(a);
+            const g = k => a.geschrieben.get(`outdoorUnits.a1.${k}`);
+
+            // 22:00 Grundstand, bis 23:50 heizt die Anlage: aussen +2,0 kWh, innen 0,8 + 0,6, Waerme 3,2 + 2,4 kWh
+            melden(5000000, 1000000, 2000000, 3000000, 4000000);
+            uhr.setSystemTime(new Date(2026, 10, 24, 23, 50, 0));
+            stossen();
+            effizienzStossen();
+            melden(5002000, 1000800, 2000600, 3003200, 4002400);
+            await vb.takt();
+            expect(g('energyToday')).to.equal(2);
+            expect(g('otherToday')).to.equal(0.6);
+            expect(g('copToday')).to.equal(2.8); // 5,6 / (1,4 x 2,0/1,4)
+            expect(g('copYesterday')).to.equal(null);
+
+            // 00:01: niemand heizt, die Module melden unveraenderte Zaehler; der Stundentakt hat gestossen
+            uhr.setSystemTime(new Date(2026, 10, 25, 0, 1, 0));
+            stossen();
+            effizienzStossen();
+            melden(5002000, 1000800, 2000600, 3003200, 4002400);
+            await vb.takt();
+            expect(g('energyToday')).to.equal(0);
+            expect(g('otherToday')).to.equal(0);
+            expect(g('copToday')).to.equal(null); // bis 1.2.2 blieb hier der Vortageswert stehen
+            expect(g('energyYesterday')).to.equal(2);
+            expect(g('otherYesterday')).to.equal(0.6);
+            expect(g('copYesterday')).to.equal(2.8);
+            expect(g('energyThisMonth')).to.equal(2);
+            for (const id of ['energyYesterday', 'energyLastMonth', 'otherYesterday', 'copYesterday']) {
+                expect(a.objekte.has(`outdoorUnits.a1.${id}`), id).to.equal(true);
+            }
+        } finally {
+            uhr.restore();
+        }
+    });
+
+    it('Rücksprung des Außengeräte-Zählers (Stromausfall): Module melden zeitversetzt, die Beobachtung bleibt "gleich"', () => {
+        const a = attrappe({}, werte);
+        const vb = new Verbund(a);
+        const MIN = 60000;
+        const t0 = 1e12;
+        // 10 Minuten gleich
+        for (let m = 0; m < 10; m++) {
+            vb.melden('wz', { energy: 626400 }, t0 + m * MIN - 20000);
+            vb.melden('sz', { energy: 626400 }, t0 + m * MIN - 5000);
+            vb.beobachten(t0 + m * MIN);
+        }
+        // Stromausfall: wz meldet schon 626000, sz noch eine Minute lang den alten Stand 626400
+        vb.melden('wz', { energy: 626000 }, t0 + 10 * MIN - 1000);
+        vb.beobachten(t0 + 10 * MIN);
+        vb.melden('sz', { energy: 626000 }, t0 + 11 * MIN - 1000);
+        for (let m = 11; m < 20; m++) {
+            vb.melden('wz', { energy: 626000 + (m - 11) * 100 }, t0 + m * MIN - 2000);
+            vb.melden('sz', { energy: 626000 + (m - 11) * 100 }, t0 + m * MIN - 1000);
+            vb.beobachten(t0 + m * MIN);
+        }
+        const verbundKern = require('../lib/verbund');
+        const urteil = verbundKern.paarUrteil(vb.paare.get('sz|wz'));
+        expect(urteil.gleich).to.equal(true);
+        expect(vb.paare.get('sz|wz').proben.every(p => p.d <= verbundKern.AUTO_TOLERANZ_WH)).to.equal(true);
+        // ohne Ruecksprung (Ueberlauf bei 6553,5 kWh) wird nicht ausgesetzt
+        const b = new Verbund(attrappe({}, werte));
+        b.melden('wz', { energy: 6553400 }, t0);
+        b.melden('wz', { energy: 100 }, t0 + MIN);
+        expect(b.rueckschritt.has('wz')).to.equal(false);
+    });
+
     it('verbundStand: rechnet mit dem ungespeicherten Formular, liefert Geräte, Gruppen mit Prüfung und Vorschläge', async () => {
         const a = attrappe({}, werte);
         const vb = new Verbund(a);

@@ -313,4 +313,38 @@ describe('Gemeinsames Außengerät (Multisplit, Issue #8)', () => {
             ['b', null],
         ]);
     });
+
+    it('Stromausfall (Forum 25.11.2026): Rücksprung auf volle kWh ist kein Überlauf, Gezähltes bleibt, es zählt weiter', () => {
+        const MAX = v.ZAEHLER_MODUL_WH - 100; // 0xFFFF * 100 Wh
+        // energyheat eines Innengeraets: 163800 -> 163000 Wh nach dem Stromlosmachen
+        let s = v.verarbeiten(null, 160000, zeit(25, 5)).stand;
+        s = v.verarbeiten(s, 163800, zeit(25, 6)).stand;
+        let r = v.verarbeiten(s, 163000, zeit(25, 7));
+        expect(v.istUeberlauf(163800, 163000)).to.equal(false);
+        expect(r.hinweise.join(' ')).to.match(/went backwards \(163800 -> 163000 Wh\)/);
+        expect(r.hinweise.join(' ')).to.not.match(/wrapped/);
+        expect(r.stand.ueberlaeufe).to.equal(0);
+        expect(r.werte.today).to.equal(3.8); // bis zum Ausfall Gezaehltes bleibt
+        expect(r.werte.lastHour).to.equal(3.8);
+        r = v.verarbeiten(r.stand, 163400, zeit(25, 7));
+        expect(r.werte.today).to.equal(4.2); // nur der echte Zuwachs nach dem Ausfall kommt dazu
+        expect(r.werte.currentHour).to.equal(0.4);
+        expect(r.werte.total).to.equal(163.4);
+        // Modulzaehler 626400 -> 626000: ebenso
+        expect(v.istUeberlauf(626400, 626000)).to.equal(false);
+        // auch knapp unter dem Maximum fuehrt Abrunden auf volle kWh nie in das Ueberlauf-Fenster (neu < 50 kWh)
+        expect(v.istUeberlauf(MAX - 400, MAX - 1000)).to.equal(false);
+        s = v.verarbeiten(null, MAX - 400, zeit(25, 7)).stand;
+        r = v.verarbeiten(s, MAX - 1000, zeit(25, 7));
+        expect(r.hinweise.join(' ')).to.match(/went backwards/);
+        expect(r.stand.ueberlaeufe).to.equal(0);
+        // nach dem Ueberlauf (Zaehler knapp ueber 0) und Abrunden auf 0: Ruecksprung, kein zweiter Ueberlauf
+        s = v.verarbeiten(null, MAX, zeit(25, 7)).stand;
+        s = v.verarbeiten(s, 800, zeit(25, 7)).stand;
+        expect(s.ueberlaeufe).to.equal(1);
+        r = v.verarbeiten(s, 0, zeit(25, 7));
+        expect(r.stand.ueberlaeufe).to.equal(1);
+        expect(r.hinweise.join(' ')).to.match(/went backwards/);
+        expect(r.werte.today).to.equal(0.9);
+    });
 });

@@ -14,6 +14,7 @@ const verbrauch = require('./lib/verbrauch');
 const aufzeichnung = require('./lib/aufzeichnung');
 const { Effizienz } = require('./lib/effizienz');
 const { Verbund } = require('./lib/verbundlauf');
+const { Meldungsbremse } = require('./lib/meldungsbremse');
 const { FaikoutDeviceManagement } = require('./lib/devicemanager');
 const discovery = require('./lib/discovery');
 const suche = require('./lib/suche');
@@ -124,6 +125,8 @@ class Faikout extends utils.Adapter {
 
         /** Geraete, fuer die schon vor ausgeschaltetem ha.enable gewarnt wurde (einmal je Lauf). */
         this.haWarnung = new Set();
+        /** Wiederholte Fehlermeldungen der Module (error/<Name>/comms ...) gebremst ins Log (Issue #15). */
+        this.fehlerBremse = new Meldungsbremse();
 
         /** Letzte Warnung "Einstellung abgelehnt" je Geraet: {text, zeit} - gegen Wiederholungen im Log. */
         this.abgelehntWarnung = new Map();
@@ -301,6 +304,7 @@ class Faikout extends utils.Adapter {
             // Externer Broker: "verbunden" haengt an der letzten Meldung der Module - ohne neue Meldung
             // faellt es nur ueber diesen Takt wieder ab.
             this.verbindungPruefen();
+            this.fehlerLoggen(this.fehlerBremse.pruefen());
             if (this.regelung) {
                 this.regelung.takt().catch(e => this.log.warn(`Climate control: ${e.message}`));
             }
@@ -312,6 +316,17 @@ class Faikout extends utils.Adapter {
             }
         }, 30000);
         this.stundenTaktStarten();
+    }
+
+    /**
+     * Logzeilen der Fehlerbremse (lib/meldungsbremse) ausgeben.
+     *
+     * @param {{stufe: 'warn'|'info'|'debug', text: string}[]} zeilen  Logzeilen
+     */
+    fehlerLoggen(zeilen) {
+        for (const z of zeilen) {
+            this.log[z.stufe](z.text);
+        }
     }
 
     /**
@@ -502,7 +517,8 @@ class Faikout extends utils.Adapter {
                 this.log.debug(`${t.geraet}: temp stored as auto target (module reports "Unknown" - harmless)`);
             } else {
                 // Der Unterpfad sagt, WAS schiefging (comms, unsupported, ...) - bis 0.0.18 fehlte er.
-                this.log.warn(`${t.geraet}: ${t.unter ? `${t.unter}: ` : ''}${text}`);
+                // Gebremst: eine stromlose Anlage meldet "comms" etwa alle 0,5 s (Issue #15).
+                this.fehlerLoggen(this.fehlerBremse.melden(t.geraet, t.unter || '', text));
             }
             return;
         }
@@ -1210,6 +1226,7 @@ class Faikout extends utils.Adapter {
         }
         this.haWarnung.delete(g.name);
         this.abgelehntWarnung.delete(g.name);
+        this.fehlerBremse.vergessen(g.name);
         this.log.info(`"${g.name}" (${this.namespace}.${id}) is no longer updated: ${grund}.`);
         this.verbindungPruefen();
     }

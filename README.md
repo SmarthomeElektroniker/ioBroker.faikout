@@ -299,6 +299,16 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 - Daikin power limit: hints and guide shortened to two points (suggestion from a tester) – the Daikin Wi-Fi module must
   be switched on ("SP 1"), and demand control in the Daikin app (Onecta) must not be set to "Auto". The table with four
   cases is gone; up to 1.2.2 the texts distinguished by internet access, which was imprecise.
+- Multi split (#14): `outdoorUnits.<id>.copToday` is cleared when there is no value for today yet – up to 1.2.2 the value
+  of the previous day stayed after midnight. New data points per outdoor unit: `copYesterday`, `energyYesterday`,
+  `energyLastMonth` and `otherYesterday`.
+- Log (#15): repeated error messages of a module (e.g. `comms: {"protocol":"S21","timeout":true}` about every 0.5 s
+  while the unit has no power) are summarised: the first one as a warning, further ones at debug level with a
+  counter, an info line every 15 minutes while it lasts and one info line when the messages stop.
+- Meters after a power cut: a tester's units reported lower meter readings at whole kWh afterwards (163800 → 163000 Wh).
+  This is still handled as a step backwards (counted values kept, never as a wrap at 6553.5 kWh); the multi split
+  comparison of the outdoor unit meters now pauses for a few minutes after such a step, because the modules report
+  it one after another.
 - Energy meters: the module counters `energy`, `energyheat` and `energycool` are 16 bit in steps of 100 Wh and wrap
   around at 6553.5 kWh ([RevK/ESP32-Faikout #682](https://codeberg.org/RevK/ESP32-Faikout/issues/682)). The consumption
   values now count on across the wrap (old value within 50 kWh of the maximum, new value below 50 kWh) instead of

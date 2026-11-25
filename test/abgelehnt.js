@@ -126,7 +126,19 @@ describe('Abgelehnte Einstellung: Adapter', () => {
         const a = neuerAdapter();
         a.onMqtt('error/Daikin 1OG/comms', Buffer.from('{"protocol":"S21","timeout":true}'));
         await warte();
-        expect(warnungen(a)).to.eql(['Daikin 1OG: comms: {"protocol":"S21","timeout":true}']);
+        expect(warnungen(a)).to.have.length(1);
+        expect(warnungen(a)[0]).to.match(/^Daikin 1OG: comms: \{"protocol":"S21","timeout":true\} - further messages/);
         expect(a.werte.size).to.equal(0);
+    });
+
+    it('Issue #15: wiederholte comms-Fehler nur einmal als Warnung, danach Debug mit Zähler', async () => {
+        const a = neuerAdapter();
+        for (let i = 0; i < 20; i++) {
+            a.onMqtt('error/faik-attic/comms', Buffer.from('{"protocol":"S21","timeout":true}'));
+            a.onMqtt('error/faik-bedroom/comms', Buffer.from('{"protocol":"S21","timeout":true}'));
+        }
+        await warte();
+        expect(warnungen(a).map(t => t.split(':')[0])).to.eql(['faik-attic', 'faik-bedroom']);
+        expect(a.zeilen.filter(z => z.stufe === 'debug' && /comms: .*\(#20\)$/.test(z.text))).to.have.length(2);
     });
 });
