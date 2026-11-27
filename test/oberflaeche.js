@@ -1331,7 +1331,25 @@ describe('MQTT-Broker: eigener oder externer Broker (Oberflaeche)', () => {
         }
         expect(io.encryptedNative).to.include('externPass');
         expect(io.protectedNative).to.include('externPass');
-        expect(io.common.news['1.0.0'].de).to.contain('externer MQTT-Broker');
+        // 1.0.0 kam nie auf npm (Repository-Checker W2004), darf in news nicht stehen
+        expect(io.common.news).to.not.have.property('1.0.0');
+    });
+
+    it('jedes Passwortfeld der Konfiguration steht in encryptedNative und protectedNative (W5057/W5058)', () => {
+        const io = require('../io-package.json');
+        const felder = [];
+        (function suchen(o) {
+            if (!o || typeof o !== 'object') return;
+            for (const [k, v] of Object.entries(o)) {
+                if (v && typeof v === 'object' && v.type === 'password') felder.push(k);
+                suchen(v);
+            }
+        })(require('../admin/jsonConfig.json'));
+        expect(felder).to.include.members(['pass', 'externPass', '_bindPass']);
+        for (const f of felder) {
+            expect(io.encryptedNative, f).to.include(f);
+            expect(io.protectedNative, f).to.include(f);
+        }
     });
 
     it('Knopf "Verbindung testen": Werte aus dem Formular, fuer jede Art des Ergebnisses ein Text', () => {

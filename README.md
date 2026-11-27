@@ -295,6 +295,12 @@ guide exists in [English](docs/en/README.md) and [German](docs/de/README.md).
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### 1.2.4 (2026-11-27)
+- Security (repository checker W5057/W5058): the module password field in the "bind module" dialog (`_bindPass`) is
+  listed under `protectedNative` and `encryptedNative`. Admin never stores fields starting with `_`, so there is no old
+  plain-text value to migrate; existing installations need no action.
+- Maintenance: news entry 1.0.0 removed (never published on npm, W2004), dependabot also covers `/src-admin` (W8905).
+
 ### 1.2.3 (2026-11-25)
 - Daikin power limit: hints and guide shortened to two points (suggestion from a tester) – the Daikin Wi-Fi module must
   be switched on ("SP 1"), and demand control in the Daikin app (Onecta) must not be set to "Auto". The table with four

@@ -13,6 +13,15 @@ updates:
       # @types/node must match the minimum supported node.js version — do not bump majors
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+  - package-ecosystem: npm
+    directory: "/src-admin"
+    schedule:
+      interval: cron
+      cronjob: "22 6 8 * *"
+    open-pull-requests-limit: 15
+    versioning-strategy: increase-if-necessary
+    cooldown:
+      default: 7
   - package-ecosystem: github-actions
     directory: "/"
     schedule:

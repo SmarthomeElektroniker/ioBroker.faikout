@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "faikout",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "titleLang": {
       "en": "Faikout",
       "de": "Faikout",
@@ -74,6 +74,19 @@
       }
     ],
     "news": {
+      "1.2.4": {
+        "en": "Security: the module password in the binding dialog is marked as protected and encrypted (repository checker W5057/W5058). The value was never stored, nothing changes for existing installations. Maintenance: news, dependabot.",
+        "de": "Sicherheit: Das Modulpasswort im Anbinden-Dialog ist als geschützt und verschlüsselt eingetragen (Repository-Checker W5057/W5058). Der Wert wurde nie gespeichert, für bestehende Installationen ändert sich nichts. Pflege: News, Dependabot.",
+        "ru": "Безопасность: пароль модуля в диалоге привязки помечен как защищённый и зашифрованный (проверка репозитория W5057/W5058). Значение никогда не сохранялось, для существующих установок ничего не меняется. Обслуживание: новости, dependabot.",
+        "pt": "Segurança: a palavra-passe do módulo no diálogo de ligação está marcada como protegida e encriptada (verificador do repositório W5057/W5058). O valor nunca foi guardado, nada muda nas instalações existentes. Manutenção: notícias, dependabot.",
+        "nl": "Beveiliging: het modulewachtwoord in het koppeldialoog is als beschermd en versleuteld gemarkeerd (repository-checker W5057/W5058). De waarde werd nooit opgeslagen, voor bestaande installaties verandert er niets. Onderhoud: nieuws, dependabot.",
+        "fr": "Sécurité : le mot de passe du module dans la boîte de liaison est marqué comme protégé et chiffré (vérificateur du dépôt W5057/W5058). La valeur n’a jamais été enregistrée, rien ne change pour les installations existantes. Maintenance : nouvelles, dependabot.",
+        "it": "Sicurezza: la password del modulo nella finestra di collegamento è contrassegnata come protetta e cifrata (controllo del repository W5057/W5058). Il valore non è mai stato salvato, per le installazioni esistenti non cambia nulla. Manutenzione: novità, dependabot.",
+        "es": "Seguridad: la contraseña del módulo en el diálogo de vinculación está marcada como protegida y cifrada (comprobador del repositorio W5057/W5058). El valor nunca se guardó, no cambia nada en las instalaciones existentes. Mantenimiento: novedades, dependabot.",
+        "pl": "Bezpieczeństwo: hasło modułu w oknie powiązania jest oznaczone jako chronione i szyfrowane (kontrola repozytorium W5057/W5058). Wartość nigdy nie była zapisywana, w istniejących instalacjach nic się nie zmienia. Konserwacja: aktualności, dependabot.",
+        "uk": "Безпека: пароль модуля в діалозі прив’язки позначено як захищений і зашифрований (перевірка репозиторію W5057/W5058). Значення ніколи не зберігалося, для наявних встановлень нічого не змінюється. Обслуговування: новини, dependabot.",
+        "zh-cn": "安全：绑定对话框中的模块密码已标记为受保护并加密（仓库检查 W5057/W5058）。该值从未被保存，现有安装不受影响。维护：新闻、dependabot。"
+      },
       "1.2.3": {
         "en": "Multi split (#14): the outdoor unit gets values for yesterday and last month, today's COP no longer keeps yesterday's value. Repeated module errors are summarised in the log (#15). Energy meters count on across the 16-bit wrap. Daikin power limit hints clarified.",
         "de": "Multisplit (#14): Das Außengerät hat Werte für gestern und den Vormonat, der COP von heute behält nicht mehr den Wert des Vortags. Wiederholte Modulfehler werden im Log zusammengefasst (#15). Energiezähler zählen über den 16-Bit-Überlauf weiter. Hinweise zur Daikin-Leistungsgrenze präzisiert.",
@@ -151,19 +164,6 @@
         "pl": "Efektywność: szacowana moc grzewcza i chłodnicza, bieżące COP/EER oraz ciepło i COP dziennie/miesięcznie dla każdego urządzenia (punkty danych efficiency.*). Nowa zakładka „Efektywność” z listą 96 jednostek wewnętrznych Daikin, przepływem powietrza wg biegów wentylatora i asystentem kalibracji (czujnik na wylocie lub pomiar ręczny). Wykres zużycia może pokazywać ciepło i linię COP; karta urządzenia pokazuje „COP dziś”.",
         "uk": "Ефективність: оцінка теплової та холодильної потужності, поточні COP/EER, а також тепло й COP за днями та місяцями для кожного пристрою (точки даних efficiency.*). Нова вкладка «Ефективність» зі списком із 96 внутрішніх блоків Daikin, повітряним потоком за ступенями вентилятора та майстром калібрування (датчик на виході або ручне вимірювання). Графік споживання може показувати тепло та лінію COP; на картці пристрою є «COP сьогодні».",
         "zh-cn": "能效：估算的制热量和制冷量、实时 COP/EER，以及每台设备按日/月统计的热量和 COP（数据点 efficiency.*）。新增“能效”标签页，含 96 款大金室内机列表、各风机档位的风量，以及校准向导（出风口传感器或手动测量）。用电图表可按需显示热量和 COP 曲线；设备卡片显示“今日 COP”。"
-      },
-      "1.0.0": {
-        "en": "Climate control: power limit by outdoor curve or previous day, weekly schedule with temperature levels, global template or own values per device, humidity/dew point control, manual override, sensor sources with fallback and sensor correction for external room sensors; module search and connection; module settings can be read and written; device cards with schedule and details dialog; new VIS widget; dry run as default; optional external MQTT broker instead of the built-in one",
-        "de": "Klimaregelung: Leistungsgrenze nach Außenkennlinie oder Vortag, Wochenplan mit Temperaturstufen, globale Vorlage oder eigene Werte je Gerät, Feuchte-/Taupunktregelung, Handeingriff, Sensorquellen mit Rückfall und Sensorkorrektur für fremde Raumsensoren; Module suchen und anbinden; Modul-Einstellungen lesen und schreiben; Gerätekarten mit Wochenplan- und Details-Dialog; neuer VIS-Baustein; Probelauf als Vorgabe; wahlweise externer MQTT-Broker statt des eigenen",
-        "ru": "Управление климатом: ограничение мощности по наружной кривой или по предыдущему дню, недельное расписание с температурными уровнями, общий шаблон или собственные значения для каждого устройства, регулирование влажности и точки росы, ручное вмешательство, источники датчиков с резервом и поправка датчика для сторонних комнатных датчиков; поиск и подключение модулей; чтение и запись настроек модуля; карточки устройств с диалогами расписания и подробностей; новый виджет VIS; пробный режим по умолчанию; по выбору внешний MQTT-брокер вместо встроенного",
-        "pt": "Regulação da climatização: limite de potência por curva exterior ou pelo dia anterior, programa semanal com níveis de temperatura, modelo global ou valores próprios por aparelho, regulação de humidade/ponto de orvalho, intervenção manual, fontes de sensores com recurso e correção do sensor para sensores da divisão externos; procurar e ligar módulos; ler e escrever definições do módulo; cartões de aparelho com diálogos de programa semanal e de detalhes; novo widget VIS; modo de teste por predefinição; opcionalmente broker MQTT externo em vez do próprio",
-        "nl": "Klimaatregeling: vermogensgrens volgens buitentemperatuurcurve of vorige dag, weekschema met temperatuurniveaus, globaal sjabloon of eigen waarden per apparaat, vocht-/dauwpuntregeling, handmatige ingreep, sensorbronnen met terugval en sensorcorrectie voor externe kamersensoren; modules zoeken en koppelen; module-instellingen lezen en schrijven; toestelkaarten met weekschema- en detaildialoog; nieuwe VIS-widget; proefdraai als standaard; optioneel een externe MQTT-broker in plaats van de ingebouwde",
-        "fr": "Régulation climatique : limite de puissance selon la courbe extérieure ou la veille, programme hebdomadaire avec niveaux de température, modèle global ou valeurs propres par appareil, régulation de l’humidité et du point de rosée, intervention manuelle, sources de capteurs avec repli et correction pour capteurs d’ambiance externes ; recherche et raccordement des modules ; lecture et écriture des réglages du module ; cartes d’appareil avec dialogues de programme et de détails ; nouveau widget VIS ; marche d’essai par défaut ; au choix un broker MQTT externe au lieu du broker intégré",
-        "it": "Regolazione del clima: limite di potenza secondo curva esterna o giorno precedente, programma settimanale con livelli di temperatura, modello globale o valori propri per dispositivo, regolazione di umidità e punto di rugiada, intervento manuale, sorgenti dei sensori con ripiego e correzione per sensori ambiente esterni; ricerca e collegamento dei moduli; lettura e scrittura delle impostazioni del modulo; schede dispositivo con finestre di programma e dettagli; nuovo widget VIS; funzionamento di prova predefinito; a scelta un broker MQTT esterno al posto di quello integrato",
-        "es": "Regulación de clima: límite de potencia según curva exterior o día anterior, programa semanal con niveles de temperatura, plantilla global o valores propios por equipo, regulación de humedad y punto de rocío, intervención manual, fuentes de sensores con reserva y corrección para sensores de ambiente externos; búsqueda y vinculación de módulos; lectura y escritura de los ajustes del módulo; tarjetas de equipo con diálogos de programa semanal y detalles; nuevo widget VIS; modo de prueba por defecto; opcionalmente un broker MQTT externo en lugar del integrado",
-        "pl": "Regulacja klimatu: limit mocy według krzywej temperatury zewnętrznej lub poprzedniego dnia, harmonogram tygodniowy z poziomami temperatury, szablon globalny lub własne wartości dla każdego urządzenia, regulacja wilgotności i punktu rosy, ingerencja ręczna, źródła czujników z rozwiązaniem awaryjnym i korekta czujnika dla zewnętrznych czujników pomieszczenia; wyszukiwanie i podłączanie modułów; odczyt i zapis ustawień modułu; karty urządzeń z oknami harmonogramu tygodniowego i szczegółów; nowy widżet VIS; tryb próbny domyślnie; opcjonalnie zewnętrzny broker MQTT zamiast wbudowanego",
-        "uk": "Керування кліматом: обмеження потужності за зовнішньою кривою або попереднім днем, тижневий розклад із температурними рівнями, загальний шаблон або власні значення для кожного пристрою, регулювання вологості й точки роси, ручне втручання, джерела датчиків із резервом і корекція датчика для сторонніх кімнатних датчиків; пошук і підключення модулів; читання й запис налаштувань модуля; картки пристроїв із діалогами тижневого розкладу та подробиць; новий віджет VIS; пробний режим як типове налаштування; за вибором зовнішній MQTT-брокер замість вбудованого",
-        "zh-cn": "气候调节：按室外曲线或前一日设定功率上限，带温度档位的周计划，全局模板或每台设备的自有设置，湿度/露点调节，手动干预，带回退的传感器来源以及针对外部室内传感器的传感器修正；搜索并连接模块；读取和写入模块设置；带周计划和详情对话框的设备卡片；新的 VIS 小部件；默认试运行；可选用外部 MQTT 代理代替自带代理"
       }
     },
     "restartAdapters": [
@@ -257,11 +257,13 @@
   },
   "encryptedNative": [
     "pass",
-    "externPass"
+    "externPass",
+    "_bindPass"
   ],
   "protectedNative": [
     "pass",
-    "externPass"
+    "externPass",
+    "_bindPass"
   ],
   "objects": [],
   "instanceObjects": [
